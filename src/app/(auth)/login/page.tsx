@@ -1,26 +1,49 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors]     = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors]     = useState<{ email?: string; password?: string; server?: string }>({});
+  const [loading, setLoading]   = useState(false);
   const [visible, setVisible]   = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setVisible(true));
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const next: typeof errors = {};
     if (!email.trim())    next.email    = "E-post er påkrevd";
     if (!password.trim()) next.password = "Passord er påkrevd";
-    setErrors(next);
+    if (Object.keys(next).length > 0) { setErrors(next); return; }
+
+    setLoading(true);
+    setErrors({});
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json() as { success?: boolean; error?: string };
+      if (res.ok) {
+        router.push("/feed");
+      } else {
+        setErrors({ server: data.error ?? "Noe gikk galt. Prøv igjen." });
+      }
+    } catch {
+      setErrors({ server: "Noe gikk galt. Prøv igjen." });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -97,11 +120,18 @@ export default function LoginPage() {
             )}
           </div>
 
+          {errors.server && (
+            <p className="flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-xs text-rose-400">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {errors.server}
+            </p>
+          )}
+
           <button
             type="submit"
-            className="mt-2 w-full rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
+            disabled={loading}
+            className="mt-2 w-full rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:opacity-60"
           >
-            Logg inn
+            {loading ? "Logger inn…" : "Logg inn"}
           </button>
         </form>
 
