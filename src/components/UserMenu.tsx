@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { User, Settings, LogOut } from "lucide-react";
 
 const IS_ADMIN = true; // hardkodet inntil auth er på plass
@@ -9,6 +10,7 @@ const IS_ADMIN = true; // hardkodet inntil auth er på plass
 export default function UserMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -54,7 +56,7 @@ export default function UserMenu() {
           )}
           <div className="my-1 border-t border-zinc-800" />
           <button
-            onClick={() => setOpen(false)}
+            onClick={() => { setOpen(false); router.push("/login"); }}
             className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-rose-400 transition-colors hover:bg-zinc-800"
           >
             <LogOut className="h-4 w-4 shrink-0" />
