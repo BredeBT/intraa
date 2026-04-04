@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Camera, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
+import { getMockUser } from "@/lib/mock-auth";
 
 function Field({
   label,
@@ -45,7 +46,8 @@ export default function ProfilPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [profile, setProfile] = useState({ name: "Anders Sørensen", username: "anders", email: "anders@intraa.no", bio: "" });
+  const mockUser = getMockUser();
+  const [profile, setProfile] = useState({ name: mockUser.name, username: mockUser.name.split(" ")[0].toLowerCase(), email: mockUser.email, bio: "" });
   const [profileSaved, setProfileSaved] = useState(false);
   const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
   const [passwordSaved, setPasswordSaved] = useState(false);

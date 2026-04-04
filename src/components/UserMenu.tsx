@@ -4,10 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User, Settings, LogOut } from "lucide-react";
-
-const IS_ADMIN = true; // hardkodet inntil auth er på plass
+import { getMockUser, isMockAdmin } from "@/lib/mock-auth";
 
 export default function UserMenu() {
+  const user = getMockUser();
+  const isAdmin = isMockAdmin();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -28,9 +29,9 @@ export default function UserMenu() {
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-3 rounded-lg px-2 py-1 transition-colors hover:bg-zinc-800"
       >
-        <span className="text-sm text-zinc-400">Anders Sørensen</span>
+        <span className="text-sm text-zinc-400">{user.name}</span>
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-xs font-semibold text-white">
-          AS
+          {user.initials}
         </div>
       </button>
 
@@ -44,7 +45,7 @@ export default function UserMenu() {
             <User className="h-4 w-4 shrink-0" />
             Min profil
           </Link>
-          {IS_ADMIN && (
+          {isAdmin && (
             <Link
               href="/admin"
               onClick={() => setOpen(false)}

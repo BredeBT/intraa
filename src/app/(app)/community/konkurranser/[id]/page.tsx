@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Trophy, Clock, Users, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
+import { getMockUser } from "@/lib/mock-auth";
 
 interface Contest {
   id: string; title: string; description: string;
@@ -136,6 +137,7 @@ export default function KonkurranseDetalj() {
   const router = useRouter();
   const contest = CONTESTS.find(c => c.id === id);
 
+  const currentUser = getMockUser();
   const [joined, setJoined]             = useState(false);
   const [participants, setParticipants] = useState<Participant[]>(ALL_PARTICIPANTS[id] ?? []);
 
@@ -158,11 +160,11 @@ export default function KonkurranseDetalj() {
   function toggleJoin() {
     if (isEnded) return;
     if (joined) {
-      setParticipants(prev => prev.filter(p => p.name !== "Anders Sørensen"));
+      setParticipants(prev => prev.filter(p => p.name !== currentUser.name));
     } else {
       setParticipants(prev => [
         ...prev,
-        { id: "me", name: "Anders Sørensen", initials: "AS", joinedAt: "Nettopp" },
+        { id: "me", name: currentUser.name, initials: currentUser.initials, joinedAt: "Nettopp" },
       ]);
     }
     setJoined(p => !p);

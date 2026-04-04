@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useTransition } from "react";
 import { Send } from "lucide-react";
 import { sendMessage } from "@/server/actions/messages";
 import type { MessageWithAuthor } from "@/lib/types";
+import { getMockUser } from "@/lib/mock-auth";
 
 type Channel = { id: string; name: string; type: "channel" | "dm"; initials?: string };
 
@@ -18,8 +19,9 @@ const DMS: Channel[] = [
   { id: "mock-dm-tk", name: "Thomas Kvam", type: "dm", initials: "TK" },
 ];
 
-const MOCK_AUTHOR_ID = "mock-user-1";
-const MOCK_AUTHOR_NAME = "Anders Sørensen";
+const _mockUser = getMockUser();
+const MOCK_AUTHOR_ID = _mockUser.id;
+const MOCK_AUTHOR_NAME = _mockUser.name;
 
 function formatTime(date: Date) {
   return new Date(date).toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit" });

@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import { Send, Lock } from "lucide-react";
+import { getMockUser } from "@/lib/mock-auth";
 
-const MY_ROLE = "VIP"; // hardkodet inntil auth
+const _user = getMockUser();
+const MY_ROLE = "VIP"; // Phase 4: replace with user's actual role
 
 interface Channel {
   id: string;
@@ -66,8 +68,8 @@ export default function CommunityChatPage() {
     if (!text || isLocked) return;
     const msg: Message = {
       id: `msg-${Date.now()}`,
-      author: "Anders Sørensen",
-      initials: "AS",
+      author: _user.name,
+      initials: _user.initials,
       text,
       time: now(),
       channelId: activeId,

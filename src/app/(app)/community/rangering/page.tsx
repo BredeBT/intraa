@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { getMockUser } from "@/lib/mock-auth";
 
 type Tab = "uke" | "maned" | "alltid";
 
-const ME = "Anders Sørensen";
+const ME = getMockUser().name;
 
 interface Member {
   rank: number; name: string; initials: string; points: number;
