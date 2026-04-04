@@ -1,53 +1,50 @@
 "use client";
 
-import { useState } from "react";
-import { Users, Ticket, FolderOpen, MessageSquare } from "lucide-react";
-
-// Hardkodet rolle — ingen auth ennå
-const CURRENT_USER_ROLE = "Admin";
+import { Users, Ticket, FolderOpen, MessageSquare, TrendingUp, TrendingDown, UserPlus, CheckCircle, AlertCircle, Upload, LogIn } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 const stats = [
-  { label: "Brukere", value: 24, icon: Users, color: "text-indigo-400", bg: "bg-indigo-500/10" },
-  { label: "Aktive tickets", value: 7, icon: Ticket, color: "text-yellow-400", bg: "bg-yellow-500/10" },
-  { label: "Lagrede filer", value: 142, icon: FolderOpen, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-  { label: "Meldinger sendt", value: 1084, icon: MessageSquare, color: "text-blue-400", bg: "bg-blue-500/10" },
+  { label: "Brukere", value: 24, trend: "+2", up: true, icon: Users, color: "text-indigo-400", bg: "bg-indigo-500/10" },
+  { label: "Aktive tickets", value: 7, trend: "+3", up: true, icon: Ticket, color: "text-yellow-400", bg: "bg-yellow-500/10" },
+  { label: "Filer lagret", value: 142, trend: "+12", up: true, icon: FolderOpen, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+  { label: "Meldinger i dag", value: 38, trend: "-5", up: false, icon: MessageSquare, color: "text-blue-400", bg: "bg-blue-500/10" },
 ];
 
-const initialUsers = [
-  { id: 1, name: "Anders Sørensen", role: "Admin", status: "Aktiv" },
-  { id: 2, name: "Maria Haugen", role: "Medlem", status: "Aktiv" },
-  { id: 3, name: "Thomas Kvam", role: "Medlem", status: "Aktiv" },
-  { id: 4, name: "Linn Berg", role: "Medlem", status: "Aktiv" },
-  { id: 5, name: "Ole Rønning", role: "Admin", status: "Aktiv" },
+const activityData = [
+  { day: "Man", hendelser: 14 },
+  { day: "Tir", hendelser: 22 },
+  { day: "Ons", hendelser: 18 },
+  { day: "Tor", hendelser: 31 },
+  { day: "Fre", hendelser: 27 },
+  { day: "Lør", hendelser: 9 },
+  { day: "Søn", hendelser: 5 },
+];
+
+const recentActivity = [
+  { id: 1, icon: UserPlus, color: "text-indigo-400", bg: "bg-indigo-500/10", text: "Kari Moe ble lagt til som medlem", time: "14:22" },
+  { id: 2, icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/10", text: 'Ticket "Spørsmål om feriepenger" ble løst', time: "13:45" },
+  { id: 3, icon: Upload, color: "text-blue-400", bg: "bg-blue-500/10", text: "Designsystem-v2.fig ble lastet opp", time: "12:10" },
+  { id: 4, icon: AlertCircle, color: "text-yellow-400", bg: "bg-yellow-500/10", text: 'Ny ticket opprettet: "VPN fungerer ikke hjemmefra"', time: "10:58" },
+  { id: 5, icon: LogIn, color: "text-zinc-400", bg: "bg-zinc-500/10", text: "Ole Rønning logget inn", time: "09:03" },
 ];
 
 export default function AdminPage() {
-  const [users, setUsers] = useState(initialUsers);
-
-  if (CURRENT_USER_ROLE !== "Admin") {
-    return (
-      <div className="flex h-full items-center justify-center px-8 py-16">
-        <p className="text-zinc-500">Du har ikke tilgang til denne siden.</p>
-      </div>
-    );
-  }
-
-  function deactivate(id: number) {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, status: u.status === "Aktiv" ? "Inaktiv" : "Aktiv" } : u))
-    );
-  }
-
   return (
     <div className="px-8 py-8">
-      <h1 className="mb-6 text-xl font-semibold text-white">Admin — oversikt</h1>
+      <h1 className="mb-6 text-xl font-semibold text-white">Oversikt</h1>
 
       {/* Stats */}
       <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {stats.map(({ label, value, icon: Icon, color, bg }) => (
+        {stats.map(({ label, value, trend, up, icon: Icon, color, bg }) => (
           <div key={label} className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-            <div className={`mb-3 inline-flex rounded-lg p-2 ${bg}`}>
-              <Icon className={`h-5 w-5 ${color}`} />
+            <div className="mb-3 flex items-center justify-between">
+              <div className={`inline-flex rounded-lg p-2 ${bg}`}>
+                <Icon className={`h-5 w-5 ${color}`} />
+              </div>
+              <span className={`flex items-center gap-0.5 text-xs font-medium ${up ? "text-emerald-400" : "text-rose-400"}`}>
+                {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                {trend}
+              </span>
             </div>
             <p className="text-2xl font-bold text-white">{value}</p>
             <p className="mt-0.5 text-sm text-zinc-500">{label}</p>
@@ -55,48 +52,40 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {/* User table */}
-      <h2 className="mb-3 text-sm font-semibold text-zinc-400">Brukeradmin</h2>
-      <div className="overflow-hidden rounded-xl border border-zinc-800">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-zinc-800 bg-zinc-900">
-              <th className="px-5 py-3 text-left font-medium text-zinc-500">Navn</th>
-              <th className="px-5 py-3 text-left font-medium text-zinc-500">Rolle</th>
-              <th className="px-5 py-3 text-left font-medium text-zinc-500">Status</th>
-              <th className="px-5 py-3 text-right font-medium text-zinc-500">Handling</th>
-            </tr>
-          </thead>
-          <tbody className="bg-zinc-950">
-            {users.map((user, i) => (
-              <tr
-                key={user.id}
-                className={`transition-colors hover:bg-zinc-900 ${i < users.length - 1 ? "border-b border-zinc-800" : ""}`}
-              >
-                <td className="px-5 py-4 font-medium text-white">{user.name}</td>
-                <td className="px-5 py-4 text-zinc-400">{user.role}</td>
-                <td className="px-5 py-4">
-                  <div className="flex items-center gap-2">
-                    <span className={`h-1.5 w-1.5 rounded-full ${user.status === "Aktiv" ? "bg-emerald-400" : "bg-zinc-600"}`} />
-                    <span className={user.status === "Aktiv" ? "text-zinc-300" : "text-zinc-500"}>{user.status}</span>
-                  </div>
-                </td>
-                <td className="px-5 py-4 text-right">
-                  <button
-                    onClick={() => deactivate(user.id)}
-                    className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                      user.status === "Aktiv"
-                        ? "bg-rose-500/10 text-rose-400 hover:bg-rose-500/20"
-                        : "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
-                    }`}
-                  >
-                    {user.status === "Aktiv" ? "Deaktiver" : "Aktiver"}
-                  </button>
-                </td>
-              </tr>
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Bar chart */}
+        <div className="col-span-2 rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+          <h2 className="mb-4 text-sm font-semibold text-white">Aktivitet siste 7 dager</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={activityData} barSize={28}>
+              <XAxis dataKey="day" tick={{ fill: "#71717a", fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#71717a", fontSize: 12 }} axisLine={false} tickLine={false} width={28} />
+              <Tooltip
+                contentStyle={{ background: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 12 }}
+                cursor={{ fill: "rgba(99,102,241,0.08)" }}
+              />
+              <Bar dataKey="hendelser" fill="#6366f1" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Recent activity */}
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+          <h2 className="mb-4 text-sm font-semibold text-white">Siste aktivitet</h2>
+          <div className="flex flex-col gap-3">
+            {recentActivity.map(({ id, icon: Icon, color, bg, text, time }) => (
+              <div key={id} className="flex items-start gap-3">
+                <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${bg}`}>
+                  <Icon className={`h-3.5 w-3.5 ${color}`} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs leading-snug text-zinc-300">{text}</p>
+                  <p className="mt-0.5 text-xs text-zinc-600">{time}</p>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </div>
       </div>
     </div>
   );
