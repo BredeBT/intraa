@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Rss, MessageSquare, Ticket, Folder, Users, Settings,
   LayoutDashboard, UserCog, Building2, SlidersHorizontal, Search,
-  CalendarDays, CheckSquare,
+  CalendarDays, CheckSquare, HelpCircle,
 } from "lucide-react";
 import UserMenu from "@/components/UserMenu";
 import NotificationBell from "@/components/NotificationBell";
@@ -44,6 +44,8 @@ const pageTitles: Record<string, string> = {
   "/profil":                  "Profil",
   "/notifikasjoner":          "Notifikasjoner",
   "/soek":                    "Søk",
+  "/innstillinger":           "Innstillinger",
+  "/hjelp":                   "Hjelp & Support",
 };
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -103,6 +105,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="mt-auto border-t border-zinc-800 px-3 py-3">
+          <Link
+            href="/hjelp"
+            className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              pathname === "/hjelp"
+                ? "bg-indigo-600 text-white"
+                : "text-zinc-500 hover:bg-zinc-800 hover:text-white"
+            }`}
+          >
+            <HelpCircle className="h-4 w-4 shrink-0" />
+            Hjelp
+          </Link>
           <Link
             href="/admin"
             className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${

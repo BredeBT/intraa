@@ -4,6 +4,7 @@ const PROTECTED_PREFIXES = [
   "/feed", "/chat", "/tickets", "/filer", "/medlemmer",
   "/admin", "/community", "/kalender", "/oppgaver",
   "/profil", "/notifikasjoner", "/soek",
+  "/innstillinger", "/hjelp",
 ];
 
 export function middleware(request: NextRequest) {

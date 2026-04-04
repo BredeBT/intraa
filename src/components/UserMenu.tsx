@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, SlidersHorizontal } from "lucide-react";
 import { useUser } from "@/lib/hooks/useUser";
 
 export default function UserMenu() {
@@ -49,6 +49,14 @@ export default function UserMenu() {
           >
             <User className="h-4 w-4 shrink-0" />
             Min profil
+          </Link>
+          <Link
+            href="/innstillinger"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
+          >
+            <SlidersHorizontal className="h-4 w-4 shrink-0" />
+            Innstillinger
           </Link>
           {isAdmin && (
             <Link
