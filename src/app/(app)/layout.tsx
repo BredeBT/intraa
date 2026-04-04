@@ -49,6 +49,7 @@ const pageTitles: Record<string, string> = {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const inAdmin = pathname.startsWith("/admin");
+  const inCommunity = pathname.startsWith("/community");
   const [searchOpen, setSearchOpen] = useState(false);
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
@@ -65,6 +66,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [openSearch]);
 
   const title = pageTitles[pathname] ?? "Intraa";
+
+  // Community has its own full-screen layout — bypass the intranet chrome
+  if (inCommunity) return <>{children}</>;
 
   return (
     <div className="flex min-h-screen bg-zinc-950 text-white">

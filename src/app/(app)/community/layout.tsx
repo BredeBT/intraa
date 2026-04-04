@@ -5,21 +5,20 @@ import { usePathname } from "next/navigation";
 import { Rss, Users, Trophy, Swords, MessageSquare, Settings, ArrowLeft } from "lucide-react";
 
 const navLinks = [
-  { href: "/community/feed",        label: "Feed",        icon: Rss },
-  { href: "/community/medlemmer",   label: "Medlemmer",   icon: Users },
-  { href: "/community/rangering",   label: "Rangering",   icon: Trophy },
-  { href: "/community/konkurranser",label: "Konkurranser",icon: Swords },
-  { href: "/community/chat",        label: "Chat",        icon: MessageSquare },
-  { href: "/community/admin",       label: "Admin",       icon: Settings },
+  { href: "/community/feed",         label: "Feed",         icon: Rss },
+  { href: "/community/medlemmer",    label: "Medlemmer",    icon: Users },
+  { href: "/community/rangering",    label: "Rangering",    icon: Trophy },
+  { href: "/community/konkurranser", label: "Konkurranser", icon: Swords },
+  { href: "/community/chat",         label: "Chat",         icon: MessageSquare },
+  { href: "/community/admin",        label: "Admin",        icon: Settings },
 ];
 
 export default function CommunityLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex min-h-screen bg-zinc-950 text-white">
+    <div className="flex h-full min-h-screen bg-zinc-950 text-white">
       <aside className="flex w-60 shrink-0 flex-col border-r border-zinc-800 bg-zinc-900">
-        {/* Community branding */}
         <div className="border-b border-zinc-800 px-5 py-4">
           <div className="mb-0.5 flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-xs font-bold text-white">
