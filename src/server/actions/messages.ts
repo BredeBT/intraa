@@ -47,7 +47,7 @@ const MOCK_MESSAGES: MessageWithAuthor[] = [
 ];
 
 export async function getMessages(channelId: string): Promise<MessageWithAuthor[]> {
-  if (!db) return MOCK_MESSAGES;
+  
   try {
     return await db.message.findMany({
       where: { channelId },
@@ -64,7 +64,7 @@ export async function sendMessage(
   authorId: string,
   content: string
 ): Promise<MessageWithAuthor> {
-  if (!db) throw new Error("Database ikke tilgjengelig");
+
   return db.message.create({
     data: { channelId, authorId, content },
     include: { author: true },

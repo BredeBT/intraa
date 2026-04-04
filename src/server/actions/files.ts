@@ -15,7 +15,7 @@ const MOCK_FILES: File[] = [
 ];
 
 export async function getFiles(orgId: string): Promise<File[]> {
-  if (!db) return MOCK_FILES;
+  
   try {
     return await db.file.findMany({
       where: { orgId },
@@ -33,7 +33,7 @@ export async function uploadFile(
   url: string,
   size: number
 ): Promise<File> {
-  if (!db) throw new Error("Database ikke tilgjengelig");
+
   return db.file.create({
     data: { orgId, uploaderId, name, url, size },
   });

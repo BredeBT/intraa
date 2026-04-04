@@ -1,18 +1,16 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-function isPlaceholder(url: string) {
-  return url.includes("placeholder") || url.includes("localhost");
+function createClient(): PrismaClient {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) throw new Error("DATABASE_URL is not set");
+  const adapter = new PrismaPg({ connectionString });
+  return new PrismaClient({ adapter, log: ["error"] });
 }
 
-function createClient(): PrismaClient | null {
-  const url = process.env.DATABASE_URL;
-  if (!url || isPlaceholder(url)) return null;
-  return new PrismaClient({ log: ["error"] });
-}
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null };
-
-export const db: PrismaClient | null =
+export const db: PrismaClient =
   "prisma" in globalForPrisma ? globalForPrisma.prisma : createClient();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;

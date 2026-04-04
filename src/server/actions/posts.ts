@@ -34,7 +34,7 @@ const MOCK_POSTS: PostWithAuthor[] = [
 ];
 
 export async function getPosts(orgId: string): Promise<PostWithAuthor[]> {
-  if (!db) return MOCK_POSTS;
+  
   try {
     return await db.post.findMany({
       where: { orgId },
@@ -51,7 +51,7 @@ export async function createPost(
   authorId: string,
   content: string
 ): Promise<PostWithAuthor> {
-  if (!db) throw new Error("Database ikke tilgjengelig");
+
   return db.post.create({
     data: { orgId, authorId, content },
     include: { author: true, comments: true },
@@ -59,6 +59,6 @@ export async function createPost(
 }
 
 export async function deletePost(postId: string): Promise<void> {
-  if (!db) throw new Error("Database ikke tilgjengelig");
+
   await db.post.delete({ where: { id: postId } });
 }

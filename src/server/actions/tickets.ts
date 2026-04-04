@@ -47,7 +47,7 @@ const MOCK_TICKETS: TicketWithAssignee[] = [
 ];
 
 export async function getTickets(orgId: string): Promise<TicketWithAssignee[]> {
-  if (!db) return MOCK_TICKETS;
+  
   try {
     return await db.ticket.findMany({
       where: { orgId },
@@ -64,7 +64,7 @@ export async function createTicket(
   title: string,
   category: TicketCategory
 ): Promise<TicketWithAssignee> {
-  if (!db) throw new Error("Database ikke tilgjengelig");
+
   return db.ticket.create({
     data: { orgId, title, category },
     include: { assignee: true },
@@ -75,7 +75,7 @@ export async function updateTicketStatus(
   ticketId: string,
   status: TicketStatus
 ): Promise<TicketWithAssignee> {
-  if (!db) throw new Error("Database ikke tilgjengelig");
+
   return db.ticket.update({
     where: { id: ticketId },
     data: { status },

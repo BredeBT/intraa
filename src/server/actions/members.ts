@@ -42,7 +42,7 @@ const MOCK_MEMBERS: MembershipWithUser[] = [
 ];
 
 export async function getMembers(orgId: string): Promise<MembershipWithUser[]> {
-  if (!db) return MOCK_MEMBERS;
+  
   try {
     return await db.membership.findMany({
       where: { organizationId: orgId },
@@ -59,7 +59,7 @@ export async function updateMemberRole(
   orgId: string,
   role: MemberRole
 ): Promise<MembershipWithUser> {
-  if (!db) throw new Error("Database ikke tilgjengelig");
+
   return db.membership.update({
     where: { userId_organizationId: { userId, organizationId: orgId } },
     data: { role },
@@ -71,7 +71,7 @@ export async function deactivateMember(
   userId: string,
   orgId: string
 ): Promise<void> {
-  if (!db) throw new Error("Database ikke tilgjengelig");
+
   await db.membership.delete({
     where: { userId_organizationId: { userId, organizationId: orgId } },
   });
