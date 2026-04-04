@@ -4,11 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User, Settings, LogOut } from "lucide-react";
-import { getMockUser, isMockAdmin } from "@/lib/mock-auth";
+import { useUser } from "@/lib/hooks/useUser";
 
 export default function UserMenu() {
-  const user = getMockUser();
-  const isAdmin = isMockAdmin();
+  const { user, isAdmin } = useUser();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -23,15 +22,21 @@ export default function UserMenu() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  async function handleLogout() {
+    setOpen(false);
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  }
+
   return (
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-3 rounded-lg px-2 py-1 transition-colors hover:bg-zinc-800"
       >
-        <span className="text-sm text-zinc-400">{user.name}</span>
+        <span className="text-sm text-zinc-400">{user?.name ?? "…"}</span>
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-xs font-semibold text-white">
-          {user.initials}
+          {user?.initials ?? "–"}
         </div>
       </button>
 
@@ -57,7 +62,7 @@ export default function UserMenu() {
           )}
           <div className="my-1 border-t border-zinc-800" />
           <button
-            onClick={() => { setOpen(false); router.push("/login"); }}
+            onClick={handleLogout}
             className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-rose-400 transition-colors hover:bg-zinc-800"
           >
             <LogOut className="h-4 w-4 shrink-0" />
