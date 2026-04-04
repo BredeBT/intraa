@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 
@@ -10,10 +10,10 @@ export default function LoginPage() {
   const [errors, setErrors]     = useState<{ email?: string; password?: string }>({});
   const [visible, setVisible]   = useState(false);
 
-  // Trigger fade-in on mount
-  if (typeof window !== "undefined" && !visible) {
-    requestAnimationFrame(() => setVisible(true));
-  }
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

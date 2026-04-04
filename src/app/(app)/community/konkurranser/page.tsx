@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Trophy, Users, Clock, CheckCircle } from "lucide-react";
 
 interface Contest {
@@ -42,7 +43,7 @@ export default function KonkurranserPage() {
   function ContestCard({ contest }: { contest: Contest }) {
     const isEnded = contest.status === "ended";
     return (
-      <div className={`flex flex-col rounded-2xl border bg-zinc-900 p-5 transition-colors ${isEnded ? "border-zinc-800 opacity-60" : "border-zinc-800 hover:border-zinc-700"}`}>
+      <div className={`card-lift flex flex-col rounded-2xl border bg-zinc-900 p-5 ${isEnded ? "border-zinc-800 opacity-60" : "border-zinc-800 hover:border-zinc-700"}`}>
         <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_CONFIG[contest.status].style}`}>{STATUS_CONFIG[contest.status].label}</span>
@@ -50,14 +51,14 @@ export default function KonkurranserPage() {
           </div>
           {!isEnded && <div className="flex items-center gap-1 shrink-0 text-xs text-zinc-500"><Clock className="h-3.5 w-3.5" />{contest.daysLeft}d igjen</div>}
         </div>
-        <h3 className="mb-1.5 text-base font-semibold text-white">{contest.title}</h3>
+        <Link href={`/community/konkurranser/${contest.id}`} className="mb-1.5 block text-base font-semibold text-white hover:text-violet-300 transition-colors">{contest.title}</Link>
         <p className="mb-4 flex-1 text-sm leading-relaxed text-zinc-400">{contest.description}</p>
         <div className="mb-4 flex items-center gap-4 text-sm">
           <div className="flex items-center gap-1.5"><Trophy className="h-4 w-4 text-zinc-500" /><span className={`font-medium ${contest.prizeColor}`}>{contest.prize}</span></div>
           <div className="flex items-center gap-1.5 text-zinc-500"><Users className="h-3.5 w-3.5" />{contest.participants} deltakere</div>
         </div>
         {!isEnded ? (
-          <button onClick={() => toggleJoin(contest.id)} className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-colors ${joined[contest.id] ? "bg-emerald-500/10 text-emerald-400 hover:bg-rose-500/10 hover:text-rose-400" : "bg-violet-600 text-white hover:bg-violet-500"}`}>
+          <button onClick={() => toggleJoin(contest.id)} className={`btn-press flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-colors ${joined[contest.id] ? "bg-emerald-500/10 text-emerald-400 hover:bg-rose-500/10 hover:text-rose-400" : "bg-violet-600 text-white hover:bg-violet-500"}`}>
             {joined[contest.id] ? <><CheckCircle className="h-4 w-4" /> Påmeldt — klikk for å melde av</> : "Delta"}
           </button>
         ) : (
@@ -72,7 +73,7 @@ export default function KonkurranserPage() {
   const ended    = contests.filter(c => c.status === "ended");
 
   return (
-    <div className="px-8 py-8">
+    <div className="animate-page px-8 py-8">
       <h1 className="mb-1 text-xl font-semibold text-white">Konkurranser</h1>
       <p className="mb-8 text-sm text-zinc-500">Delta, vis hva du kan og vinn premier</p>
       {active.length > 0 && <section className="mb-8"><h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-zinc-500">Aktive</h2><div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">{active.map(c => <ContestCard key={c.id} contest={c} />)}</div></section>}

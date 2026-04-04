@@ -98,7 +98,7 @@ export default function Home() {
         <h1 className="text-5xl font-extrabold leading-tight tracking-tight sm:text-6xl lg:text-7xl">
           Din arbeidsplass.{" "}
           <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
-            Din community.
+            Ditt community.
           </span>
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-400">
