@@ -2,7 +2,7 @@
 
 export type OrgType = "COMPANY" | "COMMUNITY";
 export type OrgPlan = "FREE" | "PRO" | "ENTERPRISE";
-export type MemberRole = "OWNER" | "ADMIN" | "MEMBER";
+export type MemberRole = "OWNER" | "ADMIN" | "MODERATOR" | "VIP" | "MEMBER";
 export type TicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
 export type TicketCategory = "IT" | "HR" | "OTHER";
 export type ChannelType = "TEXT" | "DIRECT";
