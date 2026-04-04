@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Rss, Users, Trophy, Swords, MessageSquare, Settings, ArrowLeft, CreditCard } from "lucide-react";
+import { Rss, Users, Trophy, Swords, MessageSquare, Settings, ArrowLeft, CreditCard, Star } from "lucide-react";
 
 const navLinks = [
   { href: "/community/feed",         label: "Feed",         icon: Rss },
   { href: "/community/medlemmer",    label: "Medlemmer",    icon: Users },
   { href: "/community/rangering",    label: "Rangering",    icon: Trophy },
   { href: "/community/konkurranser", label: "Konkurranser", icon: Swords },
+  { href: "/community/lojalitet",    label: "Lojalitet",    icon: Star },
   { href: "/community/chat",         label: "Chat",         icon: MessageSquare },
   { href: "/community/abonnement",   label: "Abonnement",   icon: CreditCard },
   { href: "/community/admin",        label: "Admin",        icon: Settings },
