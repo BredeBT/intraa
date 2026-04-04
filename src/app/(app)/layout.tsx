@@ -1,16 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Rss, MessageSquare, Ticket, Folder, Users, Settings,
   LayoutDashboard, UserCog, Building2, SlidersHorizontal, Search,
-  CalendarDays, CheckSquare, HelpCircle,
+  CalendarDays, CheckSquare, HelpCircle, ChevronDown, ArrowLeftRight,
 } from "lucide-react";
 import UserMenu from "@/components/UserMenu";
 import NotificationBell from "@/components/NotificationBell";
 import SearchOverlay from "@/components/SearchOverlay";
+import { useOrg } from "@/lib/context/OrgContext";
 
 const navLinks = [
   { href: "/feed",       label: "Feed",      icon: Rss,           badge: null },
@@ -46,6 +47,7 @@ const pageTitles: Record<string, string> = {
   "/soek":                    "Søk",
   "/innstillinger":           "Innstillinger",
   "/hjelp":                   "Hjelp & Support",
+  "/bytt-org":                "Bytt organisasjon",
 };
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -53,6 +55,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const inAdmin = pathname.startsWith("/admin");
   const inCommunity = pathname.startsWith("/community");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [orgMenuOpen, setOrgMenuOpen] = useState(false);
+  const orgMenuRef = useRef<HTMLDivElement>(null);
+  const { org } = useOrg();
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (orgMenuRef.current && !orgMenuRef.current.contains(e.target as Node)) {
+        setOrgMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
 
@@ -75,8 +90,42 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-zinc-950 text-white">
       <aside className="flex w-60 flex-col border-r border-zinc-800 bg-zinc-900">
-        <div className="px-6 py-5">
-          <span className="text-xl font-bold tracking-tight text-white">Intraa</span>
+        {/* Org switcher */}
+        <div ref={orgMenuRef} className="relative border-b border-zinc-800 px-3 py-3">
+          <button
+            onClick={() => setOrgMenuOpen(p => !p)}
+            className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-zinc-800"
+          >
+            <div
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
+              style={{ backgroundColor: org.accentColor }}
+            >
+              {org.initials}
+            </div>
+            <span className="flex-1 truncate text-left text-sm font-semibold text-white">{org.name}</span>
+            <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-zinc-500 transition-transform ${orgMenuOpen ? "rotate-180" : ""}`} />
+          </button>
+
+          {orgMenuOpen && (
+            <div className="absolute left-3 right-3 top-full z-50 mt-1 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl">
+              <Link
+                href="/bytt-org"
+                onClick={() => setOrgMenuOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
+              >
+                <ArrowLeftRight className="h-4 w-4 shrink-0" />
+                Bytt organisasjon
+              </Link>
+              <Link
+                href="/admin/organisasjon"
+                onClick={() => setOrgMenuOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
+              >
+                <Settings className="h-4 w-4 shrink-0" />
+                Organisasjonsinnstillinger
+              </Link>
+            </div>
+          )}
         </div>
 
         <nav className="flex flex-col gap-1 px-3">
