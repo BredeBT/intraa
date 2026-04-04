@@ -12,12 +12,32 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Mørkt tema (default for appen) */
+html.dark {
+  color-scheme: dark;
 }
+
+/* Lyst tema */
+html.light {
+  color-scheme: light;
+}
+
+html.light body {
+  background-color: #f4f4f5;
+  color: #18181b;
+}
+
+html.light .bg-zinc-950 { background-color: #f4f4f5 !important; }
+html.light .bg-zinc-900 { background-color: #ffffff !important; }
+html.light .bg-zinc-800 { background-color: #e4e4e7 !important; }
+html.light .bg-zinc-700 { background-color: #d4d4d8 !important; }
+html.light .border-zinc-800 { border-color: #e4e4e7 !important; }
+html.light .text-white { color: #18181b !important; }
+html.light .text-zinc-300 { color: #3f3f46 !important; }
+html.light .text-zinc-400 { color: #52525b !important; }
+html.light .text-zinc-500 { color: #71717a !important; }
+html.light .placeholder-zinc-500::placeholder { color: #a1a1aa !important; }
+html.light .placeholder-zinc-600::placeholder { color: #a1a1aa !important; }
 
 body {
   background: var(--background);

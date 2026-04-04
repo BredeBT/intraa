@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Rss, MessageSquare, Ticket, Folder, Users, Settings } from "lucide-react";
+import UserMenu from "@/components/UserMenu";
 
 const navLinks = [
   { href: "/feed", label: "Feed", icon: Rss, badge: null },
@@ -76,6 +77,7 @@ const pageTitles: Record<string, string> = {
   "/admin": "Admin",
   "/admin/brukere": "Admin — Brukere",
   "/admin/organisasjon": "Admin — Organisasjon",
+  "/profil": "Profil",
 };
 
 function Header({ pathname }: { pathname: string }) {
@@ -83,12 +85,7 @@ function Header({ pathname }: { pathname: string }) {
   return (
     <header className="flex h-14 items-center justify-between border-b border-zinc-800 bg-zinc-900 px-6">
       <span className="text-sm font-semibold text-white">{title}</span>
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-zinc-400">Anders Sørensen</span>
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-xs font-semibold text-white">
-          AS
-        </div>
-      </div>
+      <UserMenu />
     </header>
   );
 }
