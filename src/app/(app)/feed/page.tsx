@@ -1,26 +1,45 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { db } from "@/server/db";
 import { getPosts } from "@/server/actions/posts";
+import ComposeBox from "./ComposeBox";
 import PostList from "./PostList";
 
-const MOCK_ORG_ID = "mock-org";
-
 export default async function FeedPage() {
-  const posts = await getPosts(MOCK_ORG_ID);
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const membership = await db.membership.findFirst({
+    where: { userId: session.user.id },
+    include: { organization: true },
+    orderBy: { organization: { createdAt: "asc" } },
+  });
+
+  if (!membership) {
+    return (
+      <div className="mx-auto max-w-2xl px-6 py-8 text-center text-zinc-500">
+        Du er ikke medlem av noen organisasjon ennå.
+      </div>
+    );
+  }
+
+  const posts = await getPosts(membership.organizationId);
+
+  const initials = (session.user.name ?? "?")
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
       <h1 className="mb-6 text-xl font-semibold text-white">Feed</h1>
 
-      {/* Compose box */}
-      <div className="mb-8 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">
-            DU
-          </div>
-          <div className="flex-1 rounded-lg bg-zinc-800 px-4 py-2.5 text-sm text-zinc-500 cursor-text">
-            Skriv noe…
-          </div>
-        </div>
-      </div>
+      <ComposeBox
+        orgId={membership.organizationId}
+        userInitials={initials}
+      />
 
       <PostList posts={posts} />
     </div>

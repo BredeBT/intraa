@@ -2,26 +2,25 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import { Send } from "lucide-react";
-import { sendMessage } from "@/server/actions/messages";
+import { sendMessage, getMessages } from "@/server/actions/messages";
 import type { MessageWithAuthor } from "@/lib/types";
-import { getMockUser } from "@/lib/mock-auth";
 
-type Channel = { id: string; name: string; type: "channel" | "dm"; initials?: string };
+interface Channel {
+  id: string;
+  name: string;
+}
 
-const CHANNELS: Channel[] = [
-  { id: "mock-channel-general", name: "general", type: "channel" },
-  { id: "mock-channel-random", name: "random", type: "channel" },
-  { id: "mock-channel-it", name: "it", type: "channel" },
+interface Props {
+  channels: Channel[];
+  initialMessages: MessageWithAuthor[];
+  userId: string;
+  userName: string;
+}
+
+const DMS = [
+  { id: "dm-mh", name: "Maria Haugen",  initials: "MH" },
+  { id: "dm-tk", name: "Thomas Kvam",   initials: "TK" },
 ];
-
-const DMS: Channel[] = [
-  { id: "mock-dm-mh", name: "Maria Haugen", type: "dm", initials: "MH" },
-  { id: "mock-dm-tk", name: "Thomas Kvam", type: "dm", initials: "TK" },
-];
-
-const _mockUser = getMockUser();
-const MOCK_AUTHOR_ID = _mockUser.id;
-const MOCK_AUTHOR_NAME = _mockUser.name;
 
 function formatTime(date: Date) {
   return new Date(date).toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit" });
@@ -31,27 +30,40 @@ function initials(name: string) {
   return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
 }
 
-export default function ChatClient({ initialMessages }: { initialMessages: MessageWithAuthor[] }) {
-  const [activeId, setActiveId] = useState(CHANNELS[0].id);
-  const [messages, setMessages] = useState<MessageWithAuthor[]>(initialMessages);
-  const [input, setInput] = useState("");
+export default function ChatClient({ channels, initialMessages, userId, userName }: Props) {
+  const firstChannelId = channels[0]?.id ?? "";
+  const [activeId, setActiveId]     = useState(firstChannelId);
+  const [messages, setMessages]     = useState<MessageWithAuthor[]>(initialMessages);
+  const [input, setInput]           = useState("");
   const [isPending, startTransition] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const active = [...CHANNELS, ...DMS].find((c) => c.id === activeId)!;
-  const channelLabel = active.type === "channel" ? `#${active.name}` : active.name;
+  const activeChannel = channels.find((c) => c.id === activeId);
+  const activeDm      = DMS.find((d) => d.id === activeId);
+  const channelLabel  = activeChannel
+    ? `#${activeChannel.name}`
+    : activeDm?.name ?? "Direktemelding";
+
+  function switchChannel(id: string) {
+    setActiveId(id);
+    setMessages([]);
+    startTransition(async () => {
+      const msgs = await getMessages(id);
+      setMessages(msgs);
+    });
+  }
 
   function handleSend() {
     const text = input.trim();
-    if (!text) return;
+    if (!text || !activeChannel) return;
 
     const optimistic: MessageWithAuthor = {
-      id: `optimistic-${Date.now()}`,
-      content: text,
+      id:        `opt-${Date.now()}`,
+      content:   text,
       createdAt: new Date(),
       channelId: activeId,
-      authorId: MOCK_AUTHOR_ID,
-      author: { id: MOCK_AUTHOR_ID, name: MOCK_AUTHOR_NAME, email: "anders@intraa.no", avatarUrl: null, createdAt: new Date() },
+      authorId:  userId,
+      author:    { id: userId, name: userName, email: "", avatarUrl: null, createdAt: new Date() },
     };
 
     setMessages((prev) => [...prev, optimistic]);
@@ -59,12 +71,10 @@ export default function ChatClient({ initialMessages }: { initialMessages: Messa
 
     startTransition(async () => {
       try {
-        const saved = await sendMessage(activeId, MOCK_AUTHOR_ID, text);
-        setMessages((prev) =>
-          prev.map((m) => (m.id === optimistic.id ? saved : m))
-        );
+        const saved = await sendMessage(activeId, text);
+        setMessages((prev) => prev.map((m) => (m.id === optimistic.id ? saved : m)));
       } catch {
-        // db ikke tilgjengelig — optimistisk melding beholdes
+        // Optimistisk melding beholdes ved feil
       }
     });
   }
@@ -82,16 +92,16 @@ export default function ChatClient({ initialMessages }: { initialMessages: Messa
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)]">
-      {/* Channel / DM list */}
+      {/* Sidebar */}
       <aside className="flex w-52 shrink-0 flex-col border-r border-zinc-800 bg-zinc-900 py-4">
         <p className="mb-1 px-4 text-xs font-semibold uppercase tracking-widest text-zinc-500">
           Kanaler
         </p>
         <nav className="flex flex-col gap-0.5 px-2">
-          {CHANNELS.map((ch) => (
+          {channels.map((ch) => (
             <button
               key={ch.id}
-              onClick={() => setActiveId(ch.id)}
+              onClick={() => switchChannel(ch.id)}
               className={`rounded-md px-3 py-1.5 text-left text-sm font-medium transition-colors ${
                 activeId === ch.id
                   ? "bg-indigo-600 text-white"
@@ -133,6 +143,9 @@ export default function ChatClient({ initialMessages }: { initialMessages: Messa
         </header>
 
         <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-6 py-5">
+          {isPending && messages.length === 0 && (
+            <p className="text-sm text-zinc-600">Laster meldinger…</p>
+          )}
           {messages.map((msg) => (
             <div key={msg.id} className="flex items-start gap-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs font-semibold text-white">
@@ -158,12 +171,17 @@ export default function ChatClient({ initialMessages }: { initialMessages: Messa
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder={`Skriv en melding til ${channelLabel}…`}
-              className="flex-1 bg-transparent text-sm text-white placeholder-zinc-500 outline-none"
+              disabled={!activeChannel}
+              placeholder={
+                activeChannel
+                  ? `Skriv en melding til ${channelLabel}…`
+                  : "Velg en kanal for å skrive…"
+              }
+              className="flex-1 bg-transparent text-sm text-white placeholder-zinc-500 outline-none disabled:opacity-40"
             />
             <button
               onClick={handleSend}
-              disabled={!input.trim() || isPending}
+              disabled={!input.trim() || isPending || !activeChannel}
               className="text-zinc-500 transition-colors hover:text-indigo-400 disabled:opacity-30"
             >
               <Send className="h-4 w-4" />
