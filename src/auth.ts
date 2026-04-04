@@ -8,11 +8,13 @@ import { authConfig } from "./auth.config";
 declare module "next-auth" {
   interface User {
     isSuperAdmin?: boolean;
+    username?:     string | null;
   }
   interface Session {
     user: DefaultSession["user"] & {
-      id: string;
+      id:          string;
       isSuperAdmin: boolean;
+      username:    string | null;
     };
   }
 }
@@ -20,6 +22,7 @@ declare module "next-auth" {
 declare module "@auth/core/jwt" {
   interface JWT {
     isSuperAdmin?: boolean;
+    username?:     string | null;
   }
 }
 
@@ -50,8 +53,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name:         user.name ?? "",
           image:        user.image ?? user.avatarUrl ?? null,
           isSuperAdmin: user.isSuperAdmin,
+          username:     user.username ?? null,
         };
       },
     }),
   ],
+  callbacks: {
+    jwt({ token, user }) {
+      if (user) {
+        token.isSuperAdmin = user.isSuperAdmin ?? false;
+        token.username     = user.username ?? null;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      session.user.id           = token.sub ?? "";
+      session.user.isSuperAdmin = (token.isSuperAdmin as boolean | undefined) ?? false;
+      session.user.username     = (token.username as string | null | undefined) ?? null;
+      return session;
+    },
+  },
 });

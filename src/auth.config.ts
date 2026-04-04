@@ -18,12 +18,14 @@ export const authConfig = {
     jwt({ token, user }) {
       if (user) {
         token.isSuperAdmin = (user as { isSuperAdmin?: boolean }).isSuperAdmin ?? false;
+        token.username     = (user as { username?: string | null }).username ?? null;
       }
       return token;
     },
     session({ session, token }) {
       session.user.id           = token.sub ?? "";
       session.user.isSuperAdmin = (token.isSuperAdmin as boolean | undefined) ?? false;
+      session.user.username     = (token.username as string | null | undefined) ?? null;
       return session;
     },
   },

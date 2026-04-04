@@ -20,14 +20,29 @@ async function main() {
   });
   console.log(`✓ Organisation: ${org.name}`);
 
-  // User
-  const passwordHash = await bcrypt.hash("passord123", 12);
+  // Users
+  const hash123   = await bcrypt.hash("passord123", 12);
+  const hashBrede = await bcrypt.hash("passord", 12);
+
   const user = await db.user.upsert({
     where: { email: "anders@intraa.net" },
-    update: { password: passwordHash },
-    create: { email: "anders@intraa.net", name: "Anders Sørensen", password: passwordHash, isSuperAdmin: true },
+    update: { password: hash123 },
+    create: { email: "anders@intraa.net", name: "Anders Sørensen", password: hash123, isSuperAdmin: true },
   });
   console.log(`✓ User: ${user.name}`);
+
+  const superadmin = await db.user.upsert({
+    where: { email: "brede_bt@hotmail.com" },
+    update: { password: hashBrede, username: "@Brede", isSuperAdmin: true },
+    create: {
+      email:       "brede_bt@hotmail.com",
+      name:        "Brede",
+      username:    "@Brede",
+      password:    hashBrede,
+      isSuperAdmin: true,
+    },
+  });
+  console.log(`✓ Superadmin: ${superadmin.name} (${superadmin.username})`);
 
   // Membership
   await db.membership.upsert({
