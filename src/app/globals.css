@@ -12,12 +12,12 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Mørkt tema (default for appen) */
+/* ── Dark theme (default) ── */
 html.dark {
   color-scheme: dark;
 }
 
-/* Lyst tema */
+/* ── Light theme ── */
 html.light {
   color-scheme: light;
 }
@@ -27,17 +27,43 @@ html.light body {
   color: #18181b;
 }
 
-html.light .bg-zinc-950 { background-color: #f4f4f5 !important; }
-html.light .bg-zinc-900 { background-color: #ffffff !important; }
-html.light .bg-zinc-800 { background-color: #e4e4e7 !important; }
-html.light .bg-zinc-700 { background-color: #d4d4d8 !important; }
-html.light .border-zinc-800 { border-color: #e4e4e7 !important; }
-html.light .text-white { color: #18181b !important; }
-html.light .text-zinc-300 { color: #3f3f46 !important; }
-html.light .text-zinc-400 { color: #52525b !important; }
-html.light .text-zinc-500 { color: #71717a !important; }
+/* Backgrounds */
+html.light .bg-zinc-950   { background-color: #f4f4f5 !important; }
+html.light .bg-zinc-900   { background-color: #ffffff !important; }
+html.light .bg-zinc-800   { background-color: #e4e4e7 !important; }
+html.light .bg-zinc-800\/50 { background-color: #e4e4e750 !important; }
+html.light .bg-zinc-700   { background-color: #d4d4d8 !important; }
+html.light .bg-zinc-700\/50 { background-color: #d4d4d880 !important; }
+
+/* Borders */
+html.light .border-zinc-800   { border-color: #e4e4e7 !important; }
+html.light .border-zinc-700   { border-color: #d4d4d8 !important; }
+html.light .border-zinc-600   { border-color: #a1a1aa !important; }
+
+/* Text */
+html.light .text-white        { color: #18181b !important; }
+html.light .text-zinc-100     { color: #27272a !important; }
+html.light .text-zinc-300     { color: #3f3f46 !important; }
+html.light .text-zinc-400     { color: #52525b !important; }
+html.light .text-zinc-500     { color: #71717a !important; }
+html.light .text-zinc-600     { color: #a1a1aa !important; }
+html.light .text-zinc-700     { color: #d4d4d8 !important; }
+
+/* Placeholders */
 html.light .placeholder-zinc-500::placeholder { color: #a1a1aa !important; }
 html.light .placeholder-zinc-600::placeholder { color: #a1a1aa !important; }
+
+/* Hover states used in sidebar / nav */
+html.light .hover\:bg-zinc-800:hover { background-color: #e4e4e7 !important; }
+html.light .hover\:bg-zinc-900:hover { background-color: #f4f4f5 !important; }
+html.light .hover\:text-white:hover  { color: #18181b !important; }
+
+/* Ring / shadow adjustments for light */
+html.light .card-lift:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+/* Keep accent colors (indigo, violet, emerald, etc.) untouched in light mode */
 
 body {
   background: var(--background);
@@ -45,7 +71,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Page enter animation */
+/* ── Page enter animation ── */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -54,7 +80,7 @@ body {
   animation: fadeInUp 0.3s ease both;
 }
 
-/* Card hover lift */
+/* ── Card hover lift ── */
 .card-lift {
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
@@ -63,11 +89,20 @@ body {
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 }
 
-/* Button click scale */
+/* ── Button click scale ── */
 .btn-press {
   transition: transform 0.1s ease, opacity 0.1s ease;
 }
 .btn-press:active {
   transform: scale(0.96);
   opacity: 0.9;
+}
+
+/* ── Mobile sidebar backdrop ── */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(2px);
 }

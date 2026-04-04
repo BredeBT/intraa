@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Slack, Chrome } from "lucide-react";
+import { Check, MessageSquare, Globe, Monitor } from "lucide-react";
 import { useUser } from "@/lib/hooks/useUser";
 
 type Tab = "konto" | "varsler" | "personvern" | "integrasjoner";
@@ -24,17 +24,17 @@ const NOTIFICATIONS = [
 const INTEGRATIONS = [
   {
     id: "slack", name: "Slack", desc: "Motta varsler og send meldinger direkte fra Slack.",
-    icon: Slack, iconColor: "text-[#4A154B]", iconBg: "bg-[#4A154B]/10",
+    icon: MessageSquare, iconColor: "text-purple-400", iconBg: "bg-purple-500/10",
     connected: false,
   },
   {
     id: "google", name: "Google", desc: "Synkroniser Google Kalender og logg inn med Google.",
-    icon: Chrome, iconColor: "text-blue-400", iconBg: "bg-blue-500/10",
+    icon: Globe, iconColor: "text-blue-400", iconBg: "bg-blue-500/10",
     connected: true,
   },
   {
     id: "microsoft", name: "Microsoft 365", desc: "Integrer med Teams, Outlook og OneDrive.",
-    icon: null, iconColor: "text-blue-500", iconBg: "bg-blue-500/10",
+    icon: Monitor, iconColor: "text-sky-400", iconBg: "bg-sky-500/10",
     connected: false,
   },
 ];
@@ -279,13 +279,7 @@ export default function InnstillingerPage() {
             return (
               <div key={intg.id} className="card-lift flex items-center gap-4 rounded-xl border border-zinc-800 bg-zinc-900 p-5">
                 <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${intg.iconBg}`}>
-                  {intg.icon ? (
-                    <intg.icon className={`h-5 w-5 ${intg.iconColor}`} />
-                  ) : (
-                    <svg className="h-5 w-5 text-blue-400" viewBox="0 0 23 23" fill="currentColor" aria-hidden="true">
-                      <path d="M11.5 0L0 6.6v9.8L11.5 23 23 16.4V6.6L11.5 0zm0 2.3l9.2 5.3v8.8l-9.2 5.3-9.2-5.3V7.6l9.2-5.3z"/>
-                    </svg>
-                  )}
+                  <intg.icon className={`h-5 w-5 ${intg.iconColor}`} />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-white">{intg.name}</p>
