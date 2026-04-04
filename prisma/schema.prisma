@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum OrgType {
+  COMPANY
+  COMMUNITY
+}
+
+enum OrgPlan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum TicketCategory {
+  IT
+  HR
+  OTHER
+}
+
+enum ChannelType {
+  TEXT
+  DIRECT
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model Organization {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  type      OrgType
+  plan      OrgPlan  @default(FREE)
+  createdAt DateTime @default(now())
+
+  memberships Membership[]
+  posts       Post[]
+  channels    Channel[]
+  tickets     Ticket[]
+  files       File[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  avatarUrl String?
+  createdAt DateTime @default(now())
+
+  memberships   Membership[]
+  posts         Post[]
+  comments      Comment[]
+  messages      Message[]
+  assignedTickets Ticket[]   @relation("TicketAssignee")
+  uploadedFiles File[]
+}
+
+model Membership {
+  id             String       @id @default(cuid())
+  role           MemberRole   @default(MEMBER)
+  userId         String
+  organizationId String
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  orgId     String
+  authorId  String
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  author       User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments     Comment[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  postId    String
+  authorId  String
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Channel {
+  id        String      @id @default(cuid())
+  name      String
+  type      ChannelType @default(TEXT)
+  orgId     String
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  messages     Message[]
+
+  @@unique([orgId, name])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  channelId String
+  authorId  String
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Ticket {
+  id         String         @id @default(cuid())
+  title      String
+  status     TicketStatus   @default(OPEN)
+  category   TicketCategory @default(OTHER)
+  createdAt  DateTime       @default(now())
+  orgId      String
+  assigneeId String?
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  assignee     User?        @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+}
+
+model File {
+  id         String   @id @default(cuid())
+  name       String
+  url        String
+  size       Int
+  createdAt  DateTime @default(now())
+  orgId      String
+  uploaderId String
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  uploader     User         @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+}

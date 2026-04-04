@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Rss, MessageSquare, Ticket, Folder, Users } from "lucide-react";
+import { Rss, MessageSquare, Ticket, Folder, Users, Settings } from "lucide-react";
 
 const navLinks = [
   { href: "/feed", label: "Feed", icon: Rss, badge: null },
@@ -45,6 +45,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+        <div className="mt-auto border-t border-zinc-800 px-3 py-3">
+          <Link
+            href="/admin"
+            className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              pathname.startsWith("/admin")
+                ? "bg-indigo-600 text-white"
+                : "text-zinc-500 hover:bg-zinc-800 hover:text-white"
+            }`}
+          >
+            <Settings className="h-4 w-4 shrink-0" />
+            Admin
+          </Link>
+        </div>
       </aside>
       <div className="flex flex-1 flex-col">
         <Header pathname={pathname} />
@@ -60,6 +73,9 @@ const pageTitles: Record<string, string> = {
   "/tickets": "Tickets",
   "/filer": "Filer",
   "/medlemmer": "Medlemmer",
+  "/admin": "Admin",
+  "/admin/brukere": "Admin — Brukere",
+  "/admin/organisasjon": "Admin — Organisasjon",
 };
 
 function Header({ pathname }: { pathname: string }) {
