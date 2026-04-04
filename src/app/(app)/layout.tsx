@@ -6,17 +6,20 @@ import { usePathname } from "next/navigation";
 import {
   Rss, MessageSquare, Ticket, Folder, Users, Settings,
   LayoutDashboard, UserCog, Building2, SlidersHorizontal, Search,
+  CalendarDays, CheckSquare,
 } from "lucide-react";
 import UserMenu from "@/components/UserMenu";
 import NotificationBell from "@/components/NotificationBell";
 import SearchOverlay from "@/components/SearchOverlay";
 
 const navLinks = [
-  { href: "/feed",      label: "Feed",      icon: Rss,            badge: null },
-  { href: "/chat",      label: "Chat",      icon: MessageSquare,  badge: 3 },
-  { href: "/tickets",   label: "Tickets",   icon: Ticket,         badge: null },
-  { href: "/filer",     label: "Filer",     icon: Folder,         badge: null },
-  { href: "/medlemmer", label: "Medlemmer", icon: Users,          badge: null },
+  { href: "/feed",       label: "Feed",      icon: Rss,           badge: null },
+  { href: "/chat",       label: "Chat",      icon: MessageSquare, badge: 3 },
+  { href: "/tickets",    label: "Tickets",   icon: Ticket,        badge: null },
+  { href: "/kalender",   label: "Kalender",  icon: CalendarDays,  badge: null },
+  { href: "/oppgaver",   label: "Oppgaver",  icon: CheckSquare,   badge: null },
+  { href: "/filer",      label: "Filer",     icon: Folder,        badge: null },
+  { href: "/medlemmer",  label: "Medlemmer", icon: Users,         badge: null },
 ];
 
 const adminLinks = [
@@ -36,6 +39,8 @@ const pageTitles: Record<string, string> = {
   "/admin/brukere":           "Admin — Brukere",
   "/admin/organisasjon":      "Admin — Organisasjon",
   "/admin/innstillinger":     "Admin — Innstillinger",
+  "/kalender":                "Kalender",
+  "/oppgaver":                "Oppgaver",
   "/profil":                  "Profil",
   "/notifikasjoner":          "Notifikasjoner",
   "/soek":                    "Søk",
