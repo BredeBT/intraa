@@ -1,25 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { MockUser } from "@/lib/mock-auth";
+import { useSession } from "next-auth/react";
+
+export interface SessionUser {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  initials: string;
+  isSuperAdmin: boolean;
+}
 
 interface UseUserResult {
-  user: MockUser | null;
+  user: SessionUser | null;
   isLoading: boolean;
   isAdmin: boolean;
 }
 
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 export function useUser(): UseUserResult {
-  const [user, setUser]         = useState<MockUser | null>(null);
-  const [isLoading, setLoading] = useState(true);
+  const { data: session, status } = useSession();
+  const raw = session?.user ?? null;
 
-  useEffect(() => {
-    fetch("/api/auth/me")
-      .then(res => res.ok ? res.json() as Promise<MockUser> : Promise.reject())
-      .then(data => setUser(data))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
-  }, []);
+  const user: SessionUser | null = raw
+    ? {
+        id:          raw.id,
+        name:        raw.name ?? "",
+        email:       raw.email ?? "",
+        image:       raw.image,
+        initials:    getInitials(raw.name ?? "?"),
+        isSuperAdmin: raw.isSuperAdmin,
+      }
+    : null;
 
-  return { user, isLoading, isAdmin: user?.role === "ADMIN" };
+  return {
+    user,
+    isLoading: status === "loading",
+    isAdmin:   user?.isSuperAdmin ?? false,
+  };
 }

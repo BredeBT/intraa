@@ -35,10 +35,10 @@ export default function PostList({ posts }: { posts: PostWithAuthor[] }) {
         <article key={post.id} className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-sm font-semibold text-white">
-              {initials(post.author.name)}
+              {initials(post.author.name ?? "")}
             </div>
             <div>
-              <p className="text-sm font-medium text-white">{post.author.name}</p>
+              <p className="text-sm font-medium text-white">{post.author.name ?? ""}</p>
               <p className="text-xs text-zinc-500">{relativeTime(post.createdAt)}</p>
             </div>
           </div>

@@ -136,11 +136,11 @@ export default function ChatClient({ initialMessages }: { initialMessages: Messa
           {messages.map((msg) => (
             <div key={msg.id} className="flex items-start gap-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs font-semibold text-white">
-                {initials(msg.author.name)}
+                {initials(msg.author.name ?? "")}
               </div>
               <div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-sm font-medium text-white">{msg.author.name}</span>
+                  <span className="text-sm font-medium text-white">{msg.author.name ?? ""}</span>
                   <span className="text-xs text-zinc-500">{formatTime(msg.createdAt)}</span>
                 </div>
                 <p className="mt-0.5 text-sm text-zinc-300">{msg.content}</p>

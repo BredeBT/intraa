@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { NextResponse } from "next/server";
 
 const PROTECTED_PREFIXES = [
   "/feed", "/chat", "/tickets", "/filer", "/medlemmer",
@@ -7,30 +8,25 @@ const PROTECTED_PREFIXES = [
   "/innstillinger", "/hjelp", "/bytt-org", "/superadmin",
 ];
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const session = request.cookies.get("intraa-session");
+export default auth((req) => {
+  const { pathname } = req.nextUrl;
 
   const isProtected = PROTECTED_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(p + "/")
   );
   const isLoginPage = pathname === "/login";
 
-  if (isProtected && !session) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+  if (isProtected && !req.auth) {
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  if (isLoginPage && session) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/feed";
-    return NextResponse.redirect(url);
+  if (isLoginPage && req.auth) {
+    return NextResponse.redirect(new URL("/feed", req.url));
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon\\.ico|api/).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon\\.ico|api/auth).*)"],
 };

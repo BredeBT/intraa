@@ -21,7 +21,7 @@ export type Organization = {
 export type User = {
   id: string;
   email: string;
-  name: string;
+  name: string | null;
   avatarUrl: string | null;
   createdAt: Date;
 };

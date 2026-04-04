@@ -24,7 +24,8 @@ export default function UserMenu() {
 
   async function handleLogout() {
     setOpen(false);
-    await fetch("/api/auth/logout", { method: "POST" });
+    const { signOut } = await import("next-auth/react");
+    await signOut({ redirect: false });
     router.push("/login");
   }
 

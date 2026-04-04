@@ -28,16 +28,12 @@ export default function LoginPage() {
     setLoading(true);
     setErrors({});
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json() as { success?: boolean; error?: string };
-      if (res.ok) {
-        router.push("/feed");
+      const { signIn } = await import("next-auth/react");
+      const result = await signIn("credentials", { email, password, redirect: false });
+      if (result?.error) {
+        setErrors({ server: "Feil e-post eller passord" });
       } else {
-        setErrors({ server: data.error ?? "Noe gikk galt. Prøv igjen." });
+        router.push("/feed");
       }
     } catch {
       setErrors({ server: "Noe gikk galt. Prøv igjen." });
