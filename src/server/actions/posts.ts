@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { addPoints } from "@/server/addPoints";
 import type { PostWithAuthor } from "@/lib/types";
 
 export async function getPosts(orgId: string): Promise<PostWithAuthor[]> {
@@ -37,6 +38,7 @@ export async function createPost(orgId: string, content: string): Promise<PostWi
     include: { author: true, comments: true },
   });
 
+  void addPoints(session.user.id, orgId, "POST");
   revalidatePath("/feed");
   return post;
 }

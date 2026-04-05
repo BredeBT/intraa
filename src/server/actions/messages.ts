@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { addPoints } from "@/server/addPoints";
 import type { MessageWithAuthor } from "@/lib/types";
 
 export async function getMessages(channelId: string): Promise<MessageWithAuthor[]> {
@@ -40,8 +41,11 @@ export async function sendMessage(
   });
   if (!channel) throw new Error("Ikke autorisert");
 
-  return db.message.create({
+  const message = await db.message.create({
     data:    { channelId, authorId: session.user.id, content },
     include: { author: true },
   });
+
+  void addPoints(session.user.id, channel.orgId, "MESSAGE");
+  return message;
 }

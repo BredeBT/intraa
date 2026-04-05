@@ -72,13 +72,15 @@ model Organization {
   plan      OrgPlan  @default(FREE)
   createdAt DateTime @default(now())
 
-  memberships   Membership[]
-  posts         Post[]
-  channels      Channel[]
-  tickets       Ticket[]
-  files         File[]
-  invitations   Invitation[]
-  notifications Notification[]
+  memberships    Membership[]
+  posts          Post[]
+  channels       Channel[]
+  tickets        Ticket[]
+  files          File[]
+  invitations    Invitation[]
+  notifications  Notification[]
+  userActivities UserActivity[]
+  follows        Follow[]
 }
 
 model User {
@@ -103,6 +105,9 @@ model User {
   sessions         Session[]
   sentInvitations  Invitation[]   @relation("InvitedBy")
   notifications    Notification[]
+  userActivities   UserActivity[]
+  following        Follow[]       @relation("Follower")
+  followers        Follow[]       @relation("Following")
 }
 
 model Account {
@@ -144,6 +149,7 @@ model VerificationToken {
 model Membership {
   id             String       @id @default(cuid())
   role           MemberRole   @default(MEMBER)
+  points         Int          @default(0)
   userId         String
   organizationId String
 
@@ -254,4 +260,30 @@ model Notification {
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model UserActivity {
+  id             String   @id @default(cuid())
+  action         String
+  points         Int
+  createdAt      DateTime @default(now())
+  userId         String
+  organizationId String
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model Follow {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  followerId     String
+  followingId    String
+  organizationId String
+
+  follower     User         @relation("Follower",  fields: [followerId],  references: [id], onDelete: Cascade)
+  following    User         @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId, organizationId])
 }
