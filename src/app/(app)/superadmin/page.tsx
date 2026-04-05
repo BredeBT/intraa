@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { Users, TrendingUp, Globe, ShieldAlert, Eye, Ban, Trash2, Mail } from "lucide-react";
+import { Users, TrendingUp, Globe, ShieldAlert, Ban, Trash2, Settings2 } from "lucide-react";
+import SuperAdminActions from "./SuperAdminActions";
 
 type OrgPlan = "FREE" | "STARTER" | "PRO" | "ENTERPRISE";
 
@@ -58,16 +59,7 @@ export default async function SuperAdminPage() {
       </div>
       <p className="mb-8 text-sm text-zinc-500">Globalt administrasjonspanel for alle organisasjoner på plattformen.</p>
 
-      {/* Quick actions */}
-      <div className="mb-8">
-        <Link
-          href="/superadmin/invitasjoner"
-          className="inline-flex items-center gap-2 rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-300 transition-colors hover:bg-indigo-500/20"
-        >
-          <Mail className="h-4 w-4" />
-          Send invitasjoner
-        </Link>
-      </div>
+      <SuperAdminActions />
 
       {/* Global stats */}
       <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -138,12 +130,13 @@ export default async function SuperAdminPage() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-end gap-1">
-                        <button
-                          title="Se som admin"
+                        <Link
+                          href={`/superadmin/org/${org.id}`}
+                          title="Administrer"
                           className="rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
                         >
-                          <Eye className="h-4 w-4" />
-                        </button>
+                          <Settings2 className="h-4 w-4" />
+                        </Link>
                         <button
                           title="Deaktiver"
                           className="rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-amber-400"
