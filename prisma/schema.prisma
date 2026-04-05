@@ -44,6 +44,17 @@ enum ChannelType {
   DIRECT
 }
 
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
+enum InvitationRole {
+  ADMIN
+  MEMBER
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model Organization {
@@ -54,11 +65,12 @@ model Organization {
   plan      OrgPlan  @default(FREE)
   createdAt DateTime @default(now())
 
-  memberships Membership[]
-  posts       Post[]
-  channels    Channel[]
-  tickets     Ticket[]
-  files       File[]
+  memberships  Membership[]
+  posts        Post[]
+  channels     Channel[]
+  tickets      Ticket[]
+  files        File[]
+  invitations  Invitation[]
 }
 
 model User {
@@ -73,14 +85,15 @@ model User {
   isSuperAdmin  Boolean   @default(false)
   createdAt     DateTime  @default(now())
 
-  memberships     Membership[]
-  posts           Post[]
-  comments        Comment[]
-  messages        Message[]
-  assignedTickets Ticket[]     @relation("TicketAssignee")
-  uploadedFiles   File[]
-  accounts        Account[]
-  sessions        Session[]
+  memberships      Membership[]
+  posts            Post[]
+  comments         Comment[]
+  messages         Message[]
+  assignedTickets  Ticket[]     @relation("TicketAssignee")
+  uploadedFiles    File[]
+  accounts         Account[]
+  sessions         Session[]
+  sentInvitations  Invitation[] @relation("InvitedBy")
 }
 
 model Account {
@@ -201,4 +214,20 @@ model File {
 
   organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
   uploader     User         @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+}
+
+model Invitation {
+  id             String           @id @default(cuid())
+  email          String
+  role           InvitationRole   @default(MEMBER)
+  status         InvitationStatus @default(PENDING)
+  token          String           @unique @default(cuid())
+  organizationId String
+  invitedById    String
+  expiresAt      DateTime
+  usedAt         DateTime?
+  createdAt      DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy    User         @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
 }

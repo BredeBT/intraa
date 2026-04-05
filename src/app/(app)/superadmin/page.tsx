@@ -1,4 +1,5 @@
-import { Users, TrendingUp, Globe, Building2, ShieldAlert, Eye, Ban, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Users, TrendingUp, Globe, ShieldAlert, Eye, Ban, Trash2, Mail } from "lucide-react";
 
 // In Phase 4 this will verify isSuperAdmin from the session.
 // For now, mock access is always granted.
@@ -56,6 +57,18 @@ export default function SuperAdminPage() {
         <h1 className="text-xl font-semibold text-white">Superadmin</h1>
       </div>
       <p className="mb-8 text-sm text-zinc-500">Globalt administrasjonspanel for alle communities på plattformen.</p>
+
+      {/* Global stats */}
+      {/* Quick actions */}
+      <div className="mb-8">
+        <Link
+          href="/superadmin/invitasjoner"
+          className="inline-flex items-center gap-2 rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-300 transition-colors hover:bg-indigo-500/20"
+        >
+          <Mail className="h-4 w-4" />
+          Send invitasjoner
+        </Link>
+      </div>
 
       {/* Global stats */}
       <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
