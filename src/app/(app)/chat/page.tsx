@@ -12,20 +12,37 @@ export default async function ChatPage() {
     where: { userId: session.user.id },
     include: {
       organization: {
-        include: { channels: { where: { type: "TEXT" }, orderBy: { name: "asc" } } },
+        include: {
+          channels:    { where: { type: "TEXT" }, orderBy: { name: "asc" } },
+          memberships: { include: { user: { select: { id: true, name: true } } } },
+        },
       },
     },
     orderBy: { organization: { createdAt: "asc" } },
   });
 
-  const channels = membership?.organization.channels ?? [];
-  const firstChannel = channels[0] ?? null;
+  const channels        = membership?.organization.channels ?? [];
+  const firstChannel    = channels[0] ?? null;
   const initialMessages = firstChannel ? await getMessages(firstChannel.id) : [];
+
+  const dmContacts = (membership?.organization.memberships ?? [])
+    .filter((m) => m.userId !== session.user.id)
+    .map((m) => ({
+      id:       m.userId,
+      name:     m.user.name ?? "Ukjent",
+      initials: (m.user.name ?? "?")
+        .split(" ")
+        .map((p) => p[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase(),
+    }));
 
   return (
     <ChatClient
       channels={channels.map((c) => ({ id: c.id, name: c.name }))}
       initialMessages={initialMessages}
+      dmContacts={dmContacts}
       userId={session.user.id}
       userName={session.user.name ?? ""}
     />

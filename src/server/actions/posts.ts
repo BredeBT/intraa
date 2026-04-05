@@ -13,15 +13,17 @@ export async function getPosts(orgId: string): Promise<PostWithAuthor[]> {
   });
 }
 
-export async function createPost(orgId: string, content: string): Promise<void> {
+export async function createPost(orgId: string, content: string): Promise<PostWithAuthor> {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Ikke innlogget");
 
-  await db.post.create({
+  const post = await db.post.create({
     data: { orgId, authorId: session.user.id, content },
+    include: { author: true, comments: true },
   });
 
   revalidatePath("/feed");
+  return post;
 }
 
 export async function deletePost(postId: string): Promise<void> {

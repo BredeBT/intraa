@@ -16,6 +16,7 @@ interface Channel { id: string; name: string; }
 interface Props {
   channels:        Channel[];
   initialMessages: MessageWithAuthor[];
+  dmContacts:      DmContact[];
   userId:          string;
   userName:        string;
 }
@@ -24,15 +25,7 @@ interface DmContact {
   id:       string;
   name:     string;
   initials: string;
-  online:   boolean;
 }
-
-// ─── Mock DM contacts ─────────────────────────────────────────────────────────
-
-const DM_CONTACTS: DmContact[] = [
-  { id: "dm-mh", name: "Maria Haugen", initials: "MH", online: true  },
-  { id: "dm-tk", name: "Thomas Kvam",  initials: "TK", online: false },
-];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -42,7 +35,7 @@ function initials(name: string) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ChatClient({ channels, initialMessages, userId, userName }: Props) {
+export default function ChatClient({ channels, initialMessages, dmContacts, userId, userName }: Props) {
   const firstChannelId = channels[0]?.id ?? "";
 
   // Core state
@@ -86,7 +79,7 @@ export default function ChatClient({ channels, initialMessages, userId, userName
 
   const visibleChannels = channels.filter((c) => !leftChannels.has(c.id));
   const activeChannel   = visibleChannels.find((c) => c.id === activeId);
-  const activeDm        = DM_CONTACTS.find((d) => d.id === activeId);
+  const activeDm        = dmContacts.find((d) => d.id === activeId);
   const channelLabel    = activeChannel
     ? `#${activeChannel.name}`
     : activeDm?.name ?? "";
@@ -113,14 +106,9 @@ export default function ChatClient({ channels, initialMessages, userId, userName
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  // Simulate typing indicator for DMs
+  // Clear typing indicator when switching away from DMs
   useEffect(() => {
-    if (!activeDm) { setTypingDm(null); return; }
-    if (activeDm.online) {
-      const t = setTimeout(() => setTypingDm(activeDm.name), 1200);
-      const c = setTimeout(() => setTypingDm(null), 4000);
-      return () => { clearTimeout(t); clearTimeout(c); };
-    }
+    if (!activeDm) setTypingDm(null);
   }, [activeId, activeDm]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
@@ -330,7 +318,10 @@ export default function ChatClient({ channels, initialMessages, userId, userName
           Direktemeldinger
         </p>
         <nav className="flex flex-col gap-0.5 px-2">
-          {DM_CONTACTS.map((dm) => (
+          {dmContacts.length === 0 && (
+            <p className="px-3 py-1.5 text-xs text-zinc-600">Ingen andre medlemmer ennå.</p>
+          )}
+          {dmContacts.map((dm) => (
             <button
               key={dm.id}
               onClick={() => switchDm(dm.id)}
@@ -340,16 +331,8 @@ export default function ChatClient({ channels, initialMessages, userId, userName
                   : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
               }`}
             >
-              {/* Avatar with online dot */}
-              <div className="relative shrink-0">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-700 text-[10px] font-semibold text-white">
-                  {dm.initials}
-                </div>
-                <span
-                  className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-zinc-900 ${
-                    dm.online ? "bg-emerald-500" : "bg-zinc-600"
-                  }`}
-                />
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-[10px] font-semibold text-white">
+                {dm.initials}
               </div>
               <span className="truncate">{dm.name}</span>
             </button>
@@ -363,11 +346,6 @@ export default function ChatClient({ channels, initialMessages, userId, userName
         <header className="border-b border-zinc-800 px-6 py-3">
           <div className="flex items-center gap-2">
             <p className="text-sm font-semibold text-white">{channelLabel}</p>
-            {activeDm && (
-              <span
-                className={`h-2 w-2 rounded-full ${activeDm.online ? "bg-emerald-500" : "bg-zinc-600"}`}
-              />
-            )}
           </div>
           {activeDm && typingDm && (
             <p className="mt-0.5 text-xs text-zinc-500 italic">{typingDm} skriver…</p>
