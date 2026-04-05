@@ -2,7 +2,6 @@
 
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { getUserOrg } from "@/server/getUserOrg";
 
 export type DbNotification = {
   id:             string;
@@ -20,13 +19,21 @@ export async function getNotifications(): Promise<DbNotification[]> {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  const ctx = await getUserOrg();
-  if (!ctx) return [];
+  // Fetch notifications across all orgs the user belongs to
+  const memberships = await db.membership.findMany({
+    where:  { userId: session.user.id },
+    select: { organizationId: true },
+  });
 
-  return db.notification.findMany({
-    where:   { userId: session.user.id, organizationId: ctx.organizationId },
+  const orgIds = memberships.map((m) => m.organizationId);
+  if (orgIds.length === 0) return [];
+
+  const rows = await db.notification.findMany({
+    where:   { userId: session.user.id, organizationId: { in: orgIds } },
     orderBy: { createdAt: "desc" },
-  }) as Promise<DbNotification[]>;
+  });
+
+  return rows as DbNotification[];
 }
 
 export async function markNotificationRead(id: string): Promise<void> {
@@ -43,11 +50,16 @@ export async function markAllNotificationsRead(): Promise<void> {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Ikke innlogget");
 
-  const ctx = await getUserOrg();
-  if (!ctx) return;
+  const memberships = await db.membership.findMany({
+    where:  { userId: session.user.id },
+    select: { organizationId: true },
+  });
+
+  const orgIds = memberships.map((m) => m.organizationId);
+  if (orgIds.length === 0) return;
 
   await db.notification.updateMany({
-    where: { userId: session.user.id, organizationId: ctx.organizationId, readAt: null },
+    where: { userId: session.user.id, organizationId: { in: orgIds }, readAt: null },
     data:  { readAt: new Date() },
   });
 }
