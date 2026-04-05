@@ -7,6 +7,7 @@ import {
   Rss, MessageSquare, Ticket, Folder, Users, Settings,
   LayoutDashboard, UserCog, Building2, SlidersHorizontal, Search,
   CalendarDays, CheckSquare, HelpCircle, ChevronDown, ArrowLeftRight, Menu, X,
+  Trophy, Swords, Star, CreditCard,
 } from "lucide-react";
 import UserMenu from "@/components/UserMenu";
 import NotificationBell from "@/components/NotificationBell";
@@ -15,64 +16,82 @@ import OnboardingModal from "@/components/OnboardingModal";
 import { useOrg } from "@/lib/context/OrgContext";
 import { useUser } from "@/lib/hooks/useUser";
 
-const navLinks = [
-  { href: "/feed",       label: "Feed",      icon: Rss,           badge: null },
-  { href: "/chat",       label: "Chat",      icon: MessageSquare, badge: 3 },
-  { href: "/tickets",    label: "Tickets",   icon: Ticket,        badge: null },
-  { href: "/kalender",   label: "Kalender",  icon: CalendarDays,  badge: null },
-  { href: "/oppgaver",   label: "Oppgaver",  icon: CheckSquare,   badge: null },
-  { href: "/filer",      label: "Filer",     icon: Folder,        badge: null },
-  { href: "/medlemmer",  label: "Medlemmer", icon: Users,         badge: null },
+// ─── Nav definitions ──────────────────────────────────────────────────────────
+
+const COMPANY_NAV = [
+  { href: "/feed",      label: "Feed",      icon: Rss,           badge: null },
+  { href: "/chat",      label: "Chat",      icon: MessageSquare, badge: null },
+  { href: "/tickets",   label: "Tickets",   icon: Ticket,        badge: null },
+  { href: "/kalender",  label: "Kalender",  icon: CalendarDays,  badge: null },
+  { href: "/oppgaver",  label: "Oppgaver",  icon: CheckSquare,   badge: null },
+  { href: "/filer",     label: "Filer",     icon: Folder,        badge: null },
+  { href: "/medlemmer", label: "Medlemmer", icon: Users,         badge: null },
 ];
 
-const adminLinks = [
+const COMMUNITY_NAV = [
+  { href: "/community/feed",         label: "Feed",         icon: Rss,           badge: null },
+  { href: "/community/medlemmer",    label: "Medlemmer",    icon: Users,         badge: null },
+  { href: "/community/rangering",    label: "Rangering",    icon: Trophy,        badge: null },
+  { href: "/community/konkurranser", label: "Konkurranser", icon: Swords,        badge: null },
+  { href: "/community/lojalitet",    label: "Lojalitet",    icon: Star,          badge: null },
+  { href: "/community/chat",         label: "Chat",         icon: MessageSquare, badge: null },
+  { href: "/community/abonnement",   label: "Abonnement",   icon: CreditCard,    badge: null },
+];
+
+const ADMIN_LINKS = [
   { href: "/admin",               label: "Oversikt",      icon: LayoutDashboard },
   { href: "/admin/brukere",       label: "Brukere",       icon: UserCog },
   { href: "/admin/organisasjon",  label: "Organisasjon",  icon: Building2 },
   { href: "/admin/innstillinger", label: "Innstillinger", icon: SlidersHorizontal },
 ];
 
-const pageTitles: Record<string, string> = {
-  "/feed":                 "Feed",
-  "/chat":                 "Chat",
-  "/tickets":              "Tickets",
-  "/filer":                "Filer",
-  "/medlemmer":            "Medlemmer",
-  "/admin":                "Admin — Oversikt",
-  "/admin/brukere":        "Admin — Brukere",
-  "/admin/organisasjon":   "Admin — Organisasjon",
-  "/admin/innstillinger":  "Admin — Innstillinger",
-  "/kalender":             "Kalender",
-  "/oppgaver":             "Oppgaver",
-  "/profil":               "Profil",
-  "/notifikasjoner":       "Notifikasjoner",
-  "/soek":                 "Søk",
-  "/innstillinger":        "Innstillinger",
-  "/hjelp":                "Hjelp & Support",
-  "/bytt-org":             "Bytt organisasjon",
+const PAGE_TITLES: Record<string, string> = {
+  "/feed":                      "Feed",
+  "/chat":                      "Chat",
+  "/tickets":                   "Tickets",
+  "/filer":                     "Filer",
+  "/medlemmer":                 "Medlemmer",
+  "/kalender":                  "Kalender",
+  "/oppgaver":                  "Oppgaver",
+  "/admin":                     "Admin — Oversikt",
+  "/admin/brukere":             "Admin — Brukere",
+  "/admin/organisasjon":        "Admin — Organisasjon",
+  "/admin/innstillinger":       "Admin — Innstillinger",
+  "/profil":                    "Profil",
+  "/notifikasjoner":            "Notifikasjoner",
+  "/soek":                      "Søk",
+  "/innstillinger":             "Innstillinger",
+  "/hjelp":                     "Hjelp & Support",
+  "/bytt-org":                  "Bytt organisasjon",
+  "/community/feed":            "Feed",
+  "/community/medlemmer":       "Medlemmer",
+  "/community/rangering":       "Rangering",
+  "/community/konkurranser":    "Konkurranser",
+  "/community/lojalitet":       "Lojalitet",
+  "/community/chat":            "Chat",
+  "/community/abonnement":      "Abonnement",
+  "/community/admin":           "Admin",
 };
 
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+
 function SidebarContent({
-  pathname,
-  inAdmin,
-  org,
-  orgMenuOpen,
-  orgMenuRef,
-  setOrgMenuOpen,
-  onNavClick,
-  isSuperAdmin,
-  userName,
+  pathname, inAdmin, org, orgMenuOpen, orgMenuRef, setOrgMenuOpen, onNavClick, isSuperAdmin, userName,
 }: {
-  pathname: string;
-  inAdmin: boolean;
-  org: ReturnType<typeof useOrg>["org"] | null;
-  orgMenuOpen: boolean;
-  orgMenuRef: React.RefObject<HTMLDivElement | null>;
-  setOrgMenuOpen: (v: boolean | ((p: boolean) => boolean)) => void;
-  onNavClick: () => void;
-  isSuperAdmin: boolean;
-  userName: string;
+  pathname:      string;
+  inAdmin:       boolean;
+  org:           ReturnType<typeof useOrg>["org"] | null;
+  orgMenuOpen:   boolean;
+  orgMenuRef:    React.RefObject<HTMLDivElement | null>;
+  setOrgMenuOpen:(v: boolean | ((p: boolean) => boolean)) => void;
+  onNavClick:    () => void;
+  isSuperAdmin:  boolean;
+  userName:      string;
 }) {
+  const isCommunity = org?.type === "COMMUNITY";
+  const navLinks    = isCommunity ? COMMUNITY_NAV : COMPANY_NAV;
+  const accentActive = isCommunity ? "bg-violet-600" : "bg-indigo-600";
+
   return (
     <>
       {/* Org switcher */}
@@ -108,11 +127,11 @@ function SidebarContent({
       {/* Nav */}
       <nav className="flex flex-col gap-1 px-3 py-3">
         {navLinks.map(({ href, label, icon: Icon, badge }) => {
-          const active = pathname === href;
+          const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link key={href} href={href} onClick={onNavClick}
               className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                active ? "bg-indigo-600 text-white" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                active ? `${accentActive} text-white` : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -131,7 +150,7 @@ function SidebarContent({
       <div className="mt-auto border-t border-zinc-800 px-3 py-3">
         <Link href="/hjelp" onClick={onNavClick}
           className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-            pathname === "/hjelp" ? "bg-indigo-600 text-white" : "text-zinc-500 hover:bg-zinc-800 hover:text-white"
+            pathname === "/hjelp" ? `${accentActive} text-white` : "text-zinc-500 hover:bg-zinc-800 hover:text-white"
           }`}
         >
           <HelpCircle className="h-4 w-4 shrink-0" /> Hjelp
@@ -146,10 +165,10 @@ function SidebarContent({
         </Link>
         {inAdmin && (
           <div className="mt-1 flex flex-col gap-0.5 pl-3">
-            {adminLinks.map(({ href, label, icon: Icon }) => (
+            {ADMIN_LINKS.map(({ href, label, icon: Icon }) => (
               <Link key={href} href={href} onClick={onNavClick}
                 className={`flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm transition-colors ${
-                  pathname === href ? "bg-indigo-600 font-medium text-white" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                  pathname === href ? `${accentActive} font-medium text-white` : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
                 }`}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0" /> {label}
@@ -158,7 +177,7 @@ function SidebarContent({
           </div>
         )}
 
-        {/* User row with SA badge */}
+        {/* User row */}
         <div className="mt-3 flex items-center gap-2 rounded-md px-3 py-2">
           <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-[10px] font-semibold text-white">
             {userName ? userName.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase() : "?"}
@@ -175,21 +194,20 @@ function SidebarContent({
   );
 }
 
+// ─── Layout ───────────────────────────────────────────────────────────────────
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const inAdmin = pathname.startsWith("/admin");
-  const inCommunity = pathname.startsWith("/community");
-  const [searchOpen, setSearchOpen] = useState(false);
+  const pathname     = usePathname();
+  const inAdmin      = pathname.startsWith("/admin");
+  const [searchOpen,  setSearchOpen]  = useState(false);
   const [orgMenuOpen, setOrgMenuOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const orgMenuRef = useRef<HTMLDivElement>(null);
-  const { org } = useOrg();
-  const { user } = useUser();
+  const orgMenuRef   = useRef<HTMLDivElement>(null);
+  const { org }      = useOrg();
+  const { user }     = useUser();
 
-  // Close sidebar on route change
   useEffect(() => { setSidebarOpen(false); }, [pathname]);
 
-  // Close org menu on outside click
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
       if (orgMenuRef.current && !orgMenuRef.current.contains(e.target as Node)) {
@@ -200,7 +218,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  // CMD+K
   const openSearch = useCallback(() => setSearchOpen(true), []);
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -210,15 +227,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [openSearch]);
 
-  // Prevent body scroll when mobile sidebar is open
   useEffect(() => {
     document.body.style.overflow = sidebarOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [sidebarOpen]);
 
-  const title = pageTitles[pathname] ?? "Intraa";
-
-  if (inCommunity) return <>{children}</>;
+  const title = PAGE_TITLES[pathname] ?? "Intraa";
 
   const sidebarProps = {
     pathname, inAdmin, org, orgMenuOpen, orgMenuRef, setOrgMenuOpen,
@@ -256,7 +270,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Header */}
         <header className="flex h-14 items-center justify-between border-b border-zinc-800 bg-zinc-900 px-4">
           <div className="flex items-center gap-3">
-            {/* Hamburger — mobile only */}
             <button
               onClick={() => setSidebarOpen(true)}
               className="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white md:hidden"
@@ -268,7 +281,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Search — hide label on mobile */}
             <button
               onClick={openSearch}
               className="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-400 transition-colors hover:border-zinc-600 hover:text-white sm:px-3"
