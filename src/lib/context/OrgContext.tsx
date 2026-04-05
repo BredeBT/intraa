@@ -6,6 +6,8 @@ import { useSession } from "next-auth/react";
 export type OrgType = "COMPANY" | "COMMUNITY";
 export type OrgPlan = "FREE" | "STARTER" | "PRO" | "ENTERPRISE";
 
+export type OrgRole = "OWNER" | "ADMIN" | "MODERATOR" | "VIP" | "MEMBER";
+
 export interface Org {
   id:          string;
   slug:        string;
@@ -14,6 +16,7 @@ export interface Org {
   type:        OrgType;
   plan:        OrgPlan;
   accentColor: string;
+  userRole:    OrgRole;
 }
 
 interface OrgContextValue {
@@ -29,6 +32,7 @@ const FALLBACK: Org = {
   type:        "COMPANY",
   plan:        "FREE",
   accentColor: "#6366f1",
+  userRole:    "MEMBER",
 };
 
 const OrgContext = createContext<OrgContextValue>({

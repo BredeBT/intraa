@@ -155,26 +155,30 @@ function SidebarContent({
         >
           <HelpCircle className="h-4 w-4 shrink-0" /> Hjelp
         </Link>
-        <Link href="/admin" onClick={onNavClick}
-          className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-            inAdmin ? "text-white" : "text-zinc-500 hover:bg-zinc-800 hover:text-white"
-          }`}
-        >
-          <Settings className="h-4 w-4 shrink-0" />
-          <span className="flex-1">Admin</span>
-        </Link>
-        {inAdmin && (
-          <div className="mt-1 flex flex-col gap-0.5 pl-3">
-            {ADMIN_LINKS.map(({ href, label, icon: Icon }) => (
-              <Link key={href} href={href} onClick={onNavClick}
-                className={`flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm transition-colors ${
-                  pathname === href ? `${accentActive} font-medium text-white` : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5 shrink-0" /> {label}
-              </Link>
-            ))}
-          </div>
+        {(org?.userRole === "OWNER" || org?.userRole === "ADMIN") && (
+          <>
+            <Link href="/admin" onClick={onNavClick}
+              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                inAdmin ? "text-white" : "text-zinc-500 hover:bg-zinc-800 hover:text-white"
+              }`}
+            >
+              <Settings className="h-4 w-4 shrink-0" />
+              <span className="flex-1">Admin</span>
+            </Link>
+            {inAdmin && (
+              <div className="mt-1 flex flex-col gap-0.5 pl-3">
+                {ADMIN_LINKS.map(({ href, label, icon: Icon }) => (
+                  <Link key={href} href={href} onClick={onNavClick}
+                    className={`flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm transition-colors ${
+                      pathname === href ? `${accentActive} font-medium text-white` : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5 shrink-0" /> {label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {/* User row */}

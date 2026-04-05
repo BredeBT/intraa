@@ -17,7 +17,10 @@ function orgColor(id: string): string {
   return ACCENT_COLORS[hash % ACCENT_COLORS.length];
 }
 
-function orgToJson(o: { id: string; slug: string; name: string; type: string; plan: string }) {
+function orgToJson(
+  o: { id: string; slug: string; name: string; type: string; plan: string },
+  role: string,
+) {
   return {
     id:          o.id,
     slug:        o.slug,
@@ -26,6 +29,7 @@ function orgToJson(o: { id: string; slug: string; name: string; type: string; pl
     type:        o.type,
     plan:        o.plan,
     accentColor: orgColor(o.id),
+    userRole:    role,
   };
 }
 
@@ -60,7 +64,7 @@ export async function GET() {
     return NextResponse.json({ error: "Ingen org" }, { status: 404 });
   }
 
-  return NextResponse.json(orgToJson(membership.organization));
+  return NextResponse.json(orgToJson(membership.organization, membership.role));
 }
 
 // PATCH { slug } — switches the active org and sets the persistent cookie
@@ -81,7 +85,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Ikke autorisert" }, { status: 403 });
   }
 
-  const response = NextResponse.json(orgToJson(membership.organization));
+  const response = NextResponse.json(orgToJson(membership.organization, membership.role));
   response.cookies.set("selected_org", slug, {
     httpOnly: true,
     path:     "/",
