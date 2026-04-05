@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Building2, Globe, ArrowLeft } from "lucide-react";
-import { useOrg, MOCK_ORGS } from "@/lib/context/OrgContext";
+import { useOrg, type Org } from "@/lib/context/OrgContext";
 
 const PLAN_LABEL: Record<string, string> = {
   FREE: "Gratis", STARTER: "Starter", PRO: "Pro", ENTERPRISE: "Enterprise",
@@ -17,8 +18,16 @@ const PLAN_STYLE: Record<string, string> = {
 export default function ByttOrgPage() {
   const { org, setOrg } = useOrg();
   const router = useRouter();
+  const [orgs, setOrgs] = useState<Org[]>([]);
 
-  function select(selected: typeof MOCK_ORGS[0]) {
+  useEffect(() => {
+    fetch("/api/user/orgs")
+      .then((r) => r.ok ? r.json() as Promise<Org[]> : Promise.reject())
+      .then(setOrgs)
+      .catch(() => setOrgs([]));
+  }, []);
+
+  function select(selected: Org) {
     setOrg(selected);
     router.push("/feed");
   }
@@ -36,8 +45,11 @@ export default function ByttOrgPage() {
       <p className="mb-8 text-sm text-zinc-500">Velg hvilken organisasjon du vil jobbe i.</p>
 
       <div className="flex flex-col gap-3">
-        {MOCK_ORGS.map(o => {
-          const isActive = o.id === org.id;
+        {orgs.length === 0 && (
+          <p className="text-sm text-zinc-600">Ingen organisasjoner funnet.</p>
+        )}
+        {orgs.map((o) => {
+          const isActive = o.id === org?.id;
           const Icon = o.type === "COMMUNITY" ? Globe : Building2;
           return (
             <button
@@ -50,7 +62,6 @@ export default function ByttOrgPage() {
               }`}
               style={isActive ? { borderColor: "transparent", boxShadow: `0 0 0 2px ${o.accentColor}55`, backgroundColor: `${o.accentColor}0d` } : {}}
             >
-              {/* Avatar */}
               <div
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white"
                 style={{ backgroundColor: o.accentColor }}
@@ -72,7 +83,7 @@ export default function ByttOrgPage() {
               </div>
 
               {isActive && (
-                <Check className="h-5 w-5 shrink-0 text-white" style={{ color: o.accentColor }} />
+                <Check className="h-5 w-5 shrink-0" style={{ color: o.accentColor }} />
               )}
             </button>
           );

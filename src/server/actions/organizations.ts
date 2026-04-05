@@ -38,6 +38,13 @@ export async function createOrganization(
           role:   "OWNER",
         },
       },
+      channels: {
+        create: [
+          { name: "general",       type: "TEXT" },
+          { name: "random",        type: "TEXT" },
+          { name: "announcements", type: "TEXT" },
+        ],
+      },
     },
   });
 

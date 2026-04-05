@@ -1,40 +1,57 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 export type OrgType = "COMPANY" | "COMMUNITY";
 export type OrgPlan = "FREE" | "STARTER" | "PRO" | "ENTERPRISE";
 
 export interface Org {
-  id: string;
-  name: string;
-  initials: string;
-  type: OrgType;
-  plan: OrgPlan;
+  id:          string;
+  name:        string;
+  initials:    string;
+  type:        OrgType;
+  plan:        OrgPlan;
   accentColor: string;
 }
 
 interface OrgContextValue {
-  org: Org;
+  org:    Org | null;
   setOrg: (org: Org) => void;
 }
 
-const MOCK_ORGS: Org[] = [
-  { id: "1", name: "Intraa Demo",     initials: "ID", type: "COMPANY",   plan: "PRO",        accentColor: "#6366f1" },
-  { id: "2", name: "Designerklubben", initials: "DK", type: "COMMUNITY", plan: "STARTER",    accentColor: "#8b5cf6" },
-  { id: "3", name: "Acme AS",         initials: "AC", type: "COMPANY",   plan: "ENTERPRISE", accentColor: "#0ea5e9" },
-];
-
-export { MOCK_ORGS };
+const FALLBACK: Org = {
+  id:          "",
+  name:        "…",
+  initials:    "…",
+  type:        "COMPANY",
+  plan:        "FREE",
+  accentColor: "#6366f1",
+};
 
 const OrgContext = createContext<OrgContextValue>({
-  org: MOCK_ORGS[0],
+  org:    FALLBACK,
   setOrg: () => {},
 });
 
 export function OrgProvider({ children }: { children: React.ReactNode }) {
-  const [org, setOrg] = useState<Org>(MOCK_ORGS[0]);
-  return <OrgContext.Provider value={{ org, setOrg }}>{children}</OrgContext.Provider>;
+  const { status } = useSession();
+  const [org, setOrg] = useState<Org | null>(null);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    fetch("/api/user/org")
+      .then((r) => r.ok ? r.json() as Promise<Org> : Promise.reject())
+      .then((data) => setOrg(data))
+      .catch(() => setOrg(null));
+  }, [status]);
+
+  return (
+    <OrgContext.Provider value={{ org, setOrg }}>
+      {children}
+    </OrgContext.Provider>
+  );
 }
 
 export function useOrg(): OrgContextValue {

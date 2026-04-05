@@ -65,7 +65,7 @@ function SidebarContent({
 }: {
   pathname: string;
   inAdmin: boolean;
-  org: ReturnType<typeof useOrg>["org"];
+  org: ReturnType<typeof useOrg>["org"] | null;
   orgMenuOpen: boolean;
   orgMenuRef: React.RefObject<HTMLDivElement | null>;
   setOrgMenuOpen: (v: boolean | ((p: boolean) => boolean)) => void;
@@ -83,11 +83,11 @@ function SidebarContent({
         >
           <div
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
-            style={{ backgroundColor: org.accentColor }}
+            style={{ backgroundColor: org?.accentColor ?? "#6366f1" }}
           >
-            {org.initials}
+            {org?.initials ?? "…"}
           </div>
-          <span className="flex-1 truncate text-left text-sm font-semibold text-white">{org.name}</span>
+          <span className="flex-1 truncate text-left text-sm font-semibold text-white">{org?.name ?? "…"}</span>
           <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-zinc-500 transition-transform ${orgMenuOpen ? "rotate-180" : ""}`} />
         </button>
 
