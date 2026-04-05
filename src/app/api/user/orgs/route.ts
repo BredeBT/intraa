@@ -32,6 +32,7 @@ export async function GET() {
     const o = m.organization;
     return {
       id:          o.id,
+      slug:        o.slug,
       name:        o.name,
       initials:    toInitials(o.name),
       type:        o.type,

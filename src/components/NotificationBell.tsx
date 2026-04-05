@@ -1,24 +1,42 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { Bell, MessageSquare, Ticket, MessageCircle, UserPlus } from "lucide-react";
-import { MOCK_NOTIFICATIONS, type Notification, type NotifType } from "@/lib/notifications";
+import { getNotifications, markNotificationRead } from "@/server/actions/notifications";
+import type { DbNotification } from "@/server/actions/notifications";
+import type { NotifType } from "@/lib/notifications";
 
 const TYPE_ICONS: Record<NotifType, React.ElementType> = {
-  message: MessageSquare,
-  ticket:  Ticket,
-  comment: MessageCircle,
-  user:    UserPlus,
+  MESSAGE: MessageSquare,
+  TICKET:  Ticket,
+  COMMENT: MessageCircle,
+  USER:    UserPlus,
 };
 
+function relTime(date: Date) {
+  const diff = Date.now() - new Date(date).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1)  return "Nå";
+  if (mins < 60) return `${mins} min`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}t`;
+  return "I går";
+}
+
 export default function NotificationBell() {
-  const [notifs, setNotifs] = useState<Notification[]>(MOCK_NOTIFICATIONS);
-  const [open, setOpen] = useState(false);
+  const [notifs,  setNotifs]  = useState<DbNotification[]>([]);
+  const [open,    setOpen]    = useState(false);
+  const [, startTransition]   = useTransition();
   const ref = useRef<HTMLDivElement>(null);
 
-  const unread = notifs.filter((n) => !n.read).length;
-  const preview = notifs.slice(0, 5);
+  // Load notifications from DB
+  useEffect(() => {
+    startTransition(async () => {
+      const data = await getNotifications();
+      setNotifs(data);
+    });
+  }, []);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -28,9 +46,15 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  function markRead(id: string) {
-    setNotifs((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  function handleRead(id: string) {
+    setNotifs((prev) => prev.map((n) => n.id === id ? { ...n, readAt: new Date() } : n));
+    startTransition(async () => {
+      await markNotificationRead(id);
+    });
   }
+
+  const unread  = notifs.filter((n) => !n.readAt).length;
+  const preview = notifs.slice(0, 5);
 
   return (
     <div ref={ref} className="relative">
@@ -58,25 +82,27 @@ export default function NotificationBell() {
           </div>
 
           <div className="flex flex-col">
+            {preview.length === 0 && (
+              <p className="px-4 py-6 text-center text-xs text-zinc-600">Ingen notifikasjoner ennå.</p>
+            )}
             {preview.map((notif) => {
               const Icon = TYPE_ICONS[notif.type];
+              const isRead = !!notif.readAt;
               return (
                 <Link
                   key={notif.id}
                   href={notif.href}
-                  onClick={() => { markRead(notif.id); setOpen(false); }}
-                  className={`flex items-start gap-3 px-4 py-3 transition-colors hover:bg-zinc-800 ${
-                    !notif.read ? "bg-zinc-800/50" : ""
-                  }`}
+                  onClick={() => { handleRead(notif.id); setOpen(false); }}
+                  className={`flex items-start gap-3 px-4 py-3 transition-colors hover:bg-zinc-800 ${!isRead ? "bg-zinc-800/50" : ""}`}
                 >
-                  <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${!notif.read ? "text-indigo-400" : "text-zinc-500"}`} />
+                  <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${!isRead ? "text-indigo-400" : "text-zinc-500"}`} />
                   <div className="min-w-0 flex-1">
-                    <p className={`truncate text-xs font-medium ${notif.read ? "text-zinc-300" : "text-white"}`}>
+                    <p className={`truncate text-xs font-medium ${isRead ? "text-zinc-300" : "text-white"}`}>
                       {notif.title}
                     </p>
                     <p className="mt-0.5 truncate text-xs text-zinc-500">{notif.body}</p>
                   </div>
-                  <span className="shrink-0 text-xs text-zinc-600">{notif.time}</span>
+                  <span className="shrink-0 text-xs text-zinc-600">{relTime(notif.createdAt)}</span>
                 </Link>
               );
             })}

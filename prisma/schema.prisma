@@ -55,6 +55,13 @@ enum InvitationRole {
   MEMBER
 }
 
+enum NotifType {
+  MESSAGE
+  TICKET
+  COMMENT
+  USER
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model Organization {
@@ -65,12 +72,13 @@ model Organization {
   plan      OrgPlan  @default(FREE)
   createdAt DateTime @default(now())
 
-  memberships  Membership[]
-  posts        Post[]
-  channels     Channel[]
-  tickets      Ticket[]
-  files        File[]
-  invitations  Invitation[]
+  memberships   Membership[]
+  posts         Post[]
+  channels      Channel[]
+  tickets       Ticket[]
+  files         File[]
+  invitations   Invitation[]
+  notifications Notification[]
 }
 
 model User {
@@ -89,11 +97,12 @@ model User {
   posts            Post[]
   comments         Comment[]
   messages         Message[]
-  assignedTickets  Ticket[]     @relation("TicketAssignee")
+  assignedTickets  Ticket[]       @relation("TicketAssignee")
   uploadedFiles    File[]
   accounts         Account[]
   sessions         Session[]
-  sentInvitations  Invitation[] @relation("InvitedBy")
+  sentInvitations  Invitation[]   @relation("InvitedBy")
+  notifications    Notification[]
 }
 
 model Account {
@@ -230,4 +239,19 @@ model Invitation {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   invitedBy    User         @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id             String    @id @default(cuid())
+  type           NotifType
+  title          String
+  body           String
+  href           String
+  createdAt      DateTime  @default(now())
+  readAt         DateTime?
+  userId         String
+  organizationId String
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 }

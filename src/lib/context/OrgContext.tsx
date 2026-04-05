@@ -8,6 +8,7 @@ export type OrgPlan = "FREE" | "STARTER" | "PRO" | "ENTERPRISE";
 
 export interface Org {
   id:          string;
+  slug:        string;
   name:        string;
   initials:    string;
   type:        OrgType;
@@ -22,6 +23,7 @@ interface OrgContextValue {
 
 const FALLBACK: Org = {
   id:          "",
+  slug:        "",
   name:        "…",
   initials:    "…",
   type:        "COMPANY",

@@ -17,7 +17,7 @@ const PLAN_STYLE: Record<string, string> = {
 
 export default function ByttOrgPage() {
   const { org, setOrg } = useOrg();
-  const router = useRouter();
+  const router          = useRouter();
   const [orgs, setOrgs] = useState<Org[]>([]);
 
   useEffect(() => {
@@ -27,7 +27,13 @@ export default function ByttOrgPage() {
       .catch(() => setOrgs([]));
   }, []);
 
-  function select(selected: Org) {
+  async function select(selected: Org) {
+    // Set persistent cookie via PATCH — server validates membership
+    await fetch("/api/user/org", {
+      method:  "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ slug: selected.slug }),
+    });
     setOrg(selected);
     router.push("/feed");
   }
@@ -50,7 +56,7 @@ export default function ByttOrgPage() {
         )}
         {orgs.map((o) => {
           const isActive = o.id === org?.id;
-          const Icon = o.type === "COMMUNITY" ? Globe : Building2;
+          const Icon     = o.type === "COMMUNITY" ? Globe : Building2;
           return (
             <button
               key={o.id}
