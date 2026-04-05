@@ -13,6 +13,7 @@ import NotificationBell from "@/components/NotificationBell";
 import SearchOverlay from "@/components/SearchOverlay";
 import OnboardingModal from "@/components/OnboardingModal";
 import { useOrg } from "@/lib/context/OrgContext";
+import { useUser } from "@/lib/hooks/useUser";
 
 const navLinks = [
   { href: "/feed",       label: "Feed",      icon: Rss,           badge: null },
@@ -59,6 +60,8 @@ function SidebarContent({
   orgMenuRef,
   setOrgMenuOpen,
   onNavClick,
+  isSuperAdmin,
+  userName,
 }: {
   pathname: string;
   inAdmin: boolean;
@@ -67,6 +70,8 @@ function SidebarContent({
   orgMenuRef: React.RefObject<HTMLDivElement | null>;
   setOrgMenuOpen: (v: boolean | ((p: boolean) => boolean)) => void;
   onNavClick: () => void;
+  isSuperAdmin: boolean;
+  userName: string;
 }) {
   return (
     <>
@@ -152,6 +157,19 @@ function SidebarContent({
             ))}
           </div>
         )}
+
+        {/* User row with SA badge */}
+        <div className="mt-3 flex items-center gap-2 rounded-md px-3 py-2">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-[10px] font-semibold text-white">
+            {userName ? userName.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase() : "?"}
+          </div>
+          <span className="flex-1 truncate text-xs text-zinc-500">{userName}</span>
+          {isSuperAdmin && (
+            <span className="rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-violet-400">
+              SA
+            </span>
+          )}
+        </div>
       </div>
     </>
   );
@@ -166,6 +184,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const orgMenuRef = useRef<HTMLDivElement>(null);
   const { org } = useOrg();
+  const { user } = useUser();
 
   // Close sidebar on route change
   useEffect(() => { setSidebarOpen(false); }, [pathname]);
@@ -204,6 +223,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const sidebarProps = {
     pathname, inAdmin, org, orgMenuOpen, orgMenuRef, setOrgMenuOpen,
     onNavClick: () => setSidebarOpen(false),
+    isSuperAdmin: user?.isSuperAdmin ?? false,
+    userName: user?.name ?? "",
   };
 
   return (

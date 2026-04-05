@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User, Settings, LogOut, SlidersHorizontal } from "lucide-react";
+import { User, Settings, LogOut, SlidersHorizontal, ShieldAlert } from "lucide-react";
 import { useUser } from "@/lib/hooks/useUser";
 
 export default function UserMenu() {
   const { user, isAdmin } = useUser();
+  const isSuperAdmin = user?.isSuperAdmin ?? false;
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -43,6 +44,19 @@ export default function UserMenu() {
 
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1.5 w-48 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-xl">
+          {isSuperAdmin && (
+            <>
+              <Link
+                href="/superadmin"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-violet-400 transition-colors hover:bg-zinc-800 hover:text-violet-300"
+              >
+                <ShieldAlert className="h-4 w-4 shrink-0" />
+                Superadmin panel
+              </Link>
+              <div className="my-1 border-t border-zinc-800" />
+            </>
+          )}
           <Link
             href="/profil"
             onClick={() => setOpen(false)}
