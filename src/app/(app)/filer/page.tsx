@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { FileText, FileImage, FileSpreadsheet, File, Folder } from "lucide-react";
 import { getUserOrg } from "@/server/getUserOrg";
 import { db } from "@/server/db";
+import { checkFeature } from "@/server/checkFeature";
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -31,6 +32,7 @@ function FileIcon({ name, className }: { name: string; className?: string }) {
 }
 
 export default async function FilerPage() {
+  await checkFeature("files");
   const ctx = await getUserOrg();
   if (!ctx) redirect("/feed");
 

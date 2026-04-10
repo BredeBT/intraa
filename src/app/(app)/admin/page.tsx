@@ -1,4 +1,4 @@
-import { Users, Ticket, FolderOpen, MessageSquare, Activity } from "lucide-react";
+import { Users, Ticket, FolderOpen, MessageSquare, Activity, FileText, Coins } from "lucide-react";
 import { requireAdmin } from "@/server/requireAdmin";
 import { db } from "@/server/db";
 import AdminChart from "./AdminChart";
@@ -30,16 +30,19 @@ export default async function AdminPage() {
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
   sevenDaysAgo.setHours(0, 0, 0, 0);
 
-  const [memberCount, activeTickets, fileCount, messagesToday, recentActivities, weekActivities] =
+  const [org, memberCount, activeTickets, fileCount, messagesToday, postCount, coinsAggregate, recentActivities, weekActivities] =
     await Promise.all([
+      db.organization.findUnique({ where: { id: organizationId }, select: { type: true } }),
       db.membership.count({ where: { organizationId } }),
       db.ticket.count({ where: { orgId: organizationId, status: { not: "RESOLVED" } } }),
       db.file.count({ where: { orgId: organizationId } }),
       db.message.count({
-        where: {
-          channel:   { orgId: organizationId },
-          createdAt: { gte: startOfToday },
-        },
+        where: { channel: { orgId: organizationId }, createdAt: { gte: startOfToday } },
+      }),
+      db.post.count({ where: { orgId: organizationId } }),
+      db.membership.aggregate({
+        where: { organizationId },
+        _sum:  { points: true },
       }),
       db.userActivity.findMany({
         where:   { organizationId },
@@ -48,10 +51,13 @@ export default async function AdminPage() {
         include: { user: { select: { name: true } } },
       }),
       db.userActivity.findMany({
-        where:   { organizationId, createdAt: { gte: sevenDaysAgo } },
-        select:  { createdAt: true },
+        where:  { organizationId, createdAt: { gte: sevenDaysAgo } },
+        select: { createdAt: true },
       }),
     ]);
+
+  const isCommunity = org?.type === "COMMUNITY";
+  const totalCoins  = coinsAggregate._sum.points ?? 0;
 
   // Aggregate weekly activity by day label
   const DAY_LABELS = ["Søn", "Man", "Tir", "Ons", "Tor", "Fre", "Lør"];
@@ -67,12 +73,21 @@ export default async function AdminPage() {
   }
   const chartData = Object.entries(dayCounts).map(([day, hendelser]) => ({ day, hendelser }));
 
-  const stats = [
-    { label: "Brukere",        value: memberCount,    icon: Users,          color: "text-indigo-400", bg: "bg-indigo-500/10" },
-    { label: "Aktive tickets", value: activeTickets,  icon: Ticket,         color: "text-yellow-400", bg: "bg-yellow-500/10" },
-    { label: "Filer lagret",   value: fileCount,      icon: FolderOpen,     color: "text-emerald-400",bg: "bg-emerald-500/10" },
-    { label: "Meldinger i dag",value: messagesToday,  icon: MessageSquare,  color: "text-blue-400",   bg: "bg-blue-500/10" },
+  const companyStats = [
+    { label: "Antall medlemmer",  value: memberCount,   icon: Users,         color: "text-indigo-400",  bg: "bg-indigo-500/10"  },
+    { label: "Aktive tickets",    value: activeTickets, icon: Ticket,        color: "text-yellow-400",  bg: "bg-yellow-500/10"  },
+    { label: "Filer lagret",      value: fileCount,     icon: FolderOpen,    color: "text-emerald-400", bg: "bg-emerald-500/10" },
+    { label: "Meldinger i dag",   value: messagesToday, icon: MessageSquare, color: "text-blue-400",    bg: "bg-blue-500/10"    },
   ];
+
+  const communityStats = [
+    { label: "Antall medlemmer",  value: memberCount,   icon: Users,         color: "text-indigo-400",  bg: "bg-indigo-500/10"  },
+    { label: "Innlegg totalt",    value: postCount,     icon: FileText,      color: "text-violet-400",  bg: "bg-violet-500/10"  },
+    { label: "Meldinger i dag",   value: messagesToday, icon: MessageSquare, color: "text-blue-400",    bg: "bg-blue-500/10"    },
+    { label: "Coins i omløp",     value: totalCoins,    icon: Coins,         color: "text-amber-400",   bg: "bg-amber-500/10"   },
+  ];
+
+  const stats = isCommunity ? communityStats : companyStats;
 
   return (
     <div className="px-8 py-8">
@@ -87,7 +102,7 @@ export default async function AdminPage() {
                 <Icon className={`h-5 w-5 ${color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-white">{value}</p>
+            <p className="text-2xl font-bold text-white">{value.toLocaleString("no-NO")}</p>
             <p className="mt-0.5 text-sm text-zinc-500">{label}</p>
           </div>
         ))}

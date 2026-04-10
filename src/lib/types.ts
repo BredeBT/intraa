@@ -3,8 +3,9 @@
 export type OrgType = "COMPANY" | "COMMUNITY";
 export type OrgPlan = "FREE" | "PRO" | "ENTERPRISE";
 export type MemberRole = "OWNER" | "ADMIN" | "MODERATOR" | "VIP" | "MEMBER";
-export type TicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
-export type TicketCategory = "IT" | "HR" | "OTHER";
+export type TicketStatus   = "OPEN" | "IN_PROGRESS" | "WAITING" | "RESOLVED" | "CLOSED";
+export type TicketPriority = "LOW" | "NORMAL" | "HIGH" | "URGENT";
+export type TicketSource   = "INTERNAL" | "SUPPORT";
 export type ChannelType = "TEXT" | "DIRECT";
 
 // ─── Base models ──────────────────────────────────────────────────────────────
@@ -27,17 +28,19 @@ export type User = {
 };
 
 export type Membership = {
-  id: string;
-  role: MemberRole;
-  userId: string;
+  id:             string;
+  role:           MemberRole;
+  userId:         string;
   organizationId: string;
+  username:       string | null;
 };
 
 export type Post = {
-  id: string;
-  content: string;
+  id:       string;
+  content:  string;
+  imageUrl: string | null;
   createdAt: Date;
-  orgId: string;
+  orgId:    string;
   authorId: string;
 };
 
@@ -57,21 +60,37 @@ export type Channel = {
 };
 
 export type Message = {
-  id: string;
-  content: string;
-  createdAt: Date;
-  channelId: string;
-  authorId: string;
+  id:              string;
+  content:         string;
+  imageUrl:        string | null;
+  createdAt:       Date;
+  editedAt:        Date | null;
+  isPinned:        boolean;
+  channelId:       string;
+  authorId:        string;
+  parentMessageId: string | null;
+};
+
+export type ReactionGroup = {
+  emoji:      string;
+  count:      number;
+  reactedByMe: boolean;
 };
 
 export type Ticket = {
-  id: string;
-  title: string;
-  status: TicketStatus;
-  category: TicketCategory;
-  createdAt: Date;
-  orgId: string;
-  assigneeId: string | null;
+  id:          string;
+  title:       string;
+  description: string;
+  status:      TicketStatus;
+  priority:    TicketPriority;
+  category:    string | null;
+  source:      TicketSource;
+  fromTenantId: string | null;
+  createdAt:   Date;
+  updatedAt:   Date;
+  orgId:       string;
+  authorId:    string;
+  assigneeId:  string | null;
 };
 
 export type File = {
@@ -84,19 +103,37 @@ export type File = {
   uploaderId: string;
 };
 
+export type Like = {
+  id:             string;
+  postId:         string;
+  userId:         string;
+  organizationId: string;
+  createdAt:      Date;
+};
+
 // ─── With relations ───────────────────────────────────────────────────────────
 
-export type PostWithAuthor = Post & {
+export type CommentWithAuthor = Comment & {
   author: User;
-  comments: Comment[];
+};
+
+export type PostWithAuthor = Post & {
+  author:    User;
+  comments:  CommentWithAuthor[];
+  likeCount: number;
+  likedByMe: boolean;
 };
 
 export type TicketWithAssignee = Ticket & {
-  assignee: User | null;
+  assignee: Pick<User, "id" | "name"> | null;
+  author:   Pick<User, "id" | "name">;
 };
 
 export type MessageWithAuthor = Message & {
-  author: User;
+  author:     User;
+  reactions:  ReactionGroup[];
+  replyCount: number;
+  replies:    MessageWithAuthor[];
 };
 
 export type MembershipWithUser = Membership & {

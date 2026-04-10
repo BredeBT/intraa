@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/server/db";
-import { signIn } from "@/auth";
 
 export async function POST(request: NextRequest) {
   const body = await request.json() as {
@@ -66,16 +65,6 @@ export async function POST(request: NextRequest) {
     data:  { status: "ACCEPTED", usedAt: new Date() },
   });
 
-  // Sign in the new user
-  try {
-    await signIn("credentials", {
-      email:    user.email,
-      password,
-      redirect: false,
-    });
-  } catch {
-    // signIn may throw on redirect — ignore
-  }
-
-  return NextResponse.json({ success: true });
+  // Return email so client can sign in with next-auth/react
+  return NextResponse.json({ success: true, email: user.email });
 }

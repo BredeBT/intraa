@@ -96,12 +96,6 @@ export default function ByttOrgPage() {
         })}
       </div>
 
-      <p className="mt-8 text-center text-xs text-zinc-600">
-        Mangler en organisasjon?{" "}
-        <a href="/registrer" className="text-indigo-400 hover:text-indigo-300 transition-colors">
-          Opprett ny
-        </a>
-      </p>
     </div>
   );
 }

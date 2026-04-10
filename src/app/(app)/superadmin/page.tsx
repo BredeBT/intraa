@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { Users, TrendingUp, Globe, ShieldAlert, Ban, Trash2, Settings2 } from "lucide-react";
+import { Users, TrendingUp, Globe, ShieldAlert, ArrowRight, Inbox, Flag } from "lucide-react";
 import SuperAdminActions from "./SuperAdminActions";
 
 type OrgPlan = "FREE" | "STARTER" | "PRO" | "ENTERPRISE";
@@ -61,6 +61,33 @@ export default async function SuperAdminPage() {
 
       <SuperAdminActions />
 
+      <div className="mb-8 flex flex-wrap gap-3">
+        <Link
+          href="/superadmin/tenants"
+          className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white"
+        >
+          <Globe className="h-4 w-4" />
+          Administrer tenants
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+        <Link
+          href="/superadmin/support"
+          className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white"
+        >
+          <Inbox className="h-4 w-4" />
+          Support-innboks
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+        <Link
+          href="/superadmin/rapporter"
+          className="inline-flex items-center gap-2 rounded-lg border border-rose-800/40 bg-rose-950/20 px-4 py-2.5 text-sm font-medium text-rose-400 transition-colors hover:border-rose-700/60 hover:text-rose-300"
+        >
+          <Flag className="h-4 w-4" />
+          Brukerrapporter
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+
       {/* Global stats */}
       <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {globalStats.map(({ label, value, icon: Icon, color, bg }) => (
@@ -88,7 +115,7 @@ export default async function SuperAdminPage() {
                 <th className="px-5 py-3 text-left font-medium text-zinc-500">Medlemmer</th>
                 <th className="px-5 py-3 text-left font-medium text-zinc-500">Plan</th>
                 <th className="px-5 py-3 text-left font-medium text-zinc-500 hidden md:table-cell">Opprettet</th>
-                <th className="px-5 py-3 text-right font-medium text-zinc-500">Handlinger</th>
+                <th className="px-5 py-3" />
               </tr>
             </thead>
             <tbody className="bg-zinc-950">
@@ -128,28 +155,13 @@ export default async function SuperAdminPage() {
                     <td className="px-5 py-4 text-xs text-zinc-500 hidden md:table-cell">
                       {formatDate(org.createdAt)}
                     </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center justify-end gap-1">
-                        <Link
-                          href={`/superadmin/org/${org.id}`}
-                          title="Administrer"
-                          className="rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
-                        >
-                          <Settings2 className="h-4 w-4" />
-                        </Link>
-                        <button
-                          title="Deaktiver"
-                          className="rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-amber-400"
-                        >
-                          <Ban className="h-4 w-4" />
-                        </button>
-                        <button
-                          title="Slett"
-                          className="rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-red-400"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+                    <td className="px-5 py-4 text-right">
+                      <Link
+                        href={`/superadmin/tenants/${org.id}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white"
+                      >
+                        Administrer <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
                     </td>
                   </tr>
                 );

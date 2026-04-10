@@ -15,10 +15,15 @@ export const authConfig = {
     Credentials({}),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) {
         token.isSuperAdmin = (user as { isSuperAdmin?: boolean }).isSuperAdmin ?? false;
         token.username     = (user as { username?: string | null }).username ?? null;
+      }
+      if (trigger === "update" && session) {
+        const s = session as { name?: string; image?: string };
+        if (s.name  !== undefined) token.name    = s.name;
+        if (s.image !== undefined) token.picture = s.image;
       }
       return token;
     },
@@ -26,6 +31,8 @@ export const authConfig = {
       session.user.id           = token.sub ?? "";
       session.user.isSuperAdmin = (token.isSuperAdmin as boolean | undefined) ?? false;
       session.user.username     = (token.username as string | null | undefined) ?? null;
+      if (token.name)    session.user.name  = token.name;
+      if (token.picture) session.user.image = token.picture as string;
       return session;
     },
   },

@@ -3,10 +3,13 @@ import { getUserOrg } from "@/server/getUserOrg";
 import { db } from "@/server/db";
 import { auth } from "@/auth";
 import MedlemmerClient from "./MedlemmerClient";
+import { checkFeature } from "@/server/checkFeature";
 
 export default async function CommunityMedlemmerPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+
+  await checkFeature("community_members");
 
   const ctx = await getUserOrg();
   if (!ctx) redirect("/login");

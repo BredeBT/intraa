@@ -9,7 +9,7 @@ interface Invitation {
   id:           string;
   email:        string;
   role:         "ADMIN" | "MEMBER";
-  status:       "PENDING" | "ACCEPTED" | "EXPIRED";
+  status:       "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED";
   token:        string;
   expiresAt:    Date;
   usedAt:       Date | null;
@@ -26,18 +26,21 @@ interface Props {
 const STATUS_STYLES = {
   PENDING:  "bg-amber-500/15 text-amber-400 border border-amber-500/30",
   ACCEPTED: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
+  DECLINED: "bg-rose-500/15 text-rose-400 border border-rose-500/30",
   EXPIRED:  "bg-zinc-700/50 text-zinc-500",
 };
 
 const STATUS_ICONS = {
   PENDING:  Clock,
   ACCEPTED: CheckCircle,
+  DECLINED: XCircle,
   EXPIRED:  XCircle,
 };
 
 const STATUS_LABELS = {
   PENDING:  "Venter",
   ACCEPTED: "Akseptert",
+  DECLINED: "Avslått",
   EXPIRED:  "Utløpt",
 };
 
@@ -100,9 +103,9 @@ export default function InvitasjonsPanel({ orgs, initialInvitations }: Props) {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: string, token: string) {
     setInvitations((prev) => prev.filter((i) => i.id !== id));
-    await fetch(`/api/invitations/${id}`, { method: "DELETE" }).catch(() => null);
+    await fetch(`/api/invitations/${token}`, { method: "DELETE" }).catch(() => null);
   }
 
   return (
@@ -245,7 +248,7 @@ export default function InvitasjonsPanel({ orgs, initialInvitations }: Props) {
                     <td className="px-5 py-4 text-right">
                       {inv.status === "PENDING" && (
                         <button
-                          onClick={() => handleDelete(inv.id)}
+                          onClick={() => handleDelete(inv.id, inv.token)}
                           className="rounded-md p-1.5 text-zinc-600 transition-colors hover:bg-zinc-800 hover:text-rose-400"
                           title="Avbryt invitasjon"
                         >

@@ -44,6 +44,12 @@ export async function getUserOrg(): Promise<UserOrg | null> {
 
   if (!membership) return null;
 
+  // Redirect banned members
+  if (membership.isBanned) {
+    const { redirect: nextRedirect } = await import("next/navigation");
+    nextRedirect(`/blokkert?org=${encodeURIComponent(membership.organization.name)}`);
+  }
+
   return {
     userId:         session.user.id,
     organizationId: membership.organizationId,

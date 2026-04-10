@@ -22,11 +22,13 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Ikke autorisert" }, { status: 403 });
   }
 
+  console.log("[admin/org] Lagrer:", { orgId, name, slug });
   try {
     const updated = await db.organization.update({
       where: { id: orgId },
       data:  { name: name.trim(), slug: slug.trim(), type: type as "COMPANY" | "COMMUNITY" },
     });
+    console.log("[admin/org] Lagret OK:", { id: updated.id, name: updated.name, slug: updated.slug });
     return NextResponse.json(updated);
   } catch {
     return NextResponse.json({ error: "Slug er allerede i bruk" }, { status: 400 });

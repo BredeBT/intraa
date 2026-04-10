@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { seedDefaultFeatures } from "@/server/seedFeatures";
 
 export async function createOrganization(
   name: string,
@@ -47,6 +48,8 @@ export async function createOrganization(
       },
     },
   });
+
+  await seedDefaultFeatures(org.id, type);
 
   revalidatePath("/superadmin");
   return { success: true, id: org.id };

@@ -33,7 +33,7 @@ export default function LoginPage() {
       if (result?.error) {
         setErrors({ server: "Feil e-post eller passord" });
       } else {
-        router.push("/feed");
+        router.push("/home");
       }
     } catch {
       setErrors({ server: "Noe gikk galt. Prøv igjen." });

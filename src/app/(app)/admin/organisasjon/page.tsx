@@ -1,22 +1,5 @@
-import { requireAdmin } from "@/server/requireAdmin";
-import { db } from "@/server/db";
-import OrganisasjonClient from "./OrganisasjonClient";
+import { redirect } from "next/navigation";
 
-export default async function OrganisasjonPage() {
-  const { organizationId } = await requireAdmin();
-
-  const org = await db.organization.findUnique({
-    where: { id: organizationId },
-  });
-
-  if (!org) return null;
-
-  return (
-    <OrganisasjonClient
-      orgId={org.id}
-      initialName={org.name}
-      initialSlug={org.slug}
-      initialType={org.type}
-    />
-  );
+export default function OrganisasjonPage() {
+  redirect("/admin/innstillinger?tab=generelt");
 }

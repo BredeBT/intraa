@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Trophy } from "lucide-react";
 import { getUserOrg } from "@/server/getUserOrg";
 import { db } from "@/server/db";
+import { checkFeature } from "@/server/checkFeature";
 
 const PODIUM_STYLE = {
   0: { bg: "bg-amber-500/10",  ring: "ring-amber-500/40",  avatar: "bg-amber-500",  medal: "🥇", height: "h-24" },
@@ -14,6 +15,7 @@ function initials(name: string) {
 }
 
 export default async function RangeringPage() {
+  await checkFeature("community_leaderboard");
   const ctx = await getUserOrg();
   if (!ctx) redirect("/login");
 

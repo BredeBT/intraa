@@ -33,10 +33,24 @@ export default function AcceptInviteForm({ token, email }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, name, password }),
       });
-      const data = await res.json() as { error?: string };
+      const data = await res.json() as { error?: string; email?: string };
 
       if (!res.ok) {
         setError(data.error ?? "Noe gikk galt. Prøv igjen.");
+        return;
+      }
+
+      // Sign in client-side so NextAuth sets the session cookie correctly
+      const { signIn } = await import("next-auth/react");
+      const result = await signIn("credentials", {
+        email:    data.email ?? email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Konto opprettet, men innlogging feilet. Prøv å logge inn manuelt.");
+        router.push("/login");
         return;
       }
 

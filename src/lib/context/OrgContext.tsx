@@ -20,41 +20,34 @@ export interface Org {
 }
 
 interface OrgContextValue {
-  org:    Org | null;
-  setOrg: (org: Org) => void;
+  org:       Org | null;
+  setOrg:    (org: Org) => void;
+  /** true once the initial /api/user/org fetch has completed (success or 404) */
+  orgLoaded: boolean;
 }
 
-const FALLBACK: Org = {
-  id:          "",
-  slug:        "",
-  name:        "…",
-  initials:    "…",
-  type:        "COMPANY",
-  plan:        "FREE",
-  accentColor: "#6366f1",
-  userRole:    "MEMBER",
-};
-
 const OrgContext = createContext<OrgContextValue>({
-  org:    FALLBACK,
-  setOrg: () => {},
+  org:       null,
+  setOrg:    () => {},
+  orgLoaded: false,
 });
 
 export function OrgProvider({ children }: { children: React.ReactNode }) {
   const { status } = useSession();
-  const [org, setOrg] = useState<Org | null>(null);
+  const [org,       setOrg]       = useState<Org | null>(null);
+  const [orgLoaded, setOrgLoaded] = useState(false);
 
   useEffect(() => {
     if (status !== "authenticated") return;
 
     fetch("/api/user/org")
       .then((r) => r.ok ? r.json() as Promise<Org> : Promise.reject())
-      .then((data) => setOrg(data))
-      .catch(() => setOrg(null));
+      .then((data) => { setOrg(data); setOrgLoaded(true); })
+      .catch(() => { setOrg(null); setOrgLoaded(true); });
   }, [status]);
 
   return (
-    <OrgContext.Provider value={{ org, setOrg }}>
+    <OrgContext.Provider value={{ org, setOrg, orgLoaded }}>
       {children}
     </OrgContext.Provider>
   );

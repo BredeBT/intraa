@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getUserOrg } from "@/server/getUserOrg";
 import { db } from "@/server/db";
+import { checkFeature } from "@/server/checkFeature";
 
 const ROLE_STYLES: Record<string, string> = {
   OWNER:     "bg-amber-500/10 text-amber-400",
@@ -23,6 +24,7 @@ function initials(name: string): string {
 }
 
 export default async function MedlemmerPage() {
+  await checkFeature("members");
   const ctx = await getUserOrg();
   if (!ctx) redirect("/feed");
 
@@ -37,15 +39,15 @@ export default async function MedlemmerPage() {
       <h1 className="mb-6 text-xl font-semibold text-white">Medlemmer</h1>
 
       {memberships.length === 0 ? (
-        <p className="text-sm text-zinc-600">Ingen medlemmer i denne organisasjonen ennå.</p>
+        <p className="text-sm text-zinc-400 opacity-50">Ingen medlemmer i denne organisasjonen ennå.</p>
       ) : (
         <div className="overflow-hidden rounded-xl border border-zinc-800">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900">
-                <th className="px-5 py-3 text-left font-medium text-zinc-500">Navn</th>
-                <th className="px-5 py-3 text-left font-medium text-zinc-500 hidden sm:table-cell">E-post</th>
-                <th className="px-5 py-3 text-left font-medium text-zinc-500">Rolle</th>
+              <tr className="border-b border-zinc-800 bg-zinc-800">
+                <th className="px-5 py-3 text-left font-medium text-zinc-400">Navn</th>
+                <th className="px-5 py-3 text-left font-medium text-zinc-400 hidden sm:table-cell">E-post</th>
+                <th className="px-5 py-3 text-left font-medium text-zinc-400">Rolle</th>
               </tr>
             </thead>
             <tbody className="bg-zinc-950">
@@ -58,7 +60,7 @@ export default async function MedlemmerPage() {
                   >
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs font-semibold text-white">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white">
                           {initials(name)}
                         </div>
                         <span className="font-medium text-white">{name}</span>

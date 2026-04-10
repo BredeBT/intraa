@@ -59,10 +59,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) {
         token.isSuperAdmin = user.isSuperAdmin ?? false;
         token.username     = user.username ?? null;
+      }
+      // Handle client-side update() calls — persist name/image into token
+      if (trigger === "update" && session) {
+        const s = session as { name?: string; image?: string };
+        if (s.name  !== undefined) token.name    = s.name;
+        if (s.image !== undefined) token.picture = s.image;
       }
       return token;
     },
@@ -70,6 +76,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.id           = token.sub ?? "";
       session.user.isSuperAdmin = (token.isSuperAdmin as boolean | undefined) ?? false;
       session.user.username     = (token.username as string | null | undefined) ?? null;
+      // Propagate name/image from token (kept up-to-date via update())
+      if (token.name)    session.user.name  = token.name;
+      if (token.picture) session.user.image = token.picture as string;
       return session;
     },
   },
