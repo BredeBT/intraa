@@ -2,28 +2,24 @@ import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 import { NextResponse } from "next/server";
 
-const PROTECTED_PREFIXES = [
-  "/feed", "/chat", "/tickets", "/filer", "/medlemmer",
-  "/admin", "/community", "/kalender", "/oppgaver",
-  "/profil", "/notifikasjoner", "/soek",
-  "/innstillinger", "/hjelp", "/bytt-org", "/superadmin",
-];
+// Paths that are always public (no auth required)
+const PUBLIC_PATHS = ["/", "/login", "/registrer", "/glemt-passord"];
+const PUBLIC_PREFIXES = ["/inviter", "/api/auth", "/c/"];
 
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
-  const isProtected = PROTECTED_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(p + "/")
-  );
-  const isLoginPage = pathname === "/login";
+  const isPublic =
+    PUBLIC_PATHS.includes(pathname) ||
+    PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
 
-  if (isProtected && !req.auth) {
+  if (!isPublic && !req.auth) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  if (isLoginPage && req.auth) {
+  if (pathname === "/login" && req.auth) {
     return NextResponse.redirect(new URL("/feed", req.url));
   }
 
@@ -31,5 +27,7 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon\\.ico|api/auth|inviter).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon\\.ico).*)",
+  ],
 };
