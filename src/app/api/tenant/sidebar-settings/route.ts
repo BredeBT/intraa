@@ -40,6 +40,8 @@ export async function PATCH(request: Request) {
   const ctx = await getUserOrg();
   if (!ctx) return NextResponse.json({ error: "Ingen org" }, { status: 404 });
 
+  const { db } = await import("@/server/db");
+
   // Only OWNER may update
   const membership = await db.membership.findUnique({
     where:  { userId_organizationId: { userId: session.user.id, organizationId: ctx.organizationId } },
@@ -50,8 +52,6 @@ export async function PATCH(request: Request) {
   }
 
   const body = (await request.json()) as Partial<typeof DEFAULT_SETTINGS>;
-
-  const { db } = await import("@/server/db");
   const settings = await db.profileSidebarSettings.upsert({
     where:  { organizationId: ctx.organizationId },
     update: body,

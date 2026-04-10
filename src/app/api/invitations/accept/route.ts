@@ -45,10 +45,19 @@ export async function POST(request: NextRequest) {
   // Create user + membership atomically
   const memberRole = invitation.role === "ADMIN" ? "ADMIN" : "MEMBER";
 
+  // Derive a unique username from the email prefix
+  const baseUsername = invitation.email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "").slice(0, 18) || "user";
+  let username = baseUsername;
+  let suffix = 2;
+  while (await db.user.findUnique({ where: { username } })) {
+    username = `${baseUsername}${suffix++}`;
+  }
+
   const user = await db.user.create({
     data: {
       email:    invitation.email,
       name:     name.trim(),
+      username,
       password: passwordHash,
       memberships: {
         create: {

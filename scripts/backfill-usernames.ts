@@ -7,10 +7,9 @@ const adapter = new PrismaPg({ connectionString });
 const db = new PrismaClient({ adapter });
 
 async function main() {
-  const users = await db.user.findMany({
-    where:  { username: null },
-    select: { id: true, name: true },
-  });
+  const users = await db.$queryRaw<{ id: string; name: string | null }[]>`
+    SELECT id, name FROM "User" WHERE username IS NULL
+  `;
 
   console.log(`Backfilling ${users.length} users without username...`);
 

@@ -27,7 +27,7 @@ async function main() {
   const user = await db.user.upsert({
     where: { email: "anders@intraa.net" },
     update: { password: hash123 },
-    create: { email: "anders@intraa.net", name: "Anders Sørensen", password: hash123, isSuperAdmin: true },
+    create: { email: "anders@intraa.net", name: "Anders Sørensen", username: "anders", password: hash123, isSuperAdmin: true },
   });
   console.log(`✓ User: ${user.name}`);
 

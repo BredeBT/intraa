@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const slug = name.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
   if (!slug) return NextResponse.json({ error: "Ugyldig navn" }, { status: 400 });
 
-  const channelType = type === "ANNOUNCEMENT" ? "ANNOUNCEMENT" : "TEXT";
+  const channelType = "TEXT" as const;
 
   const existing = await db.channel.findFirst({
     where: { orgId: ctx.organizationId, name: slug },
