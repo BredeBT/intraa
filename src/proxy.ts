@@ -8,7 +8,7 @@ const PUBLIC_PREFIXES = ["/inviter", "/api/auth", "/c/"];
 
 const { auth } = NextAuth(authConfig);
 
-export default auth((req) => {
+const proxy = auth((req) => {
   const { pathname } = req.nextUrl;
 
   const isPublic =
@@ -25,6 +25,8 @@ export default auth((req) => {
 
   return NextResponse.next();
 });
+
+export default proxy;
 
 export const config = {
   matcher: [
