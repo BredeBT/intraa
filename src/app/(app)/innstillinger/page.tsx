@@ -29,7 +29,6 @@ const NOTIF_ROWS: { id: string; emailKey: string; pushKey: string; label: string
 
 const INTEGRATIONS = [
   { id: "slack",     name: "Slack",         desc: "Motta varsler og send meldinger direkte fra Slack.",    icon: MessageSquare, iconColor: "text-purple-400", iconBg: "bg-purple-500/10", connected: false },
-  { id: "google",    name: "Google",        desc: "Synkroniser Google Kalender og logg inn med Google.",   icon: Globe,         iconColor: "text-blue-400",   iconBg: "bg-blue-500/10",   connected: true  },
   { id: "microsoft", name: "Microsoft 365", desc: "Integrer med Teams, Outlook og OneDrive.",              icon: Monitor,       iconColor: "text-sky-400",    iconBg: "bg-sky-500/10",    connected: false },
 ];
 
