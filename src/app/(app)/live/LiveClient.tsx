@@ -48,7 +48,9 @@ function relativeTime(date: Date) {
   return new Date(date).toLocaleDateString("no-NO", { day: "numeric", month: "short" });
 }
 
-const domain = process.env.NEXT_PUBLIC_DOMAIN ?? "intraa.net";
+const domain = typeof window !== "undefined"
+  ? window.location.hostname
+  : (process.env.NEXT_PUBLIC_DOMAIN ?? "intraa.net");
 
 // ─── FeedTab ─────────────────────────────────────────────────────────────────
 
