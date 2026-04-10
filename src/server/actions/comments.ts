@@ -18,7 +18,7 @@ export async function createComment(postId: string, content: string) {
 
   const comment = await db.comment.create({
     data:    { postId, authorId: session.user.id, content },
-    include: { author: true },
+    include: { author: { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } } },
   });
 
   void addPoints(session.user.id, post.orgId, "COMMENT");
