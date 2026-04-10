@@ -20,7 +20,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 export default async function TenantsPage() {
   const session = await auth();
-  if (!session?.user?.id || !session.user.isSuperAdmin) redirect("/feed");
+  if (!session?.user?.id || !session.user.isSuperAdmin) redirect("/home");
 
   const orgs = await db.organization.findMany({
     orderBy: { createdAt: "desc" },

@@ -1,8 +1,12 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { db } from "@/server/db";
 import DangerActions from "./DangerActions";
 
 export default async function FaresonePage({ params }: { params: Promise<{ orgId: string }> }) {
+  const session = await auth();
+  if (!session?.user?.id || !session.user.isSuperAdmin) redirect("/home");
+
   const { orgId } = await params;
 
   const org = await db.organization.findUnique({ where: { id: orgId } });

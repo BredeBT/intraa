@@ -1,9 +1,13 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { SUPERADMIN_FEATURE_GROUPS } from "@/lib/featureGroups";
 import FeatureToggles from "./FeatureToggles";
 
 export default async function FunksjonerPage({ params }: { params: Promise<{ orgId: string }> }) {
+  const session = await auth();
+  if (!session?.user?.id || !session.user.isSuperAdmin) redirect("/home");
+
   const { orgId } = await params;
 
   const org = await db.organization.findUnique({

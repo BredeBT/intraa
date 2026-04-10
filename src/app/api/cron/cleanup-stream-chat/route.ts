@@ -5,6 +5,11 @@ export const dynamic = "force-dynamic";
 
 /** POST /api/cron/cleanup-stream-chat — deletes stream-chat messages for orgs whose stream ended >60min ago */
 export async function POST(request: Request) {
+  const secret = request.headers.get("x-cron-secret");
+  if (secret !== process.env.CRON_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { organizationId } = (await request.json().catch(() => ({}))) as { organizationId?: string };
 
   const cutoff = new Date(Date.now() - 60 * 60 * 1000);

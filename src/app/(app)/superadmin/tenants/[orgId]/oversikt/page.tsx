@@ -1,4 +1,5 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { Users, FileText, MessageSquare, Calendar } from "lucide-react";
 
@@ -13,6 +14,9 @@ const PLAN_STYLES: Record<string, string> = {
 };
 
 export default async function OversiktPage({ params }: { params: Promise<{ orgId: string }> }) {
+  const session = await auth();
+  if (!session?.user?.id || !session.user.isSuperAdmin) redirect("/home");
+
   const { orgId } = await params;
 
   const org = await db.organization.findUnique({

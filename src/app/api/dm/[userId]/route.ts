@@ -24,6 +24,11 @@ export async function GET(
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { userId } = await params;
+
+  if (!(await areFriends(session.user.id, userId))) {
+    return NextResponse.json({ error: "Ingen tilgang" }, { status: 403 });
+  }
+
   const cursor = req.nextUrl.searchParams.get("cursor");
 
   const messages = await db.directMessage.findMany({

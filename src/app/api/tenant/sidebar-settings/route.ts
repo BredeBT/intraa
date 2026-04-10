@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { db } from "@/server/db";
 import { getUserOrg } from "@/server/getUserOrg";
 
 const DEFAULT_SETTINGS = {
@@ -20,11 +21,13 @@ const DEFAULT_SETTINGS = {
 
 /** GET /api/tenant/sidebar-settings?orgId=X */
 export async function GET(request: Request) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const { searchParams } = new URL(request.url);
   const orgId = searchParams.get("orgId");
   if (!orgId) return NextResponse.json({ error: "orgId required" }, { status: 400 });
 
-  const { db } = await import("@/server/db");
   const settings = await db.profileSidebarSettings.findUnique({
     where: { organizationId: orgId },
   });
@@ -39,8 +42,6 @@ export async function PATCH(request: Request) {
 
   const ctx = await getUserOrg();
   if (!ctx) return NextResponse.json({ error: "Ingen org" }, { status: 404 });
-
-  const { db } = await import("@/server/db");
 
   // Only OWNER may update
   const membership = await db.membership.findUnique({

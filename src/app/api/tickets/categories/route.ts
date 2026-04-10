@@ -18,6 +18,11 @@ export async function GET(req: NextRequest) {
   const orgId = req.nextUrl.searchParams.get("orgId");
   if (!orgId) return NextResponse.json({ error: "orgId required" }, { status: 400 });
 
+  const membership = await db.membership.findFirst({
+    where: { userId: session.user.id, organizationId: orgId },
+  });
+  if (!membership) return NextResponse.json({ error: "Ingen tilgang" }, { status: 403 });
+
   const categories = await db.ticketCategory.findMany({
     where:   { organizationId: orgId },
     orderBy: { createdAt: "asc" },

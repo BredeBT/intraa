@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { db } from "@/server/db";
 
 export const dynamic = "force-dynamic";
@@ -111,9 +112,18 @@ async function checkYouTube(channelId: string): Promise<StreamStatus> {
 // ─── Handler ──────────────────────────────────────────────────────────────────
 
 export async function GET(request: Request) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const { searchParams } = new URL(request.url);
   const orgId = searchParams.get("orgId");
   if (!orgId) return NextResponse.json({ error: "orgId required" }, { status: 400 });
+
+  const membership = await db.membership.findFirst({
+    where: { userId: session.user.id, organizationId: orgId },
+    select: { id: true },
+  });
+  if (!membership) return NextResponse.json({ error: "Ingen tilgang" }, { status: 403 });
 
   const cached = getCached(orgId);
   if (cached) return NextResponse.json(cached);

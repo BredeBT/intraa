@@ -13,7 +13,7 @@ export default async function TenantLayout({
   params:   Promise<{ orgId: string }>;
 }) {
   const session = await auth();
-  if (!session?.user?.id || !session.user.isSuperAdmin) redirect("/feed");
+  if (!session?.user?.id || !session.user.isSuperAdmin) redirect("/home");
 
   const { orgId } = await params;
   const org = await db.organization.findUnique({ where: { id: orgId } });

@@ -7,8 +7,9 @@ export async function PATCH(
   { params }: { params: Promise<{ reportId: string }> },
 ) {
   const session = await auth();
-  if (!session?.user?.id || !session.user.isSuperAdmin)
-    return NextResponse.json({ error: "Ingen tilgang" }, { status: 403 });
+  if (!session?.user?.id) return NextResponse.json({ error: "Ikke innlogget" }, { status: 401 });
+  const caller = await db.user.findUnique({ where: { id: session.user.id }, select: { isSuperAdmin: true } });
+  if (!caller?.isSuperAdmin) return NextResponse.json({ error: "Ingen tilgang" }, { status: 403 });
 
   const { reportId } = await params;
   const body = await req.json() as { status?: string; reviewNote?: string };

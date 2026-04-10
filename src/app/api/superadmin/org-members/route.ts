@@ -6,9 +6,9 @@ type MemberRole = "OWNER" | "ADMIN" | "MODERATOR" | "VIP" | "MEMBER";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
-  if (!session?.user?.id || !session.user.isSuperAdmin) {
-    return NextResponse.json({ error: "Ingen tilgang" }, { status: 403 });
-  }
+  if (!session?.user?.id) return NextResponse.json({ error: "Ikke innlogget" }, { status: 401 });
+  const caller = await db.user.findUnique({ where: { id: session.user.id }, select: { isSuperAdmin: true } });
+  if (!caller?.isSuperAdmin) return NextResponse.json({ error: "Ingen tilgang" }, { status: 403 });
 
   const body = await request.json() as {
     action:       "add" | "remove" | "changeRole";
