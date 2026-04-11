@@ -139,13 +139,12 @@ export default function ClickerPage() {
           body:    JSON.stringify({ orgId: orgIdRef.current, delta, clicks }),
         });
         if (res.ok) {
-          const data = await res.json() as { coins: number };
-          const serverValue = data.coins ?? 0;
-          // Subtract only what we sent — preserve any delta that arrived during fetch
-          localDelta.current -= delta;
-          clickCount.current -= clicks;
-          serverCoins.current = serverValue;
-          console.log("[COINS] After sync - server:", serverValue, "| localDelta remaining:", localDelta.current, "| display:", serverValue + localDelta.current);
+          // Subtract only what we sent — preserve any delta that arrived during fetch.
+          // Advance serverCoins by the confirmed delta instead of trusting the server
+          // response value, which may race with offline-coin credits from the GET.
+          localDelta.current  -= delta;
+          clickCount.current  -= clicks;
+          serverCoins.current += delta;
           setTotalClicks((t) => t + clicks);
         }
         // On error: leave localDelta/clickCount untouched, retry next interval
