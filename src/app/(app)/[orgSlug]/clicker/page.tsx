@@ -98,11 +98,12 @@ export default function ClickerPage() {
   const [totalClicks,   setTotalClicks]   = useState(0);
 
   // Coin state: server-confirmed value + local delta accumulated since last sync
-  const serverCoins  = useRef(0);
-  const localDelta   = useRef(0);
-  const clickCount   = useRef(0); // raw click count for totalClicks
-  const floatId      = useRef(0);
-  const orgIdRef     = useRef<string | null>(null);
+  const serverCoins    = useRef(0);
+  const localDelta     = useRef(0);
+  const clickCount     = useRef(0); // raw click count for totalClicks
+  const totalClicksRef = useRef(0); // mirrors totalClicks state for use in effects
+  const floatId        = useRef(0);
+  const orgIdRef       = useRef<string | null>(null);
 
   // ── Restore from localStorage on mount (before DB fetch) ─────────────────
   useEffect(() => {
@@ -127,6 +128,9 @@ export default function ClickerPage() {
     try { localStorage.setItem(CK.coins, String(Math.floor(displayCoins))); } catch { /* ignore */ }
   }, [displayCoins]);
 
+  // ── Keep totalClicksRef in sync ──────────────────────────────────────────
+  useEffect(() => { totalClicksRef.current = totalClicks; }, [totalClicks]);
+
   // ── Load ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     fetch("/api/user/org")
@@ -148,16 +152,24 @@ export default function ClickerPage() {
     fetch(`/api/clicker?orgId=${orgId}`)
       .then((r) => r.json())
       .then((data: { profile: ClickerProfile; upgrades: UpgradeState[]; offlineEarned: number; activeEvent: ActiveEvent | null }) => {
-        setProfile(data.profile);
-        serverCoins.current = data.profile.coins;
+        // Take the higher of DB value and local (cached + unsync'd delta).
+        // If the user clicked between page load and this response, localDelta
+        // holds those coins — don't throw them away.
+        const dbCoins    = data.profile.coins;
+        const localCoins = serverCoins.current + localDelta.current;
+        const best       = Math.max(dbCoins, localCoins);
+
+        // Re-anchor: server = best, delta = 0 (delta already folded in).
+        serverCoins.current = best;
         localDelta.current  = 0;
-        console.log("[COINS] Initial load:", data.profile.coins);
-        setDisplayCoins(data.profile.coins);
-        setTotalClicks(data.profile.totalClicks);
+
+        setProfile(data.profile);
+        setDisplayCoins(best);
+        setTotalClicks(Math.max(data.profile.totalClicks, totalClicksRef.current));
         setUpgrades(data.upgrades);
         setActiveEvent(data.activeEvent);
         if (data.offlineEarned > 0) setOfflineMsg(data.offlineEarned);
-        writeCache(data.profile, data.upgrades, data.profile.coins);
+        writeCache(data.profile, data.upgrades, best);
       });
     fetch(`/api/clicker/leaderboard?orgId=${orgId}`)
       .then((r) => r.json())
