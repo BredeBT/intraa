@@ -59,6 +59,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
+    async redirect({ baseUrl }) {
+      return `${baseUrl}/home`;
+    },
     jwt({ token, user, trigger, session }) {
       if (user) {
         token.isSuperAdmin = user.isSuperAdmin ?? false;

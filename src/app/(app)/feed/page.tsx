@@ -48,8 +48,8 @@ export default async function FeedPage() {
   return (
     <div className="flex h-[calc(100vh-56px)]">
 
-      {/* Venstre: scrollbart feed */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Venstre: scrollbart feed — scrollbar skjult (vises ellers midt på siden ved sidebar) */}
+      <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 
         {/* BANNER – full bredde */}
         {(theme?.bannerUrl ?? theme?.bannerPreset) && (

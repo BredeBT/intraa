@@ -288,6 +288,16 @@ function SidebarContent({
     { href: "/profil/meg",  label: "Min profil", icon: UserCircle, badge: 0 },
   ];
 
+  // Org-specific links are hidden on "global" pages regardless of whether org is set
+  const GLOBAL_PREFIXES = [
+    "/home", "/meldinger", "/profil", "/u/", "/soek", "/innstillinger",
+    "/hjelp", "/support", "/bytt-org", "/notifikasjoner", "/superadmin",
+  ];
+  const isOnGlobalPage = GLOBAL_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(p + "/") || (p.endsWith("/") && pathname.startsWith(p))
+  );
+  const showOrgLinks = !isOnGlobalPage && mounted && orgLoaded && !!org;
+
   return (
     <>
       {orgSwitcher}
@@ -322,8 +332,8 @@ function SidebarContent({
           );
         })}
 
-        {/* Org-specific section — only shown when org fetch is complete and user has an org */}
-        {mounted && orgLoaded && org && (
+        {/* Org-specific section — hidden on global pages (home, meldinger, profil…) */}
+        {showOrgLinks && (
           <>
             <div className="my-1 border-t border-zinc-800" />
 
@@ -368,8 +378,8 @@ function SidebarContent({
           </>
         )}
 
-        {/* Spill — bare for community når org er bekreftet lastet */}
-        {mounted && orgLoaded && isCommunity && org?.slug && (
+        {/* Spill — bare for community på org-sider */}
+        {showOrgLinks && isCommunity && org?.slug && (
           <Link href={`/${org.slug}/clicker`} onClick={onNavClick}
             title={collapsed ? "Spill" : undefined}
             className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${collapsed ? "justify-center" : ""} ${
