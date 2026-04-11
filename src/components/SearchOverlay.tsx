@@ -193,21 +193,27 @@ export default function SearchOverlay({
               <p className="px-4 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
                 Communities
               </p>
-              {orgs.slice(0, 5).map((o) => (
+              {orgs.slice(0, 5).map((o) => {
+                const orgHref = o.isMember ? `/${o.slug}/feed` : `/c/${o.slug}`;
+                return (
                 <div key={o.id} className="flex items-center gap-3 px-4 py-2 hover:bg-zinc-800 transition-colors">
-                  <Link href={`/c/${o.slug}`} onClick={onClose}>
+                  <Link href={orgHref} onClick={onClose}>
                     <OrgLogo logoUrl={o.logoUrl} name={o.name} />
                   </Link>
-                  <Link href={`/c/${o.slug}`} onClick={onClose} className="min-w-0 flex-1">
+                  <Link href={orgHref} onClick={onClose} className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-white">{o.name}</p>
                     <p className="flex items-center gap-1 text-xs text-zinc-500">
                       <Users className="h-3 w-3" /> {o.memberCount.toLocaleString("no-NO")} medlemmer
                     </p>
                   </Link>
                   {o.isMember ? (
-                    <span className="shrink-0 rounded-md border border-zinc-700 px-2 py-1 text-[10px] text-zinc-500">
-                      Medlem
-                    </span>
+                    <Link
+                      href={orgHref}
+                      onClick={onClose}
+                      className="shrink-0 rounded-md border border-zinc-700 px-2 py-1 text-[10px] text-zinc-500 hover:border-zinc-500 transition-colors"
+                    >
+                      Gå til
+                    </Link>
                   ) : (
                     <Link
                       href={`/c/${o.slug}`}
@@ -218,7 +224,8 @@ export default function SearchOverlay({
                     </Link>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

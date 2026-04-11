@@ -56,11 +56,12 @@ function Avatar({ avatarUrl, name, size = 8 }: { avatarUrl: string | null; name:
 
 // ─── Community Card ───────────────────────────────────────────────────────────
 
-function CommunityCard({ c, compact = false }: { c: Community; compact?: boolean }) {
+function CommunityCard({ c, compact = false, isMember = false }: { c: Community; compact?: boolean; isMember?: boolean }) {
+  const href = isMember ? `/${c.slug}/feed` : `/c/${c.slug}`;
   if (compact) {
     return (
       <Link
-        href={`/c/${c.slug}`}
+        href={href}
         className="flex shrink-0 w-44 flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 transition-colors hover:border-zinc-700"
       >
         <div
@@ -131,10 +132,10 @@ function CommunityCard({ c, compact = false }: { c: Community; compact?: boolean
             <Users className="h-3.5 w-3.5" /> {c.memberCount} medlemmer
           </span>
           <Link
-            href={`/c/${c.slug}`}
+            href={href}
             className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:opacity-80"
           >
-            Se community <ArrowRight className="h-3 w-3" />
+            {isMember ? "Gå til community" : "Se community"} <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
       </div>
@@ -215,7 +216,7 @@ export default function HomeClient({ userName, myCommunities, recommendedCommuni
                 <h2 className="mb-3 text-sm font-semibold text-white">Mine communities</h2>
                 <div className="flex gap-3 overflow-x-auto pb-2">
                   {myCommunities.map((c) => (
-                    <CommunityCard key={c.id} c={c} compact />
+                    <CommunityCard key={c.id} c={c} compact isMember />
                   ))}
                 </div>
               </section>
