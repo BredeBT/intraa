@@ -580,8 +580,9 @@ model ClickerProfile {
   id             String   @id @default(cuid())
   userId         String
   organizationId String
-  coins          Float    @default(0)
-  totalClicks    Int      @default(0)
+  coins             Float    @default(0)
+  allTimeHighCoins  Float    @default(0)
+  totalClicks       Int      @default(0)
   coinsPerClick  Float    @default(1)
   coinsPerSecond Float    @default(0)
   lastSeen       DateTime @default(now())

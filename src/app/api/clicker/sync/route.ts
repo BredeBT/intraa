@@ -52,12 +52,14 @@ export async function POST(req: NextRequest) {
   const newCoins      = currentCoins  + safeCoins;
   const newClicks     = currentClicks + safeClicks;
 
+  const currentHigh = existing.allTimeHighCoins ?? 0;
   const updated = await db.clickerProfile.update({
     where: { userId_organizationId: { userId: session.user.id, organizationId: orgId } },
     data: {
-      coins:       newCoins,
-      totalClicks: newClicks,
-      lastSeen:    new Date(),
+      coins:            newCoins,
+      allTimeHighCoins: Math.max(currentHigh, newCoins),
+      totalClicks:      newClicks,
+      lastSeen:         new Date(),
     },
   });
 

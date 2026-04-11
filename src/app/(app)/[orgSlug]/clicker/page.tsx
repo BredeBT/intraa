@@ -7,16 +7,17 @@ import { Coins, Zap, Clock, Trophy, X } from "lucide-react";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ClickerProfile {
-  id:             string;
-  coins:          number;
-  totalClicks:    number;
-  coinsPerClick:  number;
-  coinsPerSecond: number;
-  lastSeen:       string;
-  prestigeLevel:  number;
-  prestigeWorld:  number;
-  permanentBonus: number;
-  totalPrestige:  number;
+  id:               string;
+  coins:            number;
+  allTimeHighCoins: number;
+  totalClicks:      number;
+  coinsPerClick:    number;
+  coinsPerSecond:   number;
+  lastSeen:         string;
+  prestigeLevel:    number;
+  prestigeWorld:    number;
+  permanentBonus:   number;
+  totalPrestige:    number;
 }
 
 interface UpgradeState {
@@ -458,6 +459,11 @@ export default function ClickerPage() {
         <span className="text-4xl md:text-5xl font-bold tabular-nums text-white">{fmt(displayCoins)}</span>
         <span className="text-lg md:text-xl text-zinc-400">coins</span>
       </div>
+      {profile.allTimeHighCoins > 0 && (
+        <p className="mb-0.5 text-xs text-zinc-600">
+          Rekord: <span className="text-zinc-500">{fmt(profile.allTimeHighCoins)}</span> coins
+        </p>
+      )}
       {profile.permanentBonus > 1 && (
         <p className="mb-1 text-xs text-amber-400">
           ⚡ {((profile.permanentBonus - 1) * 100).toFixed(0)}% permanent prestige-bonus
@@ -517,14 +523,6 @@ export default function ClickerPage() {
               style={{ width: `${Math.min(100, (displayCoins / prestigeCost) * 100).toFixed(2)}%` }}
             />
           </div>
-          {profile.coinsPerSecond > 0 && (() => {
-            const eta = fmtTime((prestigeCost - displayCoins) / profile.coinsPerSecond);
-            return eta ? (
-              <p className="mt-1 text-[10px] text-zinc-600">
-                Estimert tid: <span className="text-zinc-500">{eta}</span>
-              </p>
-            ) : null;
-          })()}
         </div>
       ) : null}
       {/* Leaderboard */}
