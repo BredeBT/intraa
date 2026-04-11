@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { SendHorizontal, Loader2, X, Paperclip, Trash2 } from "lucide-react";
+import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
+import SafeHtml from "@/components/SafeHtml";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -58,7 +60,6 @@ function formatTime(iso: string) {
 
 export default function GroupView({ groupId, groupName, createdBy, currentUserId, members, onDeleted }: Props) {
   const [messages,       setMessages]       = useState<GroupMsg[]>([]);
-  const [input,          setInput]          = useState("");
   const [sending,        setSending]        = useState(false);
   const [mentionQuery,   setMentionQuery]   = useState<string | null>(null);
   const [mentionIndex,   setMentionIndex]   = useState(0);
@@ -70,9 +71,8 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
 
   const bottomRef       = useRef<HTMLDivElement>(null);
   const pasteToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const textareaRef     = useRef<HTMLTextAreaElement>(null);
+  const editorRef       = useRef<RichTextEditorRef>(null);
 
-  const memberNames = members.map((m) => m.name ?? "").filter(Boolean);
   const mentionSuggestions = mentionQuery !== null
     ? members.filter((m) => (m.name ?? "").toLowerCase().includes(mentionQuery.toLowerCase())).slice(0, 6)
     : [];
@@ -127,36 +127,25 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
   }, [showPasteToast]);
 
   // @mention handling
-  function handleInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    const val = e.target.value;
-    setInput(val);
-    const cursor = e.target.selectionStart ?? val.length;
-    const textBefore = val.slice(0, cursor);
-    const atMatch = textBefore.match(/@(\w*)$/);
+  function handleEditorChange(_text: string, textBeforeCursor: string) {
+    const atMatch = textBeforeCursor.match(/@(\w*)$/);
     if (atMatch) { setMentionQuery(atMatch[1]); setMentionIndex(0); }
     else setMentionQuery(null);
   }
 
   function insertMention(name: string) {
-    const cursor = textareaRef.current?.selectionStart ?? input.length;
-    const before = input.slice(0, cursor).replace(/@\w*$/, `@${name} `);
-    setInput(before + input.slice(cursor));
+    editorRef.current?.insertMention(name);
     setMentionQuery(null);
-    setTimeout(() => textareaRef.current?.focus(), 0);
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (mentionSuggestions.length > 0) {
-      if (e.key === "ArrowDown") { e.preventDefault(); setMentionIndex((i) => Math.min(i + 1, mentionSuggestions.length - 1)); return; }
-      if (e.key === "ArrowUp")   { e.preventDefault(); setMentionIndex((i) => Math.max(i - 1, 0)); return; }
-      if (e.key === "Enter" || e.key === "Tab") {
-        e.preventDefault();
-        if (mentionSuggestions[mentionIndex]) insertMention(mentionSuggestions[mentionIndex].name ?? "");
-        return;
-      }
-      if (e.key === "Escape") { setMentionQuery(null); return; }
-    }
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void doSend(); }
+  function handleMentionKey(e: React.KeyboardEvent) {
+    if (mentionSuggestions.length === 0) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); setMentionIndex((i) => Math.min(i + 1, mentionSuggestions.length - 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setMentionIndex((i) => Math.max(i - 1, 0)); }
+    else if (e.key === "Enter" || e.key === "Tab") {
+      e.preventDefault();
+      if (mentionSuggestions[mentionIndex]) insertMention(mentionSuggestions[mentionIndex].name ?? "");
+    } else if (e.key === "Escape") { setMentionQuery(null); }
   }
 
   // Upload
@@ -175,7 +164,8 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
 
   // Send
   async function doSend() {
-    if ((!input.trim() && !pasteImageFile) || sending) return;
+    const editorEmpty = editorRef.current?.isEmpty() ?? true;
+    if ((editorEmpty && !pasteImageFile) || sending) return;
     setSending(true);
 
     let imageUrl: string | null = null;
@@ -185,14 +175,14 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
       setPastePreview(null);
     }
 
-    const content = input.trim();
-    setInput("");
+    const html = editorRef.current?.getHTML() ?? "";
+    editorRef.current?.clear();
     setMentionQuery(null);
 
     const res = await fetch(`/api/groups/${groupId}/messages`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ content: content || " ", imageUrl }),
+      body:    JSON.stringify({ content: html || " ", imageUrl }),
     });
     if (res.ok) {
       const data = await res.json() as { message: GroupMsg };
@@ -205,19 +195,6 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
   async function deleteGroup() {
     const res = await fetch(`/api/groups/${groupId}`, { method: "DELETE" });
     if (res.ok) onDeleted();
-  }
-
-  // Highlight @mentions
-  function parseMentions(content: string) {
-    if (!memberNames.length) return content;
-    const parts = content.split(/(@\w+)/g);
-    return parts.map((part, i) => {
-      const name = part.startsWith("@") ? part.slice(1) : null;
-      if (name && memberNames.includes(name)) {
-        return <mark key={i} className="rounded bg-yellow-500/20 px-0.5 text-yellow-300">{part}</mark>;
-      }
-      return <span key={i}>{part}</span>;
-    });
   }
 
   return (
@@ -278,8 +255,8 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={msg.imageUrl} alt="" className="max-h-48 w-auto rounded-xl border border-zinc-700 object-cover cursor-pointer" />
                 ) : (
-                  <div className={`whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm ${isMe ? "rounded-br-sm bg-indigo-600 text-white" : "rounded-bl-sm bg-zinc-800 text-zinc-200"}`}>
-                    {parseMentions(msg.content)}
+                  <div className={`rounded-2xl px-4 py-2.5 text-sm ${isMe ? "rounded-br-sm bg-indigo-600 text-white" : "rounded-bl-sm bg-zinc-800 text-zinc-200"}`}>
+                    <SafeHtml html={msg.content} />
                   </div>
                 )}
                 <p className={`mt-0.5 text-[10px] text-zinc-600 ${isMe ? "text-right" : ""}`}>{formatTime(msg.createdAt)}</p>
@@ -307,7 +284,7 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
 
       {/* @mention dropdown */}
       {mentionSuggestions.length > 0 && (
-        <div className="mx-5 mb-1 overflow-hidden rounded-lg border border-zinc-700 bg-zinc-800 shadow-xl">
+        <div className="mx-5 mb-1 overflow-hidden rounded-lg border border-zinc-700 bg-zinc-800 shadow-xl" onKeyDown={handleMentionKey}>
           {mentionSuggestions.map((m, i) => (
             <button key={m.id} onMouseDown={(e) => { e.preventDefault(); insertMention(m.name ?? ""); }}
               className={`flex w-full items-center gap-2 px-3 py-2 text-sm text-left ${i === mentionIndex ? "bg-zinc-700 text-white" : "text-zinc-300 hover:bg-zinc-700"}`}>
@@ -322,17 +299,13 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
       <div className="shrink-0 border-t border-zinc-800 bg-zinc-900 px-5 py-3">
         <div className="flex items-end gap-2">
           <div className="relative flex-1">
-            <textarea
-              ref={textareaRef}
-              rows={1}
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
+            <RichTextEditor
+              ref={editorRef}
               placeholder="Skriv en gruppemelding…"
-              className="w-full resize-none rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 pr-10 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-indigo-500 transition-colors"
-              style={{ maxHeight: "120px", overflowY: "auto" }}
+              onChange={handleEditorChange}
+              onEnter={() => void doSend()}
             />
-            <label className="absolute bottom-2.5 right-3 cursor-pointer text-zinc-500 hover:text-zinc-300 transition-colors">
+            <label className="absolute bottom-2 right-3 cursor-pointer text-zinc-500 hover:text-zinc-300 transition-colors">
               <Paperclip className="h-4 w-4" />
               <input type="file" accept="image/*" className="sr-only" onChange={async (e) => {
                 const file = e.target.files?.[0];
@@ -345,7 +318,7 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
           </div>
           <button
             onClick={() => void doSend()}
-            disabled={(!input.trim() && !pasteImageFile) || sending || isUploading}
+            disabled={sending || isUploading}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white transition-colors hover:opacity-80 disabled:opacity-30"
           >
             {sending || isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizontal className="h-4 w-4" />}

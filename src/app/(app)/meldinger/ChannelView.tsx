@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition, useCallback } from "react";
 import { SendHorizontal, Loader2, X, Paperclip } from "lucide-react";
+import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
 import {
   sendMessage, getMessages, editMessage, deleteMessage, pinMessage,
 } from "@/server/actions/messages";
@@ -26,7 +27,6 @@ interface Props {
 
 export default function ChannelView({ channelId, channelName, userId, userName, userRole, members }: Props) {
   const [messages,       setMessages]       = useState<LocalMessage[]>([]);
-  const [input,          setInput]          = useState("");
   const [isPending,      startTransition]   = useTransition();
   const [mentionQuery,   setMentionQuery]   = useState<string | null>(null);
   const [mentionIndex,   setMentionIndex]   = useState(0);
@@ -40,7 +40,7 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
   const isAtBottomRef  = useRef(true);
   const lastMsgIdRef   = useRef<string | undefined>(undefined);
   const pasteToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const textareaRef    = useRef<HTMLTextAreaElement>(null);
+  const editorRef      = useRef<RichTextEditorRef>(null);
 
   const canPin = userRole === "OWNER" || userRole === "ADMIN" || userRole === "MODERATOR";
   const memberNames = members.map((m) => m.name ?? "").filter(Boolean);
@@ -51,7 +51,7 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
   // Load messages on mount and when channelId changes
   useEffect(() => {
     setMessages([]);
-    setInput("");
+    editorRef.current?.clear();
     getMessages(channelId).then((msgs) => {
       setMessages(msgs as LocalMessage[]);
       lastMsgIdRef.current = msgs[msgs.length - 1]?.id;
@@ -118,40 +118,15 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
 
   // ── @mention handling ────────────────────────────────────────────────────────
 
-  function handleInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    const val = e.target.value;
-    setInput(val);
-    const cursor = e.target.selectionStart ?? val.length;
-    const textBefore = val.slice(0, cursor);
-    const atMatch = textBefore.match(/@(\w*)$/);
-    if (atMatch) {
-      setMentionQuery(atMatch[1]);
-      setMentionIndex(0);
-    } else {
-      setMentionQuery(null);
-    }
+  function handleEditorChange(_text: string, textBeforeCursor: string) {
+    const atMatch = textBeforeCursor.match(/@(\w*)$/);
+    if (atMatch) { setMentionQuery(atMatch[1]); setMentionIndex(0); }
+    else setMentionQuery(null);
   }
 
   function insertMention(name: string) {
-    const cursor = textareaRef.current?.selectionStart ?? input.length;
-    const before = input.slice(0, cursor).replace(/@\w*$/, `@${name} `);
-    setInput(before + input.slice(cursor));
+    editorRef.current?.insertMention(name);
     setMentionQuery(null);
-    setTimeout(() => textareaRef.current?.focus(), 0);
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (mentionSuggestions.length > 0) {
-      if (e.key === "ArrowDown") { e.preventDefault(); setMentionIndex((i) => Math.min(i + 1, mentionSuggestions.length - 1)); return; }
-      if (e.key === "ArrowUp")   { e.preventDefault(); setMentionIndex((i) => Math.max(i - 1, 0)); return; }
-      if (e.key === "Enter" || e.key === "Tab") {
-        e.preventDefault();
-        if (mentionSuggestions[mentionIndex]) insertMention(mentionSuggestions[mentionIndex].name ?? "");
-        return;
-      }
-      if (e.key === "Escape") { setMentionQuery(null); return; }
-    }
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void doSend(); }
   }
 
   // ── Send ─────────────────────────────────────────────────────────────────────
@@ -170,7 +145,8 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
   }
 
   async function doSend() {
-    if ((!input.trim() && !pasteImageFile) || isPending) return;
+    const editorEmpty = editorRef.current?.isEmpty() ?? true;
+    if ((editorEmpty && !pasteImageFile) || isPending) return;
 
     let imageUrl: string | undefined;
     if (pasteImageFile) {
@@ -180,13 +156,13 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
       setPastePreview(null);
     }
 
-    const content = input.trim();
-    setInput("");
+    const html = editorRef.current?.getHTML() ?? "";
+    editorRef.current?.clear();
     setMentionQuery(null);
 
     startTransition(async () => {
       try {
-        const msg = await sendMessage(channelId, content || " ", undefined, imageUrl);
+        const msg = await sendMessage(channelId, html || " ", undefined, imageUrl);
         setMessages((prev) => {
           const ids = new Set(prev.map((m) => m.id));
           if (ids.has(msg.id)) return prev;
@@ -325,17 +301,13 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
       <div className="shrink-0 border-t border-zinc-800 bg-zinc-900 px-5 py-3">
         <div className="flex items-end gap-2">
           <div className="relative flex-1">
-            <textarea
-              ref={textareaRef}
-              rows={1}
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
+            <RichTextEditor
+              ref={editorRef}
               placeholder={`Skriv i #${channelName}…`}
-              className="w-full resize-none rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 pr-10 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-indigo-500 transition-colors"
-              style={{ maxHeight: "120px", overflowY: "auto" }}
+              onChange={handleEditorChange}
+              onEnter={() => void doSend()}
             />
-            <label className="absolute bottom-2.5 right-3 cursor-pointer text-zinc-500 hover:text-zinc-300 transition-colors">
+            <label className="absolute bottom-2 right-3 cursor-pointer text-zinc-500 hover:text-zinc-300 transition-colors">
               <Paperclip className="h-4 w-4" />
               <input type="file" accept="image/*" className="sr-only" onChange={async (e) => {
                 const file = e.target.files?.[0];
@@ -348,7 +320,7 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
           </div>
           <button
             onClick={() => void doSend()}
-            disabled={(!input.trim() && !pasteImageFile) || isPending || isUploading}
+            disabled={isPending || isUploading}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white transition-colors hover:opacity-80 disabled:opacity-30"
           >
             {isPending || isUploading
@@ -358,7 +330,7 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
           </button>
         </div>
         {userName && (
-          <p className="mt-1 text-[10px] text-zinc-600">Enter for å sende · Shift+Enter for ny linje · @ for å nevne</p>
+          <p className="mt-1 text-[10px] text-zinc-600">Enter for å sende · Shift+Enter for ny linje · @ for å nevne · **fet** _kursiv_</p>
         )}
       </div>
     </div>

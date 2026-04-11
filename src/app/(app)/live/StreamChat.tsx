@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
+import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
+import SafeHtml from "@/components/SafeHtml";
 
 interface ChatMessage {
   id:        string;
@@ -23,10 +25,10 @@ function initials(name: string | null) {
 
 export default function StreamChat({ orgId, userId, disabled }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input,    setInput]    = useState("");
   const [sending,  setSending]  = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const knownIds  = useRef<Set<string>>(new Set());
+  const bottomRef  = useRef<HTMLDivElement>(null);
+  const knownIds   = useRef<Set<string>>(new Set());
+  const editorRef  = useRef<RichTextEditorRef>(null);
 
   async function fetchMessages() {
     try {
@@ -62,26 +64,26 @@ export default function StreamChat({ orgId, userId, disabled }: Props) {
   }, [messages]);
 
   async function handleSend() {
-    const text = input.trim();
-    if (!text || sending || disabled) return;
+    if (!editorRef.current || editorRef.current.isEmpty() || sending || disabled) return;
+    const html = editorRef.current.getHTML();
     setSending(true);
 
     // Optimistic
     const optimistic: ChatMessage = {
       id:        `opt-${Date.now()}`,
-      content:   text,
+      content:   html,
       createdAt: new Date().toISOString(),
       author:    { id: userId, name: "Deg", avatarUrl: null },
     };
     setMessages((prev) => [...prev, optimistic]);
     knownIds.current.add(optimistic.id);
-    setInput("");
+    editorRef.current.clear();
 
     try {
       const res  = await fetch("/api/stream/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orgId, content: text }),
+        body: JSON.stringify({ orgId, content: html }),
       });
       const data = (await res.json()) as { message: ChatMessage };
       // Replace optimistic with real
@@ -95,10 +97,6 @@ export default function StreamChat({ orgId, userId, disabled }: Props) {
     } finally {
       setSending(false);
     }
-  }
-
-  function handleKey(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void handleSend(); }
   }
 
   return (
@@ -122,7 +120,7 @@ export default function StreamChat({ orgId, userId, disabled }: Props) {
                   {new Date(msg.createdAt).toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit" })}
                 </span>
               </div>
-              <p className="whitespace-pre-wrap break-words text-[11px] leading-relaxed text-zinc-300">{msg.content}</p>
+              <SafeHtml html={msg.content} className="text-[11px] leading-relaxed text-zinc-300" />
             </div>
           </div>
         ))}
@@ -134,17 +132,16 @@ export default function StreamChat({ orgId, userId, disabled }: Props) {
         {disabled ? (
           <p className="py-2 text-center text-xs text-zinc-600">Chatten er lukket</p>
         ) : (
-          <div className="flex items-center gap-2 rounded-lg border border-violet-800/60 bg-violet-950/40 px-3 py-2 focus-within:border-violet-500">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKey}
+          <div className="flex items-end gap-2">
+            <RichTextEditor
+              ref={editorRef}
               placeholder="Si noe til chatten…"
-              className="flex-1 bg-transparent text-xs text-white placeholder-violet-700 outline-none"
+              disabled={disabled}
+              onEnter={() => void handleSend()}
+              className="flex-1 border-violet-800/60 bg-violet-950/40 focus-within:border-violet-500"
             />
-            <button onClick={() => void handleSend()} disabled={!input.trim() || sending}
-              className="shrink-0 text-violet-500 transition-colors hover:text-violet-300 disabled:opacity-30">
+            <button onClick={() => void handleSend()} disabled={sending}
+              className="shrink-0 text-violet-500 transition-colors hover:text-violet-300 disabled:opacity-30 pb-2">
               <Send className="h-3.5 w-3.5" />
             </button>
           </div>

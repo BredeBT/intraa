@@ -8,6 +8,7 @@ import {
   Check, MoreHorizontal, Pin, X, Loader2, Settings, Search,
   Pencil, Trash2, Plus,
 } from "lucide-react";
+import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
 import {
   sendMessage, getMessages, getOrCreateDmChannel,
   editMessage, deleteMessage, pinMessage,
@@ -56,7 +57,6 @@ export default function ChatClient({
 
   // DM search
   const [dmSearch,         setDmSearch]         = useState("");
-  const [input,            setInput]            = useState("");
   const [isPending,        startTransition]     = useTransition();
   const [unread,           setUnread]           = useState<Record<string, number>>({});
   const [muted,            setMuted]            = useState<Set<string>>(new Set());
@@ -83,6 +83,7 @@ export default function ChatClient({
   const isAtBottomRef = useRef(true);
   const lastMsgIdRef  = useRef<string | undefined>(undefined);
   const fileInputRef  = useRef<HTMLInputElement>(null);
+  const editorRef     = useRef<RichTextEditorRef>(null);
 
   const canPin = userRole === "OWNER" || userRole === "ADMIN" || userRole === "MODERATOR";
 
@@ -206,44 +207,15 @@ export default function ChatClient({
 
   // ── Input / Mention handling ─────────────────────────────────────────────────
 
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const val = e.target.value;
-    setInput(val);
-
-    // Detect @mention: find last @ in input
-    const lastAt = val.lastIndexOf("@");
-    if (lastAt !== -1) {
-      const query = val.slice(lastAt + 1);
-      // Only show if query has no spaces (mid-word) or is empty
-      if (!query.includes(" ") || query === "") {
-        setMentionQuery(query);
-        setMentionIndex(0);
-        return;
-      }
-    }
-    setMentionQuery(null);
+  function handleEditorChange(_text: string, textBeforeCursor: string) {
+    const atMatch = textBeforeCursor.match(/@(\w*)$/);
+    if (atMatch) { setMentionQuery(atMatch[1]); setMentionIndex(0); }
+    else setMentionQuery(null);
   }
 
   function insertMention(name: string) {
-    // Replace the @query at the end with @Name
-    const lastAt = input.lastIndexOf("@");
-    const newInput = input.slice(0, lastAt) + `@${name} `;
-    setInput(newInput);
+    editorRef.current?.insertMention(name);
     setMentionQuery(null);
-  }
-
-  function handleKey(e: React.KeyboardEvent) {
-    // Mention navigation
-    if (mentionQuery !== null && mentionSuggestions.length > 0) {
-      if (e.key === "ArrowDown") { e.preventDefault(); setMentionIndex((i) => (i + 1) % mentionSuggestions.length); return; }
-      if (e.key === "ArrowUp")   { e.preventDefault(); setMentionIndex((i) => (i - 1 + mentionSuggestions.length) % mentionSuggestions.length); return; }
-      if (e.key === "Enter" || e.key === "Tab") {
-        const s = mentionSuggestions[mentionIndex];
-        if (s) { e.preventDefault(); insertMention(s.name); return; }
-      }
-      if (e.key === "Escape") { setMentionQuery(null); return; }
-    }
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
   }
 
   // ── Channel actions ──────────────────────────────────────────────────────────
@@ -281,10 +253,11 @@ export default function ChatClient({
   // ── Send ─────────────────────────────────────────────────────────────────────
 
   function handleSend() {
-    const text = input.trim();
-    if ((!text && !pasteImageFile) || !resolvedChannelId) return;
+    const editorEmpty = editorRef.current?.isEmpty() ?? true;
+    if ((editorEmpty && !pasteImageFile) || !resolvedChannelId) return;
+    const html = editorRef.current?.getHTML() ?? "";
     const imageFile = pasteImageFile;
-    setInput("");
+    editorRef.current?.clear();
     setMentionQuery(null);
     clearPasteImage();
 
@@ -302,24 +275,20 @@ export default function ChatClient({
               imageUrl = data.url;
             } else {
               setIsUploading(false);
-              setInput(text);
               return;
             }
           } catch {
             setIsUploading(false);
-            setInput(text);
             return;
           } finally {
             setIsUploading(false);
           }
         }
-        await sendMessage(resolvedChannelId, text, undefined, imageUrl);
+        await sendMessage(resolvedChannelId, html || " ", undefined, imageUrl);
         const msgs = await getMessages(resolvedChannelId);
         setMessages(msgs);
         setTimeout(scrollToBottom, 50);
-      } catch {
-        setInput(text);
-      }
+      } catch { /* silent */ }
     });
   }
 
@@ -677,30 +646,29 @@ export default function ChatClient({
             </div>
           )}
 
-          <div className="flex items-center gap-3 rounded-lg bg-zinc-900 px-4 py-2">
+          <div className="flex items-end gap-3">
             <button onClick={() => fileInputRef.current?.click()} disabled={!activeChannel}
-              className="shrink-0 text-zinc-400 transition-colors hover:text-indigo-400 disabled:opacity-30" title="Legg ved fil">
+              className="shrink-0 pb-2 text-zinc-400 transition-colors hover:text-indigo-400 disabled:opacity-30" title="Legg ved fil">
               <Paperclip className="h-4 w-4" />
             </button>
             <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
-            <input
-              type="text"
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKey}
-              disabled={(!activeChannel && !activeDm) || (isAnnouncementChannel && !isAdmin)}
+            <RichTextEditor
+              ref={editorRef}
               placeholder={
                 isAnnouncementChannel && !isAdmin ? "Kun admin kan skrive i kunngjøringskanaler"
                 : pasteImageFile ? "Legg til en bildetekst (valgfritt)…"
-                : activeChannel ? `Skriv til ${channelLabel}… (@ for mention, Ctrl+V for bilde)`
+                : activeChannel ? `Skriv til ${channelLabel}…`
                 : activeDm ? `Melding til ${activeDm.name}…`
                 : "Velg en kanal…"
               }
-              className="flex-1 bg-transparent text-sm text-white placeholder:text-zinc-400 outline-none disabled:opacity-40"
+              disabled={(!activeChannel && !activeDm) || (isAnnouncementChannel && !isAdmin)}
+              onChange={handleEditorChange}
+              onEnter={handleSend}
+              className="flex-1"
             />
             <button onClick={handleSend}
-              disabled={(!input.trim() && !pasteImageFile) || isPending || isUploading || (!activeChannel && !activeDm) || (isAnnouncementChannel && !isAdmin)}
-              className="shrink-0 rounded-md bg-indigo-600 p-1.5 text-white transition-colors hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50">
+              disabled={isPending || isUploading || (!activeChannel && !activeDm) || (isAnnouncementChannel && !isAdmin)}
+              className="shrink-0 rounded-md bg-indigo-600 p-1.5 pb-2 text-white transition-colors hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50">
               {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizontal className="h-4 w-4" />}
             </button>
           </div>

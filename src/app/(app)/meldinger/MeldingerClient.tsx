@@ -5,6 +5,8 @@ import {
   Search, Send, MessageSquare, ChevronDown, ChevronRight,
   Hash, Plus, X, Users, Check, UserPlus, Clock,
 } from "lucide-react";
+import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
+import SafeHtml from "@/components/SafeHtml";
 import type { UserSearchResult } from "@/app/api/users/search/route";
 import dynamic from "next/dynamic";
 
@@ -225,9 +227,9 @@ function DMView({
   currentUserId: string;
 }) {
   const [messages, setMessages] = useState<DMMessage[]>([]);
-  const [text,     setText]     = useState("");
   const [sending,  setSending]  = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<RichTextEditorRef>(null);
   const [, start] = useTransition();
 
   useEffect(() => {
@@ -258,16 +260,17 @@ function DMView({
   }, [messages]);
 
   async function send() {
-    if (!text.trim() || sending) return;
+    if (!editorRef.current || editorRef.current.isEmpty() || sending) return;
+    const html = editorRef.current.getHTML();
     setSending(true);
+    editorRef.current.clear();
     const res = await fetch(`/api/dm/${friendId}`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body:   JSON.stringify({ content: text }),
+      body:   JSON.stringify({ content: html }),
     });
     if (res.ok) {
       const data = await res.json() as { message: DMMessage };
       setMessages((prev) => [...prev, data.message]);
-      setText("");
     }
     setSending(false);
   }
@@ -290,8 +293,8 @@ function DMView({
             <div key={msg.id} className={`flex items-end gap-2 ${isMe ? "justify-end" : ""}`}>
               {!isMe && <Avatar avatarUrl={msg.sender.avatarUrl} name={msg.sender.name} size={6} />}
               <div>
-                <div className={`max-w-xs whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm ${isMe ? "rounded-br-sm bg-indigo-600 text-white" : "rounded-bl-sm bg-zinc-800 text-zinc-200"}`}>
-                  {msg.content}
+                <div className={`max-w-xs rounded-2xl px-4 py-2.5 text-sm ${isMe ? "rounded-br-sm bg-indigo-600 text-white" : "rounded-bl-sm bg-zinc-800 text-zinc-200"}`}>
+                  <SafeHtml html={msg.content} />
                 </div>
                 <p className={`mt-0.5 text-[10px] text-zinc-600 ${isMe ? "text-right" : ""}`}>{formatTime(msg.createdAt)}</p>
               </div>
@@ -302,17 +305,15 @@ function DMView({
       </div>
       <div className="shrink-0 border-t border-zinc-800 bg-zinc-900 px-5 py-3">
         <div className="flex items-end gap-2">
-          <textarea
-            rows={1}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }}
+          <RichTextEditor
+            ref={editorRef}
             placeholder="Skriv en melding…"
-            className="flex-1 resize-none rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-indigo-500 transition-colors"
+            onEnter={() => void send()}
+            className="flex-1"
           />
           <button
             onClick={() => void send()}
-            disabled={!text.trim() || sending}
+            disabled={sending}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white transition-colors hover:opacity-80 disabled:opacity-30"
           >
             <Send className="h-4 w-4" />
