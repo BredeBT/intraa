@@ -114,13 +114,10 @@ function FanpassStatus({
     return (
       <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-5">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">✅</span>
+          <span className="text-2xl">🎫</span>
           <div>
-            <p className="font-semibold text-emerald-400">Fanpass aktiv</p>
+            <p className="font-semibold text-emerald-400">Fanpass er aktivt</p>
             <p className="text-sm text-zinc-400">Utløper {fmt(fanpass.endDate)}</p>
-          </div>
-          <div className="ml-auto rounded-lg bg-emerald-500/20 px-3 py-1.5 text-xs font-semibold text-emerald-400">
-            1.5x coin-multiplier aktiv
           </div>
         </div>
       </div>
@@ -133,10 +130,10 @@ function FanpassStatus({
         <div>
           <p className="font-semibold text-violet-300">🎫 Fanpass — 59 kr/mnd</p>
           <ul className="mt-2 space-y-1 text-sm text-zinc-400">
-            <li>✅ 1.5x coins på alle aktiviteter</li>
-            <li>✅ Eksklusive shop-items</li>
             <li>✅ Fanpass-badge ved navn</li>
-            <li>✅ Støtt {orgName} direkte</li>
+            <li>✅ Prioritert support</li>
+            <li>✅ Tidlig tilgang til nye funksjoner</li>
+            <li>✅ En del av abonnementet går til Smilekassen</li>
           </ul>
         </div>
         <button
@@ -297,30 +294,18 @@ function ShopGrid({
   );
 }
 
-function FanpassTab({ orgId, orgName, hasFanpass, onActivated }: {
-  orgId:        string;
-  orgName:      string;
-  hasFanpass: boolean;
-  onActivated:  () => void;
+function FanpassTab({ orgId, hasFanpass, onActivated }: {
+  orgId:       string;
+  orgName:     string;
+  hasFanpass:  boolean;
+  onActivated: () => void;
 }) {
   const BENEFITS = [
-    "1.5x coins på alle aktiviteter",
-    "Eksklusive shop-items",
-    "Fanpass-badge ved navn",
-    "Tilgang til Fanpass-eksklusiv shop",
-    `Støtt ${orgName} direkte`,
-  ];
-
-  const TABLE_ROWS = [
-    { label: "Coins ved innlogging",  free: "+5",    bp: "+8"   },
-    { label: "Coins ved innlegg",     free: "+10",   bp: "+15"  },
-    { label: "Coins ved kommentar",   free: "+3",    bp: "+5"   },
-    { label: "Stream 30 min",         free: "+20",   bp: "+30"  },
-    { label: "Daglig maks",           free: "~74",   bp: "~111" },
-    { label: "Mnd maks (aktiv)",      free: "~1500", bp: "~2200"},
-    { label: "Fanpass fornyelse",     free: "800 🪙", bp: "800 🪙"},
-    { label: "Eksklusive items",      free: "❌",    bp: "✅"   },
-    { label: "Fanpass badge",         free: "❌",    bp: "✅"   },
+    { icon: "🎫", title: "Fanpass-badge ved navn",          desc: "Vis frem at du støtter communityet i chat og feed" },
+    { icon: "⚡", title: "Prioritert support",               desc: "Sakene dine behandles foran køen" },
+    { icon: "🔭", title: "Tidlig tilgang til nye funksjoner", desc: "Test nye features før alle andre" },
+    { icon: "🔒", title: "Eksklusiv Fanpass-kanal",          desc: "Privat kanal kun for Fanpass-medlemmer" },
+    { icon: "❤️", title: "Du støtter Intraa direkte",         desc: "Bidrar til bedre tjeneste for hele communityet" },
   ];
 
   const [activating, setActivating] = useState(false);
@@ -337,60 +322,54 @@ function FanpassTab({ orgId, orgName, hasFanpass, onActivated }: {
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-2">
-      {/* Left: info */}
-      <div>
-        <div className="mb-6 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-700 p-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-violet-300">Fanpass</p>
-          <p className="mt-1 text-3xl font-bold text-white">59 kr/mnd</p>
-          <p className="mt-1 text-sm text-violet-200">Maks ut din coin-inntjening</p>
-        </div>
+    <div className="space-y-6">
+      {/* Hero */}
+      <div className="rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-700 p-6">
+        <p className="text-xs font-semibold uppercase tracking-wider text-violet-300">Fanpass</p>
+        <p className="mt-1 text-3xl font-bold text-white">59 kr/mnd</p>
+        <p className="mt-1 text-sm text-violet-200">Støtt communityet og få eksklusive fordeler</p>
+      </div>
 
-        <div className="mb-6 space-y-2.5">
-          {BENEFITS.map((b) => (
-            <div key={b} className="flex items-center gap-3 text-sm text-zinc-300">
-              <span className="text-emerald-400">✅</span> {b}
+      {/* Benefits */}
+      <div className="space-y-3">
+        {BENEFITS.map((b) => (
+          <div key={b.title} className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+            <span className="mt-0.5 text-xl leading-none">{b.icon}</span>
+            <div>
+              <p className="text-sm font-semibold text-white">{b.title}</p>
+              <p className="mt-0.5 text-xs text-zinc-500">{b.desc}</p>
             </div>
-          ))}
-        </div>
-
-        {!hasFanpass ? (
-          <button
-            onClick={() => void activate()}
-            disabled={activating}
-            className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3 text-sm font-bold text-white hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50"
-          >
-            {activating ? "Aktiverer…" : "Aktiver Fanpass"}
-          </button>
-        ) : (
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-3 text-center text-sm font-semibold text-emerald-400">
-            ✅ Fanpass er aktivt
           </div>
-        )}
-        <p className="mt-2 text-center text-xs text-zinc-600">
-          Stripe-betaling kommer snart — nå aktiveres uten betaling (demo)
+        ))}
+      </div>
+
+      {/* Smilekassen */}
+      <div className="rounded-xl border border-pink-500/20 bg-pink-500/5 p-5">
+        <p className="font-semibold text-pink-300">💛 Vi gir tilbake</p>
+        <p className="mt-1.5 text-sm text-zinc-400">
+          En fast andel av alle Fanpass-inntekter doneres månedlig til{" "}
+          <span className="font-medium text-white">Smilekassen</span>, en norsk veldedighet som
+          støtter barn og unge med livstruende og alvorlig sykdom.
         </p>
       </div>
 
-      {/* Right: comparison table */}
-      <div>
-        <h3 className="mb-4 text-sm font-semibold text-white">Free vs Fanpass</h3>
-        <div className="overflow-hidden rounded-xl border border-zinc-800">
-          <div className="grid grid-cols-3 bg-zinc-800/50 px-4 py-2 text-xs font-semibold text-zinc-400">
-            <span></span>
-            <span className="text-center">Free</span>
-            <span className="text-center text-violet-400">Fanpass</span>
-          </div>
-          {TABLE_ROWS.map((row, i) => (
-            <div key={row.label}
-              className={`grid grid-cols-3 items-center px-4 py-3 text-sm ${i < TABLE_ROWS.length - 1 ? "border-b border-zinc-800" : ""}`}>
-              <span className="text-zinc-400">{row.label}</span>
-              <span className="text-center text-zinc-500">{row.free}</span>
-              <span className="text-center font-semibold text-violet-400">{row.bp}</span>
-            </div>
-          ))}
+      {/* CTA */}
+      {!hasFanpass ? (
+        <div>
+          <button
+            onClick={() => void activate()}
+            disabled={activating}
+            className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3.5 text-sm font-bold text-white hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50"
+          >
+            {activating ? "Aktiverer…" : "Aktiver Fanpass"}
+          </button>
+          <p className="mt-2 text-center text-xs text-zinc-600">59 kr/mnd — avbryt når som helst</p>
         </div>
-      </div>
+      ) : (
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-3.5 text-center text-sm font-semibold text-emerald-400">
+          ✅ Fanpass er aktivt
+        </div>
+      )}
     </div>
   );
 }
