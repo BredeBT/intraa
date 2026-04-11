@@ -308,16 +308,18 @@ export default function FeedClient({
       {liveStream?.isLive && orgSlug && (
         <Link
           href={`/${orgSlug}/live`}
-          className="md:hidden flex items-center gap-3 border-b border-red-900/30 bg-red-950/30 px-4 py-3"
+          className="md:hidden flex items-center gap-3 overflow-hidden border-b border-red-900/30 bg-red-950/30 px-4 py-3"
         >
           <span className="h-2 w-2 shrink-0 rounded-full bg-red-500 animate-pulse" />
-          <div className="min-w-0 flex-1">
-            <span className="text-xs font-semibold text-red-400">LIVE NÅ</span>
-            {liveStream.title && (
-              <span className="ml-2 truncate text-xs text-zinc-400">{liveStream.title}</span>
-            )}
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <div className="flex items-center gap-1.5 overflow-hidden">
+              <span className="shrink-0 text-xs font-semibold text-red-400">LIVE NÅ</span>
+              {liveStream.title && (
+                <span className="truncate text-xs text-zinc-400">{liveStream.title}</span>
+              )}
+            </div>
           </div>
-          <span className="shrink-0 text-xs text-zinc-500">Se →</span>
+          <span className="ml-2 shrink-0 text-xs font-medium text-zinc-400">Se →</span>
         </Link>
       )}
 
