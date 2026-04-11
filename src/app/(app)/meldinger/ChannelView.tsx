@@ -8,6 +8,8 @@ import {
 } from "@/server/actions/messages";
 import type { MessageWithAuthor } from "@/lib/types";
 import MessageItem, { type LocalMessage } from "@/app/(app)/chat/MessageItem";
+import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
+import { broadcastMessage } from "@/lib/broadcast";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -60,22 +62,16 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
     fetch(`/api/channels/${channelId}/read`, { method: "PATCH" }).catch(() => null);
   }, [channelId]);
 
-  // Poll every 5s
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const newMsgs = await getMessages(channelId, lastMsgIdRef.current);
-        if (newMsgs.length > 0) {
-          lastMsgIdRef.current = newMsgs[newMsgs.length - 1]?.id;
-          setMessages((prev) => {
-            const ids = new Set(prev.map((m) => m.id));
-            return [...prev, ...newMsgs.filter((m) => !ids.has(m.id)) as LocalMessage[]];
-          });
-        }
-      } catch { /* ignore */ }
-    }, 8000);
-    return () => clearInterval(interval);
-  }, [channelId]);
+  // Realtime: receive messages from other users
+  useRealtimeChannel(`channel:${channelId}`, (payload) => {
+    const msg = (payload as { payload?: LocalMessage }).payload;
+    if (!msg) return;
+    setMessages((prev) => {
+      if (prev.some((m) => m.id === msg.id)) return prev;
+      if (isAtBottomRef.current) setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+      return [...prev, msg];
+    });
+  });
 
   // Scroll tracking
   useEffect(() => {
@@ -170,6 +166,8 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
         });
         lastMsgIdRef.current = msg.id;
         isAtBottomRef.current = true;
+        // Broadcast to other subscribers so they see the message without polling
+        void broadcastMessage(`channel:${channelId}`, msg);
       } catch { /* ignore */ }
     });
   }

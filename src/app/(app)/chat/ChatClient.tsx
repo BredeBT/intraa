@@ -15,6 +15,8 @@ import {
 } from "@/server/actions/messages";
 import type { MessageWithAuthor } from "@/lib/types";
 import MessageItem, { type LocalMessage, type Attachment } from "./MessageItem";
+import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
+import { broadcastMessage } from "@/lib/broadcast";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -121,31 +123,20 @@ export default function ChatClient({
 
   useEffect(() => { lastMsgIdRef.current = messages[messages.length - 1]?.id; }, [messages]);
 
-  useEffect(() => {
-    if (!resolvedChannelId) return;
-    const INTERVAL = 8000;
-    let id: ReturnType<typeof setInterval>;
-    const run = async () => {
-      try {
-        const newMsgs = await getMessages(resolvedChannelId, lastMsgIdRef.current);
-        if (newMsgs.length === 0) return;
-        setMessages((prev) => {
-          const existingIds = new Set(prev.map((m) => m.id));
-          const fresh = newMsgs.filter((m) => !existingIds.has(m.id));
-          if (fresh.length === 0) return prev;
-          if (isAtBottomRef.current) setTimeout(scrollToBottom, 50);
-          return [...prev, ...fresh];
-        });
-      } catch { /* silent */ }
-    };
-    id = setInterval(run, INTERVAL);
-    const onVisibility = () => {
-      if (document.hidden) clearInterval(id);
-      else id = setInterval(run, INTERVAL);
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => { clearInterval(id); document.removeEventListener("visibilitychange", onVisibility); };
-  }, [resolvedChannelId]);
+  // Realtime: receive messages from other users on the active channel
+  useRealtimeChannel(
+    resolvedChannelId ? `channel:${resolvedChannelId}` : "__none__",
+    (payload) => {
+      if (!resolvedChannelId) return;
+      const msg = (payload as { payload?: LocalMessage }).payload;
+      if (!msg) return;
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        if (isAtBottomRef.current) setTimeout(scrollToBottom, 50);
+        return [...prev, msg];
+      });
+    },
+  );
 
   // Fetch pinned messages when channel changes
   useEffect(() => {
@@ -284,10 +275,14 @@ export default function ChatClient({
             setIsUploading(false);
           }
         }
-        await sendMessage(resolvedChannelId, html || " ", undefined, imageUrl);
-        const msgs = await getMessages(resolvedChannelId);
-        setMessages(msgs);
+        const newMsg = await sendMessage(resolvedChannelId, html || " ", undefined, imageUrl);
+        setMessages((prev) => {
+          const ids = new Set(prev.map((m) => m.id));
+          return ids.has(newMsg.id) ? prev : [...prev, newMsg as LocalMessage];
+        });
         setTimeout(scrollToBottom, 50);
+        // Broadcast to other subscribers
+        void broadcastMessage(`channel:${resolvedChannelId}`, newMsg);
       } catch { /* silent */ }
     });
   }

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useTransition } from "react";
+import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
+import { broadcastMessage } from "@/lib/broadcast";
 import {
   Search, Send, MessageSquare, ChevronDown, ChevronRight,
   Hash, Plus, X, Users, Check, UserPlus, Clock,
@@ -239,21 +241,16 @@ function DMView({
     fetch(`/api/dm/${friendId}/read`, { method: "PATCH" }).catch(() => null);
   }, [friendId]);
 
-  useEffect(() => {
-    const INTERVAL = 8000;
-    let id: ReturnType<typeof setInterval>;
-    const run = async () => {
-      const res = await fetch(`/api/dm/${friendId}`);
-      if (res.ok) setMessages((await res.json() as { messages: DMMessage[] }).messages);
-    };
-    id = setInterval(run, INTERVAL);
-    const onVisibility = () => {
-      if (document.hidden) clearInterval(id);
-      else id = setInterval(run, INTERVAL);
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => { clearInterval(id); document.removeEventListener("visibilitychange", onVisibility); };
-  }, [friendId]);
+  // Realtime: receive DMs from the other user
+  const dmChannel = [currentUserId, friendId].sort().join("-");
+  useRealtimeChannel(`dm:${dmChannel}`, (payload) => {
+    const msg = (payload as { payload?: DMMessage }).payload;
+    if (!msg) return;
+    setMessages((prev) => {
+      if (prev.some((m) => m.id === msg.id)) return prev;
+      return [...prev, msg];
+    });
+  });
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -271,6 +268,8 @@ function DMView({
     if (res.ok) {
       const data = await res.json() as { message: DMMessage };
       setMessages((prev) => [...prev, data.message]);
+      // Broadcast to the other user
+      void broadcastMessage(`dm:${dmChannel}`, data.message);
     }
     setSending(false);
   }
