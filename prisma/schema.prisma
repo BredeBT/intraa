@@ -430,6 +430,8 @@ model TicketReply {
 
   ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   author User   @relation(fields: [authorId], references: [id])
+
+  @@index([ticketId, createdAt(sort: Desc)])
 }
 
 model TicketCategory {
@@ -505,6 +507,8 @@ model Notification {
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
 }
 
 model UserActivity {

@@ -131,15 +131,23 @@ export default function FeedClient({
   useEffect(() => {
     if (isPosting) return;
     let cancelled = false;
-    const interval = setInterval(async () => {
+    const INTERVAL = 15000;
+    let id: ReturnType<typeof setInterval>;
+    const run = async () => {
       try {
         const res = await fetch(`/api/posts?orgId=${orgId}`);
         if (cancelled || !res.ok) return;
         const fresh = await res.json() as PostWithAuthor[];
         if (!cancelled) setPosts(fresh);
       } catch { /* silent */ }
-    }, 10000);
-    return () => { cancelled = true; clearInterval(interval); };
+    };
+    id = setInterval(run, INTERVAL);
+    const onVisibility = () => {
+      if (document.hidden) clearInterval(id);
+      else id = setInterval(run, INTERVAL);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { cancelled = true; clearInterval(id); document.removeEventListener("visibilitychange", onVisibility); };
   }, [orgId, isPosting]);
 
   useEffect(() => {
@@ -154,7 +162,7 @@ export default function FeedClient({
           setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, comments } : p));
         } catch { /* silent */ }
       }
-    }, 10000);
+    }, 20000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openKey]);

@@ -122,7 +122,9 @@ export default function ChatClient({
 
   useEffect(() => {
     if (!resolvedChannelId) return;
-    const interval = setInterval(async () => {
+    const INTERVAL = 8000;
+    let id: ReturnType<typeof setInterval>;
+    const run = async () => {
       try {
         const newMsgs = await getMessages(resolvedChannelId, lastMsgIdRef.current);
         if (newMsgs.length === 0) return;
@@ -134,8 +136,14 @@ export default function ChatClient({
           return [...prev, ...fresh];
         });
       } catch { /* silent */ }
-    }, 5000);
-    return () => clearInterval(interval);
+    };
+    id = setInterval(run, INTERVAL);
+    const onVisibility = () => {
+      if (document.hidden) clearInterval(id);
+      else id = setInterval(run, INTERVAL);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { clearInterval(id); document.removeEventListener("visibilitychange", onVisibility); };
   }, [resolvedChannelId]);
 
   // Fetch pinned messages when channel changes

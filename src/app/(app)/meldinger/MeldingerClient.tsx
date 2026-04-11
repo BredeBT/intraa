@@ -237,11 +237,19 @@ function DMView({
   }, [friendId]);
 
   useEffect(() => {
-    const interval = setInterval(async () => {
+    const INTERVAL = 8000;
+    let id: ReturnType<typeof setInterval>;
+    const run = async () => {
       const res = await fetch(`/api/dm/${friendId}`);
       if (res.ok) setMessages((await res.json() as { messages: DMMessage[] }).messages);
-    }, 3000);
-    return () => clearInterval(interval);
+    };
+    id = setInterval(run, INTERVAL);
+    const onVisibility = () => {
+      if (document.hidden) clearInterval(id);
+      else id = setInterval(run, INTERVAL);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { clearInterval(id); document.removeEventListener("visibilitychange", onVisibility); };
   }, [friendId]);
 
   useEffect(() => {

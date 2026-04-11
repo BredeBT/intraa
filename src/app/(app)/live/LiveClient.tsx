@@ -83,7 +83,7 @@ function FeedTab({ orgId, userId, isAdmin }: { orgId: string; userId: string; is
 
   useEffect(() => {
     void fetchPosts();
-    const interval = setInterval(fetchPosts, 10_000);
+    const interval = setInterval(fetchPosts, 15_000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);

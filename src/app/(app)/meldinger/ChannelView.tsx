@@ -73,7 +73,7 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
           });
         }
       } catch { /* ignore */ }
-    }, 5000);
+    }, 8000);
     return () => clearInterval(interval);
   }, [channelId]);
 

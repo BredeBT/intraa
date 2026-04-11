@@ -51,7 +51,7 @@ export default function StreamChat({ orgId, userId, disabled }: Props) {
       })
       .catch(() => null);
 
-    const interval = setInterval(fetchMessages, 5_000);
+    const interval = setInterval(fetchMessages, 8_000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);

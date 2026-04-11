@@ -461,8 +461,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [org?.id]);
 
-  // Poll unread count every 15s
+  // Poll unread count every 30s, paused when tab is hidden
   useEffect(() => {
+    const INTERVAL = 30_000;
+    let id: ReturnType<typeof setInterval>;
     const check = () => {
       fetch("/api/user/unread")
         .then((r) => r.ok ? r.json() as Promise<{ total: number }> : Promise.reject())
@@ -470,8 +472,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         .catch(() => null);
     };
     check();
-    const interval = setInterval(check, 15_000);
-    return () => clearInterval(interval);
+    id = setInterval(check, INTERVAL);
+    const onVisibility = () => {
+      if (document.hidden) clearInterval(id);
+      else { check(); id = setInterval(check, INTERVAL); }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { clearInterval(id); document.removeEventListener("visibilitychange", onVisibility); };
   }, []);
 
   // Persist desktop sidebar collapsed state — read after mount to avoid SSR mismatch

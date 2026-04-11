@@ -94,7 +94,7 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
         const data = await res.json() as { messages: GroupMsg[] };
         setMessages(data.messages);
       }
-    }, 5000);
+    }, 8000);
     return () => clearInterval(interval);
   }, [groupId]);
 

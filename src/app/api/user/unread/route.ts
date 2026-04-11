@@ -62,5 +62,8 @@ export async function GET() {
     channelUnread += count;
   }
 
-  return NextResponse.json({ total: dmUnread + groupUnread + channelUnread, dm: dmUnread, group: groupUnread, channel: channelUnread });
+  return NextResponse.json(
+    { total: dmUnread + groupUnread + channelUnread, dm: dmUnread, group: groupUnread, channel: channelUnread },
+    { headers: { "Cache-Control": "private, max-age=20" } },
+  );
 }
