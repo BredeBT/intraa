@@ -46,14 +46,14 @@ export default async function FeedPage() {
   const sidebar = isCommunity && org ? await getSidebarData(ctx.organizationId, org.createdAt) : null;
 
   return (
-    <div className="flex h-[calc(100vh-56px)]">
+    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)]">
 
       {/* Venstre: scrollbart feed — scrollbar skjult (vises ellers midt på siden ved sidebar) */}
       <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 
         {/* BANNER – full bredde */}
         {(theme?.bannerUrl ?? theme?.bannerPreset) && (
-          <div className="relative h-36 w-full overflow-hidden">
+          <div className="relative h-24 md:h-36 w-full overflow-hidden">
             {theme?.bannerUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={theme.bannerUrl} alt="" className="h-full w-full object-cover" />
@@ -68,7 +68,7 @@ export default async function FeedPage() {
         )}
 
         {/* INNHOLD */}
-        <div className={sidebar ? "mx-auto max-w-4xl px-6" : "mx-auto max-w-2xl px-6"}>
+        <div className={sidebar ? "mx-auto max-w-2xl px-4 md:max-w-4xl md:px-6" : "mx-auto max-w-2xl px-4 md:px-6"}>
           <FeedClient
             initialPosts={posts}
             orgId={ctx.organizationId}
@@ -83,13 +83,15 @@ export default async function FeedPage() {
             orgColor="#4f46e5"
             memberCount={memberCount}
             welcomeMessage={theme?.welcomeMessage ?? null}
+            orgSlug={org?.slug ?? null}
+            liveEnabled={sidebar?.liveEnabled ?? false}
           />
         </div>
       </div>
 
-      {/* Høyre: fast sidebar med egen scroll */}
+      {/* Høyre: fast sidebar — skjult på mobil */}
       {sidebar && (
-        <div className="w-80 shrink-0 overflow-y-auto border-l border-zinc-800/50 p-4">
+        <div className="hidden md:block w-80 shrink-0 overflow-y-auto border-l border-zinc-800/50 p-4">
           <OwnerSidebar
             owner={sidebar.ownerProfile}
             orgId={ctx.organizationId}

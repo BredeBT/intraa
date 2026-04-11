@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X } from "lucide-react";
+import Link from "next/link";
+import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X, Radio } from "lucide-react";
 import { createPost, deletePost } from "@/server/actions/posts";
 import type { PostWithAuthor, CommentWithAuthor } from "@/lib/types";
 import { AVATAR_PRESETS } from "@/lib/themePresets";
@@ -48,6 +49,8 @@ interface Props {
   orgColor:        string;
   memberCount:     number;
   welcomeMessage?: string | null;
+  orgSlug?:        string | null;
+  liveEnabled?:    boolean;
 }
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
@@ -68,6 +71,7 @@ function UserAvatar({ name, size = "md" }: { name: string; size?: "sm" | "md" })
 export default function FeedClient({
   initialPosts, orgId, userName, userId, isSuperAdmin,
   bannerUrl, logoUrl, avatarPreset, orgName, orgType, orgColor, memberCount, welcomeMessage,
+  orgSlug, liveEnabled,
 }: Props) {
   const [posts,            setPosts]            = useState<PostWithAuthor[]>(initialPosts);
   const [open,             setOpen]             = useState(false);
@@ -81,6 +85,8 @@ export default function FeedClient({
   const [imagePreview,     setImagePreview]     = useState<string | null>(null);
   const [isUploading,      setIsUploading]      = useState(false);
   const [pasteToast,       setPasteToast]       = useState<string | null>(null);
+
+  const [liveStream, setLiveStream] = useState<{ isLive: boolean; title: string } | null>(null);
 
   const pasteToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef     = useRef<HTMLTextAreaElement>(null);
@@ -167,6 +173,20 @@ export default function FeedClient({
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openKey]);
+
+  // Poll live status (for mobile banner)
+  useEffect(() => {
+    if (!liveEnabled || !orgId) return;
+    const check = () => {
+      fetch(`/api/stream/status?orgId=${orgId}`)
+        .then((r) => r.ok ? r.json() as Promise<{ isLive: boolean; title: string }> : Promise.reject())
+        .then((data) => setLiveStream(data))
+        .catch(() => null);
+    };
+    check();
+    const interval = setInterval(check, 60_000);
+    return () => clearInterval(interval);
+  }, [orgId, liveEnabled]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
@@ -283,6 +303,23 @@ export default function FeedClient({
 
   return (
     <div className="min-h-screen bg-zinc-950">
+
+      {/* ── MOBIL LIVE-BANNER (skjult på desktop der OwnerSidebar viser dette) ── */}
+      {liveStream?.isLive && orgSlug && (
+        <Link
+          href={`/${orgSlug}/live`}
+          className="md:hidden flex items-center gap-3 border-b border-red-900/30 bg-red-950/30 px-4 py-3"
+        >
+          <span className="h-2 w-2 shrink-0 rounded-full bg-red-500 animate-pulse" />
+          <div className="min-w-0 flex-1">
+            <span className="text-xs font-semibold text-red-400">LIVE NÅ</span>
+            {liveStream.title && (
+              <span className="ml-2 truncate text-xs text-zinc-400">{liveStream.title}</span>
+            )}
+          </div>
+          <span className="shrink-0 text-xs text-zinc-500">Se →</span>
+        </Link>
+      )}
 
       {/* ── 1. ORG HEADER ── */}
       <div className="relative z-10 mx-auto max-w-2xl px-4">
@@ -481,10 +518,10 @@ export default function FeedClient({
                   )}
 
                   {/* Actions */}
-                  <div className="mt-3 flex items-center gap-5 border-t border-zinc-800 pt-3">
+                  <div className="mt-2 flex items-center gap-1 border-t border-zinc-800 pt-1">
                     <button
                       onClick={() => handleLike(post.id, post.likedByMe)}
-                      className={`flex items-center gap-1.5 text-xs transition-colors ${
+                      className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg text-xs transition-colors ${
                         post.likedByMe ? "text-rose-400" : "text-zinc-400 hover:text-rose-400"
                       }`}
                     >
@@ -494,7 +531,7 @@ export default function FeedClient({
                     </button>
                     <button
                       onClick={() => toggleComments(post.id)}
-                      className={`flex items-center gap-1.5 text-xs transition-colors ${
+                      className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg text-xs transition-colors ${
                         isCommentsOpen ? "text-indigo-400" : "text-zinc-400 hover:text-indigo-400"
                       }`}
                     >
