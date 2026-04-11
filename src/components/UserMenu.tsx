@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Settings, LogOut, ShieldAlert, ArrowLeftRight } from "lucide-react";
+import { Settings, LogOut, ShieldAlert } from "lucide-react";
 import { useUser } from "@/lib/hooks/useUser";
 import { useOrg } from "@/lib/context/OrgContext";
 
@@ -20,7 +20,6 @@ export default function UserMenu() {
   const isSuperAdmin      = user?.isSuperAdmin ?? false;
   const [open,     setOpen]     = useState(false);
   const [status,   setStatus]   = useState<string>("online");
-  const [orgCount, setOrgCount] = useState(0);
   const ref    = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -34,13 +33,6 @@ export default function UserMenu() {
       .catch(() => null);
   }, []);
 
-  // Fetch org count to conditionally show org switcher
-  useEffect(() => {
-    fetch("/api/user/orgs")
-      .then((r) => r.ok ? r.json() as Promise<unknown[]> : Promise.reject())
-      .then((orgs) => setOrgCount(Array.isArray(orgs) ? orgs.length : 0))
-      .catch(() => null);
-  }, []);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -94,16 +86,6 @@ export default function UserMenu() {
               <div className="my-1 border-t border-zinc-800" />
             </>
           )}
-          {orgCount >= 2 && (
-            <Link
-              href="/bytt-org"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
-            >
-              <ArrowLeftRight className="h-4 w-4 shrink-0" />
-              Bytt organisasjon
-            </Link>
-          )}
           {isOrgAdmin && (
             <Link
               href="/admin/innstillinger"
@@ -114,7 +96,7 @@ export default function UserMenu() {
               Organisasjonsinnstillinger
             </Link>
           )}
-          {(orgCount >= 2 || isOrgAdmin) && <div className="my-1 border-t border-zinc-800" />}
+          {isOrgAdmin && <div className="my-1 border-t border-zinc-800" />}
           <Link
             href="/innstillinger"
             onClick={() => setOpen(false)}
