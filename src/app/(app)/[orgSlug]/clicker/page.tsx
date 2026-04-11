@@ -510,7 +510,7 @@ export default function ClickerPage() {
 
       {/* ── MOBIL TAB-BAR ─────────────────────────────────────────────────── */}
       <div className="flex shrink-0 border-b border-zinc-800 bg-zinc-900 md:hidden">
-        {(["klikker", "verdener", "oppgraderinger"] as const).map((tab) => {
+        {(["verdener", "klikker", "oppgraderinger"] as const).map((tab) => {
           const labels = { klikker: "🎮 Klikk", verdener: "🌍 Verdener", oppgraderinger: "⬆️ Oppgrader" };
           return (
             <button
