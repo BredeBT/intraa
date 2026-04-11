@@ -92,6 +92,14 @@ const PRIORITY_STYLES: Record<Priority, string> = {
   URGENT: "bg-red-500/10 text-red-400",
 };
 
+const STATUS_ORDER: Record<Status, number> = {
+  OPEN: 0, IN_PROGRESS: 1, WAITING: 2, RESOLVED: 3, CLOSED: 4,
+};
+
+const ACTIVE_STATUSES: Status[]   = ["OPEN", "IN_PROGRESS", "WAITING"];
+const RESOLVED_STATUSES: Status[] = ["RESOLVED", "CLOSED"];
+const PAGE_SIZE = 20;
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
@@ -117,12 +125,12 @@ function NewTicketModal({
   onClose:    () => void;
   onCreated:  (t: TicketRow) => void;
 }) {
-  const [title, setTitle]          = useState("");
-  const [description, setDesc]     = useState("");
+  const [title, setTitle]           = useState("");
+  const [description, setDesc]      = useState("");
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
-  const [priority, setPriority]    = useState<Priority>("NORMAL");
-  const [error, setError]          = useState("");
-  const [pending, startTransition] = useTransition();
+  const [priority, setPriority]     = useState<Priority>("NORMAL");
+  const [error, setError]           = useState("");
+  const [pending, startTransition]  = useTransition();
 
   function submit() {
     if (!title.trim() || !description.trim()) { setError("Fyll ut alle felt"); return; }
@@ -242,7 +250,6 @@ function TicketDetail({
   const isAdmin = ticketRole === "admin";
   const isAgent = ticketRole === "agent" || isAdmin;
 
-  // Load replies on mount
   if (!loaded) {
     setLoaded(true);
     fetch(`/api/tickets/${ticket.id}`)
@@ -259,9 +266,24 @@ function TicketDetail({
       body:    JSON.stringify({ content: reply }),
     });
     if (res.ok) {
-      const data = await res.json() as { reply: TicketReply };
-      setReplies((prev) => [...prev, data.reply]);
+      const data = await res.json() as { reply: TicketReply; reopened?: boolean };
+      setReplies((prev) => [
+        ...prev,
+        data.reply,
+        ...(data.reopened
+          ? [{
+              id:        `system-${Date.now()}`,
+              content:   "↩ Saken ble automatisk gjenåpnet fordi brukeren sendte et nytt svar.",
+              isAgent:   true,
+              createdAt: new Date().toISOString(),
+              author:    { id: "system", name: "System" },
+            }]
+          : []),
+      ]);
       setReply("");
+      if (data.reopened) {
+        onUpdate({ id: ticket.id, status: "OPEN" });
+      }
     }
     setSending(false);
   }
@@ -428,7 +450,13 @@ export default function TicketsClient({
   categories,
   members,
 }: Props) {
-  const [tickets,      setTickets]      = useState<TicketRow[]>(initialTickets);
+  const [tickets,         setTickets]         = useState<TicketRow[]>(initialTickets);
+  const [resolvedTickets, setResolvedTickets] = useState<TicketRow[]>([]);
+  const [resolvedLoading, setResolvedLoading] = useState(false);
+  const [resolvedPage,    setResolvedPage]    = useState(0);
+  const [resolvedHasMore, setResolvedHasMore] = useState(true);
+  const [tab,             setTab]             = useState<"active" | "resolved">("active");
+
   const [search,       setSearch]       = useState("");
   const [statusFilter, setStatusFilter] = useState<Status | "ALL">("ALL");
   const [priFilter,    setPriFilter]    = useState<Priority | "ALL">("ALL");
@@ -439,20 +467,76 @@ export default function TicketsClient({
   const isAdmin = ticketRole === "admin";
   const isAgent = ticketRole === "agent" || isAdmin;
 
-  const visible = tickets.filter((t) => {
-    if (statusFilter !== "ALL" && t.status !== statusFilter) return false;
+  // Counts derived from live state
+  const openCount       = tickets.filter((t) => t.status === "OPEN").length;
+  const inProgressCount = tickets.filter((t) => t.status === "IN_PROGRESS").length;
+  const waitingCount    = tickets.filter((t) => t.status === "WAITING").length;
+  const activeTotal     = openCount + inProgressCount + waitingCount;
+
+  // Sort active tickets: OPEN → IN_PROGRESS → WAITING, then newest first
+  const sortedActive = [...tickets].sort((a, b) => {
+    const diff = STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
+    if (diff !== 0) return diff;
+    return b.createdAt.localeCompare(a.createdAt);
+  });
+
+  const currentList = tab === "active" ? sortedActive : resolvedTickets;
+
+  const visible = currentList.filter((t) => {
+    if (tab === "active" && statusFilter !== "ALL" && t.status !== statusFilter) return false;
     if (priFilter !== "ALL" && t.priority !== priFilter) return false;
     if (catFilter !== "ALL" && t.category?.id !== catFilter) return false;
     if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
+  async function loadResolved(page: number) {
+    setResolvedLoading(true);
+    const res  = await fetch(`/api/tickets?resolved=1&page=${page}`);
+    const data = await res.json() as { tickets: Array<TicketRow & { _count?: { replies: number } }> };
+    const rows: TicketRow[] = data.tickets.map((t) => ({ ...t, replyCount: (t as { replyCount?: number }).replyCount ?? 0 }));
+    if (page === 0) {
+      setResolvedTickets(rows);
+    } else {
+      setResolvedTickets((prev) => [...prev, ...rows]);
+    }
+    setResolvedHasMore(rows.length === PAGE_SIZE);
+    setResolvedPage(page);
+    setResolvedLoading(false);
+  }
+
+  function switchTab(next: "active" | "resolved") {
+    setTab(next);
+    if (next === "resolved" && resolvedTickets.length === 0 && !resolvedLoading) {
+      void loadResolved(0);
+    }
+  }
+
   function handleCreated(t: TicketRow) {
     setTickets((prev) => [t, ...prev]);
   }
 
   function handleUpdate(update: Partial<TicketRow> & { id: string }) {
-    setTickets((prev) => prev.map((t) => t.id === update.id ? { ...t, ...update } : t));
+    const newStatus = update.status as Status | undefined;
+
+    setTickets((prev) => {
+      const mapped = prev.map((t) => t.id === update.id ? { ...t, ...update } : t);
+      // Remove from active list if now resolved/closed
+      if (newStatus && RESOLVED_STATUSES.includes(newStatus)) {
+        return mapped.filter((t) => t.id !== update.id);
+      }
+      return mapped;
+    });
+
+    setResolvedTickets((prev) => {
+      const mapped = prev.map((t) => t.id === update.id ? { ...t, ...update } : t);
+      // Remove from resolved list if now active
+      if (newStatus && ACTIVE_STATUSES.includes(newStatus)) {
+        return mapped.filter((t) => t.id !== update.id);
+      }
+      return mapped;
+    });
+
     setSelected((s) => s && s.id === update.id ? { ...s, ...update } : s);
   }
 
@@ -460,13 +544,22 @@ export default function TicketsClient({
     <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
       {/* List panel */}
       <div className="flex flex-1 flex-col overflow-hidden">
+
         {/* Toolbar */}
         <div className="flex shrink-0 items-center justify-between border-b border-zinc-800 bg-zinc-950 px-6 py-4">
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-1">
             <h1 className="text-sm font-semibold text-white">
               {ticketRole === "user" ? "Mine saker" : ticketRole === "agent" ? "Saker i mine kategorier" : "Alle saker"}
             </h1>
-            <p className="text-xs text-zinc-500">{visible.length} sak{visible.length !== 1 ? "er" : ""}</p>
+            {/* Status badges */}
+            <div className="flex items-center gap-1.5 text-xs">
+              {openCount > 0 && <span className="text-yellow-400">{openCount} åpne</span>}
+              {openCount > 0 && (inProgressCount > 0 || waitingCount > 0) && <span className="text-zinc-700">·</span>}
+              {inProgressCount > 0 && <span className="text-blue-400">{inProgressCount} under arbeid</span>}
+              {inProgressCount > 0 && waitingCount > 0 && <span className="text-zinc-700">·</span>}
+              {waitingCount > 0 && <span className="text-orange-400">{waitingCount} venter</span>}
+              {activeTotal === 0 && <span className="text-zinc-600">Ingen aktive saker</span>}
+            </div>
           </div>
 
           <button
@@ -474,6 +567,35 @@ export default function TicketsClient({
             className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:opacity-80"
           >
             <Plus className="h-3.5 w-3.5" /> Ny sak
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex shrink-0 items-center gap-1 border-b border-zinc-800 bg-zinc-950 px-6 pt-3 pb-0">
+          <button
+            onClick={() => switchTab("active")}
+            className={`flex items-center gap-1.5 rounded-t-lg px-4 py-2 text-xs font-medium transition-colors ${
+              tab === "active"
+                ? "border-b-2 border-indigo-500 text-white"
+                : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            Aktive
+            {activeTotal > 0 && (
+              <span className="rounded-full bg-indigo-600 px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
+                {activeTotal}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => switchTab("resolved")}
+            className={`flex items-center gap-1.5 rounded-t-lg px-4 py-2 text-xs font-medium transition-colors ${
+              tab === "resolved"
+                ? "border-b-2 border-indigo-500 text-white"
+                : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            Løste
           </button>
         </div>
 
@@ -489,7 +611,7 @@ export default function TicketsClient({
             />
           </div>
 
-          {isAgent && (
+          {isAgent && tab === "active" && (
             <>
               <select
                 value={statusFilter}
@@ -497,8 +619,8 @@ export default function TicketsClient({
                 className="rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-300 outline-none"
               >
                 <option value="ALL">Alle statuser</option>
-                {(Object.entries(STATUS_LABELS) as [Status, string][]).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
+                {(["OPEN", "IN_PROGRESS", "WAITING"] as Status[]).map((k) => (
+                  <option key={k} value={k}>{STATUS_LABELS[k]}</option>
                 ))}
               </select>
 
@@ -531,10 +653,16 @@ export default function TicketsClient({
 
         {/* Table */}
         <div className="flex-1 overflow-y-auto">
-          {visible.length === 0 ? (
+          {resolvedLoading && tab === "resolved" && resolvedTickets.length === 0 ? (
+            <div className="flex h-32 items-center justify-center">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+            </div>
+          ) : visible.length === 0 ? (
             <div className="flex h-full items-center justify-center">
               <p className="text-sm text-zinc-600">
-                {tickets.length === 0 ? "Ingen saker ennå." : "Ingen saker matcher filteret."}
+                {tab === "active" && tickets.length === 0 ? "Ingen aktive saker." :
+                 tab === "resolved" && resolvedTickets.length === 0 ? "Ingen løste saker." :
+                 "Ingen saker matcher filteret."}
               </p>
             </div>
           ) : (
@@ -586,6 +714,19 @@ export default function TicketsClient({
                 })}
               </tbody>
             </table>
+          )}
+
+          {/* Load more for resolved */}
+          {tab === "resolved" && resolvedHasMore && resolvedTickets.length > 0 && (
+            <div className="flex justify-center py-4">
+              <button
+                onClick={() => void loadResolved(resolvedPage + 1)}
+                disabled={resolvedLoading}
+                className="rounded-lg border border-zinc-700 px-4 py-2 text-xs text-zinc-400 transition-colors hover:text-white disabled:opacity-40"
+              >
+                {resolvedLoading ? "Laster…" : "Last flere"}
+              </button>
+            </div>
           )}
         </div>
       </div>

@@ -15,16 +15,25 @@ export async function GET(req: NextRequest) {
   const role = await getTicketRole(session.user.id, ctx.organizationId);
   if (!role) return NextResponse.json({ error: "Ingen tilgang" }, { status: 403 });
 
+  const resolved = req.nextUrl.searchParams.get("resolved") === "1";
+  const page     = Math.max(0, parseInt(req.nextUrl.searchParams.get("page") ?? "0", 10));
+  const pageSize = 20;
+
   // Build where clause based on role
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const where: any = { orgId: ctx.organizationId, source: "INTERNAL" };
+  const where: any = {
+    orgId:  ctx.organizationId,
+    source: "INTERNAL",
+    status: resolved
+      ? { in: ["RESOLVED", "CLOSED"] }
+      : { in: ["OPEN", "IN_PROGRESS", "WAITING"] },
+  };
 
   if (role === "user") {
     where.authorId = session.user.id;
   } else if (role === "agent") {
     const categoryIds = await getAgentCategoryIds(session.user.id, ctx.organizationId);
     where.categoryId = { in: categoryIds };
-    // Also include tickets assigned to this agent
     const filter = req.nextUrl.searchParams.get("filter");
     if (filter === "mine") {
       where.assigneeId = session.user.id;
@@ -35,6 +44,8 @@ export async function GET(req: NextRequest) {
   const tickets = await db.ticket.findMany({
     where,
     orderBy: { createdAt: "desc" },
+    skip:    resolved ? page * pageSize : 0,
+    take:    resolved ? pageSize : undefined,
     include: {
       author:   { select: { id: true, name: true } },
       assignee: { select: { id: true, name: true } },

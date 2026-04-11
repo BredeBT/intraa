@@ -59,6 +59,21 @@ export async function POST(
     include: { author: { select: { id: true, name: true } } },
   });
 
+  // Auto-reopen if a non-agent replies on a resolved/closed ticket
+  let reopened = false;
+  if (!isAgent && (ticket.status === "RESOLVED" || ticket.status === "CLOSED")) {
+    await db.ticket.update({ where: { id }, data: { status: "OPEN" } });
+    await db.ticketReply.create({
+      data: {
+        ticketId: id,
+        authorId: session.user.id,
+        content:  "↩ Saken ble automatisk gjenåpnet fordi brukeren sendte et nytt svar.",
+        isAgent:  true,
+      },
+    });
+    reopened = true;
+  }
+
   // Notifications
   if (ticket.source === "SUPPORT") {
     if (isAgent) {
@@ -151,5 +166,5 @@ export async function POST(
     }
   }
 
-  return NextResponse.json({ reply }, { status: 201 });
+  return NextResponse.json({ reply, reopened }, { status: 201 });
 }
