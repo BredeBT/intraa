@@ -54,7 +54,13 @@ interface FloatItem { id: number; x: number; y: number; value: number }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+// MOBIL-MØNSTER: Bruk tabs for alle spill med flere seksjoner
+// Tab 1: Spill (klikk-knapp + stats + leaderboard)
+// Tab 2: Statistikk/verdener
+// Tab 3: Shop/Oppgraderinger
+
 export default function ClickerPage() {
+  const [mobileTab,     setMobileTab]     = useState<"klikker" | "verdener" | "oppgraderinger">("klikker");
   const [orgId,         setOrgId]         = useState<string | null>(null);
   const [profile,       setProfile]       = useState<ClickerProfile | null>(null);
   const [upgrades,      setUpgrades]      = useState<UpgradeState[]>([]);
@@ -306,8 +312,171 @@ export default function ClickerPage() {
   };
   const btnGradient = worldColors[worldDef.color] ?? worldColors.violet;
 
+  // ── Shared sub-sections (used in both mobile and desktop) ───────────────
+
+  const WorldsPanel = (
+    <>
+      <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-4 px-2">Verdener</p>
+      {([
+        { n: 1, emoji: totalPrestige >= 1 ? "🖥️" : "🖥️", label: "Tech",    active: "violet", color: "violet" },
+        { n: 2, emoji: totalPrestige >= 1 ? "⚔️" : "🔒",  label: "Eventyr", active: "amber",  color: "amber"  },
+        { n: 3, emoji: totalPrestige >= 2 ? "🚀" : "🔒",  label: "Romfart", active: "cyan",   color: "cyan"   },
+      ] as const).map(({ n, emoji, label, active }) => {
+        const isActive  = world === n;
+        const unlocked  = n === 1 || (n === 2 && totalPrestige >= 1) || (n === 3 && totalPrestige >= 2);
+        const completed = n === 1 ? totalPrestige >= 1 : n === 2 ? totalPrestige >= 2 : false;
+        const borderCls = isActive
+          ? active === "violet" ? "bg-violet-600/20 border border-violet-600/40"
+          : active === "amber"  ? "bg-amber-600/20 border border-amber-600/40"
+          : "bg-cyan-600/20 border border-cyan-600/40"
+          : unlocked ? "opacity-70" : "opacity-25";
+        const hereCls   = active === "violet" ? "text-violet-400" : active === "amber" ? "text-amber-400" : "text-cyan-400";
+        return (
+          <div key={n} className={`rounded-lg p-2 mb-1.5 ${borderCls}`}>
+            <div className="flex items-center gap-1.5">
+              <span className="text-base">{emoji}</span>
+              <div>
+                <p className="text-xs font-semibold text-white leading-tight">Verden {n}</p>
+                <p className="text-[10px] text-zinc-400 leading-tight">{label}</p>
+              </div>
+            </div>
+            {!unlocked && <p className="text-[10px] text-zinc-600 mt-1">Lås opp med prestige</p>}
+            {completed   && <p className="text-[10px] text-green-400 mt-1">✓ Fullført</p>}
+            {isActive    && <p className={`text-[10px] mt-1 ${hereCls}`}>← Du er her</p>}
+          </div>
+        );
+      })}
+      <div className="rounded-lg p-2 mb-1.5 opacity-40 border border-dashed border-zinc-700">
+        <div className="flex items-center gap-1.5">
+          <span className="text-base">❓</span>
+          <div>
+            <p className="text-xs font-semibold text-zinc-400 leading-tight">Verden 4</p>
+            <p className="text-[10px] text-zinc-500 leading-tight">Kommer snart...</p>
+          </div>
+        </div>
+      </div>
+      <div className="mt-2 rounded-lg p-2 opacity-30">
+        <p className="text-[10px] text-zinc-500 text-center">Mer på vei 👀</p>
+      </div>
+    </>
+  );
+
+  const ClickPanel = (
+    <>
+      {/* Offline toast */}
+      {offlineMsg !== null && (
+        <div className="mb-4 flex w-full max-w-sm items-start gap-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 p-3">
+          <span className="text-xl">😴</span>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-white">Velkommen tilbake!</p>
+            <p className="text-xs text-zinc-400">+<span className="font-bold text-indigo-400">{fmt(offlineMsg)}</span> coins mens du var borte.</p>
+          </div>
+          <button onClick={() => setOfflineMsg(null)} className="text-zinc-500 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+      {/* Event banner */}
+      {activeEvent && activeEvent.type === "multiplier" && new Date(activeEvent.endsAt) > new Date() && (
+        <div className="mb-4 flex w-full max-w-sm items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+          <span>⚡</span>
+          <p className="text-sm text-amber-300"><span className="font-bold">{activeEvent.multiplier}x multiplier</span> aktiv!</p>
+        </div>
+      )}
+      {/* Coin counter */}
+      <div className="mb-0.5 flex items-center gap-2">
+        <Coins className="h-7 w-7 text-amber-400" />
+        <span className="text-4xl md:text-5xl font-bold tabular-nums text-white">{fmt(displayCoins)}</span>
+        <span className="text-lg md:text-xl text-zinc-400">coins</span>
+      </div>
+      {profile.permanentBonus > 1 && (
+        <p className="mb-1 text-xs text-amber-400">
+          ⚡ {((profile.permanentBonus - 1) * 100).toFixed(0)}% permanent prestige-bonus
+        </p>
+      )}
+      <div className="mb-6 flex gap-6 text-sm text-zinc-500">
+        <span className="flex items-center gap-1.5">
+          <Zap className="h-4 w-4 text-yellow-500" />
+          {fmt(profile.coinsPerClick * multiplier)}/klikk
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Clock className="h-4 w-4 text-indigo-400" />
+          {fmt(profile.coinsPerSecond)}/sek
+        </span>
+      </div>
+      {/* Click button */}
+      <div className="relative mb-6">
+        {floats.map((fl) => (
+          <span key={fl.id}
+            className="pointer-events-none absolute z-10 animate-bounce text-sm font-bold text-amber-300"
+            style={{ left: fl.x, top: fl.y, animationDuration: "0.8s", opacity: 0 }}>
+            +{fmt(fl.value)}
+          </span>
+        ))}
+        <button
+          onClick={handleClick}
+          className={`relative flex h-56 w-56 md:h-48 md:w-48 select-none items-center justify-center rounded-full bg-gradient-to-br ${btnGradient} shadow-2xl transition-all duration-75 active:scale-95 hover:scale-105 ${clicking ? "scale-95" : "scale-100"}`}
+        >
+          {logoUrl
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={logoUrl} alt="" className="h-36 w-36 md:h-32 md:w-32 rounded-full object-cover" />
+            : <span className="text-7xl">{worldDef.emoji}</span>
+          }
+        </button>
+      </div>
+      <p className="mb-4 text-xs text-zinc-600">{fmt(totalClicks)} totale klikk{totalPrestige > 0 && ` · 🏆 ${totalPrestige} prestige`}</p>
+      {/* Prestige button / progress */}
+      {canPrestige ? (
+        <button
+          onClick={() => setPrestigeModal(true)}
+          className="mb-6 w-full max-w-sm rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-3 font-bold text-white shadow-lg shadow-amber-500/30 transition-all hover:shadow-amber-500/50"
+        >
+          ✨ PRESTIGE! Verden {world} → {nextWorld}
+          <span className="mt-0.5 block text-xs font-normal opacity-80">
+            Nullstill alt + få {worldDef.fanpassCoins} Fanpass-coins + 10% bonus
+          </span>
+        </button>
+      ) : world < 3 ? (
+        <div className="mb-6 w-full max-w-sm">
+          <div className="mb-1 flex justify-between text-[10px] text-zinc-600">
+            <span>Prestige fremgang</span>
+            <span>{fmt(displayCoins)} / {fmt(prestigeCost)}</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
+            <div
+              className="h-full rounded-full bg-amber-500 transition-all"
+              style={{ width: `${Math.min(100, (displayCoins / prestigeCost) * 100).toFixed(2)}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
+      {/* Leaderboard */}
+      {leaderboard.length > 0 && (
+        <div className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+          <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+            <Trophy className="h-3.5 w-3.5 text-amber-500" /> Topp 5
+          </p>
+          <div className="flex flex-col gap-2">
+            {leaderboard.map((entry, i) => (
+              <div key={entry.user.id} className="flex items-center gap-2.5">
+                <span className={`w-5 shrink-0 text-center text-xs font-bold ${
+                  i === 0 ? "text-amber-400" : i === 1 ? "text-zinc-400" : i === 2 ? "text-amber-700" : "text-zinc-600"
+                }`}>{i + 1}.</span>
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-700 text-[10px] font-bold text-white">
+                  {initials(entry.user.name)}
+                </div>
+                <span className="min-w-0 flex-1 truncate text-xs text-zinc-300">{entry.user.name ?? "Ukjent"}</span>
+                <span className="shrink-0 text-xs font-semibold text-amber-400">{fmt(entry.coins)} 🪙</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+
   return (
-    <div className="flex h-[calc(100vh-56px)] bg-zinc-950">
+    <div className="flex flex-col md:flex-row h-[calc(100dvh-7rem)] md:h-[calc(100vh-56px)] bg-zinc-950">
 
       {/* ── Prestige modal ────────────────────────────────────────────────── */}
       {prestigeModal && (
@@ -339,206 +508,88 @@ export default function ClickerPage() {
         </div>
       )}
 
+      {/* ── MOBIL TAB-BAR ─────────────────────────────────────────────────── */}
+      <div className="flex shrink-0 border-b border-zinc-800 bg-zinc-900 md:hidden">
+        {(["klikker", "verdener", "oppgraderinger"] as const).map((tab) => {
+          const labels = { klikker: "🎮 Klikk", verdener: "🌍 Verdener", oppgraderinger: "⬆️ Oppgrader" };
+          return (
+            <button
+              key={tab}
+              onClick={() => setMobileTab(tab)}
+              className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${
+                mobileTab === tab
+                  ? "border-b-2 border-indigo-500 text-white"
+                  : "text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              {labels[tab]}
+            </button>
+          );
+        })}
+      </div>
+
       {/* ── VENSTRE 15% – Verdensoversikt ─────────────────────────────────── */}
-      <div className="w-[15%] border-r border-zinc-800 flex flex-col overflow-y-auto py-4 px-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-4 px-2">Verdener</p>
-
-        {/* Verden 1 */}
-        <div className={`rounded-lg p-2 mb-1.5 ${world === 1 ? "bg-violet-600/20 border border-violet-600/40" : "opacity-40"}`}>
-          <div className="flex items-center gap-1.5">
-            <span className="text-base">🖥️</span>
-            <div>
-              <p className="text-xs font-semibold text-white leading-tight">Verden 1</p>
-              <p className="text-[10px] text-zinc-400 leading-tight">Tech</p>
-            </div>
-          </div>
-          {totalPrestige >= 1 && <p className="text-[10px] text-green-400 mt-1">✓ Fullført</p>}
-          {world === 1 && <p className="text-[10px] text-violet-400 mt-1">← Du er her</p>}
-        </div>
-
-        {/* Verden 2 – låst inntil prestige 1 */}
-        <div className={`rounded-lg p-2 mb-1.5 ${
-          world === 2
-            ? "bg-amber-600/20 border border-amber-600/40"
-            : totalPrestige >= 1 ? "opacity-70" : "opacity-25"
-        }`}>
-          <div className="flex items-center gap-1.5">
-            <span className="text-base">{totalPrestige >= 1 ? "⚔️" : "🔒"}</span>
-            <div>
-              <p className="text-xs font-semibold text-white leading-tight">Verden 2</p>
-              <p className="text-[10px] text-zinc-400 leading-tight">Eventyr</p>
-            </div>
-          </div>
-          {totalPrestige < 1 && <p className="text-[10px] text-zinc-600 mt-1">Lås opp med prestige</p>}
-          {world === 2 && <p className="text-[10px] text-amber-400 mt-1">← Du er her</p>}
-          {totalPrestige >= 2 && <p className="text-[10px] text-green-400 mt-1">✓ Fullført</p>}
-        </div>
-
-        {/* Verden 3 – låst inntil prestige 2 */}
-        <div className={`rounded-lg p-2 mb-1.5 ${
-          world === 3
-            ? "bg-cyan-600/20 border border-cyan-600/40"
-            : totalPrestige >= 2 ? "opacity-70" : "opacity-25"
-        }`}>
-          <div className="flex items-center gap-1.5">
-            <span className="text-base">{totalPrestige >= 2 ? "🚀" : "🔒"}</span>
-            <div>
-              <p className="text-xs font-semibold text-white leading-tight">Verden 3</p>
-              <p className="text-[10px] text-zinc-400 leading-tight">Romfart</p>
-            </div>
-          </div>
-          {totalPrestige < 2 && <p className="text-[10px] text-zinc-600 mt-1">Lås opp med prestige</p>}
-          {world === 3 && <p className="text-[10px] text-cyan-400 mt-1">← Du er her</p>}
-        </div>
-
-        {/* Verden 4 – kommer */}
-        <div className="rounded-lg p-2 mb-1.5 opacity-40 border border-dashed border-zinc-700">
-          <div className="flex items-center gap-1.5">
-            <span className="text-base">❓</span>
-            <div>
-              <p className="text-xs font-semibold text-zinc-400 leading-tight">Verden 4</p>
-              <p className="text-[10px] text-zinc-500 leading-tight">Kommer snart...</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-2 rounded-lg p-2 opacity-30">
-          <p className="text-[10px] text-zinc-500 text-center">Mer på vei 👀</p>
-        </div>
+      <div className={`${mobileTab === "verdener" ? "flex" : "hidden"} md:flex w-full md:w-[15%] flex-col border-r border-zinc-800 overflow-y-auto py-4 px-3`}>
+        {WorldsPanel}
       </div>
 
       {/* ── MIDTRE 70% – Selve spillet ────────────────────────────────────── */}
-      <div className="flex w-[70%] flex-col items-center justify-center px-8 overflow-y-auto py-6">
-
-        {/* Offline toast */}
-        {offlineMsg !== null && (
-          <div className="mb-4 flex w-full max-w-sm items-start gap-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 p-3">
-            <span className="text-xl">😴</span>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-white">Velkommen tilbake!</p>
-              <p className="text-xs text-zinc-400">+<span className="font-bold text-indigo-400">{fmt(offlineMsg)}</span> coins mens du var borte.</p>
-            </div>
-            <button onClick={() => setOfflineMsg(null)} className="text-zinc-500 hover:text-white">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-
-        {/* Event banner */}
-        {activeEvent && activeEvent.type === "multiplier" && new Date(activeEvent.endsAt) > new Date() && (
-          <div className="mb-4 flex w-full max-w-sm items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2">
-            <span>⚡</span>
-            <p className="text-sm text-amber-300"><span className="font-bold">{activeEvent.multiplier}x multiplier</span> aktiv!</p>
-          </div>
-        )}
-
-        {/* Coin counter */}
-        <div className="mb-0.5 flex items-center gap-2">
-          <Coins className="h-7 w-7 text-amber-400" />
-          <span className="text-5xl font-bold tabular-nums text-white">{fmt(displayCoins)}</span>
-          <span className="text-xl text-zinc-400">coins</span>
-        </div>
-
-        {profile.permanentBonus > 1 && (
-          <p className="mb-1 text-xs text-amber-400">
-            ⚡ {((profile.permanentBonus - 1) * 100).toFixed(0)}% permanent prestige-bonus
-          </p>
-        )}
-
-        <div className="mb-8 flex gap-6 text-sm text-zinc-500">
-          <span className="flex items-center gap-1.5">
-            <Zap className="h-4 w-4 text-yellow-500" />
-            {fmt(profile.coinsPerClick * multiplier)}/klikk
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Clock className="h-4 w-4 text-indigo-400" />
-            {fmt(profile.coinsPerSecond)}/sek
-          </span>
-        </div>
-
-        {/* Click button */}
-        <div className="relative mb-6">
-          {floats.map((fl) => (
-            <span key={fl.id}
-              className="pointer-events-none absolute z-10 animate-bounce text-sm font-bold text-amber-300"
-              style={{ left: fl.x, top: fl.y, animationDuration: "0.8s", opacity: 0 }}>
-              +{fmt(fl.value)}
-            </span>
-          ))}
-          <button
-            onClick={handleClick}
-            className={`relative flex h-48 w-48 select-none items-center justify-center rounded-full bg-gradient-to-br ${btnGradient} shadow-2xl transition-all duration-75 active:scale-95 hover:scale-105 ${clicking ? "scale-95" : "scale-100"}`}
-          >
-            {logoUrl
-              // eslint-disable-next-line @next/next/no-img-element
-              ? <img src={logoUrl} alt="" className="h-32 w-32 rounded-full object-cover" />
-              : <span className="text-7xl">{worldDef.emoji}</span>
-            }
-          </button>
-        </div>
-
-        <p className="mb-6 text-xs text-zinc-600">{fmt(totalClicks)} totale klikk · {totalPrestige > 0 && `🏆 ${totalPrestige} prestige`}</p>
-
-        {/* Prestige button / progress */}
-        {canPrestige ? (
-          <button
-            onClick={() => setPrestigeModal(true)}
-            className="mb-6 w-full max-w-sm rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-3 font-bold text-white shadow-lg shadow-amber-500/30 transition-all hover:shadow-amber-500/50"
-          >
-            ✨ PRESTIGE! Verden {world} → {nextWorld}
-            <span className="mt-0.5 block text-xs font-normal opacity-80">
-              Nullstill alt + få {worldDef.fanpassCoins} Fanpass-coins + 10% bonus
-            </span>
-          </button>
-        ) : world < 3 ? (
-          <div className="mb-6 w-full max-w-sm">
-            <div className="mb-1 flex justify-between text-[10px] text-zinc-600">
-              <span>Prestige fremgang</span>
-              <span>{fmt(displayCoins)} / {fmt(prestigeCost)}</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
-              <div
-                className="h-full rounded-full bg-amber-500 transition-all"
-                style={{ width: `${Math.min(100, (displayCoins / prestigeCost) * 100).toFixed(2)}%` }}
-              />
-            </div>
-          </div>
-        ) : null}
-
-        {/* Leaderboard */}
-        {leaderboard.length > 0 && (
-          <div className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-            <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-              <Trophy className="h-3.5 w-3.5 text-amber-500" /> Topp 5
-            </p>
-            <div className="flex flex-col gap-2">
-              {leaderboard.map((entry, i) => (
-                <div key={entry.user.id} className="flex items-center gap-2.5">
-                  <span className={`w-5 shrink-0 text-center text-xs font-bold ${
-                    i === 0 ? "text-amber-400" : i === 1 ? "text-zinc-400" : i === 2 ? "text-amber-700" : "text-zinc-600"
-                  }`}>{i + 1}.</span>
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-700 text-[10px] font-bold text-white">
-                    {initials(entry.user.name)}
-                  </div>
-                  <span className="min-w-0 flex-1 truncate text-xs text-zinc-300">{entry.user.name ?? "Ukjent"}</span>
-                  <span className="shrink-0 text-xs font-semibold text-amber-400">{fmt(entry.coins)} 🪙</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      <div className={`${mobileTab === "klikker" ? "flex" : "hidden"} md:flex w-full md:w-[70%] flex-col items-center justify-center px-4 md:px-8 overflow-y-auto py-6`}>
+        {ClickPanel}
       </div>
 
       {/* ── HØYRE 15% – Oppgraderinger ────────────────────────────────────── */}
-      <div className="w-[15%] border-l border-zinc-800 flex flex-col overflow-hidden">
-        <div className="border-b border-zinc-800 px-3 py-3">
+      <div className={`${mobileTab === "oppgraderinger" ? "flex" : "hidden"} md:flex w-full md:w-[15%] flex-col border-l border-zinc-800 overflow-hidden`}>
+        <div className="shrink-0 border-b border-zinc-800 px-3 py-3">
           <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
             {worldDef.emoji} Oppgraderinger
           </p>
           <p className="text-[10px] text-zinc-600">{upgradeRows.length} tilgjengelige</p>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-3 px-2 space-y-2">
+        {/* Mobile: full-width list */}
+        <div className="md:hidden flex-1 overflow-y-auto py-3 px-3 space-y-2">
+          {upgradeRows.map((upg) => (
+            <div key={upg.id}
+              className={`rounded-lg border p-3 flex items-center gap-3 transition-colors ${
+                upg.canAfford
+                  ? "border-indigo-500/30 bg-indigo-500/5"
+                  : upg.level > 0
+                  ? "border-zinc-700 bg-zinc-800/50"
+                  : "border-zinc-800 bg-zinc-900/50"
+              }`}>
+              <span className="text-2xl shrink-0">{upg.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-white truncate">{upg.name}</p>
+                  {upg.level > 0 && (
+                    <span className="shrink-0 rounded-full bg-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-400">Lv{upg.level}</span>
+                  )}
+                </div>
+                <p className="text-xs text-zinc-500">
+                  {upg.coinsPerClick  > 0 && `+${upg.coinsPerClick}/klikk`}
+                  {upg.coinsPerClick  > 0 && upg.coinsPerSecond > 0 && " · "}
+                  {upg.coinsPerSecond > 0 && `+${upg.coinsPerSecond}/sek`}
+                </p>
+              </div>
+              <button
+                onClick={() => void buyUpgrade(upg.id)}
+                disabled={!upg.canAfford || buying === upg.id || upg.level >= upg.maxLevel}
+                className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  upg.level >= upg.maxLevel
+                    ? "cursor-default bg-zinc-800 text-zinc-600"
+                    : upg.canAfford
+                    ? "bg-indigo-600 text-white hover:bg-indigo-500"
+                    : "cursor-not-allowed bg-zinc-800 text-zinc-600"
+                }`}>
+                {upg.level >= upg.maxLevel ? "Maks" : buying === upg.id ? "…" : `${fmt(upg.cost)} 🪙`}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop: compact cards */}
+        <div className="hidden md:block flex-1 overflow-y-auto py-3 px-2 space-y-2">
           {upgradeRows.map((upg) => (
             <div key={upg.id}
               className={`rounded-lg border p-2 transition-colors ${
@@ -563,7 +614,7 @@ export default function ClickerPage() {
                 {upg.coinsPerSecond > 0 && `+${upg.coinsPerSecond}/sek`}
               </p>
               <button
-                onClick={() => buyUpgrade(upg.id)}
+                onClick={() => void buyUpgrade(upg.id)}
                 disabled={!upg.canAfford || buying === upg.id || upg.level >= upg.maxLevel}
                 className={`w-full rounded py-1 text-[10px] font-semibold transition-colors ${
                   upg.level >= upg.maxLevel
@@ -572,11 +623,7 @@ export default function ClickerPage() {
                     ? "bg-indigo-600 text-white hover:bg-indigo-500"
                     : "cursor-not-allowed bg-zinc-800 text-zinc-600"
                 }`}>
-                {upg.level >= upg.maxLevel
-                  ? "Maks"
-                  : buying === upg.id
-                  ? "…"
-                  : `${fmt(upg.cost)} 🪙`}
+                {upg.level >= upg.maxLevel ? "Maks" : buying === upg.id ? "…" : `${fmt(upg.cost)} 🪙`}
               </button>
             </div>
           ))}
