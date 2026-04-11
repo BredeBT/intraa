@@ -34,18 +34,19 @@ interface Badge {
 type FriendStatus = "none" | "pending_sent" | "pending_received" | "accepted";
 
 interface Props {
-  profile:       Profile;
-  isOwnProfile:  boolean;
-  friendStatus:  FriendStatus;
-  friendshipId:  string | null;
-  friendCount:   number;
-  communities:   Community[];
-  currentUserId: string;
-  badges:        Badge[];
-  nameColor:     { shopItem: { value: string } } | null;
-  profileFrame:  { shopItem: { value: string } } | null;
-  totalCoins:    number;
-  activeFanpass: { organization: { name: string } } | null;
+  profile:         Profile;
+  isOwnProfile:    boolean;
+  showFullProfile: boolean;
+  friendStatus:    FriendStatus;
+  friendshipId:    string | null;
+  friendCount:     number;
+  communities:     Community[];
+  currentUserId:   string;
+  badges:          Badge[];
+  nameColor:       { shopItem: { value: string } } | null;
+  profileFrame:    { shopItem: { value: string } } | null;
+  totalCoins:      number;
+  activeFanpass:   { organization: { name: string } } | null;
 }
 
 
@@ -59,7 +60,7 @@ const SOCIAL_ICONS: Record<string, React.ElementType> = {
 };
 
 export default function ProfileClient({
-  profile, isOwnProfile, friendStatus: initialStatus, friendshipId: initialFriendshipId,
+  profile, isOwnProfile, showFullProfile, friendStatus: initialStatus, friendshipId: initialFriendshipId,
   friendCount, communities, currentUserId,
   badges        = [],
   nameColor     = null,
@@ -169,10 +170,12 @@ export default function ProfileClient({
                 ))}
               </div>
             )}
-            <p className="text-sm text-zinc-400 mt-1">
-              🪙 {totalCoins.toLocaleString("no-NO")} coins totalt
-            </p>
-            {activeFanpass && (
+            {showFullProfile && (
+              <p className="text-sm text-zinc-400 mt-1">
+                🪙 {totalCoins.toLocaleString("no-NO")} coins totalt
+              </p>
+            )}
+            {showFullProfile && activeFanpass && (
               <span className="inline-block mt-1 text-xs bg-violet-600/20 text-violet-300 border border-violet-600/30 rounded-full px-2 py-0.5">
                 🎫 Fanpass aktiv – {activeFanpass.organization.name}
               </span>
@@ -286,7 +289,9 @@ export default function ProfileClient({
                   )}
                   <div>
                     <p className="text-sm font-medium text-white">{c.name}</p>
-                    <p className="text-xs text-zinc-500">{c.role} · {c.points} coins</p>
+                    {showFullProfile && (
+                      <p className="text-xs text-zinc-500">{c.role} · {c.points} coins</p>
+                    )}
                   </div>
                 </Link>
               ))}

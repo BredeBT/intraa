@@ -559,8 +559,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <div className={`flex min-h-screen min-w-0 flex-col transition-all duration-200 ease-in-out ${mainPl}`}>
         {/* Header */}
-        <header className="flex h-14 items-center justify-between border-b border-zinc-800 bg-zinc-900 px-4">
-          <div className="flex items-center gap-3">
+        <header className="flex h-14 items-center gap-3 border-b border-zinc-800 bg-zinc-900 px-4">
+          {/* Left: menu + title */}
+          <div className="flex w-36 shrink-0 items-center gap-3">
             {!inAdmin && (
               <button
                 onClick={() => setSidebarOpen(true)}
@@ -568,20 +569,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 aria-label="Åpne meny"
               >
                 <Menu className="h-5 w-5" />
-              </button>
+            </button>
             )}
-            <span className="text-sm font-semibold text-white">{title}</span>
+            <span className="truncate text-sm font-semibold text-white">{title}</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Center: search bar */}
+          <div className="flex flex-1 justify-center">
             <button
               onClick={openSearch}
-              className="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-400 transition-colors hover:border-zinc-600 hover:text-white sm:px-3"
+              className="flex w-full max-w-md items-center gap-2.5 rounded-lg border border-zinc-700 bg-zinc-800/60 px-3.5 py-2 text-sm text-zinc-500 transition-colors hover:border-zinc-600 hover:text-zinc-300"
             >
-              <Search className="h-3.5 w-3.5 shrink-0" />
-              <span className="hidden sm:inline">Søk</span>
-              <kbd className="ml-1 hidden rounded border border-zinc-700 px-1 py-0.5 text-[10px] text-zinc-600 sm:inline">⌘K</kbd>
+              <Search className="h-4 w-4 shrink-0" />
+              <span className="flex-1 text-left">Søk etter personer, communities...</span>
+              <kbd className="hidden rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-600 sm:inline">⌘K</kbd>
             </button>
+          </div>
+
+          {/* Right: actions */}
+          <div className="flex w-36 shrink-0 items-center justify-end gap-2">
             <NotificationBell />
             <UserMenu />
           </div>

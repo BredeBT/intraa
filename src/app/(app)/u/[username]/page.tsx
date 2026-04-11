@@ -50,7 +50,11 @@ export default async function UserProfilePage({
   if (!profileUser) notFound();
   if (!profileUser.isPublic && profileUser.id !== session.user.id) notFound();
 
-  const isOwnProfile = profileUser.id === session.user.id;
+  const isOwnProfile   = profileUser.id === session.user.id;
+  const isFriend       =
+    profileUser.friendsSent.some((f) => f.status === "ACCEPTED") ||
+    profileUser.friendsReceived.some((f) => f.status === "ACCEPTED");
+  const showFullProfile = isOwnProfile || isFriend;
 
   const sentRequest     = profileUser.friendsReceived[0]; // I sent to them
   const receivedRequest = profileUser.friendsSent[0];      // they sent to me
@@ -125,20 +129,21 @@ export default async function UserProfilePage({
           createdAt:   profileUser.createdAt.toISOString(),
         }}
         isOwnProfile={isOwnProfile}
+        showFullProfile={showFullProfile}
         friendStatus={friendStatus}
         friendshipId={friendshipId}
         friendCount={friendCount}
         communities={communities}
         currentUserId={session.user.id}
-        badges={badges.map((b) => ({
+        badges={showFullProfile ? badges.map((b) => ({
           id:           b.id,
           shopItem:     { name: b.shopItem.name, value: b.shopItem.value },
           organization: { name: b.organization.name },
-        }))}
-        nameColor={nameColor ? { shopItem: { value: nameColor.shopItem.value } } : null}
-        profileFrame={profileFrame ? { shopItem: { value: profileFrame.shopItem.value } } : null}
-        totalCoins={totalCoins}
-        activeFanpass={activeFanpass ? { organization: { name: activeFanpass.organization.name } } : null}
+        })) : []}
+        nameColor={showFullProfile && nameColor ? { shopItem: { value: nameColor.shopItem.value } } : null}
+        profileFrame={showFullProfile && profileFrame ? { shopItem: { value: profileFrame.shopItem.value } } : null}
+        totalCoins={showFullProfile ? totalCoins : 0}
+        activeFanpass={showFullProfile && activeFanpass ? { organization: { name: activeFanpass.organization.name } } : null}
       />
     </div>
   );
