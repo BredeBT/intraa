@@ -25,9 +25,10 @@ interface UpgradeState {
 }
 
 interface LeaderboardEntry {
-  coins:       number;
-  totalClicks: number;
-  user:        { id: string; name: string | null; avatarUrl: string | null };
+  coins:         number;
+  totalClicks:   number;
+  prestigeWorld: number;
+  user:          { id: string; name: string | null; avatarUrl: string | null };
 }
 
 interface ActiveEvent {
@@ -43,6 +44,15 @@ function fmt(n: number): string {
   if (n >= 1_000_000)     return `${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 1_000)         return `${(n / 1_000).toFixed(1)}K`;
   return Math.floor(n).toLocaleString("no-NO");
+}
+
+function fmtTime(seconds: number): string {
+  if (!isFinite(seconds) || seconds <= 0) return null as unknown as string;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}t ${m}min`;
+  if (m > 0) return `${m}min`;
+  return `${Math.ceil(seconds)}s`;
 }
 
 function initials(name: string | null) {
@@ -507,6 +517,14 @@ export default function ClickerPage() {
               style={{ width: `${Math.min(100, (displayCoins / prestigeCost) * 100).toFixed(2)}%` }}
             />
           </div>
+          {profile.coinsPerSecond > 0 && (() => {
+            const eta = fmtTime((prestigeCost - displayCoins) / profile.coinsPerSecond);
+            return eta ? (
+              <p className="mt-1 text-[10px] text-zinc-600">
+                Estimert tid: <span className="text-zinc-500">{eta}</span>
+              </p>
+            ) : null;
+          })()}
         </div>
       ) : null}
       {/* Leaderboard */}
@@ -516,18 +534,26 @@ export default function ClickerPage() {
             <Trophy className="h-3.5 w-3.5 text-amber-500" /> Topp 5
           </p>
           <div className="flex flex-col gap-2">
-            {leaderboard.map((entry, i) => (
-              <div key={entry.user.id} className="flex items-center gap-2.5">
-                <span className={`w-5 shrink-0 text-center text-xs font-bold ${
-                  i === 0 ? "text-amber-400" : i === 1 ? "text-zinc-400" : i === 2 ? "text-amber-700" : "text-zinc-600"
-                }`}>{i + 1}.</span>
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-700 text-[10px] font-bold text-white">
-                  {initials(entry.user.name)}
+            {leaderboard.map((entry, i) => {
+              const w = (entry.prestigeWorld ?? 1) as 1 | 2 | 3;
+              const wDef = WORLDS[w];
+              const worldColor = w === 1 ? "text-violet-400" : w === 2 ? "text-amber-400" : "text-cyan-400";
+              return (
+                <div key={entry.user.id} className="flex items-center gap-2.5">
+                  <span className={`w-5 shrink-0 text-center text-xs font-bold ${
+                    i === 0 ? "text-amber-400" : i === 1 ? "text-zinc-400" : i === 2 ? "text-amber-700" : "text-zinc-600"
+                  }`}>{i + 1}.</span>
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-700 text-[10px] font-bold text-white">
+                    {initials(entry.user.name)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs text-zinc-300">{entry.user.name ?? "Ukjent"}</p>
+                    <p className={`text-[10px] leading-tight ${worldColor}`}>{wDef.emoji} Verden {w}</p>
+                  </div>
+                  <span className="shrink-0 text-xs font-semibold text-amber-400">{fmt(entry.coins)} 🪙</span>
                 </div>
-                <span className="min-w-0 flex-1 truncate text-xs text-zinc-300">{entry.user.name ?? "Ukjent"}</span>
-                <span className="shrink-0 text-xs font-semibold text-amber-400">{fmt(entry.coins)} 🪙</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

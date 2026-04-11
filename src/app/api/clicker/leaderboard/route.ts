@@ -15,8 +15,9 @@ export async function GET(req: NextRequest) {
     orderBy: { coins: "desc" },
     take:    5,
     select: {
-      coins:      true,
-      totalClicks: true,
+      coins:        true,
+      totalClicks:  true,
+      prestigeWorld: true,
       user: { select: { id: true, name: true, avatarUrl: true } },
     },
   });
