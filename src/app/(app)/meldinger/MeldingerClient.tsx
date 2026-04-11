@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
 import {
-  Search, Send, MessageSquare, ChevronDown, ChevronRight,
+  Search, Send, MessageSquare, ChevronDown, ChevronRight, ChevronLeft,
   Hash, Plus, X, Users, Check, UserPlus, Clock,
 } from "lucide-react";
 import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
@@ -326,6 +326,9 @@ export default function MeldingerClient({
   invitablePeople, allMembers, initialUserId, initialChannelId, initialGroupId,
 }: Props) {
   const [active,         setActive]        = useState<Active>(null);
+  const [mobileView,     setMobileView]    = useState<"list" | "chat">(
+    initialUserId || initialChannelId || initialGroupId ? "chat" : "list"
+  );
   const [groups,         setGroups]        = useState(initialGroups);
   const [showNewGroup,   setShowNewGroup]  = useState(false);
   const [expandedOrgs,   setExpandedOrgs] = useState<Set<string>>(new Set(communities.map((c) => c.orgId)));
@@ -387,18 +390,21 @@ export default function MeldingerClient({
       role:        c.role,
       members:     allMembers,
     });
+    setMobileView("chat");
   }
 
   function openGroup(g: Group) {
     setGroupUnreads((p) => ({ ...p, [g.id]: 0 }));
     fetch(`/api/groups/${g.id}/read`, { method: "PATCH" }).catch(() => null);
     setActive({ type: "group", groupId: g.id, groupName: g.name, createdBy: g.createdBy, members: g.members });
+    setMobileView("chat");
   }
 
   function openDM(friend: Friend) {
     setDmUnreads((p) => ({ ...p, [friend.id]: 0 }));
     fetch(`/api/dm/${friend.id}/read`, { method: "PATCH" }).catch(() => null);
     setActive({ type: "dm", userId: friend.id });
+    setMobileView("chat");
   }
 
   // Debounced global user search
@@ -445,9 +451,9 @@ export default function MeldingerClient({
   const totalDMUnread = conversations.reduce((s, c) => s + (dmUnreads[c.friend.id] ?? c.unreadCount), 0);
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
+    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] overflow-hidden">
       {/* ─── Left: sidebar ─────────────────────────────────────────────────── */}
-      <div className="flex w-72 shrink-0 flex-col border-r border-zinc-800 bg-zinc-900 overflow-y-auto">
+      <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-72 shrink-0 flex-col border-r border-zinc-800 bg-zinc-900 overflow-y-auto`}>
 
         {/* MINE COMMUNITIES */}
         <div className="border-b border-zinc-800">
@@ -664,46 +670,58 @@ export default function MeldingerClient({
       </div>
 
       {/* ─── Right: message view ────────────────────────────────────────────── */}
-      {active === null ? (
-        <div className="flex flex-1 items-center justify-center bg-zinc-950">
-          <div className="text-center">
-            <MessageSquare className="mx-auto mb-3 h-10 w-10 text-zinc-700" />
-            <p className="text-sm font-medium text-zinc-400">Velg en kanal, samtale eller gruppe</p>
-            <p className="mt-1 text-xs text-zinc-600">Kommuniser med teamet ditt</p>
+      <div className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0`}>
+        {/* Mobile back button */}
+        <button
+          className="md:hidden shrink-0 flex items-center gap-2 border-b border-zinc-800 bg-zinc-900 px-4 py-2.5 text-zinc-400 hover:text-white transition-colors"
+          onClick={() => setMobileView("list")}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span className="text-sm font-medium">Tilbake</span>
+        </button>
+
+        {active === null ? (
+          <div className="flex flex-1 items-center justify-center bg-zinc-950">
+            <div className="text-center">
+              <MessageSquare className="mx-auto mb-3 h-10 w-10 text-zinc-700" />
+              <p className="text-sm font-medium text-zinc-400">Velg en kanal, samtale eller gruppe</p>
+              <p className="mt-1 text-xs text-zinc-600">Kommuniser med teamet ditt</p>
+            </div>
           </div>
-        </div>
-      ) : active.type === "channel" ? (
-        <ChannelView
-          key={active.channelId}
-          channelId={active.channelId}
-          channelName={active.channelName}
-          orgId={active.orgId}
-          userId={currentUserId}
-          userName={currentUserName}
-          userRole={active.role}
-          members={active.members}
-        />
-      ) : active.type === "group" ? (
-        <GroupView
-          key={active.groupId}
-          groupId={active.groupId}
-          groupName={active.groupName}
-          createdBy={active.createdBy}
-          currentUserId={currentUserId}
-          members={active.members}
-          onDeleted={() => {
-            setGroups((prev) => prev.filter((g) => g.id !== active.groupId));
-            setActive(null);
-          }}
-        />
-      ) : (
-        <DMView
-          key={active.userId}
-          friendId={active.userId}
-          friend={activeConvFriend ?? { id: active.userId, name: null, avatarUrl: null }}
-          currentUserId={currentUserId}
-        />
-      )}
+        ) : active.type === "channel" ? (
+          <ChannelView
+            key={active.channelId}
+            channelId={active.channelId}
+            channelName={active.channelName}
+            orgId={active.orgId}
+            userId={currentUserId}
+            userName={currentUserName}
+            userRole={active.role}
+            members={active.members}
+          />
+        ) : active.type === "group" ? (
+          <GroupView
+            key={active.groupId}
+            groupId={active.groupId}
+            groupName={active.groupName}
+            createdBy={active.createdBy}
+            currentUserId={currentUserId}
+            members={active.members}
+            onDeleted={() => {
+              setGroups((prev) => prev.filter((g) => g.id !== active.groupId));
+              setActive(null);
+              setMobileView("list");
+            }}
+          />
+        ) : (
+          <DMView
+            key={active.userId}
+            friendId={active.userId}
+            friend={activeConvFriend ?? { id: active.userId, name: null, avatarUrl: null }}
+            currentUserId={currentUserId}
+          />
+        )}
+      </div>
 
       {/* New group modal */}
       {showNewGroup && (

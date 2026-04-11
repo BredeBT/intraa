@@ -6,7 +6,7 @@ import {
 import {
   SendHorizontal, Paperclip, Bell, BellOff, LogOut,
   Check, MoreHorizontal, Pin, X, Loader2, Settings, Search,
-  Pencil, Trash2, Plus,
+  Pencil, Trash2, Plus, ChevronLeft,
 } from "lucide-react";
 import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
 import {
@@ -43,6 +43,7 @@ export default function ChatClient({
   const firstChannelId = localChannels[0]?.id ?? "";
 
   const [activeId,         setActiveId]         = useState(firstChannelId);
+  const [mobileView,       setMobileView]       = useState<"list" | "chat">("list");
   const [messages,         setMessages]         = useState<LocalMessage[]>(initialMessages);
 
   // Channel management modal
@@ -210,6 +211,7 @@ export default function ChatClient({
   function switchChannel(id: string) {
     setCtxMenu(null);
     setActiveId(id);
+    setMobileView("chat");
     setResolvedChannelId(id);
     setMessages([]);
     setShowPinned(false);
@@ -225,6 +227,7 @@ export default function ChatClient({
 
   function switchDm(id: string) {
     setActiveId(id);
+    setMobileView("chat");
     setMessages([]);
     setShowPinned(false);
     clearPasteImage();
@@ -439,10 +442,10 @@ export default function ChatClient({
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)]">
+    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)]">
 
       {/* Channel / DM sidebar */}
-      <aside className="flex w-52 shrink-0 flex-col border-r border-zinc-800 bg-zinc-800 py-4">
+      <aside className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-52 shrink-0 flex-col border-r border-zinc-800 bg-zinc-800 py-4`}>
         <div className="mb-1 flex items-center justify-between px-4">
           <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">Kanaler</p>
           {isAdmin && (
@@ -529,12 +532,20 @@ export default function ChatClient({
       </aside>
 
       {/* Message area */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+      <div className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex min-w-0 flex-1 flex-col overflow-hidden`}>
 
         {/* Header */}
-        <header className="border-b border-zinc-800 px-6 py-3">
+        <header className="border-b border-zinc-800 px-4 py-3 md:px-6">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-sm font-semibold text-white">{channelLabel}</p>
+            <div className="flex items-center gap-2">
+              <button
+                className="md:hidden text-zinc-400 hover:text-white transition-colors"
+                onClick={() => setMobileView("list")}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <p className="text-sm font-semibold text-white">{channelLabel}</p>
+            </div>
             {pinnedMessages.length > 0 && (
               <button
                 onClick={() => setShowPinned((p) => !p)}
