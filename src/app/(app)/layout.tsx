@@ -13,6 +13,8 @@ import {
 import UserMenu from "@/components/UserMenu";
 import NotificationBell from "@/components/NotificationBell";
 import SearchOverlay from "@/components/SearchOverlay";
+import BottomBar from "@/components/BottomBar";
+import MobileDrawer from "@/components/MobileDrawer";
 import { useOrg } from "@/lib/context/OrgContext";
 import { useUser } from "@/lib/hooks/useUser";
 
@@ -413,6 +415,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const inAdmin      = pathname.startsWith("/admin");
   const [searchOpen,        setSearchOpen]        = useState(false);
   const [sidebarOpen,       setSidebarOpen]        = useState(false);
+  const [drawerOpen,        setDrawerOpen]         = useState(false);
   const [desktopCollapsed,  setDesktopCollapsed]   = useState(false);
   const [mounted,           setMounted]             = useState(false);
   const [supportOpen,       setSupportOpen]        = useState(false);
@@ -497,7 +500,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  useEffect(() => { setSidebarOpen(false); }, [pathname]);
+  useEffect(() => { setSidebarOpen(false); setDrawerOpen(false); }, [pathname]);
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
   useEffect(() => {
@@ -577,8 +580,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className={`flex min-h-screen min-w-0 flex-col transition-all duration-200 ease-in-out ${mainPl}`}>
         {/* Header */}
         <header className="flex h-14 items-center gap-3 border-b border-zinc-800 bg-zinc-900 px-4">
-          {/* Left: menu + title */}
-          <div className="flex w-36 shrink-0 items-center gap-3">
+          {/* Left: menu (desktop) + title */}
+          <div className="flex shrink-0 items-center gap-3 md:w-36">
             {!inAdmin && (
               <button
                 onClick={() => setSidebarOpen(true)}
@@ -586,13 +589,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 aria-label="Åpne meny"
               >
                 <Menu className="h-5 w-5" />
-            </button>
+              </button>
             )}
             <span className="truncate text-sm font-semibold text-white">{title}</span>
           </div>
 
-          {/* Center: search bar */}
-          <div className="flex flex-1 justify-center">
+          {/* Center: search bar — hidden on mobile */}
+          <div className="hidden flex-1 justify-center md:flex">
             <button
               onClick={openSearch}
               className="flex w-full max-w-md items-center gap-2.5 rounded-lg border border-zinc-700 bg-zinc-800/60 px-3.5 py-2 text-sm text-zinc-500 transition-colors hover:border-zinc-600 hover:text-zinc-300"
@@ -604,17 +607,40 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Right: actions */}
-          <div className="flex w-36 shrink-0 items-center justify-end gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-2 md:w-36 md:justify-end">
             <NotificationBell />
             <UserMenu />
           </div>
         </header>
 
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1 pb-14 md:pb-0">{children}</main>
       </div>
 
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
       {supportOpen && <SupportModal onClose={() => setSupportOpen(false)} />}
+
+      {/* Mobile bottom bar — hidden in admin */}
+      {!inAdmin && (
+        <>
+          <BottomBar
+            pathname={pathname}
+            unreadCount={unreadCount}
+            isCommunity={org?.type === "COMMUNITY"}
+            onSearch={openSearch}
+            onMenu={() => setDrawerOpen(true)}
+          />
+          <MobileDrawer
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            pathname={pathname}
+            org={org ? { slug: org.slug, type: org.type, userRole: org.userRole } : null}
+            enabledFeatures={enabledFeatures}
+            liveStatus={liveStatus}
+            isSuperAdmin={user?.isSuperAdmin ?? false}
+            onOpenSupport={() => setSupportOpen(true)}
+          />
+        </>
+      )}
     </div>
   );
 }
