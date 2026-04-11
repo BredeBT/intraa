@@ -1,23 +1,25 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase-client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
-export function useRealtimeChannel(
+export function useRealtimeChannel<T = unknown>(
   channelName: string,
-  onMessage: (payload: Record<string, unknown>) => void,
+  onMessage: (payload: T) => void,
 ) {
-  const channelRef = useRef<RealtimeChannel | null>(null);
-  // Keep a stable ref to the callback so we don't re-subscribe on every render
-  const callbackRef = useRef(onMessage);
+  const channelRef   = useRef<RealtimeChannel | null>(null);
+  const callbackRef  = useRef(onMessage);
   callbackRef.current = onMessage;
 
   useEffect(() => {
+    if (!channelName) return;
+
     const channel = supabase
       .channel(channelName)
-      .on("broadcast", { event: "new_message" }, (payload) => {
-        callbackRef.current(payload as Record<string, unknown>);
+      .on("broadcast", { event: "new_message" }, (raw) => {
+        // Supabase wraps the payload — unwrap before passing to consumer
+        callbackRef.current(raw.payload as T);
       })
       .subscribe();
 
@@ -25,8 +27,15 @@ export function useRealtimeChannel(
 
     return () => {
       void supabase.removeChannel(channel);
+      channelRef.current = null;
     };
   }, [channelName]);
 
-  return channelRef;
+  const broadcast = useCallback(async (message: T) => {
+    const ch = channelRef.current;
+    if (!ch) return;
+    await ch.send({ type: "broadcast", event: "new_message", payload: message });
+  }, []);
+
+  return { broadcast };
 }

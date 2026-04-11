@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useTransition } from "react";
 import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
-import { broadcastMessage } from "@/lib/broadcast";
 import {
   Search, Send, MessageSquare, ChevronDown, ChevronRight,
   Hash, Plus, X, Users, Check, UserPlus, Clock,
@@ -242,10 +241,8 @@ function DMView({
   }, [friendId]);
 
   // Realtime: receive DMs from the other user
-  const dmChannel = [currentUserId, friendId].sort().join("-");
-  useRealtimeChannel(`dm:${dmChannel}`, (payload) => {
-    const msg = (payload as { payload?: DMMessage }).payload;
-    if (!msg) return;
+  const dmChannel = [currentUserId, friendId].sort().join(":");
+  const { broadcast } = useRealtimeChannel<DMMessage>(`dm:${dmChannel}`, (msg) => {
     setMessages((prev) => {
       if (prev.some((m) => m.id === msg.id)) return prev;
       return [...prev, msg];
@@ -268,8 +265,7 @@ function DMView({
     if (res.ok) {
       const data = await res.json() as { message: DMMessage };
       setMessages((prev) => [...prev, data.message]);
-      // Broadcast to the other user
-      void broadcastMessage(`dm:${dmChannel}`, data.message);
+      void broadcast(data.message);
     }
     setSending(false);
   }

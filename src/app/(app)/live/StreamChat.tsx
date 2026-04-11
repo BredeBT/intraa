@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
 import SafeHtml from "@/components/SafeHtml";
+import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
 
 interface ChatMessage {
   id:        string;
@@ -26,25 +27,12 @@ function initials(name: string | null) {
 export default function StreamChat({ orgId, userId, disabled }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sending,  setSending]  = useState(false);
-  const bottomRef  = useRef<HTMLDivElement>(null);
-  const knownIds   = useRef<Set<string>>(new Set());
-  const editorRef  = useRef<RichTextEditorRef>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const knownIds  = useRef<Set<string>>(new Set());
+  const editorRef = useRef<RichTextEditorRef>(null);
 
-  async function fetchMessages() {
-    try {
-      const res  = await fetch(`/api/stream/chat?orgId=${orgId}`);
-      if (!res.ok) return;
-      const data = (await res.json()) as { messages: ChatMessage[] };
-      const fresh = data.messages.filter((m) => !knownIds.current.has(m.id));
-      if (fresh.length > 0) {
-        fresh.forEach((m) => knownIds.current.add(m.id));
-        setMessages((prev) => [...prev, ...fresh]);
-      }
-    } catch { /* silent */ }
-  }
-
+  // Initial load from DB
   useEffect(() => {
-    // Initial load — get all messages
     fetch(`/api/stream/chat?orgId=${orgId}`)
       .then((r) => r.json())
       .then((data: { messages: ChatMessage[] }) => {
@@ -52,11 +40,14 @@ export default function StreamChat({ orgId, userId, disabled }: Props) {
         setMessages(data.messages);
       })
       .catch(() => null);
-
-    const interval = setInterval(fetchMessages, 8_000);
-    return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);
+
+  // Realtime: receive messages from other viewers
+  const { broadcast } = useRealtimeChannel<ChatMessage>(`stream:${orgId}`, (msg) => {
+    if (knownIds.current.has(msg.id)) return;
+    knownIds.current.add(msg.id);
+    setMessages((prev) => [...prev, msg]);
+  });
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -88,9 +79,8 @@ export default function StreamChat({ orgId, userId, disabled }: Props) {
       const data = (await res.json()) as { message: ChatMessage };
       // Replace optimistic with real
       knownIds.current.add(data.message.id);
-      setMessages((prev) =>
-        prev.map((m) => m.id === optimistic.id ? data.message : m)
-      );
+      setMessages((prev) => prev.map((m) => m.id === optimistic.id ? data.message : m));
+      void broadcast(data.message);
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
       knownIds.current.delete(optimistic.id);

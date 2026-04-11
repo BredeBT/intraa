@@ -16,7 +16,6 @@ import {
 import type { MessageWithAuthor } from "@/lib/types";
 import MessageItem, { type LocalMessage, type Attachment } from "./MessageItem";
 import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
-import { broadcastMessage } from "@/lib/broadcast";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -123,13 +122,10 @@ export default function ChatClient({
 
   useEffect(() => { lastMsgIdRef.current = messages[messages.length - 1]?.id; }, [messages]);
 
-  // Realtime: receive messages from other users on the active channel
-  useRealtimeChannel(
-    resolvedChannelId ? `channel:${resolvedChannelId}` : "__none__",
-    (payload) => {
-      if (!resolvedChannelId) return;
-      const msg = (payload as { payload?: LocalMessage }).payload;
-      if (!msg) return;
+  // Realtime: receive messages broadcast by other users on the active channel
+  const { broadcast } = useRealtimeChannel<LocalMessage>(
+    resolvedChannelId ? `channel:${resolvedChannelId}` : "",
+    (msg) => {
       setMessages((prev) => {
         if (prev.some((m) => m.id === msg.id)) return prev;
         if (isAtBottomRef.current) setTimeout(scrollToBottom, 50);
@@ -281,8 +277,7 @@ export default function ChatClient({
           return ids.has(newMsg.id) ? prev : [...prev, newMsg as LocalMessage];
         });
         setTimeout(scrollToBottom, 50);
-        // Broadcast to other subscribers
-        void broadcastMessage(`channel:${resolvedChannelId}`, newMsg);
+        void broadcast(newMsg as LocalMessage);
       } catch { /* silent */ }
     });
   }

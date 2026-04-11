@@ -5,7 +5,6 @@ import { SendHorizontal, Loader2, X, Paperclip, Trash2 } from "lucide-react";
 import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
 import SafeHtml from "@/components/SafeHtml";
 import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
-import { broadcastMessage } from "@/lib/broadcast";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -88,10 +87,8 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
       .catch(() => null);
   }, [groupId]);
 
-  // Realtime: receive messages from other users
-  useRealtimeChannel(`group:${groupId}`, (payload) => {
-    const msg = (payload as { payload?: GroupMsg }).payload;
-    if (!msg) return;
+  // Realtime: receive messages broadcast by other group members
+  const { broadcast } = useRealtimeChannel<GroupMsg>(`group:${groupId}`, (msg) => {
     setMessages((prev) => {
       if (prev.some((m) => m.id === msg.id)) return prev;
       return [...prev, msg];
@@ -187,8 +184,7 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
     if (res.ok) {
       const data = await res.json() as { message: GroupMsg };
       setMessages((prev) => [...prev, data.message]);
-      // Broadcast to other group members
-      void broadcastMessage(`group:${groupId}`, data.message);
+      void broadcast(data.message);
     }
     setSending(false);
   }
