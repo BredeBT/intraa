@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
-import { Search, Radio, Users, UserPlus, Check, X, ArrowRight } from "lucide-react";
+import { Search, Radio, Users, Check, X, ArrowRight } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -222,21 +222,21 @@ export default function HomeClient({ userName, myCommunities, recommendedCommuni
             )}
 
             {/* Recommended / search results */}
-            <section>
-              <h2 className="mb-3 text-sm font-semibold text-white">
-                {search ? `Resultater for «${search}»` : "Anbefalte communities"}
-                {searching && <span className="ml-2 text-xs font-normal text-zinc-500">Søker…</span>}
-              </h2>
-              {displayed.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-zinc-800 py-12 text-center">
+            {(displayed.length > 0 || search) && (
+              <section>
+                <h2 className="mb-3 text-sm font-semibold text-white">
+                  {search ? `Resultater for «${search}»` : "Anbefalte communities"}
+                  {searching && <span className="ml-2 text-xs font-normal text-zinc-500">Søker…</span>}
+                </h2>
+                {displayed.length === 0 ? (
                   <p className="text-sm text-zinc-500">Ingen communities funnet.</p>
-                </div>
-              ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {displayed.map((c) => <CommunityCard key={c.id} c={c} />)}
-                </div>
-              )}
-            </section>
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {displayed.map((c) => <CommunityCard key={c.id} c={c} />)}
+                  </div>
+                )}
+              </section>
+            )}
           </div>
 
           {/* RIGHT column */}
@@ -308,12 +308,6 @@ export default function HomeClient({ userName, myCommunities, recommendedCommuni
               </div>
             )}
 
-            {friends.length === 0 && requests.length === 0 && (
-              <div className="rounded-xl border border-dashed border-zinc-800 py-8 text-center">
-                <UserPlus className="mx-auto mb-2 h-6 w-6 text-zinc-600" />
-                <p className="text-xs text-zinc-500">Finn venner ved å besøke profiler i communities</p>
-              </div>
-            )}
           </aside>
         </div>
       </div>
