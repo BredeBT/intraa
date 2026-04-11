@@ -1,32 +1,34 @@
-"use client";
+import DOMPurify from "isomorphic-dompurify";
 
-import { useMemo } from "react";
+const ALLOWED_TAGS = ["p", "br", "strong", "em", "u", "code", "pre", "s", "ul", "ol", "li"];
+
+const IS_HTML = /<[a-z][\s\S]*>/i;
+
+function sanitize(html: string) {
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS, ALLOWED_ATTR: [] });
+}
 
 interface Props {
-  html:       string;
+  content:    string;
   className?: string;
 }
 
 /**
- * Renders a (possibly rich-text) message safely.
- * Uses DOMPurify on the client; falls back to plain-text on the server.
+ * Renders message content that may be either plain text (old) or HTML (Tiptap).
+ * Plain text is rendered with whitespace-pre-wrap; HTML goes through DOMPurify.
  */
-export default function SafeHtml({ html, className = "" }: Props) {
-  const safe = useMemo(() => {
-    if (typeof window === "undefined") return html;
-    // Lazy-import DOMPurify only when running in the browser
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const DOMPurify = (require("dompurify") as typeof import("dompurify")).default;
-    return DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: ["p", "br", "strong", "em", "u", "code", "pre", "s", "ul", "ol", "li"],
-      ALLOWED_ATTR: [],
-    });
-  }, [html]);
-
+export default function SafeHtml({ content, className = "" }: Props) {
+  if (IS_HTML.test(content)) {
+    return (
+      <span
+        className={`msg-html ${className}`}
+        dangerouslySetInnerHTML={{ __html: sanitize(content) }}
+      />
+    );
+  }
   return (
-    <span
-      className={`msg-html ${className}`}
-      dangerouslySetInnerHTML={{ __html: safe }}
-    />
+    <span className={`whitespace-pre-wrap break-words ${className}`}>
+      {content}
+    </span>
   );
 }

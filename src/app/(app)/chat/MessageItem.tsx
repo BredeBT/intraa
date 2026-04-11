@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Reply, Trash2, Pencil, Pin, PinOff, Paperclip, ChevronDown, ChevronRight, Send, X } from "lucide-react";
 import type { MessageWithAuthor } from "@/lib/types";
+import SafeHtml from "@/components/SafeHtml";
 
 export interface Attachment {
   name: string;
@@ -30,24 +31,6 @@ function formatSize(bytes: number) {
 }
 
 /** Highlight @mentions — client-only to avoid SSR/hydration mismatch */
-function parseMentions(content: string, memberNames: string[]): React.ReactNode[] {
-  if (!memberNames.length) return [<span key={0}>{content}</span>];
-
-  const sorted = [...memberNames].filter(Boolean).sort((a, b) => b.length - a.length);
-  const escaped = sorted.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  // Non-capturing group inside capture so split keeps the whole @Name token
-  const regex = new RegExp(`(@(?:${escaped.join("|")}))`, "g");
-  const parts = content.split(regex);
-
-  return parts.map((part, i) => {
-    const name = part.startsWith("@") ? part.slice(1) : null;
-    if (name && sorted.includes(name)) {
-      return <mark key={i} className="rounded bg-yellow-500/20 px-0.5 text-yellow-300">{part}</mark>;
-    }
-    return <span key={i}>{part}</span>;
-  });
-}
-
 interface Props {
   message:      LocalMessage;
   isOwn:        boolean;
@@ -66,7 +49,6 @@ export default function MessageItem({
   message, isOwn, canPin, userId, dmContacts, memberNames,
   onReact, onEdit, onDelete, onReply, onPin,
 }: Props) {
-  const [mounted,        setMounted]        = useState(false);
   const [emojiOpen,      setEmojiOpen]      = useState(false);
   const [editing,        setEditing]        = useState(false);
   const [editContent,    setEditContent]    = useState(message.content);
@@ -76,7 +58,6 @@ export default function MessageItem({
   const [lightbox,       setLightbox]       = useState<string | null>(null);
   const [confirmDelete,  setConfirmDelete]  = useState(false);
 
-  useEffect(() => setMounted(true), []);
   const editRef  = useRef<HTMLInputElement>(null);
   const replyRef = useRef<HTMLInputElement>(null);
 
@@ -143,9 +124,9 @@ export default function MessageItem({
             </div>
           ) : (
             message.content && (
-              <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-white">
-                {mounted ? parseMentions(message.content, memberNames) : message.content}
-              </p>
+              <div className="mt-0.5 text-sm leading-relaxed text-white">
+                <SafeHtml content={message.content} />
+              </div>
             )
           )}
 
@@ -361,9 +342,9 @@ export default function MessageItem({
                   <span className="text-[10px] text-zinc-400">{formatTime(reply.createdAt)}</span>
                   {reply.editedAt && <span className="text-[10px] text-zinc-400 opacity-60">(redigert)</span>}
                 </div>
-                <p className="mt-0.5 whitespace-pre-wrap break-words text-xs text-zinc-400">
-                  {mounted ? parseMentions(reply.content, memberNames) : reply.content}
-                </p>
+                <div className="mt-0.5 text-xs text-zinc-400">
+                  <SafeHtml content={reply.content} />
+                </div>
                 {reply.reactions.length > 0 && (
                   <div className="mt-1 flex flex-wrap gap-1">
                     {reply.reactions.map(({ emoji, count, reactedByMe }) => (
