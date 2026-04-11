@@ -194,7 +194,7 @@ export default function SearchOverlay({
                 Communities
               </p>
               {orgs.slice(0, 5).map((o) => {
-                const orgHref = o.isMember ? `/${o.slug}/feed` : `/c/${o.slug}`;
+                const orgHref = o.isMember ? `/community/${o.slug}` : `/c/${o.slug}`;
                 return (
                 <div key={o.id} className="flex items-center gap-3 px-4 py-2 hover:bg-zinc-800 transition-colors">
                   <Link href={orgHref} onClick={onClose}>

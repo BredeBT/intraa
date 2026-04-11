@@ -57,7 +57,7 @@ function Avatar({ avatarUrl, name, size = 8 }: { avatarUrl: string | null; name:
 // ─── Community Card ───────────────────────────────────────────────────────────
 
 function CommunityCard({ c, compact = false, isMember = false }: { c: Community; compact?: boolean; isMember?: boolean }) {
-  const href = isMember ? `/${c.slug}/feed` : `/c/${c.slug}`;
+  const href = isMember ? `/community/${c.slug}` : `/c/${c.slug}`;
   if (compact) {
     return (
       <Link
