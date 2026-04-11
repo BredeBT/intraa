@@ -2,16 +2,17 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { Users, TrendingUp, Globe, ShieldAlert, ArrowRight, Inbox, Flag } from "lucide-react";
+import { Users, TrendingUp, Globe, ShieldAlert, ArrowRight } from "lucide-react";
 import SuperAdminActions from "./SuperAdminActions";
+import SuperAdminNav from "./SuperAdminNav";
 
 type OrgPlan = "FREE" | "STARTER" | "PRO" | "ENTERPRISE";
 
 const PLAN_STYLES: Record<OrgPlan, string> = {
-  FREE:       "bg-zinc-700/50 text-zinc-400",
-  STARTER:    "bg-blue-500/10 text-blue-400",
-  PRO:        "bg-indigo-500/10 text-indigo-400",
-  ENTERPRISE: "bg-amber-500/15 text-amber-400",
+  FREE:       "bg-zinc-800 text-zinc-500",
+  STARTER:    "bg-sky-500/10 text-sky-400",
+  PRO:        "bg-violet-500/10 text-violet-400",
+  ENTERPRISE: "bg-amber-400/10 text-amber-300",
 };
 
 function formatDate(date: Date) {
@@ -22,12 +23,7 @@ export default async function SuperAdminPage() {
   const session = await auth();
   if (!session?.user?.id || !session.user.isSuperAdmin) redirect("/feed");
 
-  const [
-    totalOrgs,
-    totalMembers,
-    proEnterpriseCount,
-    orgs,
-  ] = await Promise.all([
+  const [totalOrgs, totalMembers, proEnterpriseCount, orgs] = await Promise.all([
     db.organization.count(),
     db.membership.count(),
     db.organization.count({ where: { plan: { in: ["PRO", "ENTERPRISE"] } } }),
@@ -36,7 +32,7 @@ export default async function SuperAdminPage() {
       include: {
         _count: { select: { memberships: true } },
         memberships: {
-          where: { role: "OWNER" },
+          where:   { role: "OWNER" },
           include: { user: { select: { name: true } } },
           take: 1,
         },
@@ -45,64 +41,41 @@ export default async function SuperAdminPage() {
   ]);
 
   const globalStats = [
-    { label: "Totale organisasjoner", value: String(totalOrgs),                          icon: Globe,       color: "text-indigo-400",  bg: "bg-indigo-500/10" },
-    { label: "Totale medlemmer",      value: totalMembers.toLocaleString("nb-NO"),        icon: Users,       color: "text-emerald-400", bg: "bg-emerald-500/10" },
-    { label: "Aktive org.",           value: String(totalOrgs),                          icon: TrendingUp,  color: "text-blue-400",    bg: "bg-blue-500/10" },
-    { label: "PRO / Enterprise",      value: String(proEnterpriseCount),                 icon: ShieldAlert, color: "text-amber-400",   bg: "bg-amber-500/10" },
+    { label: "Organisasjoner", value: String(totalOrgs),                   icon: Globe },
+    { label: "Medlemmer",      value: totalMembers.toLocaleString("nb-NO"), icon: Users },
+    { label: "Aktive org.",    value: String(totalOrgs),                   icon: TrendingUp },
+    { label: "PRO / Enterprise", value: String(proEnterpriseCount),        icon: ShieldAlert },
   ];
 
   return (
     <div className="px-8 py-8">
+      {/* Header */}
       <div className="mb-1 flex items-center gap-2">
-        <ShieldAlert className="h-5 w-5 text-red-400" />
+        <ShieldAlert className="h-5 w-5 text-slate-500" />
         <h1 className="text-xl font-semibold text-white">Superadmin</h1>
       </div>
       <p className="mb-8 text-sm text-zinc-500">Globalt administrasjonspanel for alle organisasjoner på plattformen.</p>
 
-      <SuperAdminActions />
+      {/* Tab navigation */}
+      <SuperAdminNav />
 
-      <div className="mb-8 flex flex-wrap gap-3">
-        <Link
-          href="/superadmin/tenants"
-          className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white"
-        >
-          <Globe className="h-4 w-4" />
-          Administrer tenants
-          <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
-        <Link
-          href="/superadmin/support"
-          className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white"
-        >
-          <Inbox className="h-4 w-4" />
-          Support-innboks
-          <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
-        <Link
-          href="/superadmin/rapporter"
-          className="inline-flex items-center gap-2 rounded-lg border border-rose-800/40 bg-rose-950/20 px-4 py-2.5 text-sm font-medium text-rose-400 transition-colors hover:border-rose-700/60 hover:text-rose-300"
-        >
-          <Flag className="h-4 w-4" />
-          Brukerrapporter
-          <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
-      </div>
-
-      {/* Global stats */}
+      {/* Stats */}
       <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {globalStats.map(({ label, value, icon: Icon, color, bg }) => (
-          <div key={label} className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-            <div className={`mb-3 inline-flex rounded-lg p-2 ${bg}`}>
-              <Icon className={`h-5 w-5 ${color}`} />
-            </div>
-            <p className="text-2xl font-bold text-white">{value}</p>
-            <p className="mt-0.5 text-sm text-zinc-500">{label}</p>
+        {globalStats.map(({ label, value, icon: Icon }) => (
+          <div key={label} className="rounded-xl border border-white/5 bg-zinc-900 p-5">
+            <Icon className="mb-3 h-5 w-5 text-slate-400" />
+            <p className="text-2xl font-bold tabular-nums text-white">{value}</p>
+            <p className="mt-0.5 text-xs text-zinc-500">{label}</p>
           </div>
         ))}
       </div>
 
       {/* Orgs table */}
-      <h2 className="mb-3 text-sm font-semibold text-zinc-400">Alle organisasjoner</h2>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-zinc-400">Alle organisasjoner</h2>
+        <SuperAdminActions />
+      </div>
+
       {orgs.length === 0 ? (
         <p className="text-sm text-zinc-600">Ingen organisasjoner i databasen ennå.</p>
       ) : (
@@ -110,57 +83,58 @@ export default async function SuperAdminPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-800 bg-zinc-900">
-                <th className="px-5 py-3 text-left font-medium text-zinc-500">Navn</th>
-                <th className="px-5 py-3 text-left font-medium text-zinc-500 hidden sm:table-cell">Eier</th>
-                <th className="px-5 py-3 text-left font-medium text-zinc-500">Medlemmer</th>
-                <th className="px-5 py-3 text-left font-medium text-zinc-500">Plan</th>
-                <th className="px-5 py-3 text-left font-medium text-zinc-500 hidden md:table-cell">Opprettet</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-zinc-500">Navn</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-zinc-500 hidden sm:table-cell">Eier</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-zinc-500">Medlemmer</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-zinc-500">Plan</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-zinc-500 hidden md:table-cell">Opprettet</th>
                 <th className="px-5 py-3" />
               </tr>
             </thead>
-            <tbody className="bg-zinc-950">
+            <tbody>
               {orgs.map((org, i) => {
-                const plan = org.plan as OrgPlan;
+                const plan  = org.plan as OrgPlan;
                 const owner = org.memberships[0]?.user.name ?? "—";
-                const memberCount = org._count.memberships;
 
                 return (
                   <tr
                     key={org.id}
-                    className={`transition-colors hover:bg-zinc-900 ${i < orgs.length - 1 ? "border-b border-zinc-800" : ""}`}
+                    className={`transition-colors hover:bg-zinc-800/60 ${
+                      i < orgs.length - 1 ? "border-b border-zinc-800" : ""
+                    } ${i % 2 === 0 ? "bg-zinc-950" : "bg-zinc-900/40"}`}
                   >
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-700 text-xs font-bold text-white">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-800 text-xs font-bold text-zinc-300">
                           {org.name[0].toUpperCase()}
                         </div>
                         <div>
                           <p className="font-medium text-white">{org.name}</p>
-                          <p className="text-xs text-zinc-500">/{org.slug}</p>
+                          <p className="text-xs text-zinc-600">/{org.slug}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-zinc-400 hidden sm:table-cell">{owner}</td>
-                    <td className="px-5 py-4 text-zinc-300">
+                    <td className="px-5 py-3.5 text-sm text-zinc-400 hidden sm:table-cell">{owner}</td>
+                    <td className="px-5 py-3.5 text-sm text-zinc-400">
                       <div className="flex items-center gap-1.5">
-                        <Users className="h-3.5 w-3.5 text-zinc-500" />
-                        {memberCount.toLocaleString("nb-NO")}
+                        <Users className="h-3.5 w-3.5 text-zinc-600" />
+                        {org._count.memberships.toLocaleString("nb-NO")}
                       </div>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-3.5">
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${PLAN_STYLES[plan] ?? PLAN_STYLES.FREE}`}>
                         {plan}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-xs text-zinc-500 hidden md:table-cell">
+                    <td className="px-5 py-3.5 text-xs text-zinc-600 hidden md:table-cell">
                       {formatDate(org.createdAt)}
                     </td>
-                    <td className="px-5 py-4 text-right">
+                    <td className="px-5 py-3.5 text-right">
                       <Link
                         href={`/superadmin/tenants/${org.id}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white"
+                        className="inline-flex items-center gap-1 rounded-md border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400 transition-colors hover:border-zinc-500 hover:text-zinc-200"
                       >
-                        Administrer <ArrowRight className="h-3.5 w-3.5" />
+                        Administrer <ArrowRight className="h-3 w-3" />
                       </Link>
                     </td>
                   </tr>

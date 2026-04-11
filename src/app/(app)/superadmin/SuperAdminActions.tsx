@@ -10,19 +10,19 @@ export default function SuperAdminActions() {
 
   return (
     <>
-      <div className="mb-8 flex flex-wrap gap-3">
+      <div className="flex items-center gap-2">
         <Link
           href="/superadmin/invitasjoner"
-          className="inline-flex items-center gap-2 rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-300 transition-colors hover:bg-indigo-500/20"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:text-zinc-200"
         >
-          <Mail className="h-4 w-4" />
+          <Mail className="h-3.5 w-3.5" />
           Send invitasjoner
         </Link>
         <button
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-300 transition-colors hover:bg-emerald-500/20"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:text-zinc-200"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5" />
           Ny organisasjon
         </button>
       </div>
