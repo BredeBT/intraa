@@ -59,6 +59,27 @@ interface FloatItem { id: number; x: number; y: number; value: number }
 // Tab 2: Statistikk/verdener
 // Tab 3: Shop/Oppgraderinger
 
+// ── localStorage cache keys ───────────────────────────────────────────────────
+const CK = {
+  coins:       "clicker_coins",
+  profile:     "clicker_profile",
+  upgrades:    "clicker_upgrades",
+  totalClicks: "clicker_totalClicks",
+} as const;
+
+function writeCache(profile: ClickerProfile, upgrades: UpgradeState[], coins?: number) {
+  try {
+    localStorage.setItem(CK.profile,     JSON.stringify(profile));
+    localStorage.setItem(CK.upgrades,    JSON.stringify(upgrades));
+    localStorage.setItem(CK.totalClicks, String(profile.totalClicks));
+    if (coins !== undefined) localStorage.setItem(CK.coins, String(Math.floor(coins)));
+  } catch { /* quota exceeded — ignore */ }
+}
+
+function clearCache() {
+  Object.values(CK).forEach((k) => localStorage.removeItem(k));
+}
+
 export default function ClickerPage() {
   const [mobileTab,     setMobileTab]     = useState<"klikker" | "verdener" | "oppgraderinger">("klikker");
   const [orgId,         setOrgId]         = useState<string | null>(null);
@@ -82,6 +103,29 @@ export default function ClickerPage() {
   const clickCount   = useRef(0); // raw click count for totalClicks
   const floatId      = useRef(0);
   const orgIdRef     = useRef<string | null>(null);
+
+  // ── Restore from localStorage on mount (before DB fetch) ─────────────────
+  useEffect(() => {
+    try {
+      const p = localStorage.getItem(CK.profile);
+      if (p) {
+        const parsed = JSON.parse(p) as ClickerProfile;
+        setProfile(parsed);
+        const coins = parseFloat(localStorage.getItem(CK.coins) ?? String(parsed.coins));
+        serverCoins.current = coins;
+        setDisplayCoins(coins);
+      }
+      const u = localStorage.getItem(CK.upgrades);
+      if (u) setUpgrades(JSON.parse(u) as UpgradeState[]);
+      const tc = localStorage.getItem(CK.totalClicks);
+      if (tc) setTotalClicks(parseInt(tc, 10));
+    } catch { /* stale/corrupt cache — ignore */ }
+  }, []);
+
+  // ── Persist displayCoins to localStorage ─────────────────────────────────
+  useEffect(() => {
+    try { localStorage.setItem(CK.coins, String(Math.floor(displayCoins))); } catch { /* ignore */ }
+  }, [displayCoins]);
 
   // ── Load ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -113,6 +157,7 @@ export default function ClickerPage() {
         setUpgrades(data.upgrades);
         setActiveEvent(data.activeEvent);
         if (data.offlineEarned > 0) setOfflineMsg(data.offlineEarned);
+        writeCache(data.profile, data.upgrades, data.profile.coins);
       });
     fetch(`/api/clicker/leaderboard?orgId=${orgId}`)
       .then((r) => r.json())
@@ -248,6 +293,7 @@ export default function ClickerPage() {
       console.log("[COINS] After upgrade:", data.profile.coins);
       setDisplayCoins(data.profile.coins);
       setUpgrades(data.upgrades);
+      writeCache(data.profile, data.upgrades, data.profile.coins);
     }
     setBuying(null);
   }
@@ -269,6 +315,7 @@ export default function ClickerPage() {
       clickCount.current  = 0;
       setDisplayCoins(0);
       setUpgrades([]);
+      clearCache();
     }
     setPrestigeModal(false);
     setPrestiging(false);
