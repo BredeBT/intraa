@@ -577,7 +577,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <div className={`flex min-h-screen min-w-0 flex-col transition-all duration-200 ease-in-out ${mainPl}`}>
         {/* Header */}
-        <header className="flex h-14 items-center gap-3 border-b border-zinc-800 bg-zinc-900 px-4">
+        <header className="flex items-center gap-3 border-b border-zinc-800 bg-zinc-900 px-4 pt-[env(safe-area-inset-top)] min-h-14">
           {/* Left: title */}
           <div className="flex shrink-0 items-center md:w-36">
             <span className="truncate text-sm font-semibold text-white">{title}</span>
@@ -602,7 +602,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 pb-14 md:pb-0">{children}</main>
+        <main className="min-w-0 flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
       </div>
 
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
