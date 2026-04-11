@@ -21,7 +21,6 @@ const BENEFITS = [
   { icon: "🎫", title: "Fanpass-badge ved navn",           desc: "Vis frem at du støtter communityet i chat og feed" },
   { icon: "⚡", title: "Prioritert support",                desc: "Sakene dine behandles foran køen" },
   { icon: "🔭", title: "Tidlig tilgang til nye funksjoner", desc: "Test nye features før alle andre" },
-  { icon: "🔒", title: "Eksklusiv Fanpass-kanal",           desc: "Privat kanal kun for Fanpass-medlemmer" },
   { icon: "❤️", title: "Du støtter Intraa direkte",          desc: "Bidrar til bedre tjeneste for hele communityet" },
 ];
 
@@ -48,9 +47,7 @@ function SmilekassenCard() {
     <div className="rounded-xl border border-pink-500/20 bg-pink-500/5 p-5">
       <p className="font-semibold text-pink-300">💛 Vi gir tilbake</p>
       <p className="mt-1.5 text-sm text-zinc-400">
-        En fast andel av alle Fanpass-inntekter doneres månedlig til{" "}
-        <span className="font-medium text-white">Smilekassen</span>, en norsk veldedighet som
-        støtter barn og unge med livstruende og alvorlig sykdom.
+        En fast andel av alle Fanpass-inntekter doneres månedlig til Smilekassen.
       </p>
     </div>
   );
