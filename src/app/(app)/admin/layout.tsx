@@ -96,34 +96,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             <ArrowLeft className="h-3.5 w-3.5" />
           </Link>
-          <div className="flex overflow-x-auto gap-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {ADMIN_NAV.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`shrink-0 flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                  pathname === href
-                    ? "bg-indigo-600 text-white"
-                    : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {label}
-              </Link>
-            ))}
-            {isOwner && (
-              <Link
-                href="/admin/faresone"
-                className={`shrink-0 flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                  pathname === "/admin/faresone"
-                    ? "bg-red-600 text-white"
-                    : "text-red-500 hover:bg-red-500/10"
-                }`}
-              >
-                <AlertTriangle className="h-3.5 w-3.5" />
-                Faresone
-              </Link>
-            )}
+          <div className="relative flex-1 overflow-hidden">
+            <div className="flex overflow-x-auto gap-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {ADMIN_NAV.map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`shrink-0 flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                    pathname === href
+                      ? "bg-indigo-600 text-white"
+                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="hidden sm:inline">{label}</span>
+                </Link>
+              ))}
+              {isOwner && (
+                <Link
+                  href="/admin/faresone"
+                  className={`shrink-0 flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                    pathname === "/admin/faresone"
+                      ? "bg-red-600 text-white"
+                      : "text-red-500 hover:bg-red-500/10"
+                  }`}
+                >
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  <span className="hidden sm:inline">Faresone</span>
+                </Link>
+              )}
+            </div>
+            {/* Fade hint for scroll */}
+            <div className="pointer-events-none absolute right-0 top-0 h-full w-6 bg-gradient-to-l from-zinc-900 to-transparent" />
           </div>
         </div>
       </div>

@@ -217,7 +217,89 @@ export default function BrukereClient({
         />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-zinc-800">
+      {/* Mobile card list */}
+      <div className="md:hidden mb-4 space-y-2">
+        {filtered.length === 0 && (
+          <p className="py-6 text-center text-sm text-zinc-500">Ingen brukere funnet.</p>
+        )}
+        {filtered.map((user) => (
+          <div
+            key={user.userId}
+            className={`rounded-xl border border-zinc-800 bg-zinc-900 p-3 ${user.isBanned ? "opacity-60" : ""}`}
+          >
+            <div className="mb-2 flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <span className="text-sm font-medium text-white">{user.name}</span>
+                {user.username && (
+                  <span className="ml-1.5 font-mono text-xs text-zinc-500">@{user.username}</span>
+                )}
+                {user.isBanned && (
+                  <span className="ml-1.5 rounded-full bg-rose-500/10 px-2 py-0.5 text-xs text-rose-400">Blokkert</span>
+                )}
+                <p className="mt-0.5 truncate text-xs text-zinc-500">{user.email}</p>
+              </div>
+              {editingId === user.userId && !user.isMe ? (
+                <select
+                  autoFocus
+                  value={user.role}
+                  onChange={(e) => changeRole(user.userId, e.target.value as MemberRole)}
+                  onBlur={() => setEditingId(null)}
+                  className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs text-white outline-none"
+                >
+                  {ASSIGNABLE_ROLES.map((r) => (
+                    <option key={r} value={r}>{ROLE_LABEL[r]}</option>
+                  ))}
+                </select>
+              ) : (
+                <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_STYLES[user.role]}`}>
+                  {ROLE_LABEL[user.role]}
+                </span>
+              )}
+            </div>
+            {user.isMe && <span className="text-xs text-zinc-600">Det er deg</span>}
+            {!user.isMe && user.role !== "OWNER" && (
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => setEditingId(user.userId)}
+                  className="rounded-md bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-700"
+                >
+                  Rolle
+                </button>
+                {user.isBanned ? (
+                  <button
+                    onClick={() => setConfirm({ type: "unban", member: user })}
+                    className="rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20"
+                  >
+                    Opphev
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setConfirm({ type: "ban", member: user })}
+                    className="rounded-md bg-rose-500/10 px-2.5 py-1 text-xs font-medium text-rose-400 transition-colors hover:bg-rose-500/20"
+                  >
+                    🚫 Blokker
+                  </button>
+                )}
+                <button
+                  onClick={() => setConfirm({ type: "remove", member: user })}
+                  className="rounded-md bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-700"
+                >
+                  🗑️ Fjern
+                </button>
+                <button
+                  onClick={() => { setReportTarget(user); setReportReason(""); setReportDesc(""); setReportStatus("idle"); }}
+                  className="rounded-md bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-400 transition-colors hover:bg-amber-500/20"
+                >
+                  ⚠️ Rapporter
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block overflow-x-auto rounded-xl border border-zinc-800">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-zinc-800 bg-zinc-900">
