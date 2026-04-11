@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Bell, MessageSquare, Ticket, MessageCircle, UserPlus, Check, X } from "lucide-react";
-import { getNotifications, markNotificationRead } from "@/server/actions/notifications";
+import { getNotifications, markNotificationRead, markAllNotificationsRead } from "@/server/actions/notifications";
 import type { DbNotification } from "@/server/actions/notifications";
 import { getPendingInvitations } from "@/server/actions/invitations";
 import type { PendingInvitation } from "@/server/actions/invitations";
@@ -88,7 +88,15 @@ export default function NotificationBell() {
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          const opening = !open;
+          setOpen(opening);
+          if (opening && unreadNotifs > 0) {
+            // Optimistisk: marker alle som lest i lokal state umiddelbart
+            setNotifs((prev) => prev.map((n) => n.readAt ? n : { ...n, readAt: new Date() }));
+            startTransition(async () => { await markAllNotificationsRead(); });
+          }
+        }}
         className="relative flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
       >
         <Bell className="h-4 w-4" />

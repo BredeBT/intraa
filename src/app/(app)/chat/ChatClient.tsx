@@ -256,6 +256,7 @@ export default function ChatClient({
     setShowPinned(false);
     clearPasteImage();
     setUnread((p) => ({ ...p, [id]: 0 }));
+    fetch(`/api/channels/${id}/read`, { method: "PATCH" }).catch(() => null);
     startTransition(async () => {
       const msgs = await getMessages(id);
       setMessages(msgs);

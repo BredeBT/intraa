@@ -338,6 +338,10 @@ export default function MeldingerClient({
   const [searchLoading,  setSearchLoading] = useState(false);
   const [friendSending,  setFriendSending] = useState<string | null>(null);
   const [localStatuses,  setLocalStatuses] = useState<Record<string, UserSearchResult["friendStatus"]>>({});
+  // Local unread overrides — zeroed immediately when user opens a conversation
+  const [channelUnreads, setChannelUnreads] = useState<Record<string, number>>({});
+  const [dmUnreads,      setDmUnreads]      = useState<Record<string, number>>({});
+  const [groupUnreads,   setGroupUnreads]   = useState<Record<string, number>>({});
 
   // Set initial active from URL params
   useEffect(() => {
@@ -377,6 +381,8 @@ export default function MeldingerClient({
   }
 
   function openChannel(c: Community, ch: OrgChannel) {
+    setChannelUnreads((p) => ({ ...p, [ch.id]: 0 }));
+    fetch(`/api/channels/${ch.id}/read`, { method: "PATCH" }).catch(() => null);
     setActive({
       type: "channel",
       channelId:   ch.id,
@@ -388,10 +394,14 @@ export default function MeldingerClient({
   }
 
   function openGroup(g: Group) {
+    setGroupUnreads((p) => ({ ...p, [g.id]: 0 }));
+    fetch(`/api/groups/${g.id}/read`, { method: "PATCH" }).catch(() => null);
     setActive({ type: "group", groupId: g.id, groupName: g.name, createdBy: g.createdBy, members: g.members });
   }
 
   function openDM(friend: Friend) {
+    setDmUnreads((p) => ({ ...p, [friend.id]: 0 }));
+    fetch(`/api/dm/${friend.id}/read`, { method: "PATCH" }).catch(() => null);
     setActive({ type: "dm", userId: friend.id });
   }
 
@@ -436,7 +446,7 @@ export default function MeldingerClient({
     ? conversations.find((c) => c.friend.id === active.userId)?.friend ?? null
     : null;
 
-  const totalDMUnread = conversations.reduce((s, c) => s + c.unreadCount, 0);
+  const totalDMUnread = conversations.reduce((s, c) => s + (dmUnreads[c.friend.id] ?? c.unreadCount), 0);
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
@@ -453,7 +463,7 @@ export default function MeldingerClient({
           )}
           {communities.map((c) => {
             const expanded = expandedOrgs.has(c.orgId);
-            const orgUnread = c.channels.reduce((s, ch) => s + ch.unread, 0);
+            const orgUnread = c.channels.reduce((s, ch) => s + (channelUnreads[ch.id] ?? ch.unread), 0);
             return (
               <div key={c.orgId}>
                 {/* Org header */}
@@ -473,6 +483,7 @@ export default function MeldingerClient({
                 {/* Channels */}
                 {expanded && c.channels.map((ch) => {
                   const isActive = active?.type === "channel" && active.channelId === ch.id;
+                  const chUnread = channelUnreads[ch.id] ?? ch.unread;
                   return (
                     <button
                       key={ch.id}
@@ -480,10 +491,10 @@ export default function MeldingerClient({
                       className={`flex w-full items-center gap-2 py-1.5 pl-9 pr-4 text-left transition-colors ${isActive ? "bg-zinc-800 text-white" : "text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"}`}
                     >
                       <Hash className="h-3 w-3 shrink-0" />
-                      <span className={`flex-1 truncate text-xs ${ch.unread > 0 ? "font-semibold text-white" : ""}`}>{ch.name}</span>
-                      {ch.unread > 0 && (
+                      <span className={`flex-1 truncate text-xs ${chUnread > 0 ? "font-semibold text-white" : ""}`}>{ch.name}</span>
+                      {chUnread > 0 && (
                         <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-600 px-1 text-[9px] font-bold text-white">
-                          {ch.unread}
+                          {chUnread}
                         </span>
                       )}
                     </button>
@@ -573,6 +584,7 @@ export default function MeldingerClient({
           )}
           {filteredConvs.map(({ friend, lastMessage, unreadCount }) => {
             const isActive = active?.type === "dm" && active.userId === friend.id;
+            const dmUnread = dmUnreads[friend.id] ?? unreadCount;
             return (
               <button
                 key={friend.id}
@@ -582,7 +594,7 @@ export default function MeldingerClient({
                 <Avatar avatarUrl={friend.avatarUrl} name={friend.name} size={6} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className={`truncate text-xs ${unreadCount > 0 ? "font-semibold text-white" : "text-zinc-300"}`}>
+                    <span className={`truncate text-xs ${dmUnread > 0 ? "font-semibold text-white" : "text-zinc-300"}`}>
                       {friend.name ?? "Ukjent"}
                     </span>
                     {lastMessage && (
@@ -593,9 +605,9 @@ export default function MeldingerClient({
                     <p className="truncate text-[10px] text-zinc-500">{lastMessage.content}</p>
                   )}
                 </div>
-                {unreadCount > 0 && (
+                {dmUnread > 0 && (
                   <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-indigo-600 px-1 text-[9px] font-bold text-white">
-                    {unreadCount}
+                    {dmUnread}
                   </span>
                 )}
               </button>
@@ -620,7 +632,8 @@ export default function MeldingerClient({
             <p className="px-4 pb-3 text-xs text-zinc-600">Ingen grupper ennå.</p>
           )}
           {groups.map((g) => {
-            const isActive = active?.type === "group" && active.groupId === g.id;
+            const isActive  = active?.type === "group" && active.groupId === g.id;
+            const gUnread   = groupUnreads[g.id] ?? g.unread;
             return (
               <button
                 key={g.id}
@@ -636,16 +649,16 @@ export default function MeldingerClient({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className={`truncate text-xs ${g.unread > 0 ? "font-semibold text-white" : "text-zinc-300"}`}>{g.name}</span>
+                    <span className={`truncate text-xs ${gUnread > 0 ? "font-semibold text-white" : "text-zinc-300"}`}>{g.name}</span>
                     <span className="ml-1 shrink-0 text-[9px] text-zinc-500">
                       <Users className="h-2.5 w-2.5" />
                     </span>
                   </div>
                   <p className="text-[10px] text-zinc-500">{g.members.length} medlemmer</p>
                 </div>
-                {g.unread > 0 && (
+                {gUnread > 0 && (
                   <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-indigo-600 px-1 text-[9px] font-bold text-white">
-                    {g.unread}
+                    {gUnread}
                   </span>
                 )}
               </button>
