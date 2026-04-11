@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import {
   Search, Send, MessageSquare, ChevronDown, ChevronRight,
-  Hash, Plus, X, Users, Check,
+  Hash, Plus, X, Users, Check, UserPlus, Clock,
 } from "lucide-react";
+import type { UserSearchResult } from "@/app/api/users/search/route";
 import dynamic from "next/dynamic";
 
 // Lazy-load heavy channel/group views
@@ -333,6 +334,10 @@ export default function MeldingerClient({
   const [showNewGroup,   setShowNewGroup]  = useState(false);
   const [expandedOrgs,   setExpandedOrgs] = useState<Set<string>>(new Set(communities.map((c) => c.orgId)));
   const [dmSearch,       setDmSearch]     = useState("");
+  const [searchResults,  setSearchResults] = useState<UserSearchResult[]>([]);
+  const [searchLoading,  setSearchLoading] = useState(false);
+  const [friendSending,  setFriendSending] = useState<string | null>(null);
+  const [localStatuses,  setLocalStatuses] = useState<Record<string, UserSearchResult["friendStatus"]>>({});
 
   // Set initial active from URL params
   useEffect(() => {
@@ -388,6 +393,39 @@ export default function MeldingerClient({
 
   function openDM(friend: Friend) {
     setActive({ type: "dm", userId: friend.id });
+  }
+
+  // Debounced global user search
+  useEffect(() => {
+    const q = dmSearch.trim();
+    if (q.length < 2) { setSearchResults([]); return; }
+    setSearchLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`);
+        if (res.ok) {
+          const data = await res.json() as { users: UserSearchResult[] };
+          setSearchResults(data.users);
+          setLocalStatuses({});
+        }
+      } catch { /* silent */ } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [dmSearch]);
+
+  async function sendFriendRequest(userId: string) {
+    setFriendSending(userId);
+    const res = await fetch("/api/friends/request", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ receiverId: userId }),
+    });
+    if (res.ok) {
+      setLocalStatuses((prev) => ({ ...prev, [userId]: "PENDING_SENT" }));
+    }
+    setFriendSending(null);
   }
 
   const filteredConvs = conversations.filter((c) =>
@@ -482,6 +520,54 @@ export default function MeldingerClient({
               />
             </div>
           </div>
+          {/* Global search results */}
+          {dmSearch.trim().length >= 2 && (
+            <div className="pb-1">
+              {searchLoading && (
+                <p className="px-4 py-2 text-[10px] text-zinc-500">Søker…</p>
+              )}
+              {!searchLoading && searchResults.length === 0 && (
+                <p className="px-4 py-2 text-[10px] text-zinc-500">Ingen brukere funnet.</p>
+              )}
+              {searchResults.map((u) => {
+                const status = localStatuses[u.id] ?? u.friendStatus;
+                return (
+                  <div key={u.id} className="flex items-center gap-3 px-4 py-2 hover:bg-zinc-800 transition-colors">
+                    <Avatar avatarUrl={u.avatarUrl} name={u.name} size={6} />
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-xs font-medium text-zinc-200">{u.name ?? "Ukjent"}</p>
+                      {u.username && <p className="truncate text-[10px] text-zinc-500">@{u.username}</p>}
+                    </div>
+                    {status === "ACCEPTED" ? (
+                      <button
+                        onClick={() => openDM({ id: u.id, name: u.name, avatarUrl: u.avatarUrl })}
+                        className="flex shrink-0 items-center gap-1 rounded-md bg-indigo-600 px-2 py-1 text-[10px] font-semibold text-white hover:opacity-80 transition-opacity"
+                      >
+                        <MessageSquare className="h-3 w-3" /> DM
+                      </button>
+                    ) : status === "PENDING_SENT" ? (
+                      <span className="flex shrink-0 items-center gap-1 rounded-md border border-zinc-700 px-2 py-1 text-[10px] text-zinc-500">
+                        <Clock className="h-3 w-3" /> Sendt
+                      </span>
+                    ) : status === "PENDING_RECEIVED" ? (
+                      <span className="flex shrink-0 items-center gap-1 rounded-md border border-zinc-700 px-2 py-1 text-[10px] text-zinc-400">
+                        <Check className="h-3 w-3" /> Svar
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => void sendFriendRequest(u.id)}
+                        disabled={friendSending === u.id}
+                        className="flex shrink-0 items-center gap-1 rounded-md border border-zinc-700 px-2 py-1 text-[10px] text-zinc-400 hover:border-indigo-500 hover:text-indigo-400 disabled:opacity-40 transition-colors"
+                      >
+                        <UserPlus className="h-3 w-3" /> Legg til
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+              <div className="mx-4 my-1 h-px bg-zinc-800" />
+            </div>
+          )}
           {filteredConvs.length === 0 && !dmSearch && (
             <p className="px-4 pb-3 text-xs text-zinc-600">Ingen venner ennå.</p>
           )}
