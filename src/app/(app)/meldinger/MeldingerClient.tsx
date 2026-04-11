@@ -603,7 +603,7 @@ export default function MeldingerClient({
                     )}
                   </div>
                   {lastMessage && (
-                    <p className="truncate text-[10px] text-zinc-500">{lastMessage.content}</p>
+                    <p className="truncate text-[10px] text-zinc-500">{lastMessage.content.replace(/<[^>]*>/g, "")}</p>
                   )}
                 </div>
                 {dmUnread > 0 && (
