@@ -462,7 +462,7 @@ export default function FeedClient({
 
                   {/* Post content */}
                   {post.content && (
-                    <p className="mt-3 text-sm leading-relaxed text-white">{post.content}</p>
+                    <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-white">{post.content}</p>
                   )}
 
                   {/* Post image */}
@@ -514,7 +514,7 @@ export default function FeedClient({
                               <span className="text-xs font-semibold text-white">{comment.author.name}</span>
                               <span className="text-[10px] text-zinc-400">{relativeTime(comment.createdAt)}</span>
                             </div>
-                            <p className="text-xs leading-relaxed text-white">{comment.content}</p>
+                            <p className="whitespace-pre-wrap break-words text-xs leading-relaxed text-white">{comment.content}</p>
                           </div>
                         </div>
                       ))}

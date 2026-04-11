@@ -143,7 +143,7 @@ export default function MessageItem({
             </div>
           ) : (
             message.content && (
-              <p className="mt-0.5 break-words text-sm leading-relaxed text-white">
+              <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-white">
                 {mounted ? parseMentions(message.content, memberNames) : message.content}
               </p>
             )
@@ -361,7 +361,7 @@ export default function MessageItem({
                   <span className="text-[10px] text-zinc-400">{formatTime(reply.createdAt)}</span>
                   {reply.editedAt && <span className="text-[10px] text-zinc-400 opacity-60">(redigert)</span>}
                 </div>
-                <p className="mt-0.5 break-words text-xs text-zinc-400">
+                <p className="mt-0.5 whitespace-pre-wrap break-words text-xs text-zinc-400">
                   {mounted ? parseMentions(reply.content, memberNames) : reply.content}
                 </p>
                 {reply.reactions.length > 0 && (

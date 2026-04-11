@@ -42,7 +42,7 @@ export default function PostList({ posts }: { posts: PostWithAuthor[] }) {
               <p className="text-xs text-zinc-500">{relativeTime(post.createdAt)}</p>
             </div>
           </div>
-          <p className="mt-3 text-sm leading-relaxed text-zinc-300">{post.content}</p>
+          <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-300">{post.content}</p>
           <div className="mt-4 flex items-center gap-5 border-t border-zinc-800 pt-3">
             <button
               onClick={() => toggleLike(post.id)}

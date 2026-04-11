@@ -278,7 +278,7 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={msg.imageUrl} alt="" className="max-h-48 w-auto rounded-xl border border-zinc-700 object-cover cursor-pointer" />
                 ) : (
-                  <div className={`rounded-2xl px-4 py-2.5 text-sm ${isMe ? "rounded-br-sm bg-indigo-600 text-white" : "rounded-bl-sm bg-zinc-800 text-zinc-200"}`}>
+                  <div className={`whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm ${isMe ? "rounded-br-sm bg-indigo-600 text-white" : "rounded-bl-sm bg-zinc-800 text-zinc-200"}`}>
                     {parseMentions(msg.content)}
                   </div>
                 )}

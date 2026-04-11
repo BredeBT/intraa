@@ -122,7 +122,7 @@ export default function StreamChat({ orgId, userId, disabled }: Props) {
                   {new Date(msg.createdAt).toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit" })}
                 </span>
               </div>
-              <p className="text-[11px] leading-relaxed text-zinc-300">{msg.content}</p>
+              <p className="whitespace-pre-wrap break-words text-[11px] leading-relaxed text-zinc-300">{msg.content}</p>
             </div>
           </div>
         ))}
