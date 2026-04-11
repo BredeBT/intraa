@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Rss, Ticket, Folder, Users, Settings,
+  Rss, Ticket, Folder, Settings,
   Search, CalendarDays, CheckSquare, HelpCircle, Menu, X,
   Trophy, Swords, Star, Radio, Coins,
   LifeBuoy, MessageCircle,
@@ -21,20 +21,18 @@ import { useUser } from "@/lib/hooks/useUser";
 // ─── Nav definitions ──────────────────────────────────────────────────────────
 
 const COMPANY_NAV = [
-  { href: "/feed",      label: "Feed",      icon: Rss,          feature: "feed" },
-  { href: "/chat",      label: "Chat",      icon: MessageCircle, feature: "chat" },
-  { href: "/tickets",   label: "Tickets",   icon: Ticket,       feature: "tickets" },
-  { href: "/kalender",  label: "Kalender",  icon: CalendarDays, feature: "calendar" },
-  { href: "/oppgaver",  label: "Oppgaver",  icon: CheckSquare,  feature: "tasks" },
-  { href: "/filer",     label: "Filer",     icon: Folder,       feature: "files" },
-  { href: "/medlemmer", label: "Medlemmer", icon: Users,        feature: "members" },
+  { href: "/feed",     label: "Feed",     icon: Rss,           feature: "feed" },
+  { href: "/chat",     label: "Chat",     icon: MessageCircle, feature: "chat" },
+  { href: "/tickets",  label: "Tickets",  icon: Ticket,        feature: "tickets" },
+  { href: "/kalender", label: "Kalender", icon: CalendarDays,  feature: "calendar" },
+  { href: "/oppgaver", label: "Oppgaver", icon: CheckSquare,   feature: "tasks" },
+  { href: "/filer",    label: "Filer",    icon: Folder,        feature: "files" },
 ];
 
 function communityNav(slug: string) {
   return [
     { href: `/${slug}/feed`,         label: "Feed",         icon: Rss,            feature: "community_feed" },
     { href: `/chat`,                 label: "Chat",         icon: MessageCircle,  feature: "community_chat" },
-    { href: `/${slug}/medlemmer`,    label: "Medlemmer",    icon: Users,          feature: "community_members" },
     { href: `/${slug}/rangering`,    label: "Rangering",    icon: Trophy,         feature: "community_leaderboard" },
     { href: `/${slug}/konkurranser`, label: "Konkurranser", icon: Swords,         feature: "community_contests" },
     { href: `/${slug}/lojalitet`,    label: "Lojalitet",    icon: Star,           feature: "community_loyalty" },
@@ -580,17 +578,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className={`flex min-h-screen min-w-0 flex-col transition-all duration-200 ease-in-out ${mainPl}`}>
         {/* Header */}
         <header className="flex h-14 items-center gap-3 border-b border-zinc-800 bg-zinc-900 px-4">
-          {/* Left: menu (desktop) + title */}
-          <div className="flex shrink-0 items-center gap-3 md:w-36">
-            {!inAdmin && (
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white md:hidden"
-                aria-label="Åpne meny"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-            )}
+          {/* Left: title */}
+          <div className="flex shrink-0 items-center md:w-36">
             <span className="truncate text-sm font-semibold text-white">{title}</span>
           </div>
 

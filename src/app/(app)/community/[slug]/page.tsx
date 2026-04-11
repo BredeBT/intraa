@@ -120,10 +120,9 @@ export default async function CommunityForsidePage({ params }: Props) {
         )}
 
         {/* Quick links */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-3 gap-3">
           {[
             { label: "Feed",         href: `/community/${slug}/feed` },
-            { label: "Medlemmer",    href: `/community/${slug}/medlemmer` },
             { label: "Rangering",    href: `/community/${slug}/rangering` },
             { label: "Konkurranser", href: `/community/${slug}/konkurranser` },
           ].map(({ label, href }) => (

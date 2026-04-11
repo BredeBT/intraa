@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import {
-  X, Rss, MessageCircle, Ticket, Folder, Users,
+  X, Rss, MessageCircle, Ticket, Folder,
   CalendarDays, CheckSquare, Home, HelpCircle, LifeBuoy,
   Trophy, Swords, Star, Radio, Coins, Settings,
 } from "lucide-react";
@@ -38,20 +38,18 @@ interface Props {
 }
 
 const COMPANY_NAV: NavLink[] = [
-  { href: "/feed",      label: "Feed",      icon: Rss,           feature: "feed" },
-  { href: "/chat",      label: "Chat",      icon: MessageCircle, feature: "chat" },
-  { href: "/tickets",   label: "Tickets",   icon: Ticket,        feature: "tickets" },
-  { href: "/kalender",  label: "Kalender",  icon: CalendarDays,  feature: "calendar" },
-  { href: "/oppgaver",  label: "Oppgaver",  icon: CheckSquare,   feature: "tasks" },
-  { href: "/filer",     label: "Filer",     icon: Folder,        feature: "files" },
-  { href: "/medlemmer", label: "Medlemmer", icon: Users,         feature: "members" },
+  { href: "/feed",     label: "Feed",     icon: Rss,           feature: "feed" },
+  { href: "/chat",     label: "Chat",     icon: MessageCircle, feature: "chat" },
+  { href: "/tickets",  label: "Tickets",  icon: Ticket,        feature: "tickets" },
+  { href: "/kalender", label: "Kalender", icon: CalendarDays,  feature: "calendar" },
+  { href: "/oppgaver", label: "Oppgaver", icon: CheckSquare,   feature: "tasks" },
+  { href: "/filer",    label: "Filer",    icon: Folder,        feature: "files" },
 ];
 
 function communityNav(slug: string): NavLink[] {
   return [
     { href: `/${slug}/feed`,         label: "Feed",         icon: Rss,           feature: "community_feed" },
     { href: `/chat`,                 label: "Chat",         icon: MessageCircle, feature: "community_chat" },
-    { href: `/${slug}/medlemmer`,    label: "Medlemmer",    icon: Users,         feature: "community_members" },
     { href: `/${slug}/rangering`,    label: "Rangering",    icon: Trophy,        feature: "community_leaderboard" },
     { href: `/${slug}/konkurranser`, label: "Konkurranser", icon: Swords,        feature: "community_contests" },
     { href: `/${slug}/lojalitet`,    label: "Lojalitet",    icon: Star,          feature: "community_loyalty" },
