@@ -19,53 +19,54 @@ import { useUser } from "@/lib/hooks/useUser";
 // ─── Nav definitions ──────────────────────────────────────────────────────────
 
 const COMPANY_NAV = [
-  { href: "/feed",      label: "Feed",      icon: Rss,          badge: null, feature: "feed" },
-  { href: "/tickets",   label: "Tickets",   icon: Ticket,       badge: null, feature: "tickets" },
-  { href: "/kalender",  label: "Kalender",  icon: CalendarDays, badge: null, feature: "calendar" },
-  { href: "/oppgaver",  label: "Oppgaver",  icon: CheckSquare,  badge: null, feature: "tasks" },
-  { href: "/filer",     label: "Filer",     icon: Folder,       badge: null, feature: "files" },
-  { href: "/medlemmer", label: "Medlemmer", icon: Users,        badge: null, feature: "members" },
+  { href: "/feed",      label: "Feed",      icon: Rss,          feature: "feed" },
+  { href: "/chat",      label: "Chat",      icon: MessageCircle, feature: "chat" },
+  { href: "/tickets",   label: "Tickets",   icon: Ticket,       feature: "tickets" },
+  { href: "/kalender",  label: "Kalender",  icon: CalendarDays, feature: "calendar" },
+  { href: "/oppgaver",  label: "Oppgaver",  icon: CheckSquare,  feature: "tasks" },
+  { href: "/filer",     label: "Filer",     icon: Folder,       feature: "files" },
+  { href: "/medlemmer", label: "Medlemmer", icon: Users,        feature: "members" },
 ];
 
-const COMMUNITY_NAV = [
-  { href: "/feed",                    label: "Feed",         icon: Rss,    badge: null, feature: "community_feed" },
-  { href: "/community/medlemmer",     label: "Medlemmer",    icon: Users,  badge: null, feature: "community_members" },
-  { href: "/community/rangering",     label: "Rangering",    icon: Trophy, badge: null, feature: "community_leaderboard" },
-  { href: "/community/konkurranser",  label: "Konkurranser", icon: Swords, badge: null, feature: "community_contests" },
-  { href: "/community/lojalitet",     label: "Lojalitet",    icon: Star,   badge: null, feature: "community_loyalty" },
-];
+function communityNav(slug: string) {
+  return [
+    { href: `/${slug}/feed`,         label: "Feed",         icon: Rss,            feature: "community_feed" },
+    { href: `/chat`,                 label: "Chat",         icon: MessageCircle,  feature: "community_chat" },
+    { href: `/${slug}/medlemmer`,    label: "Medlemmer",    icon: Users,          feature: "community_members" },
+    { href: `/${slug}/rangering`,    label: "Rangering",    icon: Trophy,         feature: "community_leaderboard" },
+    { href: `/${slug}/konkurranser`, label: "Konkurranser", icon: Swords,         feature: "community_contests" },
+    { href: `/${slug}/lojalitet`,    label: "Lojalitet",    icon: Star,           feature: "community_loyalty" },
+  ];
+}
 
 
 const PAGE_TITLES: Record<string, string> = {
-  "/home":                      "Hjem",
-  "/meldinger":                 "Meldinger",
-  "/profil/meg":                "Min profil",
-  "/feed":                      "Feed",
-  "/chat":                      "Chat",
-  "/tickets":                   "Tickets",
-  "/filer":                     "Filer",
-  "/medlemmer":                 "Medlemmer",
-  "/kalender":                  "Kalender",
-  "/oppgaver":                  "Oppgaver",
-  "/admin":                     "Admin — Oversikt",
-  "/admin/brukere":             "Admin — Brukere",
-  "/admin/innstillinger":       "Admin — Innstillinger",
-  "/profil":                    "Profil",
-  "/notifikasjoner":            "Notifikasjoner",
-  "/soek":                      "Søk",
-  "/innstillinger":             "Innstillinger",
-  "/live":                      "Live",
-  "/clicker":                   "Clicker",
-  "/hjelp":                     "Hjelp & Support",
-  "/support":                   "Mine support-saker",
-  "/bytt-org":                  "Bytt organisasjon",
-  "/community/medlemmer":       "Medlemmer",
-  "/community/rangering":       "Rangering",
-  "/community/konkurranser":    "Konkurranser",
-  "/community/lojalitet":       "Lojalitet",
-  "/community/chat":            "Chat",
-  "/community/abonnement":      "Abonnement",
-  "/community/admin":           "Admin",
+  "/home":               "Hjem",
+  "/meldinger":          "Meldinger",
+  "/profil/meg":         "Min profil",
+  "/feed":               "Feed",
+  "/chat":               "Chat",
+  "/tickets":            "Tickets",
+  "/filer":              "Filer",
+  "/medlemmer":          "Medlemmer",
+  "/kalender":           "Kalender",
+  "/oppgaver":           "Oppgaver",
+  "/admin":              "Admin — Oversikt",
+  "/admin/brukere":      "Admin — Brukere",
+  "/admin/innstillinger":"Admin — Innstillinger",
+  "/profil":             "Profil",
+  "/notifikasjoner":     "Notifikasjoner",
+  "/soek":               "Søk",
+  "/innstillinger":      "Innstillinger",
+  "/hjelp":              "Hjelp & Support",
+  "/support":            "Mine support-saker",
+  "/bytt-org":           "Bytt organisasjon",
+  "/community/rangering":    "Rangering",
+  "/community/konkurranser": "Konkurranser",
+  "/community/lojalitet":    "Lojalitet",
+  "/community/chat":         "Chat",
+  "/community/abonnement":   "Abonnement",
+  "/community/admin":        "Admin",
 };
 
 // ─── Support Modal ────────────────────────────────────────────────────────────
@@ -192,7 +193,7 @@ function SidebarContent({
   mounted:           boolean;
 }) {
   const isCommunity  = org?.type === "COMMUNITY";
-  const allLinks     = isCommunity ? COMMUNITY_NAV : COMPANY_NAV;
+  const allLinks     = isCommunity && org?.slug ? communityNav(org.slug) : COMPANY_NAV;
   const navLinks     = enabledFeatures === null
     ? allLinks
     : allLinks.filter((l) => enabledFeatures.includes(l.feature));
@@ -350,7 +351,7 @@ function SidebarContent({
               </Link>
             )}
 
-            {navLinks.map(({ href, label, icon: Icon, badge }) => {
+            {navLinks.map(({ href, label, icon: Icon }) => {
               const active = pathname === href || pathname.startsWith(href + "/");
               return (
                 <Link key={href} href={href} onClick={onNavClick}
@@ -360,16 +361,7 @@ function SidebarContent({
                   }`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1">{label}</span>
-                      {badge !== null && (
-                        <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-                          {badge}
-                        </span>
-                      )}
-                    </>
-                  )}
+                  {!collapsed && <span className="flex-1">{label}</span>}
                 </Link>
               );
             })}
@@ -511,7 +503,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => { document.body.style.overflow = ""; };
   }, [sidebarOpen]);
 
-  const title = PAGE_TITLES[pathname] ?? (pathname.endsWith("/live") ? "Live" : "Intraa");
+  // Derive title — for /[orgSlug]/[feature] routes, use the segment after the slug
+  const SLUG_SEGMENT_TITLES: Record<string, string> = {
+    feed: "Feed", rangering: "Rangering", konkurranser: "Konkurranser",
+    lojalitet: "Lojalitet", chat: "Chat", live: "Live",
+    clicker: "Spill", admin: "Admin", medals: "Rangering",
+  };
+  function resolveTitle(path: string): string {
+    if (PAGE_TITLES[path]) return PAGE_TITLES[path];
+    const parts = path.split("/").filter(Boolean);
+    if (parts.length >= 2) {
+      const seg = parts[parts.length - 1];
+      return SLUG_SEGMENT_TITLES[seg] ?? "Intraa";
+    }
+    return "Intraa";
+  }
+  const title = resolveTitle(pathname);
 
   // Use mounted to avoid SSR/client mismatch on collapsed state (localStorage unavailable on server)
   const effectiveCollapsed = mounted && desktopCollapsed;
