@@ -17,88 +17,98 @@ export default async function MeldingerPage({
 
   const { userId: initialUserId, channelId: initialChannelId, groupId: initialGroupId } = await searchParams;
 
-  // ── Communities + channels ───────────────────────────────────────────────────
-  const memberships = await db.membership.findMany({
-    where: { userId },
-    include: {
-      organization: {
-        select: {
-          id:   true,
-          name: true,
-          type: true,
-          theme: { select: { logoUrl: true } },
-          channels: {
-            where:   { type: { not: "DIRECT" } },
-            orderBy: { name: "asc" },
-            select:  { id: true, name: true, type: true },
+  // ── Fetch all data in parallel ───────────────────────────────────────────────
+  const [memberships, friendships, groupMemberships, channelReads] = await Promise.all([
+    db.membership.findMany({
+      where: { userId },
+      include: {
+        organization: {
+          select: {
+            id:   true,
+            name: true,
+            type: true,
+            slug: true,
+            theme: { select: { logoUrl: true } },
+            channels: {
+              where:   { type: { not: "DIRECT" } },
+              orderBy: { name: "asc" },
+              select:  { id: true, name: true, type: true },
+            },
           },
         },
       },
-    },
-  });
+    }),
+    db.friendship.findMany({
+      where: { status: "ACCEPTED", OR: [{ senderId: userId }, { receiverId: userId }] },
+      include: {
+        sender:   { select: { id: true, name: true, avatarUrl: true } },
+        receiver: { select: { id: true, name: true, avatarUrl: true } },
+      },
+      take: 20,
+    }),
+    db.groupChatMember.findMany({
+      where: { userId },
+      include: {
+        group: {
+          include: {
+            members:  { include: { user: { select: { id: true, name: true, avatarUrl: true } } } },
+            messages: { orderBy: { createdAt: "desc" }, take: 1 },
+          },
+        },
+      },
+      orderBy: { joinedAt: "desc" },
+      take: 10,
+    }),
+    db.channelRead.findMany({
+      where:  { userId },
+      select: { channelId: true, readAt: true },
+    }),
+  ]);
 
-  // Get channel read times for unread counts
-  const channelReads = await db.channelRead.findMany({
-    where: { userId },
-    select: { channelId: true, readAt: true },
-  });
-  const channelReadMap = new Map(channelReads.map((r) => [r.channelId, r.readAt]));
+  // ── Channel unread counts — all parallel ─────────────────────────────────────
+  const channelReadMap  = new Map(channelReads.map((r) => [r.channelId, r.readAt]));
+  const allChannelIds   = memberships.flatMap((m) => m.organization.channels.map((c) => c.id));
 
-  const communities = await Promise.all(
-    memberships.map(async (m) => {
-      const channels = await Promise.all(
-        m.organization.channels.map(async (ch) => {
-          const lastRead = channelReadMap.get(ch.id);
-          const unread = await db.message.count({
-            where: {
-              channelId:       ch.id,
-              parentMessageId: null,
-              authorId:        { not: userId },
-              ...(lastRead ? { createdAt: { gt: lastRead } } : {}),
-            },
-          });
-          return { id: ch.id, name: ch.name, type: ch.type, unread };
-        })
-      );
-      return {
-        orgId:   m.organization.id,
-        orgName: m.organization.name,
-        orgType: m.organization.type,
-        logoUrl: m.organization.theme?.logoUrl ?? null,
-        role:    m.role,
-        channels,
-      };
+  const channelUnreadEntries = await Promise.all(
+    allChannelIds.map(async (channelId) => {
+      const lastRead = channelReadMap.get(channelId);
+      const count = await db.message.count({
+        where: {
+          channelId,
+          parentMessageId: null,
+          authorId:        { not: userId },
+          ...(lastRead ? { createdAt: { gt: lastRead } } : {}),
+        },
+      });
+      return [channelId, count] as const;
     })
   );
+  const channelUnreadMap = new Map(channelUnreadEntries);
 
-  // All org members (for @mentions in channels)
-  const allOrgMemberIds = new Set<string>();
-  const allOrgMembers: { id: string; name: string | null }[] = [];
-  for (const m of memberships) {
-    const orgMembers = await db.membership.findMany({
-      where:  { organizationId: m.organization.id },
-      select: { user: { select: { id: true, name: true } } },
-    });
-    for (const om of orgMembers) {
-      if (!allOrgMemberIds.has(om.user.id) && om.user.id !== userId) {
-        allOrgMemberIds.add(om.user.id);
-        allOrgMembers.push({ id: om.user.id, name: om.user.name });
-      }
-    }
-  }
+  const communities = memberships.map((m) => ({
+    orgId:   m.organization.id,
+    orgName: m.organization.name,
+    orgType: m.organization.type,
+    logoUrl: m.organization.theme?.logoUrl ?? null,
+    role:    m.role,
+    channels: m.organization.channels.map((ch) => ({
+      id:     ch.id,
+      name:   ch.name,
+      type:   ch.type,
+      unread: channelUnreadMap.get(ch.id) ?? 0,
+    })),
+  }));
 
-  // ── DM conversations ─────────────────────────────────────────────────────────
-  const friendships = await db.friendship.findMany({
-    where: {
-      status: "ACCEPTED",
-      OR: [{ senderId: userId }, { receiverId: userId }],
-    },
-    include: {
-      sender:   { select: { id: true, name: true, avatarUrl: true } },
-      receiver: { select: { id: true, name: true, avatarUrl: true } },
-    },
+  // ── Org members — single bulk query instead of N serial queries ───────────────
+  const allOrgIds = memberships.map((m) => m.organization.id);
+  const orgMembersRaw = await db.membership.findMany({
+    where:    { organizationId: { in: allOrgIds }, userId: { not: userId } },
+    select:   { user: { select: { id: true, name: true } } },
+    distinct: ["userId"],
   });
+  const allOrgMembers = orgMembersRaw.map((m) => ({ id: m.user.id, name: m.user.name }));
 
+  // ── DM conversations — lastMessage + unread in parallel ──────────────────────
   const friends = friendships.map((f) => {
     const friend = f.senderId === userId ? f.receiver : f.sender;
     return { id: friend.id, name: friend.name, avatarUrl: friend.avatarUrl };
@@ -115,6 +125,7 @@ export default async function MeldingerPage({
             ],
           },
           orderBy: { createdAt: "desc" },
+          select:  { content: true, createdAt: true },
         }),
         db.directMessage.count({
           where: { senderId: friend.id, receiverId: userId, readAt: null },
@@ -137,24 +148,11 @@ export default async function MeldingerPage({
   });
 
   // ── Groups ───────────────────────────────────────────────────────────────────
-  const groupMemberships = await db.groupChatMember.findMany({
-    where: { userId },
-    include: {
-      group: {
-        include: {
-          members: { include: { user: { select: { id: true, name: true, avatarUrl: true } } } },
-          messages: { orderBy: { createdAt: "desc" }, take: 1 },
-        },
-      },
-    },
-    orderBy: { joinedAt: "asc" },
-  });
-
   const groups = groupMemberships.map((gm) => {
     const lastMsg = gm.group.messages[0];
-    const unread = gm.lastReadAt
+    const unread  = gm.lastReadAt
       ? gm.group.messages.filter((m) => m.createdAt > gm.lastReadAt! && m.authorId !== userId).length
-      : 0; // simplified — will be accurate enough for initial render
+      : 0;
     return {
       id:          gm.group.id,
       name:        gm.group.name,
@@ -163,15 +161,20 @@ export default async function MeldingerPage({
         ? { content: lastMsg.content, createdAt: lastMsg.createdAt.toISOString() }
         : null,
       unread,
-      members:     gm.group.members.map((m) => ({ id: m.user.id, name: m.user.name, avatarUrl: m.user.avatarUrl })),
+      members: gm.group.members.map((m) => ({
+        id:        m.user.id,
+        name:      m.user.name,
+        avatarUrl: m.user.avatarUrl,
+      })),
     };
   });
 
-  // All people the user can invite to groups (org members + friends, deduped)
+  // ── Invitable people (deduped friends + org members) ─────────────────────────
+  const friendIds = new Set(friends.map((f) => f.id));
   const invitablePeople = [
     ...friends,
     ...allOrgMembers
-      .filter((m) => !friends.some((f) => f.id === m.id))
+      .filter((m) => !friendIds.has(m.id))
       .map((m) => ({ id: m.id, name: m.name, avatarUrl: null as string | null })),
   ];
 
