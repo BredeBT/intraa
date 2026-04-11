@@ -23,8 +23,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isOwner   = org?.userRole === "OWNER";
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)]">
-      {/* Admin sidebar — desktop fixed, mobile inline */}
+    <div className="flex flex-col md:flex-row min-h-[calc(100dvh-7rem)] md:min-h-[calc(100dvh-3.5rem)]">
+      {/* Admin sidebar — desktop only */}
       <aside className="hidden w-56 shrink-0 flex-col border-r border-zinc-800 bg-zinc-900 md:flex">
         <div className="flex flex-col gap-0.5 overflow-y-auto px-3 py-4">
           {/* Back link */}
@@ -87,40 +87,44 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* Mobile nav strip */}
-      <div className="flex shrink-0 flex-col border-b border-zinc-800 bg-zinc-900 px-3 py-2 md:hidden">
-        <Link
-          href="/feed"
-          className="mb-2 flex items-center gap-1.5 text-xs text-zinc-500 hover:text-white"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> {org?.name ?? "Tilbake"}
-        </Link>
-        <div className="flex flex-wrap gap-1">
-          {ADMIN_NAV.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                pathname === href
-                  ? "bg-indigo-600 text-white"
-                  : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
-              }`}
-            >
-              {label}
-            </Link>
-          ))}
-          {isOwner && (
-            <Link
-              href="/admin/faresone"
-              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                pathname === "/admin/faresone"
-                  ? "bg-red-600 text-white"
-                  : "text-red-500 hover:bg-red-500/10"
-              }`}
-            >
-              Faresone
-            </Link>
-          )}
+      {/* Mobile tab bar — horizontal scrollable, hidden on desktop */}
+      <div className="shrink-0 border-b border-zinc-800 bg-zinc-900 md:hidden">
+        <div className="flex items-center gap-1.5 px-3 pt-2 pb-1">
+          <Link
+            href="/feed"
+            className="shrink-0 flex items-center gap-1 rounded-md px-2 py-1 text-xs text-zinc-500 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+          </Link>
+          <div className="flex overflow-x-auto gap-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {ADMIN_NAV.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className={`shrink-0 flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  pathname === href
+                    ? "bg-indigo-600 text-white"
+                    : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </Link>
+            ))}
+            {isOwner && (
+              <Link
+                href="/admin/faresone"
+                className={`shrink-0 flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  pathname === "/admin/faresone"
+                    ? "bg-red-600 text-white"
+                    : "text-red-500 hover:bg-red-500/10"
+                }`}
+              >
+                <AlertTriangle className="h-3.5 w-3.5" />
+                Faresone
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 

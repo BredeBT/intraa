@@ -194,7 +194,7 @@ export default function BrukereClient({
   }
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-4 py-5 md:px-8 md:py-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-white">Brukere</h1>
         <button
@@ -217,7 +217,7 @@ export default function BrukereClient({
         />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-zinc-800">
+      <div className="overflow-x-auto rounded-xl border border-zinc-800">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-zinc-800 bg-zinc-900">
@@ -330,7 +330,7 @@ export default function BrukereClient({
             <Clock className="h-4 w-4" />
             Ventende invitasjoner ({invitations.length})
           </h2>
-          <div className="overflow-hidden rounded-xl border border-zinc-800">
+          <div className="overflow-x-auto rounded-xl border border-zinc-800">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-800 bg-zinc-900">

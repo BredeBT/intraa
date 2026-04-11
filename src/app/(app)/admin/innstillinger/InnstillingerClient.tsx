@@ -462,7 +462,7 @@ export default function InnstillingerClient({ initialTab, org: initialOrg, theme
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="px-6 py-8">
+    <div className="px-4 py-5 md:px-6 md:py-8">
       <h1 className="mb-6 text-xl font-semibold text-white">Innstillinger</h1>
 
       {/* Tabs */}

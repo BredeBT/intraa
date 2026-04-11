@@ -90,11 +90,11 @@ export default async function AdminPage() {
   const stats = isCommunity ? communityStats : companyStats;
 
   return (
-    <div className="px-8 py-8">
-      <h1 className="mb-6 text-xl font-semibold text-white">Oversikt</h1>
+    <div className="px-4 py-5 md:px-8 md:py-8">
+      <h1 className="mb-5 text-xl font-semibold text-white">Oversikt</h1>
 
       {/* Stats */}
-      <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
             <div className="mb-3">
@@ -108,9 +108,9 @@ export default async function AdminPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         {/* Bar chart */}
-        <div className="col-span-2 rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+        <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 p-5 lg:col-span-2">
           <h2 className="mb-4 text-sm font-semibold text-white">Aktivitet siste 7 dager</h2>
           <AdminChart data={chartData} />
         </div>
