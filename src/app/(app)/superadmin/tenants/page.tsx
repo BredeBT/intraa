@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { ArrowRight, Users, Globe } from "lucide-react";
+import BackButton from "../BackButton";
 
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" });
@@ -29,6 +30,7 @@ export default async function TenantsPage() {
 
   return (
     <div className="px-8 py-8">
+      <BackButton />
       <div className="mb-1 flex items-center gap-2">
         <Globe className="h-5 w-5 text-zinc-400" />
         <h1 className="text-xl font-semibold text-white">Alle tenants</h1>
@@ -72,10 +74,13 @@ export default async function TenantsPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-zinc-300">
-                    <div className="flex items-center gap-1.5">
+                    <Link
+                      href={`/superadmin/users?orgId=${org.id}`}
+                      className="flex items-center gap-1.5 transition-colors hover:text-white"
+                    >
                       <Users className="h-3.5 w-3.5 text-zinc-500" />
                       {org._count.memberships.toLocaleString("nb-NO")}
-                    </div>
+                    </Link>
                   </td>
                   <td className="px-6 py-4 text-xs text-zinc-500 hidden md:table-cell">
                     {formatDate(org.createdAt)}

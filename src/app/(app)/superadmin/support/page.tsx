@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { ArrowRight, Inbox } from "lucide-react";
 import SupportFilters from "./SupportFilters";
+import BackButton from "../BackButton";
 
 export const dynamic   = "force-dynamic";
 export const revalidate = 0;
@@ -109,6 +110,7 @@ export default async function SupportInboxPage({
 
   return (
     <div className="px-8 py-8">
+      <BackButton />
       <div className="mb-1 flex items-center gap-2">
         <Inbox className="h-5 w-5 text-indigo-400" />
         <h1 className="text-xl font-semibold text-white">Support-innboks</h1>

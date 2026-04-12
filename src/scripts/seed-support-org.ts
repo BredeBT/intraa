@@ -22,9 +22,9 @@ async function main() {
 
   console.log("Support org:", supportOrg.id, supportOrg.slug);
 
-  const superadmin = await db.user.findUnique({ where: { email: "brede@intraa.net" } });
+  const superadmin = await db.user.findUnique({ where: { email: "brede_bt@hotmail.com" } });
   if (!superadmin) {
-    console.error("Superadmin brede@intraa.net ikke funnet. Kjør seeding etter at brukeren er opprettet.");
+    console.error("Superadmin brede_bt@hotmail.com ikke funnet. Kjør seeding etter at brukeren er opprettet.");
     return;
   }
 

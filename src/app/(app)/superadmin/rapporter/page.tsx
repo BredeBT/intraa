@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { ArrowRight, Flag } from "lucide-react";
+import BackButton from "../BackButton";
 
 export const dynamic  = "force-dynamic";
 export const revalidate = 0;
@@ -69,6 +70,7 @@ export default async function RapporterPage({
 
   return (
     <div className="px-8 py-8">
+      <BackButton />
       <div className="mb-1 flex items-center gap-2">
         <Flag className="h-5 w-5 text-rose-400" />
         <h1 className="text-xl font-semibold text-white">Brukerrapporter</h1>
