@@ -100,7 +100,7 @@ export default function ClickerPage() {
   const [activeEvent,   setActiveEvent]   = useState<ActiveEvent | null>(null);
   const [offlineMsg,    setOfflineMsg]    = useState<number | null>(null);
   const [floats,        setFloats]        = useState<FloatItem[]>([]);
-  const [clicking,      setClicking]      = useState(false);
+  // clicking state removed — handled by CSS :active on the button
   const [buying,        setBuying]        = useState<string | null>(null);
   const [displayCoins,  setDisplayCoins]  = useState(0);
   const [logoUrl,       setLogoUrl]       = useState<string | null>(null);
@@ -266,17 +266,19 @@ export default function ClickerPage() {
     if (!profile) return;
     const multiplier = activeEvent?.type === "multiplier" ? activeEvent.multiplier : 1;
     const cpc = profile.coinsPerClick * multiplier * (hasFanpass ? 1.5 : 1);
-    localDelta.current  += cpc;
-    clickCount.current  += 1;
+    localDelta.current += cpc;
+    clickCount.current += 1;
     setDisplayCoins(serverCoins.current + localDelta.current);
-    setClicking(true);
-    setTimeout(() => setClicking(false), 100);
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left + (Math.random() * 40 - 20);
     const y = e.clientY - rect.top  - 20;
     const id = floatId.current++;
-    setFloats((f) => [...f, { id, x, y, value: cpc }]);
-    setTimeout(() => setFloats((f) => f.filter((fl) => fl.id !== id)), 900);
+    // Cap at 8 visible floats — drop oldest if over limit, avoids DOM accumulation
+    setFloats((f) => {
+      const next = f.length >= 8 ? f.slice(1) : f;
+      return [...next, { id, x, y, value: cpc }];
+    });
+    setTimeout(() => setFloats((f) => f.filter((fl) => fl.id !== id)), 800);
   }, [profile, activeEvent, hasFanpass]);
 
   // ── Buy upgrade ───────────────────────────────────────────────────────────
@@ -498,7 +500,7 @@ export default function ClickerPage() {
         ))}
         <button
           onClick={handleClick}
-          className={`relative flex h-56 w-56 md:h-48 md:w-48 select-none items-center justify-center rounded-full bg-gradient-to-br ${btnGradient} shadow-2xl transition-all duration-75 active:scale-95 hover:scale-105 ${clicking ? "scale-95" : "scale-100"}`}
+          className={`relative flex h-56 w-56 md:h-48 md:w-48 select-none items-center justify-center rounded-full bg-gradient-to-br ${btnGradient} shadow-2xl transition-transform duration-75 active:scale-95 hover:scale-105`}
         >
           {logoUrl
             // eslint-disable-next-line @next/next/no-img-element
