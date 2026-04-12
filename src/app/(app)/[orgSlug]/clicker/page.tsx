@@ -107,6 +107,7 @@ export default function ClickerPage() {
   const [prestigeModal, setPrestigeModal] = useState(false);
   const [prestiging,    setPrestiging]    = useState(false);
   const [totalClicks,   setTotalClicks]   = useState(0);
+  const [hasFanpass,    setHasFanpass]    = useState(false);
 
   // Coin state: server-confirmed value + local delta accumulated since last sync
   const serverCoins    = useRef(0);
@@ -156,6 +157,12 @@ export default function ClickerPage() {
         if (data.theme?.logoUrl) setLogoUrl(data.theme.logoUrl);
       })
       .catch(() => null);
+    fetch("/api/loyalty/stats")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { fanpass: { status: string; cancelledAt: string | null } | null } | null) => {
+        setHasFanpass(data?.fanpass?.status === "ACTIVE" && !data.fanpass.cancelledAt);
+      })
+      .catch(() => null);
   }, []);
 
   useEffect(() => {
@@ -189,12 +196,14 @@ export default function ClickerPage() {
   const coinsPerSecond = profile?.coinsPerSecond ?? 0;
   useEffect(() => {
     if (!coinsPerSecond) return;
+    const passiveMultiplier = hasFanpass ? 2 : 1;
+    const tick = coinsPerSecond * passiveMultiplier;
     const interval = setInterval(() => {
-      localDelta.current += coinsPerSecond;
+      localDelta.current += tick;
       setDisplayCoins(Math.floor(serverCoins.current + localDelta.current));
     }, 1000);
     return () => clearInterval(interval);
-  }, [coinsPerSecond]);
+  }, [coinsPerSecond, hasFanpass]);
 
   // ── Delta sync to server every 10s ────────────────────────────────────────
   // Snapshot delta but only subtract what was sent — ticks arriving during
@@ -256,7 +265,7 @@ export default function ClickerPage() {
   const handleClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     if (!profile) return;
     const multiplier = activeEvent?.type === "multiplier" ? activeEvent.multiplier : 1;
-    const cpc = profile.coinsPerClick * multiplier;
+    const cpc = profile.coinsPerClick * multiplier * (hasFanpass ? 1.5 : 1);
     localDelta.current  += cpc;
     clickCount.current  += 1;
     setDisplayCoins(serverCoins.current + localDelta.current);
@@ -268,7 +277,7 @@ export default function ClickerPage() {
     const id = floatId.current++;
     setFloats((f) => [...f, { id, x, y, value: cpc }]);
     setTimeout(() => setFloats((f) => f.filter((fl) => fl.id !== id)), 900);
-  }, [profile, activeEvent]);
+  }, [profile, activeEvent, hasFanpass]);
 
   // ── Buy upgrade ───────────────────────────────────────────────────────────
   async function buyUpgrade(upgradeId: string) {
@@ -309,12 +318,12 @@ export default function ClickerPage() {
       const data = await res.json() as { profile: ClickerProfile; upgrades: UpgradeState[] };
       setProfile(data.profile);
       serverCoins.current = data.profile.coins;
-      localDelta.current  = 0;
-      clickCount.current  = 0;
-      console.log("[COINS] After upgrade:", data.profile.coins);
-      setDisplayCoins(data.profile.coins);
+      // Keep localDelta and clickCount — they accumulate ticks/clicks
+      // that arrived during the API call and haven't been synced yet.
+      const total = data.profile.coins + localDelta.current;
+      setDisplayCoins(total);
       setUpgrades(data.upgrades);
-      writeCache(data.profile, data.upgrades, data.profile.coins);
+      writeCache(data.profile, data.upgrades, total);
     }
     setBuying(null);
   }
@@ -462,19 +471,34 @@ export default function ClickerPage() {
           Rekord: <span className="text-zinc-500">{fmt(profile.allTimeHighCoins)}</span> coins
         </p>
       )}
-      {profile.permanentBonus > 1 && (
-        <p className="mb-1 text-xs text-amber-400">
-          ⚡ {((profile.permanentBonus - 1) * 100).toFixed(0)}% permanent prestige-bonus
-        </p>
+      {/* Active multiplier badges */}
+      {(hasFanpass || profile.permanentBonus > 1) && (
+        <div className="mb-2 flex flex-wrap justify-center gap-1.5">
+          {hasFanpass && (
+            <>
+              <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-xs text-violet-300">
+                Fanpass: 1.5x klikk
+              </span>
+              <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-xs text-violet-300">
+                Fanpass: 2x passiv
+              </span>
+            </>
+          )}
+          {profile.permanentBonus > 1 && (
+            <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-300">
+              +{((profile.permanentBonus - 1) * 100).toFixed(0)}% prestige
+            </span>
+          )}
+        </div>
       )}
       <div className="mb-6 flex gap-6 text-sm text-zinc-500">
         <span className="flex items-center gap-1.5">
           <Zap className="h-4 w-4 text-yellow-500" />
-          {fmt(profile.coinsPerClick * multiplier)}/klikk
+          {fmt(profile.coinsPerClick * multiplier * (hasFanpass ? 1.5 : 1))}/klikk
         </span>
         <span className="flex items-center gap-1.5">
           <Clock className="h-4 w-4 text-indigo-400" />
-          {fmt(profile.coinsPerSecond)}/sek
+          {fmt(profile.coinsPerSecond * (hasFanpass ? 2 : 1))}/sek
         </span>
       </div>
       {/* Click button */}
