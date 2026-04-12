@@ -163,24 +163,22 @@ export default function ClickerPage() {
     fetch(`/api/clicker?orgId=${orgId}`)
       .then((r) => r.json())
       .then((data: { profile: ClickerProfile; upgrades: UpgradeState[]; offlineEarned: number; activeEvent: ActiveEvent | null }) => {
-        // Take the higher of DB value and local (cached + unsync'd delta).
-        // If the user clicked between page load and this response, localDelta
-        // holds those coins — don't throw them away.
-        const dbCoins    = data.profile.coins;
-        const localCoins = serverCoins.current + localDelta.current;
-        const best       = Math.max(dbCoins, localCoins);
-
-        // Re-anchor: server = best, delta = 0 (delta already folded in).
-        serverCoins.current = best;
-        localDelta.current  = 0;
+        // DB coins already include offline income (credited server-side).
+        // Advance serverCoins to DB value if it's higher — never go backwards.
+        // Preserve localDelta — those are clicks made after mount, not yet synced.
+        const dbCoins = data.profile.coins;
+        if (dbCoins > serverCoins.current) {
+          serverCoins.current = dbCoins;
+        }
+        // localDelta intentionally NOT reset — synced in the next 5s interval.
 
         setProfile(data.profile);
-        setDisplayCoins(best);
+        setDisplayCoins(serverCoins.current + localDelta.current);
         setTotalClicks(Math.max(data.profile.totalClicks, totalClicksRef.current));
         setUpgrades(data.upgrades);
         setActiveEvent(data.activeEvent);
         if (data.offlineEarned > 0) setOfflineMsg(data.offlineEarned);
-        writeCache(data.profile, data.upgrades, best);
+        writeCache(data.profile, data.upgrades, serverCoins.current + localDelta.current);
       });
     fetch(`/api/clicker/leaderboard?orgId=${orgId}`)
       .then((r) => r.json())

@@ -33,8 +33,10 @@ export async function GET(req: NextRequest) {
     (now.getTime() - profile.lastSeen.getTime()) / 1000,
     MAX_OFFLINE_SECONDS,
   );
+  // coinsPerSecond is already stored as base × permanentBonus (see calcCoinsPerSecond).
+  // Do NOT multiply by permanentBonus again — that would double-apply the prestige bonus.
   const offlineEarned = offlineSeconds > 5
-    ? offlineSeconds * profile.coinsPerSecond * profile.permanentBonus
+    ? offlineSeconds * profile.coinsPerSecond
     : 0;
 
   const activeEvent = await db.clickerEvent.findFirst({
