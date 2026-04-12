@@ -222,6 +222,7 @@ model User {
   channelReads            ChannelRead[]
   reportsReceived         UserReport[]    @relation("ReportedUser")
   reportsMade             UserReport[]    @relation("ReportedBy")
+  fanpassWaitlist         FanpassWaitlist?
 
   @@index([username])
 }
@@ -770,4 +771,12 @@ model UserReport {
   reportedUser User         @relation("ReportedUser", fields: [reportedUserId], references: [id])
   reportedBy   User         @relation("ReportedBy",   fields: [reportedById],   references: [id])
   organization Organization @relation(fields: [organizationId], references: [id])
+}
+
+model FanpassWaitlist {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

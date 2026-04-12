@@ -23,10 +23,11 @@ export default async function SuperAdminPage() {
   const session = await auth();
   if (!session?.user?.id || !session.user.isSuperAdmin) redirect("/feed");
 
-  const [totalOrgs, totalMembers, proEnterpriseCount, orgs] = await Promise.all([
+  const [totalOrgs, totalMembers, proEnterpriseCount, waitlistCount, orgs] = await Promise.all([
     db.organization.count(),
     db.membership.count(),
     db.organization.count({ where: { plan: { in: ["PRO", "ENTERPRISE"] } } }),
+    db.fanpassWaitlist.count(),
     db.organization.findMany({
       orderBy: { createdAt: "desc" },
       include: {
@@ -41,10 +42,10 @@ export default async function SuperAdminPage() {
   ]);
 
   const globalStats = [
-    { label: "Organisasjoner", value: String(totalOrgs),                   icon: Globe },
-    { label: "Medlemmer",      value: totalMembers.toLocaleString("nb-NO"), icon: Users },
-    { label: "Aktive org.",    value: String(totalOrgs),                   icon: TrendingUp },
-    { label: "PRO / Enterprise", value: String(proEnterpriseCount),        icon: ShieldAlert },
+    { label: "Organisasjoner",      value: String(totalOrgs),                   icon: Globe },
+    { label: "Medlemmer",           value: totalMembers.toLocaleString("nb-NO"), icon: Users },
+    { label: "PRO / Enterprise",    value: String(proEnterpriseCount),           icon: TrendingUp },
+    { label: "Venter på Fanpass",   value: String(waitlistCount),               icon: ShieldAlert },
   ];
 
   return (
