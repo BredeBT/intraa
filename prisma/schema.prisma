@@ -632,11 +632,12 @@ model FanPass {
   id             String   @id @default(cuid())
   userId         String
   organizationId String
-  status         String   @default("ACTIVE")
-  startDate      DateTime @default(now())
+  status         String    @default("ACTIVE")
+  startDate      DateTime  @default(now())
   endDate        DateTime
-  paidAmount     Int      @default(59)
-  createdAt      DateTime @default(now())
+  paidAmount     Int       @default(59)
+  cancelledAt    DateTime?
+  createdAt      DateTime  @default(now())
 
   user         User         @relation(fields: [userId],         references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)

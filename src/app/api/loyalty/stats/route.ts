@@ -55,8 +55,10 @@ export async function GET(request: Request) {
     fanpass?.status === "ACTIVE" && (fanpass.endDate > new Date());
 
   return NextResponse.json({
-    coins:       membership.points,
-    fanpass:  hasFanpass ? { endDate: fanpass!.endDate, status: fanpass!.status } : null,
+    coins:    membership.points,
+    fanpass:  hasFanpass
+      ? { endDate: fanpass!.endDate, status: fanpass!.status, cancelledAt: fanpass!.cancelledAt ?? null }
+      : null,
     thisMonth: {
       earned:   coinsEarnedThisMonth,
       logins:   loginsThisMonth,

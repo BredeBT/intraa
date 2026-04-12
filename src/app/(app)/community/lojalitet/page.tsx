@@ -6,7 +6,7 @@ import { useOrg } from "@/lib/context/OrgContext";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface MembershipData {
-  fanpass: { endDate: string; status: string } | null;
+  fanpass: { endDate: string; status: string; cancelledAt: string | null } | null;
 }
 
 type Tab = "oversikt" | "fanpass";
@@ -225,32 +225,93 @@ function OversiktTab({
   );
 }
 
+function CancelModal({
+  endDate,
+  onCancel,
+  onClose,
+}: {
+  endDate:  string;
+  onCancel: () => void;
+  onClose:  () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 md:items-center">
+      <div className="w-full max-w-sm rounded-t-2xl border border-zinc-700 bg-zinc-900 p-6 md:rounded-2xl">
+        <h2 className="mb-3 text-lg font-bold text-white">Kanseller Fanpass?</h2>
+        <p className="mb-6 text-sm text-zinc-400">
+          Fanpass forblir aktivt til{" "}
+          <span className="font-medium text-white">{fmtDate(endDate)}</span>.
+          Etter det mister du tilgang til Fanpass-fordeler.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3 text-sm font-bold text-white hover:from-violet-500 hover:to-indigo-500"
+          >
+            Behold Fanpass
+          </button>
+          <button
+            onClick={onCancel}
+            className="flex-1 rounded-xl border border-zinc-700 py-3 text-sm text-zinc-400 hover:text-white"
+          >
+            Kanseller likevel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FanpassTab({
   orgId,
-  hasFanpass,
+  fanpass,
   onActivated,
 }: {
   orgId:       string;
-  hasFanpass:  boolean;
+  fanpass:     MembershipData["fanpass"];
   onActivated: () => void;
 }) {
-  const [showModal,  setShowModal]  = useState(false);
-  const [activating, setActivating] = useState(false);
+  const hasFanpass = !!fanpass;
+  const isCancelled = !!fanpass?.cancelledAt;
 
-  async function activate() {
-    setActivating(true);
-    const res = await fetch("/api/fanpass/activate", {
+  const [showModal,      setShowModal]      = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelling,     setCancelling]     = useState(false);
+  const [reactivating,   setReactivating]   = useState(false);
+
+  async function cancel() {
+    setCancelling(true);
+    setShowCancelModal(false);
+    await fetch("/api/fanpass/cancel", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify({ orgId }),
     });
-    setActivating(false);
-    if (res.ok) onActivated();
+    setCancelling(false);
+    onActivated();
+  }
+
+  async function reactivate() {
+    setReactivating(true);
+    await fetch("/api/fanpass/reactivate", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ orgId }),
+    });
+    setReactivating(false);
+    onActivated();
   }
 
   return (
     <>
-      {showModal && <PurchaseModal onClose={() => setShowModal(false)} />}
+      {showModal       && <PurchaseModal onClose={() => setShowModal(false)} />}
+      {showCancelModal && fanpass && (
+        <CancelModal
+          endDate={fanpass.endDate}
+          onCancel={() => void cancel()}
+          onClose={() => setShowCancelModal(false)}
+        />
+      )}
 
       <div className="space-y-6">
         <div className="rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-700 p-6">
@@ -266,16 +327,37 @@ function FanpassTab({
           <div>
             <button
               onClick={() => setShowModal(true)}
-              disabled={activating}
-              className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3.5 text-sm font-bold text-white hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50"
+              className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3.5 text-sm font-bold text-white hover:from-violet-500 hover:to-indigo-500"
             >
               Aktiver Fanpass
             </button>
             <p className="mt-2 text-center text-xs text-zinc-600">59 kr/mnd — avbryt når som helst</p>
           </div>
+        ) : isCancelled ? (
+          <div className="space-y-3">
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 py-3 text-center text-sm text-amber-300">
+              Fanpass kansellert — aktivt til {fmtDate(fanpass!.endDate)}
+            </div>
+            <button
+              onClick={() => void reactivate()}
+              disabled={reactivating}
+              className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3 text-sm font-bold text-white hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50"
+            >
+              {reactivating ? "Gjenaktiverer…" : "Gjenaktiver Fanpass"}
+            </button>
+          </div>
         ) : (
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-3.5 text-center text-sm font-semibold text-emerald-400">
-            ✅ Fanpass er aktivt
+          <div className="space-y-3">
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-3.5 text-center text-sm font-semibold text-emerald-400">
+              ✅ Fanpass er aktivt
+            </div>
+            <button
+              onClick={() => setShowCancelModal(true)}
+              disabled={cancelling}
+              className="mx-auto block text-xs text-zinc-600 hover:text-zinc-400 disabled:opacity-50"
+            >
+              {cancelling ? "Kansellerer…" : "Kanseller abonnement"}
+            </button>
           </div>
         )}
       </div>
@@ -348,7 +430,7 @@ export default function LojalitetPage() {
           {tab === "fanpass" && (
             <FanpassTab
               orgId={org.id}
-              hasFanpass={!!data.fanpass}
+              fanpass={data.fanpass}
               onActivated={loadData}
             />
           )}
