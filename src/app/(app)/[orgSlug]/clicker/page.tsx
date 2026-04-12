@@ -26,10 +26,10 @@ interface UpgradeState {
 }
 
 interface LeaderboardEntry {
-  coins:         number;
-  totalClicks:   number;
-  prestigeWorld: number;
-  user:          { id: string; name: string | null; avatarUrl: string | null };
+  allTimeHighCoins: number;
+  totalClicks:      number;
+  prestigeWorld:    number;
+  user:             { id: string; name: string | null; avatarUrl: string | null };
 }
 
 interface ActiveEvent {
@@ -536,9 +536,12 @@ export default function ClickerPage() {
       {/* Leaderboard */}
       {leaderboard.length > 0 && (
         <div className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            <Trophy className="h-3.5 w-3.5 text-amber-500" /> Topp 5
-          </p>
+          <div className="mb-3">
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              <Trophy className="h-3.5 w-3.5 text-amber-500" /> Topp 5
+            </p>
+            <p className="text-[10px] text-zinc-600">sortert etter rekord</p>
+          </div>
           <div className="flex flex-col gap-2">
             {leaderboard.map((entry, i) => {
               const w = (entry.prestigeWorld ?? 1) as 1 | 2 | 3;
@@ -556,7 +559,7 @@ export default function ClickerPage() {
                     <p className="truncate text-xs text-zinc-300">{entry.user.name ?? "Ukjent"}</p>
                     <p className={`text-[10px] leading-tight ${worldColor}`}>{wDef.emoji} Verden {w}</p>
                   </div>
-                  <span className="shrink-0 text-xs font-semibold text-amber-400">{fmt(entry.coins)} 🪙</span>
+                  <span className="shrink-0 text-xs font-semibold text-amber-400">{fmt(entry.allTimeHighCoins)} 🪙</span>
                 </div>
               );
             })}
