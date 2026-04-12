@@ -37,7 +37,7 @@ export default async function TicketsPage() {
 
   const STATUS_ORDER: Record<string, number> = { OPEN: 0, IN_PROGRESS: 1, WAITING: 2 };
 
-  const [tickets, categories, memberships] = await Promise.all([
+  const [tickets, categories, memberships, membership] = await Promise.all([
     db.ticket.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -59,12 +59,11 @@ export default async function TicketsPage() {
           include: { user: { select: { id: true, name: true } } },
         })
       : Promise.resolve([]),
+    db.membership.findUnique({
+      where:   { userId_organizationId: { userId: session.user.id, organizationId: ctx.organizationId } },
+      include: { user: { select: { name: true } } },
+    }),
   ]);
-
-  const membership = await db.membership.findUnique({
-    where:   { userId_organizationId: { userId: session.user.id, organizationId: ctx.organizationId } },
-    include: { user: { select: { name: true } } },
-  });
 
   const members = memberships.map((m) => ({ id: m.userId, name: (m as typeof m & { user: { name: string | null } }).user.name }));
 

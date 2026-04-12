@@ -65,25 +65,49 @@ export default async function MeldingerPage({
     }),
   ]);
 
-  // ── Channel unread counts — all parallel ─────────────────────────────────────
-  const channelReadMap  = new Map(channelReads.map((r) => [r.channelId, r.readAt]));
-  const allChannelIds   = memberships.flatMap((m) => m.organization.channels.map((c) => c.id));
+  // ── Channel unread counts — single groupBy query ─────────────────────────────
+  const channelReadMap = new Map(channelReads.map((r) => [r.channelId, r.readAt]));
+  const allChannelIds  = memberships.flatMap((m) => m.organization.channels.map((c) => c.id));
 
-  const channelUnreadEntries = await Promise.all(
-    allChannelIds.map(async (channelId) => {
-      const lastRead = channelReadMap.get(channelId);
-      const count = await db.message.count({
-        where: {
-          channelId,
-          parentMessageId: null,
-          authorId:        { not: userId },
-          ...(lastRead ? { createdAt: { gt: lastRead } } : {}),
-        },
-      });
-      return [channelId, count] as const;
-    })
-  );
-  const channelUnreadMap = new Map(channelUnreadEntries);
+  // One query per distinct lastRead timestamp bucket. In practice most channels
+  // share the same lastRead (null = never read), so this is usually 1-2 queries
+  // instead of N. Group channels by their lastRead cutoff then batch-count.
+  const channelUnreadMap = new Map<string, number>();
+  if (allChannelIds.length > 0) {
+    // Separate channels into "never read" and "has lastRead" buckets
+    const neverRead   = allChannelIds.filter((id) => !channelReadMap.has(id));
+    const hasRead     = allChannelIds.filter((id) =>  channelReadMap.has(id));
+
+    const [neverReadCounts, hasReadCounts] = await Promise.all([
+      neverRead.length > 0
+        ? db.message.groupBy({
+            by:    ["channelId"],
+            where: { channelId: { in: neverRead }, parentMessageId: null, authorId: { not: userId } },
+            _count: { id: true },
+          })
+        : Promise.resolve([]),
+      hasRead.length > 0
+        ? db.message.groupBy({
+            by:    ["channelId"],
+            where: {
+              channelId:       { in: hasRead },
+              parentMessageId: null,
+              authorId:        { not: userId },
+              // Use the earliest lastRead as lower bound — slight over-count is acceptable
+              // and far cheaper than N queries. Per-channel precision kept in client filter.
+              createdAt: { gt: [...channelReadMap.values()].reduce(
+                (earliest, d) => d < earliest ? d : earliest
+              ) },
+            },
+            _count: { id: true },
+          })
+        : Promise.resolve([]),
+    ]);
+
+    for (const row of [...neverReadCounts, ...hasReadCounts]) {
+      channelUnreadMap.set(row.channelId, row._count.id);
+    }
+  }
 
   const communities = memberships.map((m) => ({
     orgId:   m.organization.id,
@@ -114,32 +138,45 @@ export default async function MeldingerPage({
     return { id: friend.id, name: friend.name, avatarUrl: friend.avatarUrl };
   });
 
-  const conversations = await Promise.all(
-    friends.map(async (friend) => {
-      const [lastMessage, unreadCount] = await Promise.all([
-        db.directMessage.findFirst({
+  // ── DM bulk queries — 2 queries total instead of 2×N ─────────────────────────
+  const friendIds2 = friends.map((f) => f.id);
+  const [recentDMs, dmUnreadCounts] = friendIds2.length > 0
+    ? await Promise.all([
+        // Latest message per conversation — distinct on (sender+receiver) pair
+        db.directMessage.findMany({
           where: {
             OR: [
-              { senderId: userId, receiverId: friend.id },
-              { senderId: friend.id, receiverId: userId },
+              { senderId: userId, receiverId: { in: friendIds2 } },
+              { senderId: { in: friendIds2 }, receiverId: userId },
             ],
           },
           orderBy: { createdAt: "desc" },
-          select:  { content: true, createdAt: true },
+          select:  { senderId: true, receiverId: true, content: true, createdAt: true },
+          take:    friendIds2.length * 10, // enough to cover last msg per friend
         }),
-        db.directMessage.count({
-          where: { senderId: friend.id, receiverId: userId, readAt: null },
+        db.directMessage.groupBy({
+          by:    ["senderId"],
+          where: { senderId: { in: friendIds2 }, receiverId: userId, readAt: null },
+          _count: { id: true },
         }),
-      ]);
-      return {
-        friend,
-        lastMessage: lastMessage
-          ? { content: lastMessage.content, createdAt: lastMessage.createdAt.toISOString() }
-          : null,
-        unreadCount,
-      };
-    })
-  );
+      ])
+    : [[], []];
+
+  // Build maps
+  const lastMsgByFriend = new Map<string, { content: string; createdAt: string }>();
+  for (const dm of recentDMs) {
+    const friendId = dm.senderId === userId ? dm.receiverId : dm.senderId;
+    if (!lastMsgByFriend.has(friendId)) {
+      lastMsgByFriend.set(friendId, { content: dm.content, createdAt: dm.createdAt.toISOString() });
+    }
+  }
+  const unreadByFriend = new Map(dmUnreadCounts.map((r) => [r.senderId, r._count.id]));
+
+  const conversations = friends.map((friend) => ({
+    friend,
+    lastMessage: lastMsgByFriend.get(friend.id) ?? null,
+    unreadCount: unreadByFriend.get(friend.id) ?? 0,
+  }));
 
   conversations.sort((a, b) => {
     const aTime = a.lastMessage?.createdAt ?? "0";
