@@ -187,6 +187,7 @@ model User {
   website       String?
   socialLinks   Json?
   status        String?   @default("online")
+  lastActive    DateTime?
 
   memberships             Membership[]
   posts                   Post[]

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { updateLastActive } from "@/lib/updateLastActive";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Ikke innlogget" }, { status: 401 });
+  void updateLastActive(session.user.id);
 
   const { searchParams } = new URL(request.url);
   const orgId = searchParams.get("orgId");
