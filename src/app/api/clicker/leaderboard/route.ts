@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   const { db } = await import("@/server/db");
 
   const top = await db.clickerProfile.findMany({
-    where:   { organizationId: orgId },
+    where:   { organizationId: orgId, coins: { gt: 0 } },
     orderBy: { coins: "desc" },
     take:    5,
     select: {

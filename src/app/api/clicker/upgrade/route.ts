@@ -6,7 +6,12 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { orgId, upgradeId } = await req.json() as { orgId: string; upgradeId: string };
+  const { orgId, upgradeId, delta, clicks } = await req.json() as {
+    orgId:     string;
+    upgradeId: string;
+    delta?:    number;
+    clicks?:   number;
+  };
   if (!orgId || !upgradeId) return NextResponse.json({ error: "Invalid" }, { status: 400 });
 
   const upgradeDef = UPGRADES.find((u) => u.id === upgradeId);
@@ -33,8 +38,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Max level reached" }, { status: 400 });
   }
 
-  const cost = getUpgradeCost(upgradeId, currentLevel);
-  const currentCoins = profile.coins ?? 0;
+  // Apply pending delta atomically (cap: 5 min of passive income + clicks)
+  const safeClicks = Math.max(0, Math.floor(clicks ?? 0));
+  const maxDelta   = (profile.coinsPerSecond * 300) + (safeClicks * profile.coinsPerClick) + 10_000;
+  const safeDelta  = Math.min(maxDelta, Math.max(0, Math.floor(delta ?? 0)));
+
+  const cost          = getUpgradeCost(upgradeId, currentLevel);
+  const currentCoins  = (profile.coins ?? 0) + safeDelta;
+
   if (currentCoins < cost) {
     return NextResponse.json({ error: "Not enough coins" }, { status: 400 });
   }
@@ -46,21 +57,24 @@ export async function POST(req: NextRequest) {
   });
 
   const allUpgrades = await db.clickerUpgrade.findMany({
-    where: { userId: session.user.id, organizationId: orgId },
+    where:  { userId: session.user.id, organizationId: orgId },
     select: { upgradeId: true, level: true },
   });
 
   const newCoinsPerClick  = calcCoinsPerClick(allUpgrades, profile.prestigeWorld, profile.permanentBonus);
   const newCoinsPerSecond = calcCoinsPerSecond(allUpgrades, profile.prestigeWorld, profile.permanentBonus);
+  const newCoins          = Math.max(0, currentCoins - cost);
+  const currentHigh       = profile.allTimeHighCoins ?? 0;
 
-  // Use explicit value to avoid NULL arithmetic in PostgreSQL
   const updatedProfile = await db.clickerProfile.update({
     where: { userId_organizationId: { userId: session.user.id, organizationId: orgId } },
     data: {
-      coins:          Math.max(0, currentCoins - cost),
-      coinsPerClick:  newCoinsPerClick,
-      coinsPerSecond: newCoinsPerSecond,
-      lastSeen:       new Date(),
+      coins:            newCoins,
+      allTimeHighCoins: Math.max(currentHigh, currentCoins), // record before purchase deduction
+      coinsPerClick:    newCoinsPerClick,
+      coinsPerSecond:   newCoinsPerSecond,
+      totalClicks:      { increment: safeClicks },
+      lastSeen:         new Date(),
     },
   });
 

@@ -284,46 +284,32 @@ export default function ClickerPage() {
     if (!orgId || !profile || buying) return;
     setBuying(upgradeId);
 
-    // Sync localDelta to server BEFORE buying so the server has the correct balance
-    if (localDelta.current > 0) {
-      const delta  = localDelta.current;
-      const clicks = clickCount.current;
-      localDelta.current = 0;
-      clickCount.current = 0;
-      try {
-        const syncRes = await fetch("/api/clicker/sync", {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ orgId, delta, clicks }),
-        });
-        if (syncRes.ok) {
-          const syncData = await syncRes.json() as { coins: number };
-          serverCoins.current = syncData.coins;
-        }
-      } catch {
-        // Sync failed — restore delta and abort purchase
-        localDelta.current += delta;
-        clickCount.current += clicks;
-        setBuying(null);
-        return;
-      }
-    }
+    // Capture and clear the pending delta — send it atomically with the upgrade
+    // request so the server can apply it before checking the coin balance.
+    // This avoids the pre-buy sync race and the MAX_COINS_PER_SYNC truncation bug.
+    const delta  = localDelta.current;
+    const clicks = clickCount.current;
+    localDelta.current = 0;
+    clickCount.current = 0;
 
     const res = await fetch("/api/clicker/upgrade", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ orgId, upgradeId }),
+      body:    JSON.stringify({ orgId, upgradeId, delta, clicks }),
     });
     if (res.ok) {
       const data = await res.json() as { profile: ClickerProfile; upgrades: UpgradeState[] };
       setProfile(data.profile);
       serverCoins.current = data.profile.coins;
-      // Keep localDelta and clickCount — they accumulate ticks/clicks
-      // that arrived during the API call and haven't been synced yet.
+      // localDelta may have new ticks that arrived during the API call — keep them.
       const total = data.profile.coins + localDelta.current;
       setDisplayCoins(total);
       setUpgrades(data.upgrades);
       writeCache(data.profile, data.upgrades, total);
+    } else {
+      // Purchase failed — restore delta so ticks aren't lost.
+      localDelta.current += delta;
+      clickCount.current += clicks;
     }
     setBuying(null);
   }
