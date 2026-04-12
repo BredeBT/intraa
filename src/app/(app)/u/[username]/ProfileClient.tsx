@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { UserPlus, UserCheck, MessageSquare, Pencil, Globe, ExternalLink } from "lucide-react";
+import { UserPlus, UserCheck, MessageSquare, Pencil, Globe, ExternalLink, MoreVertical, X } from "lucide-react";
 
 interface Profile {
   id:          string;
@@ -49,7 +49,6 @@ interface Props {
   activeFanpass:   { organization: { name: string } } | null;
 }
 
-
 function initials(name: string | null) {
   return (name ?? "?").split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 }
@@ -58,6 +57,137 @@ const SOCIAL_ICONS: Record<string, React.ElementType> = {
   website: Globe,
   default: ExternalLink,
 };
+
+// ── Three-dots menu ──────────────────────────────────────────────────────────
+
+interface MenuItem {
+  label:   string;
+  danger?: boolean;
+  divider?: boolean;
+  onClick: () => void;
+}
+
+function DropdownMenu({ items, onClose }: { items: MenuItem[]; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      className="absolute right-0 top-8 z-50 min-w-[180px] rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl shadow-black/40"
+    >
+      {items.map((item, i) => (
+        <div key={i}>
+          {item.divider && <div className="my-1 border-t border-zinc-800" />}
+          <button
+            onClick={() => { item.onClick(); onClose(); }}
+            className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-xl last:rounded-b-xl hover:bg-zinc-800 ${
+              item.danger ? "text-red-400 hover:text-red-300" : "text-zinc-200"
+            }`}
+          >
+            {item.label}
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BottomSheet({
+  items,
+  profile,
+  onClose,
+}: {
+  items:    MenuItem[];
+  profile:  Profile;
+  onClose:  () => void;
+}) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    // trigger enter animation
+    requestAnimationFrame(() => setVisible(true));
+  }, []);
+
+  function close() {
+    setVisible(false);
+    setTimeout(onClose, 250);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+      {/* Backdrop */}
+      <div
+        className={`absolute inset-0 bg-black/60 transition-opacity duration-200 ${visible ? "opacity-100" : "opacity-0"}`}
+        onClick={close}
+      />
+
+      {/* Sheet */}
+      <div
+        className={`relative z-10 rounded-t-2xl border-t border-zinc-800 bg-zinc-900 pb-safe transition-transform duration-250 ${
+          visible ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        {/* Handle */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="h-1 w-10 rounded-full bg-zinc-700" />
+        </div>
+
+        {/* User context */}
+        <div className="flex items-center gap-3 px-5 py-3 border-b border-zinc-800">
+          {profile.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-600 text-sm font-bold text-white">
+              {initials(profile.name)}
+            </div>
+          )}
+          <div>
+            <p className="text-sm font-semibold text-white">{profile.name ?? "Ukjent"}</p>
+            {profile.username && <p className="text-xs text-zinc-500">@{profile.username}</p>}
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="py-2">
+          {items.map((item, i) => (
+            <div key={i}>
+              {item.divider && <div className="my-1 border-t border-zinc-800" />}
+              <button
+                onClick={() => { item.onClick(); close(); }}
+                className={`flex w-full items-center px-5 py-3.5 text-sm font-medium transition-colors active:bg-zinc-800 min-h-[52px] ${
+                  item.danger ? "text-red-400" : "text-zinc-100"
+                }`}
+              >
+                {item.label}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Cancel */}
+        <div className="px-4 pb-4">
+          <button
+            onClick={close}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-800 py-3.5 text-sm font-medium text-zinc-300 min-h-[52px]"
+          >
+            <X className="h-4 w-4" /> Avbryt
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ───────────────────────────────────────────────────────────
 
 export default function ProfileClient({
   profile, isOwnProfile, showFullProfile, friendStatus: initialStatus, friendshipId: initialFriendshipId,
@@ -71,6 +201,18 @@ export default function ProfileClient({
   const [friendStatus,  setFriendStatus]  = useState<FriendStatus>(initialStatus);
   const [friendshipId,  setFriendshipId]  = useState<string | null>(initialFriendshipId);
   const [pending,       start]            = useTransition();
+  const [menuOpen,      setMenuOpen]      = useState(false);
+  const [isMobile,      setIsMobile]      = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+    function onResize() { setIsMobile(window.innerWidth < 768); }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   function sendFriendRequest() {
     start(async () => {
@@ -84,6 +226,14 @@ export default function ProfileClient({
         setFriendStatus("pending_sent");
         setFriendshipId(data.friendship.id);
       }
+    });
+  }
+
+  function withdrawRequest() {
+    if (!friendshipId) return;
+    start(async () => {
+      const res = await fetch(`/api/friends/${friendshipId}`, { method: "DELETE" });
+      if (res.ok) { setFriendStatus("none"); setFriendshipId(null); }
     });
   }
 
@@ -108,6 +258,29 @@ export default function ProfileClient({
       const res = await fetch(`/api/friends/${friendshipId}`, { method: "DELETE" });
       if (res.ok) { setFriendStatus("none"); setFriendshipId(null); }
     });
+  }
+
+  function reportUser() {
+    // TODO: implement report flow
+    alert("Rapporten din er mottatt. Vi vil se på saken.");
+  }
+
+  // Build menu items based on friendship status
+  const menuItems: MenuItem[] = [];
+
+  if (friendStatus === "accepted") {
+    menuItems.push({ label: "Send melding",  onClick: () => { window.location.href = `/meldinger?userId=${profile.id}`; } });
+    menuItems.push({ label: "Fjern venn",    onClick: removeFriend });
+    menuItems.push({ label: "Rapporter bruker", danger: true, divider: true, onClick: reportUser });
+  } else if (friendStatus === "none") {
+    menuItems.push({ label: "Send venneforespørsel", onClick: sendFriendRequest });
+    menuItems.push({ label: "Rapporter bruker", danger: true, divider: true, onClick: reportUser });
+  } else if (friendStatus === "pending_sent") {
+    menuItems.push({ label: "Trekk tilbake forespørsel", onClick: withdrawRequest });
+    menuItems.push({ label: "Rapporter bruker", danger: true, divider: true, onClick: reportUser });
+  } else {
+    // pending_received — keep accept/decline as explicit buttons, only show report in menu
+    menuItems.push({ label: "Rapporter bruker", danger: true, onClick: reportUser });
   }
 
   const socialEntries = Object.entries(profile.socialLinks ?? {}).filter(([, v]) => v);
@@ -186,8 +359,8 @@ export default function ProfileClient({
             <p className="mt-1 text-xs text-zinc-600">{friendCount} venner</p>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex shrink-0 flex-col gap-2">
+          {/* Action area */}
+          <div className="flex shrink-0 items-center gap-2">
             {isOwnProfile ? (
               <Link
                 href="/innstillinger"
@@ -197,6 +370,15 @@ export default function ProfileClient({
               </Link>
             ) : (
               <>
+                {/* Primary CTA */}
+                {friendStatus === "accepted" && (
+                  <Link
+                    href={`/meldinger?userId=${profile.id}`}
+                    className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:opacity-80"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" /> Send melding
+                  </Link>
+                )}
                 {friendStatus === "none" && (
                   <button
                     onClick={sendFriendRequest}
@@ -208,9 +390,8 @@ export default function ProfileClient({
                 )}
                 {friendStatus === "pending_sent" && (
                   <button
-                    onClick={removeFriend}
-                    disabled={pending}
-                    className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-red-500/50 hover:text-red-400 disabled:opacity-50"
+                    disabled
+                    className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs font-medium text-zinc-400 opacity-70"
                   >
                     <UserCheck className="h-3.5 w-3.5" /> Forespørsel sendt
                   </button>
@@ -233,22 +414,24 @@ export default function ProfileClient({
                     </button>
                   </div>
                 )}
-                {friendStatus === "accepted" && (
-                  <>
-                    <Link
-                      href={`/meldinger?userId=${profile.id}`}
-                      className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:opacity-80"
-                    >
-                      <MessageSquare className="h-3.5 w-3.5" /> Send melding
-                    </Link>
-                    <button
-                      onClick={removeFriend}
-                      disabled={pending}
-                      className="rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-500 transition-colors hover:border-red-500/50 hover:text-red-400 disabled:opacity-50"
-                    >
-                      Fjern venn
-                    </button>
-                  </>
+
+                {/* Three-dots menu */}
+                <div ref={menuRef} className="relative">
+                  <button
+                    onClick={() => setMenuOpen((v) => !v)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-200"
+                    aria-label="Flere valg"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+
+                  {menuOpen && !isMobile && (
+                    <DropdownMenu items={menuItems} onClose={closeMenu} />
+                  )}
+                </div>
+
+                {menuOpen && isMobile && (
+                  <BottomSheet items={menuItems} profile={profile} onClose={closeMenu} />
                 )}
               </>
             )}
