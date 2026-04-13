@@ -16,7 +16,7 @@ export default async function InnstillingerPage({ params }: { params: Promise<{ 
     <div className="px-8 py-8">
       <h2 className="mb-1 text-lg font-semibold text-white">Innstillinger</h2>
       <p className="mb-6 text-sm text-zinc-500">Rediger grunnleggende informasjon om organisasjonen.</p>
-      <OrgSettingsForm org={{ id: org.id, name: org.name, slug: org.slug, plan: org.plan }} />
+      <OrgSettingsForm org={{ id: org.id, name: org.name, slug: org.slug, plan: org.plan, description: org.description ?? null }} />
     </div>
   );
 }

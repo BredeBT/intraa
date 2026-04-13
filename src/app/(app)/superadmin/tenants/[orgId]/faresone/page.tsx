@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import DangerActions from "./DangerActions";
+import { SuspendAction, DeleteAction } from "./DangerActions";
 
 export default async function FaresonePage({ params }: { params: Promise<{ orgId: string }> }) {
   const session = await auth();
@@ -13,25 +13,45 @@ export default async function FaresonePage({ params }: { params: Promise<{ orgId
   if (!org) notFound();
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-8 py-8" style={{ color: "rgba(255,255,255,0.9)" }}>
       <h2 className="mb-1 text-lg font-semibold text-white">Faresone</h2>
-      <p className="mb-6 text-sm text-zinc-500">Disse handlingene er irreversible. Vær sikker på hva du gjør.</p>
+      <p className="mb-8 text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
+        Disse handlingene er irreversible. Vær sikker på hva du gjør.
+      </p>
 
       <div className="max-w-lg space-y-4">
-        <div className="rounded-xl border border-amber-800/40 bg-amber-900/10 p-5">
-          <h3 className="mb-1 font-medium text-amber-400">Suspender organisasjon</h3>
-          <p className="mb-4 text-sm text-zinc-400">
-            Medlemmer vil ikke kunne logge inn eller bruke tjenesten. Ingen data slettes.
+        {/* Deactivate */}
+        <div
+          className="rounded-xl p-5"
+          style={{
+            background: "rgba(180,83,9,0.08)",
+            border:     "1px solid rgba(180,83,9,0.3)",
+          }}
+        >
+          <h3 className="mb-1 text-sm font-semibold" style={{ color: "#fbbf24" }}>
+            Deaktiver tenant
+          </h3>
+          <p className="mb-4 text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
+            Community skjules fra discovery. Eksisterende medlemmer beholder tilgang.
           </p>
-          <DangerActions orgId={org.id} orgName={org.name} action="suspend" />
+          <SuspendAction orgId={org.id} />
         </div>
 
-        <div className="rounded-xl border border-red-800/40 bg-red-900/10 p-5">
-          <h3 className="mb-1 font-medium text-red-400">Slett organisasjon</h3>
-          <p className="mb-4 text-sm text-zinc-400">
-            Sletter organisasjonen og all tilhørende data permanent. Kan ikke angres.
+        {/* Delete */}
+        <div
+          className="rounded-xl p-5"
+          style={{
+            background: "rgba(220,38,38,0.07)",
+            border:     "1px solid rgba(220,38,38,0.25)",
+          }}
+        >
+          <h3 className="mb-1 text-sm font-semibold" style={{ color: "#f87171" }}>
+            Slett tenant permanent
+          </h3>
+          <p className="mb-4 text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
+            Sletter organisasjonen og all tilhørende data. Kan ikke angres.
           </p>
-          <DangerActions orgId={org.id} orgName={org.name} action="delete" />
+          <DeleteAction orgId={org.id} orgSlug={org.slug} />
         </div>
       </div>
     </div>
