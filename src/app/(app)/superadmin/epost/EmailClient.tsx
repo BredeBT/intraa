@@ -30,7 +30,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
   useEffect(() => { void fetchStats(); }, [fetchStats]);
 
   async function handleSend() {
-    if (!subject.trim() || !body.trim()) {
+    if (!subject?.trim() || !body?.trim()) {
       setError("Emne og innhold er påkrevd");
       return;
     }
@@ -135,7 +135,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
           </label>
           <input
             value={subject}
-            onChange={e => setSubject(e.target.value)}
+            onChange={e => { setSubject(e.target.value); if (error) setError(null); }}
             placeholder="Emne for eposten"
             className="w-full px-3 py-2.5 text-sm"
             style={inputStyle}
@@ -167,7 +167,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
           ) : (
             <textarea
               value={body}
-              onChange={e => setBody(e.target.value)}
+              onChange={e => { setBody(e.target.value); if (error) setError(null); }}
               placeholder="Skriv innholdet i eposten her…"
               rows={12}
               className="w-full resize-none px-3 py-2.5 text-sm"
@@ -175,7 +175,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
             />
           )}
           <p className="mt-1 text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
-            Linjeskift bevares i den ferdige eposten.
+            Ett linjeskift = ny linje. To linjeskift = nytt avsnitt.
           </p>
         </div>
 

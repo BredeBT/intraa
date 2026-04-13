@@ -5,13 +5,25 @@ import { resend } from "@/lib/resend";
 
 const EMAIL_FROM = process.env.EMAIL_FROM ?? "noreply@intraa.net";
 
-function buildHtml(content: string) {
-  // Escape HTML entities in user content before embedding
-  const safe = content
+function formatContent(text: string): string {
+  // Escape HTML entities first, then convert newlines to <br>/<p>
+  const escaped = text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
+  return escaped
+    .split("\n\n")
+    .map(
+      (paragraph) =>
+        `<p style="margin:0 0 16px;color:rgba(255,255,255,0.56);font-size:15px;line-height:1.7;">${
+          paragraph.split("\n").join("<br/>")
+        }</p>`
+    )
+    .join("");
+}
+
+function buildHtml(content: string) {
   return `<!DOCTYPE html>
 <html>
 <body style="margin:0;padding:0;background:#0d0d14;font-family:sans-serif;">
@@ -20,7 +32,7 @@ function buildHtml(content: string) {
       <div style="width:36px;height:36px;border-radius:8px;background:#6c47ff;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;">I</div>
       <span style="color:white;font-size:18px;font-weight:600;">Intraa</span>
     </div>
-    <div style="color:rgba(255,255,255,0.56);font-size:15px;line-height:1.7;white-space:pre-wrap;">${safe}</div>
+    ${formatContent(content)}
     <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:24px 0;" />
     <p style="color:rgba(255,255,255,0.25);font-size:12px;margin:0;">
       Du mottar denne eposten fordi du er registrert på intraa.net.<br/>
