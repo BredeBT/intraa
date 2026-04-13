@@ -134,6 +134,7 @@ export default function ClickerPage() {
         const coins        = isFinite(cachedCoins) ? cachedCoins : profileCoins;
         setProfile(parsed);
         serverCoins.current = coins;
+        console.log("[setCoins #1 INIT localStorage]", { coins, cachedCoins, profileCoins });
         setDisplayCoins(coins);
       }
       const u = ls.get(CK.upgrades);
@@ -177,6 +178,7 @@ export default function ClickerPage() {
         const safeLocalDelta = isFinite(localDelta.current) ? localDelta.current : 0;
         localDelta.current   = safeLocalDelta;
         setProfile(data.profile);
+        console.log("[setCoins #2 DB-fetch]", { dbCoins, safeLocalDelta, result: dbCoins + safeLocalDelta, rawCoins: data.profile.coins });
         setDisplayCoins(dbCoins + safeLocalDelta);
         setTotalClicks(Math.max(data.profile.totalClicks, totalClicksRef.current));
         setUpgrades(data.upgrades);
@@ -197,7 +199,9 @@ export default function ClickerPage() {
     const tick = coinsPerSecond * (hasFanpass ? 2 : 1);
     const id = setInterval(() => {
       localDelta.current += tick;
-      setDisplayCoins(Math.floor(serverCoins.current + localDelta.current));
+      const val3 = Math.floor(serverCoins.current + localDelta.current);
+      if (val3 < 5) console.warn("[setCoins #3 PASSIV — LITEN VERDI!]", { serverCoins: serverCoins.current, localDelta: localDelta.current, tick, val3 });
+      setDisplayCoins(val3);
     }, 1000);
     return () => clearInterval(id);
   }, [coinsPerSecond, hasFanpass]);
@@ -216,10 +220,23 @@ export default function ClickerPage() {
         });
         if (res.ok) {
           const body = await res.json() as { coins: number };
+          const prevServer = serverCoins.current;
+          const prevDelta  = localDelta.current;
           localDelta.current  -= delta;
           clickCount.current  -= clicks;
           serverCoins.current = body.coins;
+          console.log("[SYNC #4 respons]", {
+            sentDelta: delta,
+            bodyCoins: body.coins,
+            prevServer,
+            prevDelta,
+            newServer: serverCoins.current,
+            newDelta:  localDelta.current,
+            nextDisplay: serverCoins.current + localDelta.current,
+          });
           setTotalClicks((t) => t + clicks);
+        } else {
+          console.warn("[SYNC #4 FEIL]", { status: res.status });
         }
       } catch { /* retry next interval */ }
     };
@@ -275,7 +292,9 @@ export default function ClickerPage() {
     const cpc = profile.coinsPerClick * multiplier * (hasFanpass ? 1.5 : 1);
     localDelta.current += cpc;
     clickCount.current += 1;
-    setDisplayCoins(serverCoins.current + localDelta.current);
+    const val5 = serverCoins.current + localDelta.current;
+    if (val5 < 5) console.warn("[setCoins #5 KLIKK — LITEN VERDI!]", { serverCoins: serverCoins.current, localDelta: localDelta.current, cpc });
+    setDisplayCoins(val5);
     if (!isMobile) {
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left + (Math.random() * 40 - 20);
@@ -302,6 +321,7 @@ export default function ClickerPage() {
     localDelta.current = 0;
     clickCount.current = 0;
     serverCoins.current = Math.max(0, serverCoins.current + delta - cost);
+    console.log("[setCoins #6 KJØP optimistisk]", { serverCoins: serverCoins.current, delta, cost });
     setDisplayCoins(serverCoins.current + localDelta.current);
     const res = await fetch("/api/clicker/upgrade", {
       method:  "POST",
@@ -322,6 +342,7 @@ export default function ClickerPage() {
       serverCoins.current = serverCoins.current - delta + cost;
       localDelta.current  += delta;
       clickCount.current  += clicks;
+      console.warn("[setCoins #7 KJØP rollback]", { serverCoins: serverCoins.current, delta, cost });
       setDisplayCoins(serverCoins.current + localDelta.current);
     }
     setBuying(null);
@@ -342,6 +363,7 @@ export default function ClickerPage() {
       serverCoins.current = 0;
       localDelta.current  = 0;
       clickCount.current  = 0;
+      console.log("[setCoins #8 PRESTIGE — reset til 0]");
       setDisplayCoins(0);
       setUpgrades([]);
       clearCache();
