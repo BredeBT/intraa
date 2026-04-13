@@ -15,7 +15,7 @@ export async function PATCH(
   if (!caller?.isSuperAdmin) return NextResponse.json({ error: "Ingen tilgang" }, { status: 403 });
 
   const { orgId } = await params;
-  const body = await request.json() as { name?: string; slug?: string; plan?: string; description?: string | null; suspended?: boolean };
+  const body = await request.json() as { name?: string; slug?: string; plan?: string; description?: string | null; joinType?: string; suspended?: boolean };
 
   const org = await db.organization.findUnique({ where: { id: orgId } });
   if (!org) return NextResponse.json({ error: "Ikke funnet" }, { status: 404 });
@@ -28,10 +28,11 @@ export async function PATCH(
   const updated = await db.organization.update({
     where: { id: orgId },
     data:  {
-      ...(body.name  !== undefined ? { name: body.name!.trim() }      : {}),
-      ...(body.slug  !== undefined ? { slug: body.slug }              : {}),
-      ...(body.plan  !== undefined ? { plan: body.plan as never }     : {}),
-      ...("description" in body   ? { description: body.description } : {}),
+      ...(body.name     !== undefined ? { name: body.name!.trim() }      : {}),
+      ...(body.slug     !== undefined ? { slug: body.slug }              : {}),
+      ...(body.plan     !== undefined ? { plan: body.plan as never }     : {}),
+      ...("description" in body      ? { description: body.description } : {}),
+      ...(body.joinType !== undefined ? { joinType: body.joinType }      : {}),
     },
   });
 

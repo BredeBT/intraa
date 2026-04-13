@@ -1,7 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { db } from "@/server/db";
+import { db }   from "@/server/db";
 import OrgSettingsForm from "./OrgSettingsForm";
+
+export const dynamic  = "force-dynamic";
+export const revalidate = 0;
 
 export default async function InnstillingerPage({ params }: { params: Promise<{ orgId: string }> }) {
   const session = await auth();
@@ -13,10 +16,19 @@ export default async function InnstillingerPage({ params }: { params: Promise<{ 
   if (!org) notFound();
 
   return (
-    <div className="px-8 py-8">
-      <h2 className="mb-1 text-lg font-semibold text-white">Innstillinger</h2>
-      <p className="mb-6 text-sm text-zinc-500">Rediger grunnleggende informasjon om organisasjonen.</p>
-      <OrgSettingsForm org={{ id: org.id, name: org.name, slug: org.slug, plan: org.plan, description: org.description ?? null }} />
+    <div className="px-8 py-8" style={{ maxWidth: 680 }}>
+      <OrgSettingsForm
+        org={{
+          id:          org.id,
+          name:        org.name,
+          slug:        org.slug,
+          plan:        org.plan,
+          description: org.description ?? null,
+          type:        org.type,
+          joinType:    org.joinType,
+          createdAt:   org.createdAt.toISOString(),
+        }}
+      />
     </div>
   );
 }
