@@ -90,7 +90,7 @@ function RichCommunityCard({ c, index }: { c: Community; index: number }) {
       <div
         className="relative h-[100px] w-full"
         style={c.bannerUrl
-          ? { backgroundImage: `url(${c.bannerUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+          ? { backgroundImage: `url(${c.bannerUrl})`, backgroundSize: "cover", backgroundPosition: "top" }
           : { background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)" }
         }
       >
@@ -163,7 +163,7 @@ function CompactCommunityCard({ c }: { c: Community }) {
       <div
         className="h-24 w-full"
         style={c.bannerUrl
-          ? { backgroundImage: `url(${c.bannerUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+          ? { backgroundImage: `url(${c.bannerUrl})`, backgroundSize: "cover", backgroundPosition: "top" }
           : { background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }
         }
       />

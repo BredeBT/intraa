@@ -20,6 +20,7 @@ export default async function HomePage() {
             id: true, slug: true, name: true, type: true,
             _count:         { select: { memberships: true } },
             theme:          { select: { logoUrl: true, bannerUrl: true } },
+            streamSettings: { select: { twitchChannel: true } },
             streamSessions: { where: { endedAt: null }, select: { id: true }, take: 1 },
           },
         },
@@ -31,6 +32,7 @@ export default async function HomePage() {
       include: {
         _count:         { select: { memberships: true } },
         theme:          { select: { logoUrl: true, bannerUrl: true } },
+        streamSettings: { select: { twitchChannel: true } },
         streamSessions: { where: { endedAt: null }, select: { id: true }, take: 1 },
       },
       orderBy: { memberships: { _count: "desc" } },
@@ -99,7 +101,7 @@ export default async function HomePage() {
       memberCount: m.organization._count.memberships,
       postCount:   postCountMap.get(m.organization.id) ?? 0,
       onlineCount: 0, // TODO: Supabase Presence
-      isLive:      m.organization.streamSessions.length > 0,
+      isLive:      m.organization.streamSessions.length > 0 && !!m.organization.streamSettings?.twitchChannel?.trim(),
       logoUrl:     m.organization.theme?.logoUrl ?? null,
       bannerUrl:   m.organization.theme?.bannerUrl ?? null,
     }));
@@ -114,7 +116,7 @@ export default async function HomePage() {
       memberCount: c._count.memberships,
       postCount:   0,
       onlineCount: 0,
-      isLive:      c.streamSessions.length > 0,
+      isLive:      c.streamSessions.length > 0 && !!c.streamSettings?.twitchChannel?.trim(),
       logoUrl:     c.theme?.logoUrl ?? null,
       bannerUrl:   c.theme?.bannerUrl ?? null,
     }));
