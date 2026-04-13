@@ -76,10 +76,33 @@ export async function POST(req: NextRequest) {
       totalClicks:      { increment: safeClicks },
       lastSeen:         new Date(),
     },
+    select: {
+      coins:          true,
+      coinsPerClick:  true,
+      coinsPerSecond: true,
+      totalClicks:    true,
+      allTimeHighCoins: true,
+      prestigeWorld:  true,
+      prestigeLevel:  true,
+      permanentBonus: true,
+      totalPrestige:  true,
+    },
   });
 
+  console.log("[Upgrade API] coins fra DB:", updatedProfile.coins);
+
   return NextResponse.json({
-    profile:  { ...updatedProfile, coins: Number(updatedProfile.coins) },
+    profile: {
+      coins:          Number(updatedProfile.coins),
+      coinsPerClick:  Number(updatedProfile.coinsPerClick),
+      coinsPerSecond: Number(updatedProfile.coinsPerSecond),
+      totalClicks:    updatedProfile.totalClicks,
+      allTimeHighCoins: Number(updatedProfile.allTimeHighCoins),
+      prestigeWorld:  updatedProfile.prestigeWorld,
+      prestigeLevel:  updatedProfile.prestigeLevel,
+      permanentBonus: Number(updatedProfile.permanentBonus),
+      totalPrestige:  updatedProfile.totalPrestige,
+    },
     upgrades: allUpgrades,
   });
 }
