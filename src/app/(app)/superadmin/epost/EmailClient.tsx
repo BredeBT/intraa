@@ -30,6 +30,14 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
   useEffect(() => { void fetchStats(); }, [fetchStats]);
 
   async function handleSend() {
+    if (!subject.trim() || !body.trim()) {
+      setError("Emne og innhold er påkrevd");
+      return;
+    }
+    if (audience === "tenant" && !orgId) {
+      setError("Velg en tenant");
+      return;
+    }
     setSending(true);
     setError(null);
     try {
@@ -167,7 +175,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
             />
           )}
           <p className="mt-1 text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
-            Linjeskift konverteres til &lt;br&gt; automatisk.
+            Linjeskift bevares i den ferdige eposten.
           </p>
         </div>
 
