@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, Suspense } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Rss, Ticket, Folder, Settings,
   Search, CalendarDays, CheckSquare, HelpCircle, Menu, X,
@@ -407,6 +407,27 @@ const NO_ORG_PATHS = [
   "/meldinger", "/bytt-org", "/profil", "/soek",
 ];
 
+// ─── Superadmin impersonate banner ────────────────────────────────────────────
+
+function SuperAdminBanner() {
+  const params = useSearchParams();
+  if (params.get("sa") !== "1") return null;
+  return (
+    <div
+      className="sticky top-0 z-40 flex items-center justify-between px-4 py-2"
+      style={{ background: "#6c47ff", borderBottom: "1px solid rgba(255,255,255,0.15)" }}
+    >
+      <span className="text-xs font-semibold text-white">Superadmin-modus — du ser denne siden som bruker</span>
+      <Link
+        href="/superadmin/tenants"
+        className="flex items-center gap-1 rounded-lg bg-white/15 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-white/25"
+      >
+        ← Tilbake til superadmin
+      </Link>
+    </div>
+  );
+}
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname     = usePathname();
   const router       = useRouter();
@@ -598,7 +619,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
+        <main className="min-w-0 flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">
+          {user?.isSuperAdmin && (
+            <Suspense>
+              <SuperAdminBanner />
+            </Suspense>
+          )}
+          {children}
+        </main>
       </div>
 
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
