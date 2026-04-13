@@ -220,20 +220,17 @@ export default function ClickerPage() {
         });
         if (res.ok) {
           const body = await res.json() as { coins: number };
-          const prevServer = serverCoins.current;
-          const prevDelta  = localDelta.current;
-          localDelta.current  -= delta;
-          clickCount.current  -= clicks;
-          serverCoins.current = body.coins;
-          console.log("[SYNC #4 respons]", {
+          console.log("[SYNC #4 respons — server bekreftet]", {
             sentDelta: delta,
             bodyCoins: body.coins,
-            prevServer,
-            prevDelta,
-            newServer: serverCoins.current,
-            newDelta:  localDelta.current,
-            nextDisplay: serverCoins.current + localDelta.current,
+            serverCoinsBefore: serverCoins.current,
+            localDeltaBefore:  localDelta.current,
           });
+          // IKKE overskriv serverCoins med body.coins —
+          // klienten er fasit under aktiv spilling.
+          // Trekk kun fra sendt delta lokalt.
+          localDelta.current -= delta;
+          clickCount.current -= clicks;
           setTotalClicks((t) => t + clicks);
         } else {
           console.warn("[SYNC #4 FEIL]", { status: res.status });

@@ -23,12 +23,16 @@ export async function POST(req: NextRequest) {
 
   const { db } = await import("@/server/db");
 
-  // Check profile exists
+  console.log("[Sync API] userId:", session.user.id, "orgId:", orgId, "delta:", delta, "clicks:", safeClicks);
+
   const existing = await db.clickerProfile.findUnique({
     where: { userId_organizationId: { userId: session.user.id, organizationId: orgId } },
   });
 
+  console.log("[Sync API] existing profile found:", !!existing, "existing.coins:", existing ? Number(existing.coins) : "N/A");
+
   if (!existing) {
+    console.error("[Sync API] INGEN PROFIL FUNNET for userId:", session.user.id, "orgId:", orgId);
     const created = await db.clickerProfile.create({
       data: {
         userId:         session.user.id,
@@ -36,26 +40,26 @@ export async function POST(req: NextRequest) {
         coins:          Math.max(0, Math.floor(delta)),
         totalClicks:    safeClicks,
       },
+      select: { coins: true },
     });
+    console.log("[Sync API] Opprettet ny profil, coins:", Number(created.coins));
     return NextResponse.json({ coins: Number(created.coins) });
   }
 
-  // Dynamic cap — same formula as upgrade route:
-  // 5 minutes of passive + all claimed clicks + small buffer
-  const cps       = Number(existing.coinsPerSecond);
-  const cpc       = Number(existing.coinsPerClick);
-  const maxDelta  = (cps * 300) + (safeClicks * cpc) + 10_000;
+  // Dynamic cap — 5 minutes of passive + all claimed clicks + small buffer
+  const cps      = Number(existing.coinsPerSecond);
+  const cpc      = Number(existing.coinsPerClick);
+  const maxDelta = (cps * 300) + (safeClicks * cpc) + 10_000;
   const safeCoins = Math.min(maxDelta, Math.max(0, Math.floor(delta)));
 
-  console.log("[SYNC] delta:", delta, "safeCoins:", safeCoins, "maxDelta:", maxDelta);
+  console.log("[Sync API] delta:", delta, "safeCoins:", safeCoins, "maxDelta:", maxDelta, "currentCoins:", Number(existing.coins));
 
-  // Use explicit value to avoid NULL + increment = NULL in PostgreSQL
-  const currentCoins  = Number(existing.coins)       ?? 0;
-  const currentClicks = existing.totalClicks          ?? 0;
+  const currentCoins  = Number(existing.coins) || 0;
+  const currentClicks = existing.totalClicks    || 0;
   const newCoins      = currentCoins  + safeCoins;
   const newClicks     = currentClicks + safeClicks;
 
-  const currentHigh = Number(existing.allTimeHighCoins) ?? 0;
+  const currentHigh = Number(existing.allTimeHighCoins) || 0;
   const updated = await db.clickerProfile.update({
     where: { userId_organizationId: { userId: session.user.id, organizationId: orgId } },
     data: {
@@ -67,5 +71,8 @@ export async function POST(req: NextRequest) {
     select: { coins: true },
   });
 
-  return NextResponse.json({ coins: Number(updated.coins) });
+  const returnedCoins = Number(updated.coins);
+  console.log("[Sync API] Oppdatert coins:", returnedCoins);
+
+  return NextResponse.json({ coins: returnedCoins });
 }
