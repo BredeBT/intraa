@@ -129,15 +129,21 @@ export default function ClickerPage() {
       const p = ls.get(CK.profile);
       if (p) {
         const parsed = JSON.parse(p) as ClickerProfile;
+        // Guard against null/NaN from cache written by old buggy code
+        const cachedCoins = parseFloat(ls.get(CK.coins) ?? "");
+        const profileCoins = typeof parsed.coins === "number" ? parsed.coins : 0;
+        const coins = isFinite(cachedCoins) ? cachedCoins : profileCoins;
         setProfile(parsed);
-        const coins = parseFloat(ls.get(CK.coins) ?? String(parsed.coins));
         serverCoins.current = coins;
         setDisplayCoins(coins);
       }
       const u = ls.get(CK.upgrades);
       if (u) setUpgrades(JSON.parse(u) as UpgradeState[]);
       const tc = ls.get(CK.totalClicks);
-      if (tc) setTotalClicks(parseInt(tc, 10));
+      if (tc) {
+        const parsed = parseInt(tc, 10);
+        if (isFinite(parsed)) setTotalClicks(parsed);
+      }
     } catch { /* stale/corrupt cache — ignore */ }
   }, []);
 
@@ -179,14 +185,18 @@ export default function ClickerPage() {
         // DB is authoritative on initial load — always use dbCoins as baseline.
         // Local cache was only for instant display before DB responded.
         // dbCoins already includes offline income (server credited it server-side).
-        const dbCoins = data.profile.coins;
+        const dbCoins = typeof data.profile.coins === "number" && isFinite(data.profile.coins)
+          ? data.profile.coins
+          : 0;
         serverCoins.current = dbCoins;
         // localDelta holds clicks made between mount and now — keep them.
+        const safeLocalDelta = isFinite(localDelta.current) ? localDelta.current : 0;
+        localDelta.current   = safeLocalDelta;
 
-        console.log("[Load] dbCoins:", dbCoins, "offlineEarned:", data.offlineEarned, "localDelta:", localDelta.current);
+        console.log("[Load] dbCoins:", dbCoins, "offlineEarned:", data.offlineEarned, "localDelta:", safeLocalDelta);
 
         setProfile(data.profile);
-        setDisplayCoins(serverCoins.current + localDelta.current);
+        setDisplayCoins(dbCoins + safeLocalDelta);
         setTotalClicks(Math.max(data.profile.totalClicks, totalClicksRef.current));
         setUpgrades(data.upgrades);
         setActiveEvent(data.activeEvent);
