@@ -78,5 +78,8 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json({ profile: updatedProfile, upgrades: allUpgrades });
+  return NextResponse.json({
+    profile:  { ...updatedProfile, coins: Number(updatedProfile.coins) },
+    upgrades: allUpgrades,
+  });
 }

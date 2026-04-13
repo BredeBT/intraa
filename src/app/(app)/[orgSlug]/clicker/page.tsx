@@ -163,16 +163,16 @@ export default function ClickerPage() {
         if (data.theme?.logoUrl) setLogoUrl(data.theme.logoUrl);
       })
       .catch(() => null);
-    fetch("/api/loyalty/stats")
+  }, []);
+
+  useEffect(() => {
+    if (!orgId) return;
+    fetch(`/api/loyalty/stats?orgId=${orgId}`)
       .then((r) => r.ok ? r.json() : null)
       .then((data: { fanpass: { status: string; cancelledAt: string | null } | null } | null) => {
         setHasFanpass(data?.fanpass?.status === "ACTIVE" && !data.fanpass.cancelledAt);
       })
       .catch(() => null);
-  }, []);
-
-  useEffect(() => {
-    if (!orgId) return;
     fetch(`/api/clicker?orgId=${orgId}`)
       .then((r) => r.json())
       .then((data: { profile: ClickerProfile; upgrades: UpgradeState[]; offlineEarned: number; activeEvent: ActiveEvent | null }) => {
@@ -290,18 +290,30 @@ export default function ClickerPage() {
   // ── Buy upgrade ───────────────────────────────────────────────────────────
   async function buyUpgrade(upgradeId: string) {
     if (!orgId || !profile || buying) return;
+
+    // Calculate cost before doing anything
+    const owned        = upgrades.find((u) => u.upgradeId === upgradeId);
+    const currentLevel = owned?.level ?? 0;
+    const cost         = getUpgradeCost(upgradeId, currentLevel);
+
+    // Guard: not enough coins (local view is authoritative for UX)
+    if (displayCoins < cost) return;
+
     setBuying(upgradeId);
 
-    // Capture and clear the pending delta — send it atomically with the upgrade
-    // request so the server can apply it before checking the coin balance.
-    // This avoids the pre-buy sync race and the MAX_COINS_PER_SYNC truncation bug.
+    // Capture pending delta to send atomically with the upgrade request.
     const delta  = localDelta.current;
     const clicks = clickCount.current;
     localDelta.current = 0;
     clickCount.current = 0;
 
-    console.log("[Buy] upgradeId:", upgradeId);
-    console.log("[Buy] serverCoins:", serverCoins.current, "localDelta sent:", delta, "displayCoins:", displayCoins);
+    // Deduct cost IMMEDIATELY in local state — don't wait for server.
+    // serverCoins absorbs the pending delta then subtracts cost.
+    serverCoins.current = Math.max(0, serverCoins.current + delta - cost);
+    setDisplayCoins(serverCoins.current + localDelta.current);
+
+    console.log("[Buy] upgradeId:", upgradeId, "cost:", cost, "delta sent:", delta);
+    console.log("[Buy] serverCoins after local deduction:", serverCoins.current);
 
     const res = await fetch("/api/clicker/upgrade", {
       method:  "POST",
@@ -313,21 +325,24 @@ export default function ClickerPage() {
 
     if (res.ok) {
       const data = await res.json() as { profile: ClickerProfile; upgrades: UpgradeState[] };
-      console.log("[Buy] new serverCoins from DB:", data.profile.coins, "remaining localDelta:", localDelta.current);
-      setProfile(data.profile);
-      serverCoins.current = data.profile.coins;
-      // localDelta may have new ticks that arrived during the API call — keep them.
-      const total = data.profile.coins + localDelta.current;
-      setDisplayCoins(total);
+      console.log("[Buy] DB coins:", data.profile.coins, "local serverCoins:", serverCoins.current, "localDelta:", localDelta.current);
+      // Update profile stats (coinsPerClick, coinsPerSecond) — NOT coins (local is authoritative)
+      setProfile((prev) => prev ? {
+        ...prev,
+        coinsPerClick:  data.profile.coinsPerClick,
+        coinsPerSecond: data.profile.coinsPerSecond,
+        totalClicks:    data.profile.totalClicks,
+      } : prev);
       setUpgrades(data.upgrades);
-      writeCache(data.profile, data.upgrades, total);
-      console.log("[Buy] displayCoins after:", total);
+      writeCache(data.profile, data.upgrades, serverCoins.current + localDelta.current);
     } else {
       const errText = await res.text().catch(() => "(unreadable)");
       console.error("[Buy] purchase failed — status:", res.status, "body:", errText);
-      // Purchase failed — restore delta so ticks aren't lost.
-      localDelta.current += delta;
-      clickCount.current += clicks;
+      // Undo local deduction and restore delta
+      serverCoins.current = serverCoins.current - delta + cost;
+      localDelta.current  += delta;
+      clickCount.current  += clicks;
+      setDisplayCoins(serverCoins.current + localDelta.current);
     }
     setBuying(null);
   }
