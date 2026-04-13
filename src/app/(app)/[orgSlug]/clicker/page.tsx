@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { WORLDS, getWorldUpgrades, getUpgradeCost } from "@/lib/clickerUpgrades";
-import { Coins, Zap, Clock, Trophy, X, MessageSquare, Send } from "lucide-react";
+import { Zap, Clock, Trophy, X, MessageSquare, Send, Lock } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -285,7 +285,7 @@ export default function ClickerPage() {
         const next = f.length >= 8 ? f.slice(1) : f;
         return [...next, { id, x, y, value: cpc }];
       });
-      setTimeout(() => setFloats((f) => f.filter((fl) => fl.id !== id)), 900);
+      setTimeout(() => setFloats((f) => f.filter((fl) => fl.id !== id)), 800);
     }
   }, [profile, activeEvent, hasFanpass, isMobile]);
 
@@ -374,23 +374,23 @@ export default function ClickerPage() {
   // ── Loading ───────────────────────────────────────────────────────────────
   if (!profile) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+      <div className="flex h-full items-center justify-center" style={{ background: "#0d0d14" }}>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" style={{ borderColor: "#6c47ff", borderTopColor: "transparent" }} />
       </div>
     );
   }
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  const world        = (profile.prestigeWorld ?? 1) as 1 | 2 | 3;
-  const worldDef     = WORLDS[world];
-  const prestigeCost = worldDef.prestigeCost;
-  const prestigePct  = Math.min(100, (displayCoins / prestigeCost) * 100);
-  const canPrestige  = displayCoins >= prestigeCost && world < 3;
-  const nextWorld    = Math.min(world + 1, 3) as 1 | 2 | 3;
-  const multiplier   = activeEvent?.type === "multiplier" ? activeEvent.multiplier : 1;
+  const world         = (profile.prestigeWorld ?? 1) as 1 | 2 | 3;
+  const worldDef      = WORLDS[world];
+  const prestigeCost  = worldDef.prestigeCost;
+  const prestigePct   = Math.min(100, (displayCoins / prestigeCost) * 100);
+  const canPrestige   = displayCoins >= prestigeCost && world < 3;
+  const nextWorld     = Math.min(world + 1, 3) as 1 | 2 | 3;
+  const multiplier    = activeEvent?.type === "multiplier" ? activeEvent.multiplier : 1;
   const totalPrestige = profile.totalPrestige;
-  const effectiveCpc = profile.coinsPerClick * multiplier * (hasFanpass ? 1.5 : 1);
-  const effectiveCps = profile.coinsPerSecond * (hasFanpass ? 2 : 1);
+  const effectiveCpc  = profile.coinsPerClick * multiplier * (hasFanpass ? 1.5 : 1);
+  const effectiveCps  = profile.coinsPerSecond * (hasFanpass ? 2 : 1);
 
   const worldUpgrades = getWorldUpgrades(world);
   const upgradeRows = worldUpgrades.map((def) => {
@@ -405,77 +405,95 @@ export default function ClickerPage() {
     return a.cost - b.cost;
   });
 
-  const worldGradients: Record<string, string> = {
-    violet: "from-violet-600 to-indigo-700",
-    amber:  "from-amber-500 to-orange-600",
-    cyan:   "from-cyan-500 to-blue-600",
-  };
-  const btnGradient = worldGradients[worldDef.color] ?? worldGradients.violet;
-
-  const MEDAL_CLS = ["text-amber-400", "text-zinc-300", "text-amber-700"];
-  const AVATAR_CLS = [
-    "ring-1 ring-amber-500/60  bg-amber-500/20",
-    "ring-1 ring-zinc-400/40   bg-zinc-500/20",
-    "ring-1 ring-amber-700/40  bg-amber-800/20",
-  ];
-
-  // Prestige bar color based on progress
-  const barCls = prestigePct >= 80
-    ? "bg-gradient-to-r from-amber-400 to-orange-500"
-    : prestigePct >= 50
-    ? "bg-gradient-to-r from-violet-500 to-amber-400"
-    : "bg-violet-500";
-  const barGlow = prestigePct >= 80 ? "shadow-[0_0_8px_rgba(251,191,36,0.5)]" : "";
-
   // ── Panels ────────────────────────────────────────────────────────────────
 
   const WorldsPanel = (
     <div className="flex flex-col gap-1.5">
-      <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Verdener</p>
+      <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>
+        Verdener
+      </p>
+
       {([
-        { n: 1 as const, label: "Tech",    accentCls: "border-violet-600/40 bg-violet-600/10", hereCls: "text-violet-400" },
-        { n: 2 as const, label: "Eventyr", accentCls: "border-amber-600/40  bg-amber-600/10",  hereCls: "text-amber-400"  },
-        { n: 3 as const, label: "Romfart", accentCls: "border-cyan-600/40   bg-cyan-600/10",   hereCls: "text-cyan-400"   },
-      ]).map(({ n, label, accentCls, hereCls }) => {
+        { n: 1 as const, label: "Tech"    },
+        { n: 2 as const, label: "Eventyr" },
+        { n: 3 as const, label: "Romfart" },
+      ]).map(({ n, label }) => {
         const isActive  = world === n;
         const unlocked  = n === 1 || (n === 2 && totalPrestige >= 1) || (n === 3 && totalPrestige >= 2);
         const completed = (n === 1 && totalPrestige >= 1) || (n === 2 && totalPrestige >= 2);
         const wDef      = WORLDS[n];
         return (
-          <div key={n} className={`rounded-lg border p-2.5 transition-all ${
-            isActive  ? `border ${accentCls}`
-            : unlocked ? "border-zinc-800 bg-zinc-900/60 opacity-70"
-            : "border-zinc-800/50 bg-zinc-900/30 opacity-25"
-          }`}>
+          <div
+            key={n}
+            style={
+              isActive
+                ? { background: "rgba(108,71,255,0.13)", border: "1px solid rgba(108,71,255,0.38)", borderRadius: 10 }
+                : unlocked
+                ? { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, opacity: 0.7 }
+                : { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 10, opacity: 0.5 }
+            }
+            className="p-2.5"
+          >
             <div className="flex items-center gap-2">
-              <span className="text-lg leading-none">{unlocked ? wDef.emoji : "🔒"}</span>
+              <span className="text-base leading-none">
+                {unlocked ? wDef.emoji : <Lock className="h-3.5 w-3.5" style={{ color: "rgba(255,255,255,0.3)" }} />}
+              </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-semibold text-white leading-tight">Verden {n} — {label}</p>
-                {!unlocked && <p className="text-[10px] text-zinc-500 leading-tight">Lås opp med prestige</p>}
-                {completed  && <p className="text-[10px] text-emerald-400 leading-tight">Fullfort</p>}
-                {isActive   && <p className={`text-[10px] leading-tight ${hereCls}`}>Du er her</p>}
+                <p
+                  className="truncate text-xs leading-tight"
+                  style={{
+                    fontWeight: 500,
+                    color: isActive ? "#a78bfa" : "rgba(255,255,255,0.5)",
+                  }}
+                >
+                  Verden {n} — {label}
+                </p>
+                {!unlocked && (
+                  <p className="text-[10px] leading-tight" style={{ color: "rgba(255,255,255,0.25)" }}>
+                    Lås opp med prestige
+                  </p>
+                )}
+                {completed && (
+                  <p className="text-[10px] leading-tight" style={{ color: "#34d399" }}>Fullført</p>
+                )}
+                {isActive && !completed && (
+                  <p className="text-[10px] leading-tight" style={{ color: "#a78bfa" }}>Du er her</p>
+                )}
               </div>
             </div>
+
             {isActive && world < 3 && (
               <div className="mt-2">
-                <div className="mb-0.5 flex justify-between text-[9px] text-zinc-600">
-                  <span>Til prestige</span>
-                  <span>{fmt(Math.max(0, prestigeCost - displayCoins))}</span>
-                </div>
-                <div className="h-1 overflow-hidden rounded-full bg-zinc-800">
-                  <div className={`h-full rounded-full transition-all ${barCls}`} style={{ width: `${prestigePct.toFixed(1)}%` }} />
+                <div
+                  className="h-[3px] overflow-hidden rounded-full"
+                  style={{ background: "rgba(255,255,255,0.06)" }}
+                >
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${prestigePct.toFixed(2)}%`, background: "#6c47ff" }}
+                  />
                 </div>
               </div>
             )}
           </div>
         );
       })}
-      <div className="mt-1 rounded-lg border border-dashed border-zinc-800 p-2.5 opacity-25">
+
+      {/* World 4 — coming soon */}
+      <div
+        style={{
+          background: "rgba(255,255,255,0.01)",
+          border: "1px dashed rgba(255,255,255,0.1)",
+          borderRadius: 10,
+          opacity: 0.3,
+        }}
+        className="p-2.5"
+      >
         <div className="flex items-center gap-2">
           <span className="text-base">❓</span>
           <div>
-            <p className="text-xs font-semibold text-zinc-500 leading-tight">Verden 4</p>
-            <p className="text-[10px] text-zinc-600 leading-tight">Kommer snart</p>
+            <p className="text-xs leading-tight" style={{ color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>Verden 4</p>
+            <p className="text-[10px] leading-tight" style={{ color: "rgba(255,255,255,0.2)" }}>Kommer snart</p>
           </div>
         </div>
       </div>
@@ -486,15 +504,18 @@ export default function ClickerPage() {
     <div className="flex w-full max-w-sm flex-col items-center">
       {/* Offline toast */}
       {offlineMsg !== null && (
-        <div className="mb-4 w-full flex items-start gap-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 p-3">
+        <div
+          className="mb-4 w-full flex items-start gap-3 p-3 rounded-xl"
+          style={{ background: "rgba(108,71,255,0.1)", border: "1px solid rgba(108,71,255,0.25)" }}
+        >
           <span className="text-xl">😴</span>
           <div className="flex-1">
             <p className="text-sm font-semibold text-white">Velkommen tilbake!</p>
-            <p className="text-xs text-zinc-400">
-              +<span className="font-bold text-indigo-400">{fmt(offlineMsg)}</span> coins mens du var borte.
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+              +<span className="font-bold" style={{ color: "#a78bfa" }}>{fmt(offlineMsg)}</span> coins mens du var borte.
             </p>
           </div>
-          <button onClick={() => setOfflineMsg(null)} className="text-zinc-500 hover:text-white">
+          <button onClick={() => setOfflineMsg(null)} style={{ color: "rgba(255,255,255,0.3)" }} className="hover:text-white transition-colors">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -502,84 +523,128 @@ export default function ClickerPage() {
 
       {/* Event banner */}
       {activeEvent && activeEvent.type === "multiplier" && new Date(activeEvent.endsAt) > new Date() && (
-        <div className="mb-4 w-full flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+        <div
+          className="mb-4 w-full flex items-center gap-2 rounded-xl px-3 py-2"
+          style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)" }}
+        >
           <span>⚡</span>
-          <p className="text-sm text-amber-300">
+          <p className="text-sm" style={{ color: "#fcd34d" }}>
             <span className="font-bold">{activeEvent.multiplier}x multiplier</span> aktiv!
           </p>
         </div>
       )}
 
       {/* Coin counter */}
-      <div className="mb-1 flex items-center gap-2">
-        <Coins className="h-8 w-8 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
-        <span className="text-4xl font-bold tabular-nums text-white md:text-5xl">
+      <div className="mb-1 flex items-baseline gap-2">
+        <span
+          className="tabular-nums text-white leading-none"
+          style={{ fontSize: 52, fontWeight: 700, letterSpacing: "-2px" }}
+        >
           {fmt(displayCoins)}
         </span>
-        <span className="text-xl text-zinc-400">coins</span>
       </div>
-      {profile.allTimeHighCoins > 0 && (
-        <p className="mb-1 text-xs text-zinc-600">
-          Rekord: <span className="text-zinc-500">{fmt(profile.allTimeHighCoins)}</span>
-        </p>
-      )}
+      <p className="mb-1 text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>coins</p>
 
-      {/* Badges */}
+      {/* Fanpass badges */}
       {(hasFanpass || profile.permanentBonus > 1) && (
         <div className="mb-3 flex flex-wrap justify-center gap-1.5">
           {hasFanpass && (
             <>
-              <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-xs text-violet-300">Fanpass 1.5x klikk</span>
-              <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-xs text-violet-300">Fanpass 2x passiv</span>
+              <span
+                className="rounded-full px-2.5 py-0.5 text-xs"
+                style={{ background: "rgba(108,71,255,0.2)", color: "#a78bfa" }}
+              >
+                Fanpass 1.5x klikk
+              </span>
+              <span
+                className="rounded-full px-2.5 py-0.5 text-xs"
+                style={{ background: "rgba(108,71,255,0.2)", color: "#a78bfa" }}
+              >
+                Fanpass 2x passiv
+              </span>
             </>
           )}
           {profile.permanentBonus > 1 && (
-            <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-300">
+            <span
+              className="rounded-full px-2.5 py-0.5 text-xs"
+              style={{ background: "rgba(52,211,153,0.15)", color: "#34d399" }}
+            >
               +{((profile.permanentBonus - 1) * 100).toFixed(0)}% prestige
             </span>
           )}
         </div>
       )}
 
-      {/* Stats */}
-      <div className="mb-6 flex gap-5 text-sm text-zinc-500">
-        <span className="flex items-center gap-1.5">
-          <Zap className="h-4 w-4 text-yellow-500" />{fmt(effectiveCpc)}/klikk
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Clock className="h-4 w-4 text-indigo-400" />{fmt(effectiveCps)}/sek
-        </span>
+      {/* Stats row */}
+      <div className="mb-7 flex gap-6">
+        <div className="flex items-center gap-1.5">
+          <Zap className="h-4 w-4" style={{ color: "#fbbf24" }} />
+          <span className="text-sm font-semibold text-white">{fmt(effectiveCpc)}</span>
+          <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>/klikk</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Clock className="h-4 w-4" style={{ color: "#818cf8" }} />
+          <span className="text-sm font-semibold text-white">{fmt(effectiveCps)}</span>
+          <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>/sek</span>
+        </div>
       </div>
 
       {/* Click button */}
-      <div className="relative mb-6">
-        {/* Passive income pulse ring */}
+      <div className="relative mb-7 flex items-center justify-center">
+        {/* Outer pulse ring */}
         {effectiveCps > 0 && (
-          <span
-            className="pointer-events-none absolute inset-0 rounded-full animate-ping opacity-[0.15]"
-            style={{ background: worldDef.color === "violet" ? "#7c3aed" : worldDef.color === "amber" ? "#d97706" : "#0891b2" }}
+          <div
+            className="pulse-ring pointer-events-none absolute rounded-full"
+            style={{
+              width: 200,
+              height: 200,
+              background: "rgba(108,71,255,0.12)",
+              border: "2px solid rgba(108,71,255,0.2)",
+            }}
           />
         )}
-        {/* Floating damage numbers */}
-        {floats.map((fl) => (
-          <span key={fl.id} className="clicker-float" style={{ left: fl.x, top: fl.y }}>
-            +{fmt(fl.value)}
-          </span>
-        ))}
-        <button
-          onClick={handleClick}
-          style={{ touchAction: "manipulation" }}
-          className={`relative flex h-56 w-56 select-none items-center justify-center rounded-full bg-gradient-to-br ${btnGradient} shadow-2xl transition-transform duration-75 active:scale-95 hover:scale-[1.03] md:h-48 md:w-48`}
+
+        {/* Outer container */}
+        <div
+          className="flex items-center justify-center rounded-full transition-all duration-150 hover:scale-[1.02]"
+          style={{
+            width: 196,
+            height: 196,
+            background: "#1e1b4b",
+            border: "2px solid rgba(108,71,255,0.25)",
+          }}
         >
-          {logoUrl
-            // eslint-disable-next-line @next/next/no-img-element
-            ? <img src={logoUrl} alt="" className="h-36 w-36 rounded-full object-cover md:h-32 md:w-32" />
-            : <span className="text-7xl">{worldDef.emoji}</span>
-          }
-        </button>
+          {/* Floating damage numbers */}
+          {floats.map((fl) => (
+            <span key={fl.id} className="clicker-float" style={{ left: fl.x, top: fl.y }}>
+              +{fmt(fl.value)}
+            </span>
+          ))}
+
+          {/* Inner clickable circle */}
+          <button
+            onClick={handleClick}
+            style={{
+              width: 160,
+              height: 160,
+              background: "#6c47ff",
+              borderRadius: "50%",
+              touchAction: "manipulation",
+              transition: "transform 0.1s ease",
+              boxShadow: "0 0 32px rgba(108,71,255,0.4), inset 0 1px 0 rgba(255,255,255,0.15)",
+            }}
+            className="relative flex select-none items-center justify-center active:scale-[0.96] hover:brightness-110"
+          >
+            {logoUrl
+              // eslint-disable-next-line @next/next/no-img-element
+              ? <img src={logoUrl} alt="" className="h-28 w-28 rounded-full object-cover" />
+              : <span className="text-6xl">{worldDef.emoji}</span>
+            }
+          </button>
+        </div>
       </div>
 
-      <p className="mb-4 text-xs text-zinc-600">
+      <p className="mb-5 text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
         {fmt(totalClicks)} totale klikk{totalPrestige > 0 && ` · Prestige ${totalPrestige}`}
       </p>
 
@@ -587,7 +652,11 @@ export default function ClickerPage() {
       {canPrestige ? (
         <button
           onClick={() => setPrestigeModal(true)}
-          className="mb-6 w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-3 font-bold text-white shadow-lg shadow-amber-500/30 transition-all hover:shadow-amber-500/50"
+          className="mb-6 w-full rounded-xl px-4 py-3 font-bold text-white transition-all hover:brightness-110"
+          style={{
+            background: "linear-gradient(to right, #f59e0b, #ea580c)",
+            boxShadow: "0 4px 20px rgba(245,158,11,0.35)",
+          }}
         >
           PRESTIGE! Verden {world} → {nextWorld}
           <span className="mt-0.5 block text-xs font-normal opacity-80">
@@ -596,46 +665,82 @@ export default function ClickerPage() {
         </button>
       ) : world < 3 ? (
         <div className="mb-6 w-full">
-          <div className="mb-1 flex justify-between text-[10px] text-zinc-600">
-            <span>Prestige fremgang</span>
-            <span>{prestigePct.toFixed(1)}%</span>
+          <div className="mb-1.5 flex justify-between">
+            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>Prestige fremgang</span>
+            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>{fmt(displayCoins)} / {fmt(prestigeCost)}</span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-zinc-800">
+          <div
+            className="overflow-hidden rounded-full"
+            style={{ height: 6, background: "rgba(255,255,255,0.06)" }}
+          >
             <div
-              className={`h-full rounded-full transition-all duration-500 ${barCls} ${barGlow}`}
-              style={{ width: `${prestigePct.toFixed(2)}%` }}
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${prestigePct.toFixed(2)}%`,
+                background: "linear-gradient(to right, #6c47ff, #a78bfa)",
+              }}
             />
           </div>
-          <p className="mt-1 text-right text-[10px] text-zinc-700">{fmt(displayCoins)} / {fmt(prestigeCost)}</p>
         </div>
       ) : null}
 
       {/* Leaderboard */}
       {leaderboard.length > 0 && (
-        <div className="w-full rounded-xl border border-zinc-800 bg-zinc-900/80 p-4 backdrop-blur-sm">
+        <div
+          className="w-full rounded-xl p-4"
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 12,
+          }}
+        >
           <div className="mb-3 flex items-center gap-1.5">
-            <Trophy className="h-3.5 w-3.5 text-amber-500" />
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Topp 5</p>
-            <span className="ml-auto text-[10px] text-zinc-600">etter rekord</span>
+            <Trophy className="h-3.5 w-3.5" style={{ color: "#fbbf24" }} />
+            <p
+              className="text-[10px] font-semibold uppercase tracking-wider"
+              style={{ color: "rgba(255,255,255,0.35)" }}
+            >
+              TOPP 5 — etter rekord
+            </p>
           </div>
           <div className="flex flex-col gap-2.5">
             {leaderboard.map((entry, i) => {
-              const w    = (entry.prestigeWorld ?? 1) as 1 | 2 | 3;
-              const wDef = WORLDS[w];
-              const wColor = w === 1 ? "text-violet-400" : w === 2 ? "text-amber-400" : "text-cyan-400";
+              const w     = (entry.prestigeWorld ?? 1) as 1 | 2 | 3;
+              const wDef  = WORLDS[w];
+              const wColor = w === 1 ? "#a78bfa" : w === 2 ? "#fbbf24" : "#67e8f9";
+              const medalColor =
+                i === 0 ? "#fbbf24"
+                : i === 1 ? "#94a3b8"
+                : i === 2 ? "#b45309"
+                : "rgba(255,255,255,0.3)";
+              const avatarRing =
+                i === 0 ? "rgba(251,191,36,0.5)"
+                : i === 1 ? "rgba(148,163,184,0.4)"
+                : i === 2 ? "rgba(180,83,9,0.4)"
+                : "rgba(255,255,255,0.1)";
               return (
                 <div key={entry.user.id} className="flex items-center gap-2.5">
-                  <span className={`w-5 shrink-0 text-center text-xs font-bold ${MEDAL_CLS[i] ?? "text-zinc-600"}`}>
+                  <span className="w-5 shrink-0 text-center text-xs font-bold" style={{ color: medalColor }}>
                     {i + 1}.
                   </span>
-                  <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white ${AVATAR_CLS[i] ?? "bg-indigo-800/30"}`}>
+                  <div
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                    style={{
+                      background: "rgba(108,71,255,0.25)",
+                      outline: `1.5px solid ${avatarRing}`,
+                    }}
+                  >
                     {initials(entry.user.name)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs text-zinc-300">{entry.user.name ?? "Ukjent"}</p>
-                    <p className={`text-[10px] leading-tight ${wColor}`}>{wDef.emoji} Verden {w}</p>
+                    <p className="truncate text-xs text-white">{entry.user.name ?? "Ukjent"}</p>
+                    <p className="text-[10px] leading-tight" style={{ color: wColor }}>
+                      {wDef.emoji} Verden {w}
+                    </p>
                   </div>
-                  <span className="shrink-0 text-xs font-semibold text-amber-400">{fmt(entry.allTimeHighCoins)}</span>
+                  <span className="shrink-0 text-xs font-semibold" style={{ color: "#a78bfa" }}>
+                    {fmt(entry.allTimeHighCoins)}
+                  </span>
                 </div>
               );
             })}
@@ -647,77 +752,144 @@ export default function ClickerPage() {
 
   const UpgradesPanel = (
     <>
-      <div className="shrink-0 border-b border-zinc-800 px-3 py-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">{worldDef.emoji} Oppgraderinger</p>
-        <p className="text-[10px] text-zinc-600">{upgradeRows.length} tilgjengelige</p>
+      <div
+        className="shrink-0 px-3 py-3"
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+      >
+        <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>
+          {worldDef.emoji} Oppgraderinger
+        </p>
+        <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>{upgradeRows.length} tilgjengelige</p>
       </div>
 
-      {/* Mobile: full-width */}
-      <div className="flex-1 overflow-y-auto py-3 px-3 space-y-2 md:hidden">
+      {/* Mobile: full-width cards */}
+      <div className="scrollbar-hide flex-1 overflow-y-auto py-3 px-3 space-y-2 md:hidden">
         {upgradeRows.map((upg) => (
-          <div key={upg.id} className={`rounded-lg border p-3 flex items-center gap-3 transition-colors ${
-            upg.canAfford  ? "border-indigo-500/30 bg-indigo-500/5"
-            : upg.level > 0 ? "border-zinc-700 bg-zinc-800/50"
-            : "border-zinc-800 bg-zinc-900/50"
-          }`}>
-            <span className="text-2xl shrink-0">{upg.emoji}</span>
+          <div
+            key={upg.id}
+            className="flex items-center gap-3 rounded-xl p-3 transition-all"
+            style={{
+              background: upg.canAfford ? "rgba(108,71,255,0.08)" : "rgba(255,255,255,0.03)",
+              border: upg.canAfford
+                ? "1px solid rgba(108,71,255,0.3)"
+                : upg.level > 0
+                ? "1px solid rgba(255,255,255,0.08)"
+                : "1px solid rgba(255,255,255,0.05)",
+              borderRadius: 10,
+            }}
+          >
+            {/* Icon */}
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl"
+              style={{ background: "rgba(108,71,255,0.2)" }}
+            >
+              {upg.emoji}
+            </div>
+            {/* Name + stat */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-white truncate">{upg.name}</p>
-                {upg.level > 0 && (
-                  <span className="shrink-0 rounded-full bg-zinc-700 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-300">Lv{upg.level}</span>
-                )}
-              </div>
-              <p className="text-xs text-zinc-500">
+              <p className="text-sm font-medium text-white truncate">{upg.name}</p>
+              <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>
                 {upg.coinsPerClick  > 0 && `+${upg.coinsPerClick}/klikk`}
                 {upg.coinsPerClick  > 0 && upg.coinsPerSecond > 0 && " · "}
                 {upg.coinsPerSecond > 0 && `+${upg.coinsPerSecond}/sek`}
               </p>
             </div>
-            <button
-              onClick={() => void buyUpgrade(upg.id)}
-              disabled={!upg.canAfford || buying === upg.id || upg.level >= upg.maxLevel}
-              className={`shrink-0 min-h-[44px] min-w-[64px] rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors active:scale-95 ${
-                upg.level >= upg.maxLevel ? "cursor-default bg-zinc-800 text-zinc-600"
-                : upg.canAfford ? "bg-indigo-600 text-white hover:bg-indigo-500"
-                : "cursor-not-allowed bg-zinc-800 text-zinc-600"
-              }`}>
-              {upg.level >= upg.maxLevel ? "Maks" : buying === upg.id ? "…" : `${fmt(upg.cost)} 🪙`}
-            </button>
+            {/* Level + price */}
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              {upg.level > 0 && (
+                <span
+                  className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+                  style={{ background: "rgba(108,71,255,0.25)", color: "#a78bfa" }}
+                >
+                  Lv {upg.level}
+                </span>
+              )}
+              <button
+                onClick={() => void buyUpgrade(upg.id)}
+                disabled={!upg.canAfford || buying === upg.id || upg.level >= upg.maxLevel}
+                className="min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-semibold transition-all active:scale-95"
+                style={{
+                  background: upg.level >= upg.maxLevel
+                    ? "rgba(255,255,255,0.05)"
+                    : upg.canAfford
+                    ? "#6c47ff"
+                    : "rgba(255,255,255,0.05)",
+                  color: upg.level >= upg.maxLevel
+                    ? "rgba(255,255,255,0.25)"
+                    : upg.canAfford
+                    ? "#fff"
+                    : "rgba(255,255,255,0.25)",
+                  cursor: upg.canAfford && upg.level < upg.maxLevel ? "pointer" : "default",
+                }}
+              >
+                {upg.level >= upg.maxLevel ? "Maks" : buying === upg.id ? "…" : `${fmt(upg.cost)} 🪙`}
+              </button>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Desktop: compact */}
-      <div className="hidden md:block flex-1 overflow-y-auto py-3 px-2 space-y-1.5">
+      {/* Desktop: compact cards */}
+      <div className="scrollbar-hide hidden md:block flex-1 overflow-y-auto py-3 px-2.5 space-y-1.5">
         {upgradeRows.map((upg) => (
-          <div key={upg.id} className={`rounded-lg border p-2 transition-colors ${
-            upg.canAfford  ? "border-indigo-500/30 bg-indigo-500/5"
-            : upg.level > 0 ? "border-zinc-700 bg-zinc-800/50"
-            : "border-zinc-800 bg-zinc-900/50"
-          }`}>
-            <div className="flex items-center gap-1.5 mb-1">
-              <span className="text-base leading-none">{upg.emoji}</span>
-              <p className="text-xs font-semibold text-white leading-tight truncate flex-1">{upg.name}</p>
-              {upg.level > 0 && (
-                <span className="shrink-0 rounded-full bg-zinc-700 px-1.5 py-0.5 text-[9px] font-semibold text-zinc-300 leading-none">{upg.level}</span>
-              )}
+          <div
+            key={upg.id}
+            className="flex items-center gap-2 rounded-xl p-2.5 transition-all"
+            style={{
+              background: upg.canAfford ? "rgba(108,71,255,0.08)" : "rgba(255,255,255,0.04)",
+              border: upg.canAfford
+                ? "1px solid rgba(108,71,255,0.28)"
+                : upg.level > 0
+                ? "1px solid rgba(255,255,255,0.07)"
+                : "1px solid rgba(255,255,255,0.04)",
+              borderRadius: 10,
+            }}
+          >
+            {/* Icon */}
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg leading-none"
+              style={{ background: "rgba(108,71,255,0.2)" }}
+            >
+              {upg.emoji}
             </div>
-            <p className="text-[10px] text-zinc-600 mb-1.5 leading-tight">
-              {upg.coinsPerClick  > 0 && `+${upg.coinsPerClick}/klikk`}
-              {upg.coinsPerClick  > 0 && upg.coinsPerSecond > 0 && " · "}
-              {upg.coinsPerSecond > 0 && `+${upg.coinsPerSecond}/sek`}
-            </p>
-            <button
-              onClick={() => void buyUpgrade(upg.id)}
-              disabled={!upg.canAfford || buying === upg.id || upg.level >= upg.maxLevel}
-              className={`w-full rounded py-1.5 text-[10px] font-semibold transition-colors ${
-                upg.level >= upg.maxLevel ? "cursor-default bg-zinc-800 text-zinc-600"
-                : upg.canAfford ? "bg-indigo-600 text-white hover:bg-indigo-500"
-                : "cursor-not-allowed bg-zinc-800 text-zinc-600"
-              }`}>
-              {upg.level >= upg.maxLevel ? "Maks" : buying === upg.id ? "…" : `${fmt(upg.cost)} 🪙`}
-            </button>
+
+            {/* Name + stat */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-medium text-white leading-tight truncate">{upg.name}</p>
+              <p className="text-[11px] leading-tight" style={{ color: "rgba(255,255,255,0.25)" }}>
+                {upg.coinsPerClick  > 0 && `+${upg.coinsPerClick}/klikk`}
+                {upg.coinsPerClick  > 0 && upg.coinsPerSecond > 0 && " · "}
+                {upg.coinsPerSecond > 0 && `+${upg.coinsPerSecond}/sek`}
+              </p>
+            </div>
+
+            {/* Level badge + price */}
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              {upg.level > 0 && (
+                <span
+                  className="rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none"
+                  style={{ background: "rgba(108,71,255,0.25)", color: "#a78bfa" }}
+                >
+                  Lv {upg.level}
+                </span>
+              )}
+              <button
+                onClick={() => void buyUpgrade(upg.id)}
+                disabled={!upg.canAfford || buying === upg.id || upg.level >= upg.maxLevel}
+                className="rounded-lg px-2 py-1 text-[11px] font-semibold transition-all active:scale-95"
+                style={{
+                  color: upg.level >= upg.maxLevel
+                    ? "rgba(255,255,255,0.2)"
+                    : upg.canAfford
+                    ? "#a78bfa"
+                    : "rgba(255,255,255,0.2)",
+                  cursor: upg.canAfford && upg.level < upg.maxLevel ? "pointer" : "default",
+                  fontWeight: upg.canAfford ? 600 : 400,
+                }}
+              >
+                {upg.level >= upg.maxLevel ? "Maks" : buying === upg.id ? "…" : `${fmt(upg.cost)} 🪙`}
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -727,31 +899,43 @@ export default function ClickerPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="relative flex flex-col md:flex-row h-[calc(100dvh-7rem)] md:h-[calc(100vh-56px)] bg-zinc-950">
-
+    <div
+      className="relative flex flex-col md:flex-row h-[calc(100dvh-7rem)] md:h-[calc(100vh-56px)]"
+      style={{ background: "#0d0d14" }}
+    >
       {/* Prestige modal */}
       {prestigeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-sm rounded-2xl border border-zinc-700 bg-zinc-900 p-6">
+          <div
+            className="w-full max-w-sm rounded-2xl p-6"
+            style={{ background: "#12121e", border: "1px solid rgba(255,255,255,0.1)" }}
+          >
             <h3 className="mb-2 text-lg font-bold text-white">Gå i Prestige?</h3>
-            <p className="mb-4 text-sm text-zinc-400">
+            <p className="mb-4 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
               Nullstiller alle coins og oppgraderinger for Verden {world}.
             </p>
-            <ul className="mb-5 space-y-2 text-sm text-zinc-300">
-              <li>🪙 <strong className="text-amber-400">{worldDef.fanpassCoins} Fanpass-coins</strong></li>
+            <ul className="mb-5 space-y-2 text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
+              <li>🪙 <strong style={{ color: "#fbbf24" }}>{worldDef.fanpassCoins} Fanpass-coins</strong></li>
               <li>{worldDef.badge} Badge lagt til profilen</li>
-              <li>⚡ <strong className="text-emerald-400">+10% permanent bonus</strong></li>
+              <li>⚡ <strong style={{ color: "#34d399" }}>+10% permanent bonus</strong></li>
               {world < 3 && (
                 <li>🌍 Låser opp <strong className="text-white">Verden {nextWorld}: {WORLDS[nextWorld].name} {WORLDS[nextWorld].emoji}</strong></li>
               )}
             </ul>
             <div className="flex gap-3">
-              <button onClick={() => setPrestigeModal(false)}
-                className="flex-1 rounded-lg border border-zinc-700 py-2.5 text-sm text-zinc-400 transition-colors hover:text-white">
+              <button
+                onClick={() => setPrestigeModal(false)}
+                className="flex-1 rounded-lg py-2.5 text-sm transition-colors hover:text-white"
+                style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}
+              >
                 Nei, fortsett
               </button>
-              <button onClick={() => void handlePrestige()} disabled={prestiging}
-                className="flex-1 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 py-2.5 text-sm font-bold text-white hover:opacity-90 disabled:opacity-50">
+              <button
+                onClick={() => void handlePrestige()}
+                disabled={prestiging}
+                className="flex-1 rounded-lg py-2.5 text-sm font-bold text-white hover:brightness-110 disabled:opacity-50"
+                style={{ background: "linear-gradient(to right, #f59e0b, #ea580c)" }}
+              >
                 {prestiging ? "Prestiger…" : "Ja, Prestige!"}
               </button>
             </div>
@@ -760,46 +944,68 @@ export default function ClickerPage() {
       )}
 
       {/* Chat slide-over */}
-      <div className={`fixed right-0 top-0 z-40 flex h-full w-full flex-col border-l border-zinc-800 bg-zinc-950/95 backdrop-blur-md transition-transform duration-300 md:w-80 ${chatOpen ? "translate-x-0" : "translate-x-full"}`}>
-        <div className="flex shrink-0 items-center justify-between border-b border-zinc-800 px-4 py-3">
+      <div
+        className={`fixed right-0 top-0 z-40 flex h-full w-full flex-col transition-transform duration-300 md:w-80 ${chatOpen ? "translate-x-0" : "translate-x-full"}`}
+        style={{
+          background: "rgba(13,13,20,0.96)",
+          backdropFilter: "blur(12px)",
+          borderLeft: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        <div
+          className="flex shrink-0 items-center justify-between px-4 py-3"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+        >
           <div className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4 text-indigo-400" />
+            <MessageSquare className="h-4 w-4" style={{ color: "#a78bfa" }} />
             <span className="text-sm font-semibold text-white">Stream Chat</span>
           </div>
-          <button onClick={() => setChatOpen(false)} className="text-zinc-500 transition-colors hover:text-white">
+          <button
+            onClick={() => setChatOpen(false)}
+            className="transition-colors hover:text-white"
+            style={{ color: "rgba(255,255,255,0.35)" }}
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+        <div className="scrollbar-hide flex-1 overflow-y-auto p-3 space-y-2.5">
           {chatMessages.length === 0
-            ? <p className="mt-8 text-center text-xs text-zinc-600">Ingen meldinger ennå. Si hei!</p>
+            ? <p className="mt-8 text-center text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>Ingen meldinger ennå. Si hei!</p>
             : chatMessages.map((msg) => (
               <div key={msg.id} className="flex gap-2">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-700/60 text-[10px] font-bold text-white">
+                <div
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                  style={{ background: "rgba(108,71,255,0.4)" }}
+                >
                   {initials(msg.author.name)}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-indigo-300">{msg.author.name ?? "Ukjent"}</p>
-                  <p className="break-words text-sm text-zinc-300">{msg.content}</p>
+                  <p className="text-xs font-semibold" style={{ color: "#a78bfa" }}>{msg.author.name ?? "Ukjent"}</p>
+                  <p className="break-words text-sm text-white">{msg.content}</p>
                 </div>
               </div>
             ))
           }
           <div ref={chatBottomRef} />
         </div>
-        <div className="shrink-0 border-t border-zinc-800 p-3">
+        <div className="shrink-0 p-3" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
           <div className="flex gap-2">
             <input
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void sendChatMessage(); } }}
               placeholder="Skriv en melding…"
-              className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              className="flex-1 rounded-lg px-3 py-2 text-sm text-white outline-none transition-colors"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)",
+              }}
             />
             <button
               onClick={() => void sendChatMessage()}
               disabled={!chatInput.trim() || chatSending}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white transition-colors hover:bg-indigo-500 disabled:opacity-50"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition-all hover:brightness-110 disabled:opacity-40"
+              style={{ background: "#6c47ff" }}
             >
               <Send className="h-4 w-4" />
             </button>
@@ -808,14 +1014,22 @@ export default function ClickerPage() {
       </div>
 
       {/* Mobile tab-bar */}
-      <div className="flex shrink-0 border-b border-zinc-800 bg-zinc-900 md:hidden">
+      <div
+        className="flex shrink-0 md:hidden"
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#12121e" }}
+      >
         {(["verdener", "klikker", "oppgraderinger"] as const).map((tab) => {
           const labels = { klikker: "Klikk", verdener: "Verdener", oppgraderinger: "Oppgrader" };
           return (
-            <button key={tab} onClick={() => setMobileTab(tab)}
-              className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${
-                mobileTab === tab ? "border-b-2 border-indigo-500 text-white" : "text-zinc-500 hover:text-zinc-300"
-              }`}>
+            <button
+              key={tab}
+              onClick={() => setMobileTab(tab)}
+              className="flex-1 py-2.5 text-xs font-semibold transition-colors"
+              style={{
+                color: mobileTab === tab ? "#a78bfa" : "rgba(255,255,255,0.35)",
+                borderBottom: mobileTab === tab ? "2px solid #6c47ff" : "2px solid transparent",
+              }}
+            >
               {labels[tab]}
             </button>
           );
@@ -823,7 +1037,10 @@ export default function ClickerPage() {
       </div>
 
       {/* Left — Worlds */}
-      <div className={`${mobileTab === "verdener" ? "flex" : "hidden"} md:flex w-full md:w-[200px] shrink-0 flex-col border-r border-zinc-800 overflow-y-auto py-4 px-3`}>
+      <div
+        className={`${mobileTab === "verdener" ? "flex" : "hidden"} md:flex w-full md:w-[180px] shrink-0 flex-col overflow-y-auto py-4 px-3 scrollbar-hide`}
+        style={{ background: "#12121e", borderRight: "1px solid rgba(255,255,255,0.07)" }}
+      >
         {WorldsPanel}
       </div>
 
@@ -833,7 +1050,10 @@ export default function ClickerPage() {
       </div>
 
       {/* Right — Upgrades */}
-      <div className={`${mobileTab === "oppgraderinger" ? "flex" : "hidden"} md:flex w-full md:w-[260px] shrink-0 flex-col border-l border-zinc-800 overflow-hidden`}>
+      <div
+        className={`${mobileTab === "oppgraderinger" ? "flex" : "hidden"} md:flex w-full md:w-[260px] shrink-0 flex-col overflow-hidden`}
+        style={{ background: "#12121e", borderLeft: "1px solid rgba(255,255,255,0.07)" }}
+      >
         {UpgradesPanel}
       </div>
 
@@ -841,9 +1061,13 @@ export default function ClickerPage() {
       {!chatOpen && orgId && (
         <button
           onClick={() => setChatOpen(true)}
-          className="fixed bottom-20 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 shadow-lg shadow-indigo-500/30 transition-all hover:scale-110 hover:bg-indigo-500 active:scale-95 md:bottom-6"
+          className="fixed bottom-20 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full text-white transition-all hover:scale-110 hover:brightness-110 active:scale-95 md:bottom-6"
+          style={{
+            background: "#6c47ff",
+            boxShadow: "0 4px 20px rgba(108,71,255,0.4)",
+          }}
         >
-          <MessageSquare className="h-5 w-5 text-white" />
+          <MessageSquare className="h-5 w-5" />
         </button>
       )}
     </div>

@@ -40,18 +40,34 @@ body {
 /* ── Clicker: floating damage numbers ── */
 @keyframes clickerFloat {
   0%   { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-64px) scale(0.8); }
+  100% { opacity: 0; transform: translateY(-60px) scale(0.8); }
 }
 .clicker-float {
-  animation: clickerFloat 0.9s ease-out forwards;
+  animation: clickerFloat 0.8s ease-out forwards;
   position: absolute;
   pointer-events: none;
   z-index: 10;
-  font-size: 0.875rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  color: #fcd34d;
+  color: #a78bfa;
   white-space: nowrap;
 }
+
+/* ── Clicker: outer ring pulse ── */
+@keyframes pulseRing {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50%       { transform: scale(1.06); opacity: 0.1; }
+}
+.pulse-ring {
+  animation: pulseRing 2s ease-in-out infinite;
+}
+
+/* ── Scrollbar hide ── */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
 
 /* ── Button click scale ── */
 .btn-press {
