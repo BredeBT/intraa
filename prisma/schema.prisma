@@ -186,8 +186,9 @@ model User {
   interests     String[]
   website       String?
   socialLinks   Json?
-  status        String?   @default("online")
-  lastActive    DateTime?
+  status          String?   @default("online")
+  lastActive      DateTime?
+  termsAcceptedAt DateTime?
 
   memberships             Membership[]
   posts                   Post[]

@@ -87,6 +87,7 @@ function StepAccount({ onCreated }: { onCreated: () => void }) {
   const [email,           setEmail]   = useState("");
   const [password,        setPass]    = useState("");
   const [confirm,         setConfirm] = useState("");
+  const [acceptedTerms,   setAcceptedTerms] = useState(false);
   const [serverError,     setServerError] = useState("");
   const [pending,         start]      = useTransition();
 
@@ -101,7 +102,8 @@ function StepAccount({ onCreated }: { onCreated: () => void }) {
     unState === "available" &&
     emailState === "available" &&
     allChecksPass &&
-    passwordsMatch;
+    passwordsMatch &&
+    acceptedTerms;
 
   function submit(ev: React.FormEvent) {
     ev.preventDefault();
@@ -234,6 +236,27 @@ function StepAccount({ onCreated }: { onCreated: () => void }) {
         </p>
       )}
 
+      {/* Terms checkbox */}
+      <div className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          id="terms"
+          checked={acceptedTerms}
+          onChange={(e) => setAcceptedTerms(e.target.checked)}
+          className="mt-0.5 h-4 w-4 cursor-pointer accent-indigo-500"
+        />
+        <label htmlFor="terms" className="cursor-pointer text-xs leading-relaxed text-zinc-400">
+          Jeg godtar{" "}
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">
+            vilkårene for bruk
+          </a>
+          {" "}og{" "}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">
+            personvernerklæringen
+          </a>
+        </label>
+      </div>
+
       <button
         type="submit"
         disabled={!isValid || pending}
@@ -272,6 +295,12 @@ export default function RegistrerPage() {
         <Link href="/login" className="font-medium text-indigo-400 transition-colors hover:text-indigo-300">
           Logg inn
         </Link>
+      </p>
+
+      <p className="mt-3 text-center text-xs text-zinc-700">
+        <Link href="/terms" className="transition-colors hover:text-zinc-500">Vilkår</Link>
+        {" · "}
+        <Link href="/privacy" className="transition-colors hover:text-zinc-500">Personvern</Link>
       </p>
     </div>
   );

@@ -211,6 +211,8 @@ export default async function Home() {
             <Link href="#priser"    className="transition-colors hover:text-white">Priser</Link>
             <Link href="/login"     className="transition-colors hover:text-white">Logg inn</Link>
             <Link href="/registrer" className="transition-colors hover:text-white">Registrer</Link>
+            <Link href="/terms"     className="transition-colors hover:text-white">Vilkår</Link>
+            <Link href="/privacy"   className="transition-colors hover:text-white">Personvern</Link>
           </div>
         </div>
         <p className="mt-8 text-center text-xs text-zinc-700">© {new Date().getFullYear()} Intraa. Alle rettigheter forbeholdt.</p>

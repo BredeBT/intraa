@@ -42,10 +42,11 @@ export async function POST(request: NextRequest) {
 
     await db.user.create({
       data: {
-        email:    emailLower,
-        name:     name.trim(),
+        email:           emailLower,
+        name:            name.trim(),
         username,
-        password: passwordHash,
+        password:        passwordHash,
+        termsAcceptedAt: new Date(),
       },
     });
 

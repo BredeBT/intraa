@@ -139,6 +139,12 @@ export default function LoginPage() {
           Opprett konto
         </Link>
       </p>
+
+      <p className="mt-3 text-center text-xs text-zinc-700">
+        <Link href="/terms" className="transition-colors hover:text-zinc-500">Vilkår</Link>
+        {" · "}
+        <Link href="/privacy" className="transition-colors hover:text-zinc-500">Personvern</Link>
+      </p>
     </div>
   );
 }
