@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
       totalClicks: { increment: clicks },
       lastSeen:    new Date(),
     },
+    select: { coins: true, totalClicks: true },
   });
 
-  return NextResponse.json({ coins: updated.coins, totalClicks: updated.totalClicks });
+  return NextResponse.json({ coins: Number(updated.coins), totalClicks: updated.totalClicks });
 }

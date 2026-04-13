@@ -46,6 +46,17 @@ export async function POST(req: NextRequest) {
       prestigeWorld:  nextWorld,
       lastSeen:       new Date(),
     },
+    select: {
+      coins:          true,
+      coinsPerClick:  true,
+      coinsPerSecond: true,
+      totalClicks:    true,
+      allTimeHighCoins: true,
+      prestigeWorld:  true,
+      prestigeLevel:  true,
+      permanentBonus: true,
+      totalPrestige:  true,
+    },
   });
 
   // Award fanpass coins via awardCoins (uses prestige reason — no daily cap for it)
@@ -58,7 +69,17 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({
-    profile:        updatedProfile,
+    profile: {
+      coins:          Number(updatedProfile.coins),
+      coinsPerClick:  Number(updatedProfile.coinsPerClick),
+      coinsPerSecond: Number(updatedProfile.coinsPerSecond),
+      totalClicks:    updatedProfile.totalClicks,
+      allTimeHighCoins: Number(updatedProfile.allTimeHighCoins),
+      prestigeWorld:  updatedProfile.prestigeWorld,
+      prestigeLevel:  updatedProfile.prestigeLevel,
+      permanentBonus: Number(updatedProfile.permanentBonus),
+      totalPrestige:  updatedProfile.totalPrestige,
+    },
     fanpassCoins:   worldDef.fanpassCoins,
     nextWorld,
     permanentBonus: newBonus,
