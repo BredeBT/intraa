@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/server/db";
 import { validateUsername } from "@/lib/bannedUsernames";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    await db.user.create({
+    const user = await db.user.create({
       data: {
         email:           emailLower,
         name:            name.trim(),
@@ -49,6 +50,11 @@ export async function POST(request: NextRequest) {
         termsAcceptedAt: new Date(),
       },
     });
+
+    // Fire-and-forget welcome email — never block registration on email failure
+    sendWelcomeEmail(emailLower, name.trim(), user.id).catch((err) =>
+      console.error("[Email] Kunne ikke sende velkomst-epost:", err)
+    );
 
     return NextResponse.json({ success: true, email: emailLower });
   } catch (error) {

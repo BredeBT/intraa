@@ -188,7 +188,10 @@ model User {
   socialLinks   Json?
   status          String?   @default("online")
   lastActive      DateTime?
-  termsAcceptedAt DateTime?
+  termsAcceptedAt      DateTime?
+  passwordResetToken   String?   @unique
+  passwordResetExpires DateTime?
+  emailConsent         Boolean   @default(true)
 
   memberships             Membership[]
   posts                   Post[]
