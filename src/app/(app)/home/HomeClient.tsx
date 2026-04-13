@@ -48,24 +48,33 @@ function initials(name: string | null) {
   return (name ?? "?").split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 }
 
-function relTime(iso: string): string {
+function relTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1)  return "nå";
-  if (mins < 60) return `${mins}m`;
-  const h = Math.floor(mins / 60);
-  if (h < 24)   return `${h}t`;
-  const d = Math.floor(h / 24);
-  if (d === 1)  return "i går";
-  return `${d}d`;
+  const m = Math.floor(diff / 60_000);
+  if (m < 1)  return "nå";
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}t`;
+  return `${Math.floor(h / 24)}d`;
 }
 
+function fadeStyle(delay: number): CSSProperties {
+  return { animation: `fadeInUp 0.4s ease both`, animationDelay: `${delay}ms` };
+}
+
+// ─── Avatar ───────────────────────────────────────────────────────────────────
+
 function Avatar({
-  avatarUrl, name, size = 8,
-}: { avatarUrl: string | null; name: string | null; size?: number }) {
+  avatarUrl,
+  name,
+  size = 8,
+}: {
+  avatarUrl: string | null;
+  name: string | null;
+  size?: number;
+}) {
   const sz = `h-${size} w-${size}`;
   if (avatarUrl)
-    // eslint-disable-next-line @next/next/no-img-element
     return <img src={avatarUrl} alt="" className={`${sz} rounded-full object-cover shrink-0`} />;
   return (
     <div className={`${sz} flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 text-xs font-bold text-white`}>
@@ -74,68 +83,68 @@ function Avatar({
   );
 }
 
-function fadeStyle(delay = 0): CSSProperties {
-  return { animation: "fadeInUp 0.35s ease both", animationDelay: `${delay}ms` };
-}
-
 // ─── Rich Community Card ──────────────────────────────────────────────────────
 
 function RichCommunityCard({ c, index }: { c: Community; index: number }) {
   return (
     <div
-      className="overflow-hidden rounded-2xl border border-violet-500/20 bg-zinc-900 card-lift"
+      className="overflow-hidden rounded-xl border border-violet-500/20 bg-zinc-900 card-lift"
       style={fadeStyle(index * 60)}
     >
-      {/* Banner */}
+      {/* Banner — no logo overlap, clean top */}
       <div
-        className="relative h-[100px] w-full"
-        style={c.bannerUrl
-          ? { backgroundImage: `url(${c.bannerUrl})`, backgroundSize: "cover", backgroundPosition: "top" }
-          : { background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)" }
-        }
+        className="relative w-full"
+        style={{
+          height: 140,
+          backgroundSize: "cover",
+          backgroundPosition: "top",
+          ...(c.bannerUrl
+            ? { backgroundImage: `url(${c.bannerUrl})` }
+            : { background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)" }),
+        }}
       >
         {c.isLive && (
-          <span className="absolute top-2 left-2 flex items-center gap-1.5 rounded-full bg-black/60 px-2 py-1 text-xs font-bold text-white backdrop-blur-sm">
+          <span className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-sm">
             <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
             LIVE
           </span>
         )}
       </div>
 
-      {/* Body */}
+      {/* Body — logo below banner, no overlap */}
       <div className="p-4">
-        <div className="flex items-start gap-3">
+        <div className="flex items-center gap-3">
           {/* Logo */}
-          <div className="-mt-9 shrink-0">
+          <div className="shrink-0">
             {c.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={c.logoUrl} alt="" className="h-12 w-12 rounded-xl border-2 border-zinc-900 object-cover" />
+              <img src={c.logoUrl} alt="" className="h-12 w-12 rounded-xl border border-zinc-700 object-cover" />
             ) : (
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-zinc-900 bg-indigo-600 text-lg font-bold text-white">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-700 bg-indigo-600 text-lg font-bold text-white">
                 {c.name[0]}
               </div>
             )}
           </div>
 
-          {/* Name + stats */}
-          <div className="flex-1 min-w-0 pt-0.5">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="truncate text-sm font-semibold text-white">{c.name}</h3>
-              <Link
-                href={`/${c.slug}/feed`}
-                className="shrink-0 flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-violet-500 btn-press"
-              >
-                Gå inn <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
+          {/* Name + member count */}
+          <div className="flex-1 min-w-0">
+            <h3 className="truncate text-[18px] font-semibold leading-tight text-white">{c.name}</h3>
             <p className="mt-0.5 text-xs text-zinc-500">
               <Users className="inline h-3 w-3 mr-0.5" />
               {c.memberCount.toLocaleString("no-NO")} medlemmer
             </p>
           </div>
+
+          {/* CTA */}
+          <Link
+            href={`/${c.slug}/feed`}
+            className="shrink-0 flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-violet-500 btn-press"
+          >
+            Gå inn <ArrowRight className="h-3 w-3" />
+          </Link>
         </div>
 
-        {/* Stat boxes */}
+        {/* Stats */}
         <div className="mt-3 grid grid-cols-3 gap-2">
           <StatBox label="Innlegg denne uken" value={c.postCount} />
           <StatBox label="Medlemmer" value={c.memberCount} />
@@ -149,7 +158,7 @@ function RichCommunityCard({ c, index }: { c: Community; index: number }) {
 function StatBox({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg bg-zinc-800/60 px-3 py-2 text-center">
-      <p className="text-sm font-bold text-white">{value.toLocaleString("no-NO")}</p>
+      <p className="text-xl font-bold text-white">{value.toLocaleString("no-NO")}</p>
       <p className="mt-0.5 text-[10px] leading-tight text-zinc-500">{label}</p>
     </div>
   );
@@ -160,6 +169,7 @@ function StatBox({ label, value }: { label: string; value: number }) {
 function CompactCommunityCard({ c }: { c: Community }) {
   return (
     <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 card-lift">
+      {/* Banner */}
       <div
         className="h-24 w-full"
         style={c.bannerUrl
@@ -167,13 +177,13 @@ function CompactCommunityCard({ c }: { c: Community }) {
           : { background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }
         }
       />
-      <div className="p-4">
-        <div className="flex items-start gap-3">
+      <div className="p-3">
+        <div className="flex items-center gap-2.5">
           {c.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={c.logoUrl} alt="" className="-mt-9 h-12 w-12 rounded-xl border-2 border-zinc-900 object-cover" />
+            <img src={c.logoUrl} alt="" className="h-10 w-10 rounded-lg border border-zinc-700 object-cover shrink-0" />
           ) : (
-            <div className="-mt-9 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-zinc-900 bg-indigo-600 text-lg font-bold text-white">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-indigo-600 text-base font-bold text-white">
               {c.name[0]}
             </div>
           )}
@@ -187,17 +197,16 @@ function CompactCommunityCard({ c }: { c: Community }) {
               )}
             </div>
             {c.description && (
-              <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500">{c.description}</p>
+              <p className="truncate text-[11px] text-zinc-500">{c.description}</p>
             )}
+            <p className="text-[10px] text-zinc-600">
+              <Users className="inline h-2.5 w-2.5 mr-0.5" />
+              {c.memberCount.toLocaleString("no-NO")} medlemmer
+            </p>
           </div>
-        </div>
-        <div className="mt-3 flex items-center justify-between">
-          <span className="flex items-center gap-1 text-xs text-zinc-500">
-            <Users className="h-3.5 w-3.5" /> {c.memberCount} medlemmer
-          </span>
           <Link
-            href={`/c/${c.slug}`}
-            className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:opacity-80"
+            href={`/${c.slug}/feed`}
+            className="flex shrink-0 items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:opacity-80"
           >
             Se community <ArrowRight className="h-3 w-3" />
           </Link>
@@ -211,41 +220,45 @@ function CompactCommunityCard({ c }: { c: Community }) {
 
 function ActivityStream({ items }: { items: ActivityItem[] }) {
   if (items.length === 0) return null;
+  const visible = items.slice(0, 5);
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900 overflow-hidden" style={fadeStyle(100)}>
       <div className="px-4 py-3 border-b border-zinc-800">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">Siste aktivitet</h2>
       </div>
       <div>
-        {items.map((item, i) => (
+        {visible.map((item, i) => (
           <div
             key={i}
-            className={`flex items-start gap-3 px-4 py-3 ${i % 2 === 1 ? "bg-zinc-800/30" : ""}`}
+            className={`flex items-center gap-3 px-4 py-2.5 ${i % 2 === 1 ? "bg-zinc-800/20" : ""}`}
           >
-            <Avatar avatarUrl={item.authorAvatar} name={item.authorName} size={8} />
+            <Avatar avatarUrl={item.authorAvatar} name={item.authorName} size={7} />
             <div className="flex-1 min-w-0">
               {item.type === "post" ? (
-                <>
-                  <p className="text-xs text-zinc-300">
-                    <span className="font-semibold text-white">{item.authorName ?? "Ukjent"}</span>
-                    {" postet i "}
-                    <span className="text-violet-400">{item.orgName}</span>
-                  </p>
-                  {item.preview && (
-                    <p className="mt-0.5 truncate text-[11px] text-zinc-500">{item.preview}</p>
-                  )}
-                </>
+                <p className="truncate text-xs text-zinc-300">
+                  <span className="font-semibold text-white">{item.authorName ?? "Ukjent"}</span>
+                  {" postet i "}
+                  <Link href={`/${item.orgSlug}/feed`} className="text-violet-400 hover:underline">{item.orgName}</Link>
+                </p>
               ) : (
-                <p className="text-xs text-zinc-300">
+                <p className="truncate text-xs text-zinc-300">
                   <span className="font-semibold text-white">{item.authorName ?? "Ukjent"}</span>
                   {" ble med i "}
                   <span className="text-violet-400">{item.orgName}</span>
                 </p>
               )}
+              {item.type === "post" && item.preview && (
+                <p className="truncate text-[11px] text-zinc-600">{item.preview}</p>
+              )}
             </div>
             <span className="shrink-0 text-[10px] text-zinc-600">{relTime(item.createdAt)}</span>
           </div>
         ))}
+      </div>
+      <div className="border-t border-zinc-800 px-4 py-2.5">
+        <Link href="/feed" className="flex items-center gap-1 text-xs text-zinc-500 transition-colors hover:text-violet-400">
+          Se mer i feed <ArrowRight className="h-3 w-3" />
+        </Link>
       </div>
     </div>
   );
@@ -336,11 +349,11 @@ export default function HomeClient({
   pendingRequests: initialRequests,
   activity,
 }: Props) {
-  const [search,    setSearch]   = useState("");
-  const [results,   setResults]  = useState<Community[] | null>(null);
+  const [search,    setSearch]    = useState("");
+  const [results,   setResults]   = useState<Community[] | null>(null);
   const [searching, setSearching] = useState(false);
-  const [requests,  setRequests] = useState(initialRequests);
-  const [, start]                = useTransition();
+  const [requests,  setRequests]  = useState(initialRequests);
+  const [, start]                 = useTransition();
 
   useEffect(() => {
     if (!search.trim()) { setResults(null); return; }
@@ -369,6 +382,7 @@ export default function HomeClient({
 
   const isSearching    = !!search.trim();
   const hasCommunities = myCommunities.length > 0;
+  void userName; // used by parent for personalisation if needed
 
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -384,7 +398,7 @@ export default function HomeClient({
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Søk etter communities…"
+              placeholder="Finn et nytt community…"
               className="flex-1 bg-transparent text-sm text-white placeholder:text-zinc-500 outline-none"
             />
             {searching && <span className="text-xs text-zinc-500">Søker…</span>}
@@ -409,16 +423,16 @@ export default function HomeClient({
 
         {/* Main layout — hidden when searching */}
         {!isSearching && (
-          <div className="flex gap-6">
-            {/* LEFT: community cards */}
-            <div className="flex-1 min-w-0 space-y-4">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+
+            {/* LEFT — communities + activity (takes 2/3 on desktop) */}
+            <div className="lg:col-span-2 space-y-4">
               {hasCommunities ? (
                 myCommunities.map((c, i) => (
                   <RichCommunityCard key={c.id} c={c} index={i} />
                 ))
               ) : (
-                /* Empty state — only visible on mobile (desktop shows search-only) */
-                <div className="lg:hidden rounded-xl border border-zinc-800 bg-zinc-900 p-8 text-center" style={fadeStyle(0)}>
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-8 text-center" style={fadeStyle(0)}>
                   <p className="text-sm text-zinc-400">Du er ikke med i noen communities ennå.</p>
                   <p className="mt-1 text-xs text-zinc-600">Bruk søket over for å finne noe du liker.</p>
                 </div>
@@ -426,7 +440,7 @@ export default function HomeClient({
 
               {/* Recommended (only shown if no communities yet) */}
               {!hasCommunities && recommendedCommunities.length > 0 && (
-                <section className="hidden lg:block">
+                <section>
                   <h2 className="mb-3 text-sm font-semibold text-white">Anbefalte communities</h2>
                   <div className="grid gap-4 sm:grid-cols-2">
                     {recommendedCommunities.slice(0, 6).map((c) => (
@@ -436,18 +450,15 @@ export default function HomeClient({
                 </section>
               )}
 
-              {/* Mobile: activity + friends below communities */}
-              <div className="lg:hidden space-y-4 mt-2">
+              {/* Activity — below communities in left col on desktop, after friends on mobile */}
+              <div className="hidden lg:block">
                 <ActivityStream items={activity} />
-                <FriendsOnline friends={friends} />
-                <PendingRequests requests={requests} onRespond={respondToRequest} />
               </div>
             </div>
 
-            {/* RIGHT sidebar (desktop only) */}
-            <aside className="hidden w-80 shrink-0 space-y-4 lg:block">
+            {/* RIGHT sidebar (1/3 on desktop, below everything on mobile) */}
+            <div className="space-y-4">
               <PendingRequests requests={requests} onRespond={respondToRequest} />
-              <ActivityStream items={activity} />
               <FriendsOnline friends={friends} />
 
               {/* All friends list */}
@@ -478,7 +489,13 @@ export default function HomeClient({
                   </div>
                 </div>
               )}
-            </aside>
+
+              {/* Mobile: activity last */}
+              <div className="lg:hidden">
+                <ActivityStream items={activity} />
+              </div>
+            </div>
+
           </div>
         )}
       </div>
