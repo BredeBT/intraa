@@ -325,7 +325,7 @@ export default function ClickerPage() {
 
     if (res.ok) {
       const data = await res.json() as { profile: ClickerProfile; upgrades: UpgradeState[] };
-      console.log("[Buy] DB coins:", data.profile.coins, "local serverCoins:", serverCoins.current, "localDelta:", localDelta.current);
+      console.log("[Buy] OK — coinsPerClick:", data.profile.coinsPerClick, "coinsPerSecond:", data.profile.coinsPerSecond, "serverCoins (local):", serverCoins.current);
       // Update profile stats (coinsPerClick, coinsPerSecond) — NOT coins (local is authoritative)
       setProfile((prev) => prev ? {
         ...prev,
