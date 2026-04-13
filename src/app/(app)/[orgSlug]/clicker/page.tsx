@@ -176,14 +176,14 @@ export default function ClickerPage() {
     fetch(`/api/clicker?orgId=${orgId}`)
       .then((r) => r.json())
       .then((data: { profile: ClickerProfile; upgrades: UpgradeState[]; offlineEarned: number; activeEvent: ActiveEvent | null }) => {
-        // DB coins already include offline income (credited server-side).
-        // Advance serverCoins to DB value if it's higher — never go backwards.
-        // Preserve localDelta — those are clicks made after mount, not yet synced.
+        // DB is authoritative on initial load — always use dbCoins as baseline.
+        // Local cache was only for instant display before DB responded.
+        // dbCoins already includes offline income (server credited it server-side).
         const dbCoins = data.profile.coins;
-        if (dbCoins > serverCoins.current) {
-          serverCoins.current = dbCoins;
-        }
-        // localDelta intentionally NOT reset — synced in the next 5s interval.
+        serverCoins.current = dbCoins;
+        // localDelta holds clicks made between mount and now — keep them.
+
+        console.log("[Load] dbCoins:", dbCoins, "offlineEarned:", data.offlineEarned, "localDelta:", localDelta.current);
 
         setProfile(data.profile);
         setDisplayCoins(serverCoins.current + localDelta.current);
@@ -226,12 +226,13 @@ export default function ClickerPage() {
           body:    JSON.stringify({ orgId: orgIdRef.current, delta, clicks }),
         });
         if (res.ok) {
-          // Subtract only what we sent — preserve any delta that arrived during fetch.
-          // Advance serverCoins by the confirmed delta instead of trusting the server
-          // response value, which may race with offline-coin credits from the GET.
-          localDelta.current  -= delta;
-          clickCount.current  -= clicks;
-          serverCoins.current += delta;
+          const body = await res.json() as { coins: number };
+          // Subtract what we sent from localDelta — ticks arriving during the fetch stay.
+          localDelta.current -= delta;
+          clickCount.current -= clicks;
+          // Server returns actual DB coins after applying the (capped) delta.
+          // Use this as the new serverCoins baseline to prevent drift.
+          serverCoins.current = body.coins;
           setTotalClicks((t) => t + clicks);
         }
         // On error: leave localDelta/clickCount untouched, retry next interval
