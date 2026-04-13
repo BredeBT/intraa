@@ -28,7 +28,7 @@ export default async function HomePage() {
     }),
 
     db.organization.findMany({
-      where:   { type: "COMMUNITY" },
+      where:   { type: "COMMUNITY", visibility: { not: "private" } },
       include: {
         _count:         { select: { memberships: true } },
         theme:          { select: { logoUrl: true, bannerUrl: true } },

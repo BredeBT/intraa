@@ -114,8 +114,10 @@ model Organization {
   description String?
   type        OrgType
   plan        OrgPlan  @default(FREE)
-  joinType    String   @default("OPEN")
-  createdAt   DateTime @default(now())
+  joinType        String   @default("OPEN")
+  visibility      String   @default("open")  // "open" | "closed" | "private"
+  openInviteToken String?  @unique
+  createdAt       DateTime @default(now())
 
   memberships    Membership[]
   posts          Post[]

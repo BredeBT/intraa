@@ -4,15 +4,38 @@ import { useState, useEffect, useCallback } from "react";
 
 const PLANS = ["FREE", "PRO", "ENTERPRISE"] as const;
 
+const VISIBILITY_OPTIONS = [
+  {
+    value: "open",
+    label: "Åpent",
+    icon:  "🌐",
+    desc:  "Alle kan bli med uten invitasjon",
+  },
+  {
+    value: "closed",
+    label: "Lukket",
+    icon:  "🔒",
+    desc:  "Synlig i søk, men krever godkjenning for å bli med",
+  },
+  {
+    value: "private",
+    label: "Privat",
+    icon:  "👁️",
+    desc:  "Usynlig for alle — kun tilgjengelig via invitasjonslenke",
+  },
+] as const;
+
 interface OrgProps {
-  id:          string;
-  name:        string;
-  slug:        string;
-  plan:        string;
-  description: string | null;
-  type:        string;
-  joinType:    string;
-  createdAt:   string;
+  id:              string;
+  name:            string;
+  slug:            string;
+  plan:            string;
+  description:     string | null;
+  type:            string;
+  joinType:        string;
+  visibility:      string;
+  openInviteToken: string | null;
+  createdAt:       string;
 }
 
 // ─── Toast ───────────────────────────────────────────────────────────────────
@@ -38,7 +61,7 @@ function Toast({ ok, text, onDismiss }: { ok: boolean; text: string; onDismiss: 
   );
 }
 
-// ─── Section wrapper ──────────────────────────────────────────────────────────
+// ─── Section ─────────────────────────────────────────────────────────────────
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -46,18 +69,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       className="overflow-hidden rounded-xl"
       style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
     >
-      <div
-        className="px-5 py-4"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-      >
+      <div className="px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <h2 className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.7)" }}>{title}</h2>
       </div>
       <div className="p-5">{children}</div>
     </div>
   );
 }
-
-// ─── Row divider ─────────────────────────────────────────────────────────────
 
 function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -71,43 +89,23 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
-// ─── Toggle ──────────────────────────────────────────────────────────────────
-
-function Toggle({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="relative shrink-0 rounded-full transition-colors focus:outline-none"
-      style={{
-        width:      44,
-        height:     24,
-        background: checked ? "#6c47ff" : "rgba(255,255,255,0.2)",
-      }}
-    >
-      <span
-        className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform"
-        style={{ transform: checked ? "translateX(21px)" : "translateX(2px)" }}
-      />
-    </button>
-  );
-}
-
-// ─── Main ────────────────────────────────────────────────────────────────────
-
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("nb-NO", { day: "numeric", month: "long", year: "numeric" });
 }
+
+// ─── Main ────────────────────────────────────────────────────────────────────
 
 export default function OrgSettingsForm({ org }: { org: OrgProps }) {
   const [name,        setName]        = useState(org.name);
   const [slug,        setSlug]        = useState(org.slug);
   const [plan,        setPlan]        = useState(org.plan);
   const [description, setDescription] = useState(org.description ?? "");
-  const [isOpen,      setIsOpen]      = useState(org.joinType === "OPEN");
+  const [visibility,  setVisibility]  = useState(org.visibility ?? "open");
   const [hasChanges,  setHasChanges]  = useState(false);
   const [saving,      setSaving]      = useState(false);
   const [toast,       setToast]       = useState<{ ok: boolean; text: string } | null>(null);
+  const [inviteToken, setInviteToken] = useState<string | null>(org.openInviteToken);
+  const [genLoading,  setGenLoading]  = useState(false);
 
   const dismissToast = useCallback(() => setToast(null), []);
 
@@ -127,7 +125,8 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
           slug:        slug.trim(),
           plan,
           description: description.trim() || null,
-          joinType:    isOpen ? "OPEN" : "CLOSED",
+          joinType:    visibility === "open" ? "OPEN" : "CLOSED",
+          visibility,
         }),
       });
       if (!res.ok) {
@@ -141,7 +140,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
     } finally {
       setSaving(false);
     }
-  }, [hasChanges, saving, org.id, name, slug, plan, description, isOpen]);
+  }, [hasChanges, saving, org.id, name, slug, plan, description, visibility]);
 
   // Cmd+S / Ctrl+S
   useEffect(() => {
@@ -155,17 +154,42 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
     return () => window.removeEventListener("keydown", handler);
   }, [hasChanges, handleSave]);
 
-  const inputClass = "w-full rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none";
+  async function generateInviteLink() {
+    setGenLoading(true);
+    try {
+      const res = await fetch(`/api/superadmin/orgs/${org.id}/invite-token`, { method: "POST" });
+      const data = await res.json() as { token?: string; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Feil");
+      setInviteToken(data.token ?? null);
+      const url = `${window.location.origin}/inviter/open/${data.token}`;
+      await navigator.clipboard.writeText(url);
+      setToast({ ok: true, text: "Invitasjonslenke kopiert!" });
+    } catch {
+      setToast({ ok: false, text: "Kunne ikke generere lenke" });
+    } finally {
+      setGenLoading(false);
+    }
+  }
+
+  async function copyInviteLink() {
+    if (!inviteToken) return generateInviteLink();
+    const url = `${window.location.origin}/inviter/open/${inviteToken}`;
+    await navigator.clipboard.writeText(url);
+    setToast({ ok: true, text: "Invitasjonslenke kopiert!" });
+  }
+
+  const inputBase = "w-full rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none";
   const inputStyle = {
-    background:   "rgba(255,255,255,0.06)",
-    border:       "1px solid rgba(255,255,255,0.1)",
+    background: "rgba(255,255,255,0.06)",
+    border:     "1px solid rgba(255,255,255,0.1)",
+    fontSize:   "16px", // prevents iOS zoom
   };
-  const inputFocusStyle = "focus:border-purple-500/50 focus:bg-white/[0.08]";
+  const focusClass = "focus:border-purple-500/50";
 
   return (
     <>
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-medium text-white">Innstillinger</h1>
           <p className="mt-1 text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
@@ -175,7 +199,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
         <button
           onClick={() => void handleSave()}
           disabled={!hasChanges || saving}
-          className="rounded-lg px-5 py-2 text-sm font-medium text-white transition-all disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full rounded-lg px-5 py-2.5 text-sm font-medium text-white transition-all disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
           style={{ background: "#6c47ff" }}
         >
           {saving ? "Lagrer…" : "Lagre endringer"}
@@ -188,18 +212,16 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
         <Section title="Grunninfo">
           <div className="space-y-5">
 
-            {/* Navn */}
             <div>
               <label className="mb-2 block text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>Navn</label>
               <input
                 value={name}
                 onChange={(e) => mark(setName)(e.target.value)}
-                className={`${inputClass} ${inputFocusStyle}`}
+                className={`${inputBase} ${focusClass}`}
                 style={inputStyle}
               />
             </div>
 
-            {/* Slug */}
             <div>
               <label className="mb-2 block text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>Slug</label>
               <div
@@ -209,9 +231,10 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                 <span
                   className="shrink-0 border-r px-4 py-2.5 text-sm"
                   style={{
-                    background:   "rgba(255,255,255,0.04)",
-                    borderColor:  "rgba(255,255,255,0.1)",
-                    color:        "rgba(255,255,255,0.35)",
+                    background:  "rgba(255,255,255,0.04)",
+                    borderColor: "rgba(255,255,255,0.1)",
+                    color:       "rgba(255,255,255,0.35)",
+                    fontSize:    "14px",
                   }}
                 >
                   intraa.net/
@@ -219,8 +242,8 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                 <input
                   value={slug}
                   onChange={(e) => mark(setSlug)(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-                  className="flex-1 bg-transparent px-4 py-2.5 text-sm text-white focus:outline-none"
-                  style={{ background: "rgba(255,255,255,0.06)" }}
+                  className="flex-1 bg-transparent px-4 py-2.5 text-white focus:outline-none"
+                  style={{ background: "rgba(255,255,255,0.06)", fontSize: "16px" }}
                 />
               </div>
               <p className="mt-1.5 text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
@@ -228,7 +251,6 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
               </p>
             </div>
 
-            {/* Beskrivelse */}
             <div>
               <label className="mb-2 block text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
                 Beskrivelse{" "}
@@ -239,7 +261,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                 onChange={(e) => mark(setDescription)(e.target.value)}
                 rows={3}
                 placeholder="Beskriv hva dette communityet handler om…"
-                className={`${inputClass} ${inputFocusStyle} resize-none`}
+                className={`${inputBase} ${focusClass} resize-none`}
                 style={{ ...inputStyle, lineHeight: 1.6 }}
               />
             </div>
@@ -251,16 +273,15 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
         <Section title="Plan og status">
           <div className="space-y-1">
 
-            {/* Plan radio buttons */}
             <div>
               <label className="mb-3 block text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>Plan</label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-2">
                 {PLANS.map((p) => (
                   <button
                     key={p}
                     type="button"
                     onClick={() => mark(setPlan)(p)}
-                    className="rounded-lg py-3 text-sm font-medium transition-all"
+                    className="truncate rounded-lg px-2 py-2.5 text-xs font-medium transition-all"
                     style={plan === p
                       ? { background: "rgba(108,71,255,0.2)", border: "1px solid rgba(108,71,255,0.5)", color: "#c4b5fd" }
                       : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.45)" }
@@ -272,20 +293,18 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
               </div>
             </div>
 
-            {/* Type — readonly */}
             <InfoRow label="Type">
               <span
                 className="rounded-full px-3 py-1 text-xs font-medium"
                 style={org.type === "COMMUNITY"
                   ? { background: "rgba(139,92,246,0.15)", color: "#c4b5fd", border: "1px solid rgba(139,92,246,0.3)" }
-                  : { background: "rgba(59,130,246,0.15)", color: "#93c5fd", border: "1px solid rgba(59,130,246,0.3)" }
+                  : { background: "rgba(59,130,246,0.15)",  color: "#93c5fd", border: "1px solid rgba(59,130,246,0.3)" }
                 }
               >
                 {org.type === "COMMUNITY" ? "Community" : "Bedrift"}
               </span>
             </InfoRow>
 
-            {/* Opprettet — readonly */}
             <InfoRow label="Opprettet">
               <span className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
                 {formatDate(org.createdAt)}
@@ -297,17 +316,74 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
 
         {/* ── Synlighet ── */}
         <Section title="Synlighet">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-white">Åpent community</p>
-              <p className="mt-0.5 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                Alle kan bli med uten invitasjon
-              </p>
-            </div>
-            <Toggle
-              checked={isOpen}
-              onToggle={() => mark(setIsOpen)(!isOpen)}
-            />
+          <div className="space-y-3">
+            {VISIBILITY_OPTIONS.map((opt) => {
+              const active = visibility === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => mark(setVisibility)(opt.value)}
+                  className="w-full flex items-start gap-3 rounded-xl p-3.5 text-left transition-all"
+                  style={active
+                    ? { background: "rgba(108,71,255,0.15)", border: "1px solid rgba(108,71,255,0.4)" }
+                    : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }
+                  }
+                >
+                  <span className="mt-0.5 text-lg leading-none">{opt.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className="text-sm font-medium"
+                        style={{ color: active ? "#c4b5fd" : "white" }}
+                      >
+                        {opt.label}
+                      </span>
+                      {active && (
+                        <span
+                          className="rounded-full px-2 py-0.5 text-xs"
+                          style={{ background: "rgba(108,71,255,0.25)", color: "#c4b5fd" }}
+                        >
+                          Aktiv
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
+                      {opt.desc}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+
+            {/* Invite link — shown only for private */}
+            {visibility === "private" && (
+              <div
+                className="mt-2 rounded-xl p-4"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <p className="mb-2 text-xs font-medium text-white">Invitasjonslenke</p>
+                <p className="mb-3 text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
+                  Del denne lenken for å gi tilgang til det private communityet.
+                </p>
+                {inviteToken && (
+                  <p
+                    className="mb-3 rounded-lg px-3 py-2 font-mono text-xs break-all"
+                    style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)" }}
+                  >
+                    {typeof window !== "undefined" ? `${window.location.origin}/inviter/open/${inviteToken}` : `/inviter/open/${inviteToken}`}
+                  </p>
+                )}
+                <button
+                  onClick={inviteToken ? copyInviteLink : generateInviteLink}
+                  disabled={genLoading}
+                  className="rounded-lg px-4 py-2 text-xs font-medium text-white transition-opacity disabled:opacity-50"
+                  style={{ background: "#6c47ff" }}
+                >
+                  {genLoading ? "Genererer…" : inviteToken ? "Kopier invitasjonslenke" : "Generer invitasjonslenke"}
+                </button>
+              </div>
+            )}
           </div>
         </Section>
 

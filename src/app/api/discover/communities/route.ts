@@ -12,7 +12,8 @@ export async function GET(req: NextRequest) {
 
   const communities = await db.organization.findMany({
     where: {
-      type: "COMMUNITY",
+      type:       "COMMUNITY",
+      visibility: { not: "private" },
       ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
     },
     include: {

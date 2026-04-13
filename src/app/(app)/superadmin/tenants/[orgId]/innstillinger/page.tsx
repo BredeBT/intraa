@@ -19,14 +19,16 @@ export default async function InnstillingerPage({ params }: { params: Promise<{ 
     <div className="px-8 py-8" style={{ maxWidth: 680 }}>
       <OrgSettingsForm
         org={{
-          id:          org.id,
-          name:        org.name,
-          slug:        org.slug,
-          plan:        org.plan,
-          description: org.description ?? null,
-          type:        org.type,
-          joinType:    org.joinType,
-          createdAt:   org.createdAt.toISOString(),
+          id:              org.id,
+          name:            org.name,
+          slug:            org.slug,
+          plan:            org.plan,
+          description:     org.description ?? null,
+          type:            org.type,
+          joinType:        org.joinType,
+          visibility:      org.visibility,
+          openInviteToken: org.openInviteToken ?? null,
+          createdAt:       org.createdAt.toISOString(),
         }}
       />
     </div>

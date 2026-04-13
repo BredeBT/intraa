@@ -134,6 +134,11 @@ body {
 }
 .msg-html pre code { background: none; padding: 0; }
 
+/* ── Mobile: prevent iOS zoom on input focus ── */
+@media (max-width: 768px) {
+  input, textarea, select { font-size: 16px !important; }
+}
+
 /* ── Mobile sidebar backdrop ── */
 .sidebar-backdrop {
   position: fixed;
