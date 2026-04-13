@@ -78,17 +78,23 @@ const CK = {
   totalClicks: "clicker_totalClicks",
 } as const;
 
+// Safe localStorage wrapper — Chrome incognito and some embedded WebViews throw
+// on any localStorage access; this prevents crashes in those environments.
+const ls = {
+  get:    (key: string): string | null => { try { return localStorage.getItem(key); } catch { return null; } },
+  set:    (key: string, value: string): void => { try { localStorage.setItem(key, value); } catch { /* quota / access denied */ } },
+  remove: (key: string): void => { try { localStorage.removeItem(key); } catch { /* access denied */ } },
+};
+
 function writeCache(profile: ClickerProfile, upgrades: UpgradeState[], coins?: number) {
-  try {
-    localStorage.setItem(CK.profile,     JSON.stringify(profile));
-    localStorage.setItem(CK.upgrades,    JSON.stringify(upgrades));
-    localStorage.setItem(CK.totalClicks, String(profile.totalClicks));
-    if (coins !== undefined) localStorage.setItem(CK.coins, String(Math.floor(coins)));
-  } catch { /* quota exceeded — ignore */ }
+  ls.set(CK.profile,     JSON.stringify(profile));
+  ls.set(CK.upgrades,    JSON.stringify(upgrades));
+  ls.set(CK.totalClicks, String(profile.totalClicks));
+  if (coins !== undefined) ls.set(CK.coins, String(Math.floor(coins)));
 }
 
 function clearCache() {
-  Object.values(CK).forEach((k) => localStorage.removeItem(k));
+  Object.values(CK).forEach((k) => ls.remove(k));
 }
 
 export default function ClickerPage() {
@@ -120,24 +126,24 @@ export default function ClickerPage() {
   // ── Restore from localStorage on mount (before DB fetch) ─────────────────
   useEffect(() => {
     try {
-      const p = localStorage.getItem(CK.profile);
+      const p = ls.get(CK.profile);
       if (p) {
         const parsed = JSON.parse(p) as ClickerProfile;
         setProfile(parsed);
-        const coins = parseFloat(localStorage.getItem(CK.coins) ?? String(parsed.coins));
+        const coins = parseFloat(ls.get(CK.coins) ?? String(parsed.coins));
         serverCoins.current = coins;
         setDisplayCoins(coins);
       }
-      const u = localStorage.getItem(CK.upgrades);
+      const u = ls.get(CK.upgrades);
       if (u) setUpgrades(JSON.parse(u) as UpgradeState[]);
-      const tc = localStorage.getItem(CK.totalClicks);
+      const tc = ls.get(CK.totalClicks);
       if (tc) setTotalClicks(parseInt(tc, 10));
     } catch { /* stale/corrupt cache — ignore */ }
   }, []);
 
   // ── Persist displayCoins to localStorage ─────────────────────────────────
   useEffect(() => {
-    try { localStorage.setItem(CK.coins, String(Math.floor(displayCoins))); } catch { /* ignore */ }
+    ls.set(CK.coins, String(Math.floor(displayCoins)));
   }, [displayCoins]);
 
   // ── Keep totalClicksRef in sync ──────────────────────────────────────────
@@ -294,13 +300,20 @@ export default function ClickerPage() {
     localDelta.current = 0;
     clickCount.current = 0;
 
+    console.log("[Buy] upgradeId:", upgradeId);
+    console.log("[Buy] serverCoins:", serverCoins.current, "localDelta sent:", delta, "displayCoins:", displayCoins);
+
     const res = await fetch("/api/clicker/upgrade", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify({ orgId, upgradeId, delta, clicks }),
     });
+
+    console.log("[Buy] response status:", res.status);
+
     if (res.ok) {
       const data = await res.json() as { profile: ClickerProfile; upgrades: UpgradeState[] };
+      console.log("[Buy] new serverCoins from DB:", data.profile.coins, "remaining localDelta:", localDelta.current);
       setProfile(data.profile);
       serverCoins.current = data.profile.coins;
       // localDelta may have new ticks that arrived during the API call — keep them.
@@ -308,7 +321,10 @@ export default function ClickerPage() {
       setDisplayCoins(total);
       setUpgrades(data.upgrades);
       writeCache(data.profile, data.upgrades, total);
+      console.log("[Buy] displayCoins after:", total);
     } else {
+      const errText = await res.text().catch(() => "(unreadable)");
+      console.error("[Buy] purchase failed — status:", res.status, "body:", errText);
       // Purchase failed — restore delta so ticks aren't lost.
       localDelta.current += delta;
       clickCount.current += clicks;
