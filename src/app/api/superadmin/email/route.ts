@@ -1,7 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { db }   from "@/server/db";
-import { sendMarketingEmail } from "@/lib/email";
+import { auth }   from "@/auth";
+import { db }     from "@/server/db";
+import { resend } from "@/lib/resend";
+
+const EMAIL_FROM = process.env.EMAIL_FROM ?? "noreply@intraa.net";
+
+function buildHtml(content: string) {
+  // Escape HTML entities in user content before embedding
+  const safe = content
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  return `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#0d0d14;font-family:sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#12121e;border-radius:12px;padding:32px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+      <div style="width:36px;height:36px;border-radius:8px;background:#6c47ff;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;">I</div>
+      <span style="color:white;font-size:18px;font-weight:600;">Intraa</span>
+    </div>
+    <div style="color:rgba(255,255,255,0.56);font-size:15px;line-height:1.7;white-space:pre-wrap;">${safe}</div>
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:24px 0;" />
+    <p style="color:rgba(255,255,255,0.25);font-size:12px;margin:0;">
+      Du mottar denne eposten fordi du er registrert på intraa.net.<br/>
+      <a href="https://intraa.net/avmeldt" style="color:#6c47ff;">Meld deg av epostlisten</a>
+    </p>
+  </div>
+</body>
+</html>`;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -34,12 +62,12 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json() as {
     subject:  string;
-    html:     string;
+    content:  string;
     audience: "all" | "pro" | "tenant";
     orgId?:   string;
   };
 
-  if (!body.subject?.trim() || !body.html?.trim()) {
+  if (!body.subject?.trim() || !body.content?.trim()) {
     return NextResponse.json({ error: "Emne og innhold er påkrevd" }, { status: 400 });
   }
 
@@ -54,7 +82,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Ingen mottakere med epostsamtykke" }, { status: 400 });
   }
 
-  await sendMarketingEmail(emails, body.subject.trim(), body.html);
+  const subject = body.subject.trim();
+  const html    = buildHtml(body.content.trim());
+  const text    = body.content.trim();
+
+  for (let i = 0; i < emails.length; i += 50) {
+    await resend.emails.send({
+      from:    EMAIL_FROM,
+      to:      emails.slice(i, i + 50),
+      subject,
+      html,
+      text,
+    });
+  }
 
   return NextResponse.json({ sent: emails.length });
 }

@@ -38,7 +38,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
           subject,
-          html:     body.replace(/\n/g, "<br>"),
+          content:  body,
           audience,
           orgId:    audience === "tenant" ? orgId : undefined,
         }),
