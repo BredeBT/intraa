@@ -1,3 +1,19 @@
+## Intraa Update — 14. april 2026 (4)
+
+### Nytt
+- Profilside redesignet — sentrert layout med banner, overlappende avatar og ny kortdesign
+- Online-indikator vises på profilbildet når brukeren var aktiv siste 5 minutter
+- Rediger profil-modal direkte på profilsiden — bytt profilbilde, bannerbilde, navn og bio
+- Bio-feltet har teller som viser antall tegn igjen av 160
+
+### Forbedringer
+- Tre-prikker-meny for alle profiler: fjern venn, rapporter bruker, blokker bruker
+- Fanpass, coins og badges vises som chips under profilinformasjonen
+- Communities-seksjonen har fått mørkere kortdesign som matcher resten av appen
+- Venneliste og tom lenke-seksjon er fjernet fra profilsiden
+
+---
+
 ## Intraa Update — 14. april 2026 (3)
 
 ### Nytt
