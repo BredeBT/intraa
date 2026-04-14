@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
-import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X, Radio } from "lucide-react";
+import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X } from "lucide-react";
 import { createPost, deletePost } from "@/server/actions/posts";
 import type { PostWithAuthor, CommentWithAuthor } from "@/lib/types";
-import { AVATAR_PRESETS } from "@/lib/themePresets";
 import SafeHtml from "@/components/SafeHtml";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -18,6 +16,7 @@ function fileToBase64(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+void fileToBase64; // retained for potential use
 
 function initials(name: string) {
   return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "?";
@@ -33,6 +32,12 @@ function relativeTime(date: Date) {
   return new Date(date).toLocaleDateString("no-NO", { day: "numeric", month: "short" });
 }
 
+function formatSince(iso: string) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleDateString("no-NO", { month: "short", year: "numeric" });
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -41,27 +46,26 @@ interface Props {
   userName:        string;
   userId:          string;
   isSuperAdmin:    boolean;
-  bannerUrl?:      string | null;
-  logoUrl?:        string | null;
-  avatarPreset?:   string | null;
+  logoUrl:         string | null;
   orgName:         string;
-  orgType:         "COMPANY" | "COMMUNITY";
-  orgColor:        string;
+  orgType:         string;
+  orgSlug:         string | null;
+  orgCreatedAt:    string;
   memberCount:     number;
+  onlineCount:     number;
+  weekPostCount:   number;
   welcomeMessage?: string | null;
-  orgSlug?:        string | null;
-  liveEnabled?:    boolean;
+  bannerBg:        string | null;
   initialIsLive?:  boolean;
 }
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 
-function UserAvatar({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
-  const cls = size === "sm"
-    ? "h-7 w-7 text-[10px]"
-    : "h-9 w-9 text-sm";
+function UserAvatar({ name, size = 9 }: { name: string; size?: number }) {
   return (
-    <div className={`flex shrink-0 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white ${cls}`}>
+    <div
+      className={`h-${size} w-${size} flex shrink-0 items-center justify-center rounded-full bg-purple-600 text-xs font-semibold text-white`}
+    >
       {initials(name)}
     </div>
   );
@@ -71,8 +75,9 @@ function UserAvatar({ name, size = "md" }: { name: string; size?: "sm" | "md" })
 
 export default function FeedClient({
   initialPosts, orgId, userName, userId, isSuperAdmin,
-  bannerUrl, logoUrl, avatarPreset, orgName, orgType, orgColor, memberCount, welcomeMessage,
-  orgSlug, liveEnabled, initialIsLive,
+  logoUrl, orgName, orgType, orgSlug, orgCreatedAt,
+  memberCount, onlineCount, weekPostCount, welcomeMessage,
+  bannerBg, initialIsLive,
 }: Props) {
   const [posts,            setPosts]            = useState<PostWithAuthor[]>(initialPosts);
   const [open,             setOpen]             = useState(false);
@@ -87,19 +92,14 @@ export default function FeedClient({
   const [isUploading,      setIsUploading]      = useState(false);
   const [pasteToast,       setPasteToast]       = useState<string | null>(null);
 
-  const [liveStream] = useState<{ isLive: boolean; title: string } | null>(
-    initialIsLive ? { isLive: true, title: "" } : null
-  );
-
   const pasteToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef     = useRef<HTMLTextAreaElement>(null);
   const imageInputRef   = useRef<HTMLInputElement>(null);
 
-  const userInitials = initials(userName || "?");
-  const openKey      = Array.from(openComments).sort().join(",");
+  const openKey   = Array.from(openComments).sort().join(",");
   const ALLOWED_PASTE = ["image/png", "image/jpeg", "image/gif", "image/webp"];
 
-  const orgTypeLabel = orgType === "COMPANY" ? "Bedrift" : "Community";
+  void initialIsLive; // live handled at layout level
 
   function showPasteToast(msg: string) {
     setPasteToast(msg);
@@ -141,7 +141,6 @@ export default function FeedClient({
   useEffect(() => {
     if (isPosting) return;
     let cancelled = false;
-    const INTERVAL = 15000;
     let id: ReturnType<typeof setInterval>;
     const run = async () => {
       try {
@@ -151,10 +150,10 @@ export default function FeedClient({
         if (!cancelled) setPosts(fresh);
       } catch { /* silent */ }
     };
-    id = setInterval(run, INTERVAL);
+    id = setInterval(run, 15000);
     const onVisibility = () => {
       if (document.hidden) clearInterval(id);
-      else id = setInterval(run, INTERVAL);
+      else id = setInterval(run, 15000);
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => { cancelled = true; clearInterval(id); document.removeEventListener("visibilitychange", onVisibility); };
@@ -176,7 +175,6 @@ export default function FeedClient({
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openKey]);
-
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
@@ -212,20 +210,15 @@ export default function FeedClient({
         if (res.ok) {
           imageUrl = ((await res.json()) as { url: string }).url;
         } else {
-          setIsPosting(false);
-          setIsUploading(false);
-          return;
+          setIsPosting(false); setIsUploading(false); return;
         }
       } catch {
-        setIsPosting(false);
-        setIsUploading(false);
-        return;
+        setIsPosting(false); setIsUploading(false); return;
       }
       setIsUploading(false);
     }
 
     setContent(""); clearImage(); setOpen(false);
-
     try {
       await createPost(orgId, text, imageUrl);
       const res = await fetch(`/api/posts?orgId=${orgId}`);
@@ -292,319 +285,330 @@ export default function FeedClient({
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="mx-auto max-w-[680px] px-4 pb-10" style={{ background: "#0d0d14" }}>
 
-      {/* ── MOBIL LIVE-BANNER (skjult på desktop der OwnerSidebar viser dette) ── */}
-      {liveStream?.isLive && orgSlug && (
-        <Link
-          href={`/${orgSlug}/live`}
-          className="md:hidden flex items-center gap-3 overflow-hidden border-b border-red-900/30 bg-red-950/30 px-4 py-3"
-        >
-          <span className="h-2 w-2 shrink-0 rounded-full bg-red-500 animate-pulse" />
-          <div className="min-w-0 flex-1 overflow-hidden">
-            <div className="flex items-center gap-1.5 overflow-hidden">
-              <span className="shrink-0 text-xs font-semibold text-red-400">LIVE NÅ</span>
-              {liveStream.title && (
-                <span className="truncate text-xs text-zinc-400">{liveStream.title}</span>
-              )}
-            </div>
-          </div>
-          <span className="ml-2 shrink-0 text-xs font-medium text-zinc-400">Se →</span>
-        </Link>
-      )}
+      {/* ── Banner ── */}
+      <div
+        className="h-36 md:h-40 -mx-4 relative overflow-hidden mb-0"
+        style={{ background: bannerBg ?? "linear-gradient(135deg, #2d1b69, #4f35b8, #7c3aed)" }}
+      />
 
-      {/* ── 1. ORG HEADER ── */}
-      <div className="relative z-10 mx-auto max-w-2xl px-4">
-        <div className="flex items-end gap-4 pt-4 mb-6">
-          {/* Org logo / avatar */}
-          <div className="shrink-0">
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={logoUrl}
-                alt={orgName}
-                className="h-16 w-16 rounded-xl border-4 border-zinc-950 object-cover shadow-xl"
-              />
-            ) : avatarPreset ? (
-              (() => {
-                const ap = AVATAR_PRESETS.find((p) => p.id === avatarPreset);
-                return (
-                  <div
-                    className="flex h-16 w-16 items-center justify-center rounded-xl border-4 border-zinc-950 text-3xl shadow-xl"
-                    style={{ background: ap?.bg }}
-                  >
-                    {ap?.emoji ?? initials(orgName)}
-                  </div>
-                );
-              })()
-            ) : (
-              <div
-                className="flex h-16 w-16 items-center justify-center rounded-xl border-4 border-zinc-950 text-xl font-bold text-white shadow-xl"
-                style={{ backgroundColor: orgColor }}
-              >
-                {initials(orgName)}
-              </div>
+      {/* ── Logo + info ── */}
+      <div className="flex items-center gap-4 pt-4 pb-4">
+        <div className="w-14 h-14 rounded-2xl bg-purple-600 flex items-center justify-center font-bold text-xl shrink-0 overflow-hidden border-2 border-white/10">
+          {logoUrl
+            ? <img src={logoUrl} alt="" className="w-full h-full object-cover" />
+            : <span className="text-white">{orgName[0]}</span>
+          }
+        </div>
+        <div className="min-w-0">
+          <h1 className="text-lg font-semibold text-white truncate">{orgName}</h1>
+          <div className="flex flex-wrap items-center gap-2 mt-1 text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+            <span>{orgType === "COMMUNITY" ? "Community" : "Bedrift"}</span>
+            <span>·</span>
+            <span>{memberCount.toLocaleString("no-NO")} medlemmer</span>
+            {onlineCount > 0 && (
+              <>
+                <span>·</span>
+                <span className="flex items-center gap-1 text-green-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
+                  {onlineCount} online
+                </span>
+              </>
             )}
           </div>
-
-          {/* Org info */}
-          <div className="pb-1 min-w-0 flex-1">
-            <h1 className="truncate text-xl font-bold text-white">{orgName}</h1>
-            <div className="flex flex-wrap items-center gap-2 mt-0.5">
-              <span className="text-xs text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded-full">
-                {orgTypeLabel}
-              </span>
-              <span className="text-xs text-zinc-400">{memberCount} {memberCount === 1 ? "medlem" : "medlemmer"}</span>
-            </div>
-          </div>
         </div>
+        {orgSlug && initialIsLive && (
+          <a
+            href={`/${orgSlug}/live`}
+            className="ml-auto flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white shrink-0"
+            style={{ background: "rgba(220,38,38,0.85)" }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            LIVE
+          </a>
+        )}
+      </div>
 
-        {/* Velkomstmelding */}
-        {welcomeMessage && (
-          <div className="mb-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
-            <p className="text-sm text-zinc-300">{welcomeMessage}</p>
+      {/* ── Stats grid ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-5">
+        {[
+          { value: weekPostCount,          label: "Innlegg",    color: "text-white" },
+          { value: memberCount,            label: "Medlemmer",  color: "text-white" },
+          { value: onlineCount,            label: "Online nå",  color: "text-green-400" },
+          { value: formatSince(orgCreatedAt), label: "Aktiv siden", color: "text-white/60", small: true },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-xl py-3 text-center border border-white/[0.06]"
+            style={{ background: "rgba(255,255,255,0.05)" }}
+          >
+            <p className={`font-semibold ${stat.small ? "text-xs text-white/60" : "text-lg"} ${stat.color}`}>
+              {typeof stat.value === "number" ? stat.value.toLocaleString("no-NO") : stat.value}
+            </p>
+            <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{stat.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Velkomstmelding */}
+      {welcomeMessage && (
+        <div className="mb-4 rounded-xl border border-purple-500/20 px-4 py-3" style={{ background: "rgba(108,71,255,0.08)" }}>
+          <p className="text-sm text-white/70">{welcomeMessage}</p>
+        </div>
+      )}
+
+      {/* ── Compose box ── */}
+      <div className="rounded-2xl border border-white/[0.06] p-4 mb-4" style={{ background: "#12121e" }}>
+        {pasteToast && (
+          <div className="mb-3 flex items-center justify-between rounded-lg border border-white/[0.06] px-3 py-2 text-xs text-white/50" style={{ background: "rgba(255,255,255,0.05)" }}>
+            <span>📋 {pasteToast}</span>
+            <button onClick={() => setPasteToast(null)} className="ml-2 opacity-60 hover:opacity-100"><X className="h-3 w-3" /></button>
           </div>
         )}
 
-        {/* ── 2. COMPOSE BOX ── */}
-        <div className="mb-5 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          {/* Paste toast */}
-          {pasteToast && (
-            <div className="mb-3 flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-800 px-3 py-2 text-xs text-zinc-400">
-              <span>📋 {pasteToast}</span>
-              <button onClick={() => setPasteToast(null)} className="ml-2 opacity-60 hover:opacity-100">
-                <X className="h-3 w-3" />
+        <div className="flex gap-3 items-center">
+          <UserAvatar name={userName} />
+
+          {!open ? (
+            <div className="flex flex-1 items-center gap-2">
+              <button
+                onClick={() => setOpen(true)}
+                className="flex-1 rounded-xl px-4 py-2.5 text-left text-sm transition-colors text-left"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.35)" }}
+              >
+                Del noe med {orgName}...
+              </button>
+              <button
+                onClick={() => { setOpen(true); imageInputRef.current?.click(); }}
+                className="p-2.5 rounded-xl transition-colors"
+                style={{ color: "rgba(255,255,255,0.4)" }}
+                title="Legg til bilde"
+              >
+                <ImageIcon className="h-5 w-5" />
               </button>
             </div>
-          )}
-
-          <div className="flex items-start gap-3">
-            <UserAvatar name={userName} />
-
-            {!open ? (
-              /* Collapsed — clickable placeholder row */
-              <div className="flex flex-1 items-center gap-2">
-                <button
-                  onClick={() => setOpen(true)}
-                  className="flex-1 rounded-lg bg-zinc-800 px-4 py-2.5 text-left text-sm text-zinc-400 transition-colors hover:opacity-80"
-                >
-                  Del noe med {orgName || "teamet"}…
-                </button>
-                <button
-                  onClick={() => { setOpen(true); imageInputRef.current?.click(); }}
-                  className="flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-800 px-3 py-2.5 text-xs text-zinc-400 transition-colors hover:opacity-80"
-                  title="Legg til bilde"
-                >
-                  <ImageIcon className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              /* Expanded */
-              <div className="flex flex-1 flex-col gap-3">
-                <textarea
-                  ref={textareaRef}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  onKeyDown={handleKey}
-                  rows={3}
-                  placeholder={`Del noe med ${orgName || "teamet"}…`}
-                  className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-800 px-4 py-3 text-sm text-white placeholder:text-zinc-400 outline-none transition-colors focus:border-indigo-500"
-                />
-
-                {imagePreview && (
-                  <div className="relative w-fit">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={imagePreview} alt="Forhåndsvisning" className="max-h-48 rounded-xl object-cover" />
-                    <button
-                      onClick={clearImage}
-                      className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-zinc-900 text-white hover:opacity-80"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => imageInputRef.current?.click()}
-                      className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-zinc-400 transition-colors hover:opacity-80"
-                      title="Legg til bilde"
-                    >
-                      <ImageIcon className="h-4 w-4" />
-                    </button>
-                    <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
-                    <span className="text-xs text-zinc-400 opacity-60">⌘↵ for å sende</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button type="button" onClick={handleClose}
-                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:opacity-80">
-                      Avbryt
-                    </button>
-                    <button type="button" onClick={() => void handleSubmit()}
-                      disabled={(!content.trim() && !imageFile) || isPosting}
-                      className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:opacity-80 disabled:opacity-50">
-                      <Send className="h-3.5 w-3.5" />
-                      {isUploading ? "Laster opp…" : isPosting ? "Sender…" : "Del"}
-                    </button>
-                  </div>
+          ) : (
+            <div className="flex flex-1 flex-col gap-3">
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onKeyDown={handleKey}
+                rows={3}
+                placeholder={`Del noe med ${orgName}...`}
+                className="w-full resize-none rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none transition-colors"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
+              />
+              {imagePreview && (
+                <div className="relative w-fit">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imagePreview} alt="Forhåndsvisning" className="max-h-48 rounded-xl object-cover" />
+                  <button onClick={clearImage} className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-white" style={{ background: "#12121e" }}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <button type="button" onClick={() => imageInputRef.current?.click()}
+                    className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs transition-colors"
+                    style={{ color: "rgba(255,255,255,0.4)" }} title="Legg til bilde">
+                    <ImageIcon className="h-4 w-4" />
+                  </button>
+                  <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>⌘↵ for å sende</span>
+                </div>
+                <div className="flex gap-2">
+                  <button type="button" onClick={handleClose}
+                    className="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
+                    style={{ color: "rgba(255,255,255,0.4)" }}>
+                    Avbryt
+                  </button>
+                  <button type="button" onClick={() => void handleSubmit()}
+                    disabled={(!content.trim() && !imageFile) || isPosting}
+                    className="flex items-center gap-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 px-4 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-50">
+                    <Send className="h-3.5 w-3.5" />
+                    {isUploading ? "Laster opp…" : isPosting ? "Sender…" : "Del"}
+                  </button>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* ── 3. POST LIST ── */}
-        {posts.length === 0 ? (
-          <p className="py-12 text-center text-sm text-zinc-600">
-            Ingen innlegg ennå — vær den første til å poste!
-          </p>
-        ) : (
-          <div className="space-y-4 pb-10">
-            {posts.map((post) => {
-              const canDelete      = post.authorId === userId || isSuperAdmin;
-              const isCommentsOpen = openComments.has(post.id);
-              const isExpanded     = expandedComments.has(post.id);
-              const displayed      = isExpanded ? post.comments : post.comments.slice(0, 3);
-
-              return (
-                <article key={post.id} className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-                  {/* Post header */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-sm font-semibold text-white">
-                      {initials(post.author.name ?? "")}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white">{post.author.name ?? ""}</p>
-                      <p className="text-xs text-zinc-400">{relativeTime(post.createdAt)}</p>
-                    </div>
-                    {canDelete && (
-                      <button
-                        onClick={() => setConfirmDeleteId(post.id)}
-                        className="rounded-md p-1.5 text-zinc-400 opacity-40 transition-colors hover:opacity-100 hover:text-rose-400"
-                        title="Slett innlegg"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Post content */}
-                  {post.content && (
-                    <div className="mt-3 text-sm leading-relaxed text-white">
-                      <SafeHtml content={post.content} />
-                    </div>
-                  )}
-
-                  {/* Post image */}
-                  {post.imageUrl && (
-                    <div className="mt-3 flex justify-center">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={post.imageUrl}
-                        alt=""
-                        className="max-h-96 max-w-full rounded-xl object-contain"
-                      />
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="mt-2 flex items-center gap-1 border-t border-zinc-800 pt-1">
-                    <button
-                      onClick={() => handleLike(post.id, post.likedByMe)}
-                      className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg text-xs transition-colors ${
-                        post.likedByMe ? "text-rose-400" : "text-zinc-400 hover:text-rose-400"
-                      }`}
-                    >
-                      <Heart className="h-4 w-4" fill={post.likedByMe ? "currentColor" : "none"} />
-                      {post.likeCount > 0 && <span>{post.likeCount}</span>}
-                      <span>{post.likedByMe ? "Likt" : "Lik"}</span>
-                    </button>
-                    <button
-                      onClick={() => toggleComments(post.id)}
-                      className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg text-xs transition-colors ${
-                        isCommentsOpen ? "text-indigo-400" : "text-zinc-400 hover:text-indigo-400"
-                      }`}
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      {post.comments.length > 0 && <span>{post.comments.length}</span>}
-                      <span>Kommentarer</span>
-                    </button>
-                  </div>
-
-                  {/* Comments */}
-                  {isCommentsOpen && (
-                    <div className="mt-3 space-y-2.5 border-t border-zinc-800 pt-3">
-                      {displayed.map((comment) => (
-                        <div key={comment.id} className="flex items-start gap-2.5">
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-[10px] font-semibold text-white">
-                            {initials(comment.author.name ?? "")}
-                          </div>
-                          <div className="flex-1 rounded-lg bg-zinc-800 px-3 py-2">
-                            <div className="mb-0.5 flex items-baseline gap-2">
-                              <span className="text-xs font-semibold text-white">{comment.author.name}</span>
-                              <span className="text-[10px] text-zinc-400">{relativeTime(comment.createdAt)}</span>
-                            </div>
-                            <div className="text-xs leading-relaxed text-white"><SafeHtml content={comment.content} /></div>
-                          </div>
-                        </div>
-                      ))}
-
-                      {post.comments.length > 3 && (
-                        <button
-                          onClick={() => toggleExpand(post.id)}
-                          className="text-xs font-medium text-indigo-400 hover:opacity-80"
-                        >
-                          {isExpanded ? "Vis færre" : `Vis alle ${post.comments.length} kommentarer`}
-                        </button>
-                      )}
-
-                      {/* Comment input */}
-                      <div className="flex items-center gap-2 pt-1">
-                        <UserAvatar name={userName} size="sm" />
-                        <div className="flex flex-1 items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-800 px-3 py-2">
-                          <input
-                            type="text"
-                            value={commentInputs[post.id] ?? ""}
-                            onChange={(e) => setCommentInputs((p) => ({ ...p, [post.id]: e.target.value }))}
-                            onKeyDown={(e) => handleCommentKey(e, post.id)}
-                            placeholder="Skriv en kommentar…"
-                            className="flex-1 bg-transparent text-xs text-white placeholder:text-zinc-400 outline-none"
-                          />
-                          <button
-                            onClick={() => void handleAddComment(post.id)}
-                            disabled={!commentInputs[post.id]?.trim()}
-                            className="shrink-0 text-zinc-400 transition-colors hover:text-indigo-400 disabled:opacity-30"
-                          >
-                            <SendHorizontal className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </article>
-              );
-            })}
+        {/* Bottom toolbar (collapsed state) */}
+        {!open && (
+          <div className="flex gap-2 mt-3 pt-3 border-t border-white/[0.06]">
+            <button
+              onClick={() => { setOpen(true); imageInputRef.current?.click(); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all"
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.4)" }}
+            >
+              📷 Bilde
+            </button>
+            <button
+              onClick={() => setOpen(true)}
+              className="ml-auto bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium px-4 py-1.5 rounded-lg transition-colors"
+            >
+              Publiser
+            </button>
           </div>
         )}
       </div>
 
+      {/* ── Post list ── */}
+      {posts.length === 0 ? (
+        <p className="py-12 text-center text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>
+          Ingen innlegg ennå — vær den første til å poste!
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {posts.map((post) => {
+            const canDelete      = post.authorId === userId || isSuperAdmin;
+            const isCommentsOpen = openComments.has(post.id);
+            const isExpanded     = expandedComments.has(post.id);
+            const displayed      = isExpanded ? post.comments : post.comments.slice(0, 3);
+
+            return (
+              <article
+                key={post.id}
+                className="rounded-2xl border border-white/[0.06] overflow-hidden transition-colors hover:border-white/[0.10]"
+                style={{ background: "#12121e" }}
+              >
+                {/* Header */}
+                <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-purple-600/30 text-sm font-semibold text-purple-300">
+                    {initials(post.author.name ?? "")}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white">{post.author.name ?? ""}</p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{relativeTime(post.createdAt)}</p>
+                  </div>
+                  {canDelete && (
+                    <button
+                      onClick={() => setConfirmDeleteId(post.id)}
+                      className="p-1.5 rounded-lg transition-colors opacity-30 hover:opacity-70 hover:text-red-400"
+                      style={{ color: "rgba(255,255,255,0.6)" }}
+                      title="Slett innlegg"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Content */}
+                {post.content && (
+                  <div className="px-4 pb-3 text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.8)" }}>
+                    <SafeHtml content={post.content} />
+                  </div>
+                )}
+
+                {/* Image */}
+                {post.imageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={post.imageUrl} alt="" className="w-full max-h-80 object-cover" />
+                )}
+
+                {/* Actions */}
+                <div className="flex border-t border-white/[0.06]">
+                  <button
+                    onClick={() => handleLike(post.id, post.likedByMe)}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm transition-all ${
+                      post.likedByMe ? "text-pink-400" : "hover:text-white"
+                    }`}
+                    style={{ color: post.likedByMe ? undefined : "rgba(255,255,255,0.35)" }}
+                  >
+                    <Heart className="h-4 w-4" fill={post.likedByMe ? "currentColor" : "none"} />
+                    {post.likeCount > 0 && <span>{post.likeCount}</span>}
+                    <span>{post.likedByMe ? "Likt" : "Lik"}</span>
+                  </button>
+                  <button
+                    onClick={() => toggleComments(post.id)}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm transition-all ${
+                      isCommentsOpen ? "text-purple-400" : "hover:text-white"
+                    }`}
+                    style={{ color: isCommentsOpen ? undefined : "rgba(255,255,255,0.35)" }}
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    {post.comments.length > 0 && <span>{post.comments.length}</span>}
+                    <span>Kommenter</span>
+                  </button>
+                </div>
+
+                {/* Comments */}
+                {isCommentsOpen && (
+                  <div className="px-4 pb-4 pt-3 space-y-2.5 border-t border-white/[0.06]">
+                    {displayed.map((comment) => (
+                      <div key={comment.id} className="flex items-start gap-2.5">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-600/20 text-[10px] font-semibold text-purple-300">
+                          {initials(comment.author.name ?? "")}
+                        </div>
+                        <div className="flex-1 rounded-xl px-3 py-2" style={{ background: "rgba(255,255,255,0.05)" }}>
+                          <div className="mb-0.5 flex items-baseline gap-2">
+                            <span className="text-xs font-semibold text-white">{comment.author.name}</span>
+                            <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>{relativeTime(comment.createdAt)}</span>
+                          </div>
+                          <div className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
+                            <SafeHtml content={comment.content} />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {post.comments.length > 3 && (
+                      <button onClick={() => toggleExpand(post.id)} className="text-xs font-medium text-purple-400 hover:text-purple-300">
+                        {isExpanded ? "Vis færre" : `Vis alle ${post.comments.length} kommentarer`}
+                      </button>
+                    )}
+
+                    {/* Comment input */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-600 text-[10px] font-semibold text-white">
+                        {initials(userName)}
+                      </div>
+                      <div className="flex flex-1 items-center gap-2 rounded-xl px-3 py-2" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <input
+                          type="text"
+                          value={commentInputs[post.id] ?? ""}
+                          onChange={(e) => setCommentInputs((p) => ({ ...p, [post.id]: e.target.value }))}
+                          onKeyDown={(e) => handleCommentKey(e, post.id)}
+                          placeholder="Skriv en kommentar…"
+                          className="flex-1 bg-transparent text-xs text-white placeholder:text-white/30 outline-none"
+                        />
+                        <button
+                          onClick={() => void handleAddComment(post.id)}
+                          disabled={!commentInputs[post.id]?.trim()}
+                          className="shrink-0 transition-colors text-purple-400 hover:text-purple-300 disabled:opacity-30"
+                        >
+                          <SendHorizontal className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      )}
+
       {/* Delete confirmation modal */}
       {confirmDeleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
+          <div className="w-full max-w-sm rounded-2xl border border-white/[0.08] p-6 shadow-2xl" style={{ background: "#12121e" }}>
             <h3 className="mb-2 text-base font-semibold text-white">Slett innlegg</h3>
-            <p className="mb-5 text-sm text-zinc-400">
+            <p className="mb-5 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
               Er du sikker? Handlingen kan ikke angres.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setConfirmDeleteId(null)}
-                className="flex-1 rounded-lg border border-zinc-800 bg-zinc-800 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:opacity-80">
+                className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>
                 Avbryt
               </button>
               <button onClick={() => void handleDelete(confirmDeleteId)}
-                className="flex-1 rounded-lg bg-rose-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-500">
+                className="flex-1 rounded-xl bg-red-600 hover:bg-red-500 py-2.5 text-sm font-semibold text-white transition-colors">
                 Slett
               </button>
             </div>
