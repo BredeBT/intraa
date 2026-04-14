@@ -11,6 +11,9 @@ export default async function HomePage() {
   if (!session?.user?.id) redirect("/login");
   const userId = session.user.id;
 
+  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+  const weekAgo    = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
   const [myMemberships, allCommunities, friendships, pendingRequests] = await Promise.all([
     db.membership.findMany({
       where:   { userId },
@@ -45,8 +48,8 @@ export default async function HomePage() {
         OR: [{ senderId: userId }, { receiverId: userId }],
       },
       include: {
-        sender:   { select: { id: true, name: true, avatarUrl: true, username: true, status: true } },
-        receiver: { select: { id: true, name: true, avatarUrl: true, username: true, status: true } },
+        sender:   { select: { id: true, name: true, avatarUrl: true, lastActive: true } },
+        receiver: { select: { id: true, name: true, avatarUrl: true, lastActive: true } },
       },
     }),
 
@@ -58,38 +61,35 @@ export default async function HomePage() {
 
   const myOrgIds   = myMemberships.map((m) => m.organizationId);
   const myOrgIdSet = new Set(myOrgIds);
-  const weekAgo    = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  // Second round — needs myOrgIds
-  const [postCountsRaw, activityPosts] = myOrgIds.length > 0
+  // Second round — per-org post counts and online user counts
+  const [postCountsRaw, onlineCountsRaw] = myOrgIds.length > 0
     ? await Promise.all([
         db.post.groupBy({
           by:    ["orgId"],
           where: { orgId: { in: myOrgIds }, createdAt: { gte: weekAgo } },
           _count: { id: true },
         }),
-        db.post.findMany({
-          where:   { orgId: { in: myOrgIds } },
-          orderBy: { createdAt: "desc" },
-          take:    10,
-          include: {
-            author:       { select: { name: true, avatarUrl: true } },
-            organization: { select: { name: true, slug: true } },
-          },
-        }),
+        Promise.all(
+          myOrgIds.map((orgId) =>
+            db.user
+              .count({
+                where: {
+                  memberships: { some: { organizationId: orgId } },
+                  lastActive:  { gte: fiveMinAgo },
+                },
+              })
+              .then((count) => ({ orgId, count }))
+          )
+        ),
       ])
-    : [[], []] as [{ orgId: string; _count: { id: number } }[], typeof activityPostsPlaceholder];
+    : [[], []] as [{ orgId: string; _count: { id: number } }[], { orgId: string; count: number }[]];
 
-  // Satisfy TS — placeholder type used only for the empty branch above
-  type ActivityPost = Awaited<ReturnType<typeof db.post.findMany<{
-    include: { author: { select: { name: true; avatarUrl: true } }; organization: { select: { name: true; slug: true } } };
-  }>>>[number];
-  const activityPostsPlaceholder = [] as ActivityPost[];
-  void activityPostsPlaceholder; // suppress unused-var
-
-  const postCountMap = new Map(
-    (postCountsRaw as { orgId: string; _count: { id: number } }[])
-      .map((r) => [r.orgId, r._count.id])
+  const postCountMap   = new Map(
+    (postCountsRaw as { orgId: string; _count: { id: number } }[]).map((r) => [r.orgId, r._count.id])
+  );
+  const onlineCountMap = new Map(
+    (onlineCountsRaw as { orgId: string; count: number }[]).map((r) => [r.orgId, r.count])
   );
 
   const myCommunities = myMemberships
@@ -100,7 +100,7 @@ export default async function HomePage() {
       name:        m.organization.name,
       memberCount: m.organization._count.memberships,
       postCount:   postCountMap.get(m.organization.id) ?? 0,
-      onlineCount: 0, // TODO: Supabase Presence
+      onlineCount: onlineCountMap.get(m.organization.id) ?? 0,
       isLive:      m.organization.streamSessions.length > 0 && !!m.organization.streamSettings?.twitchChannel?.trim(),
       logoUrl:     m.organization.theme?.logoUrl ?? null,
       bannerUrl:   m.organization.theme?.bannerUrl ?? null,
@@ -121,24 +121,17 @@ export default async function HomePage() {
       bannerUrl:   c.theme?.bannerUrl ?? null,
     }));
 
-  const friends = friendships.map((f) => ({
-    friendshipId: f.id,
-    friend: f.senderId === userId ? f.receiver : f.sender,
-  }));
-
-  type ActivityItem =
-    | { type: "post"; createdAt: string; authorName: string | null; authorAvatar: string | null; orgName: string; orgSlug: string; preview: string };
-
-  const posts = activityPosts as ActivityPost[];
-  const activity: ActivityItem[] = posts.map((p) => ({
-    type:        "post",
-    createdAt:   p.createdAt.toISOString(),
-    authorName:  p.author.name,
-    authorAvatar: p.author.avatarUrl,
-    orgName:     p.organization.name,
-    orgSlug:     p.organization.slug,
-    preview:     p.content.replace(/<[^>]+>/g, "").slice(0, 60),
-  }));
+  const friends = friendships
+    .map((f) => {
+      const other = f.senderId === userId ? f.receiver : f.sender;
+      return {
+        id:       other.id,
+        name:     other.name,
+        avatarUrl: other.avatarUrl,
+        isOnline: other.lastActive ? other.lastActive >= fiveMinAgo : false,
+      };
+    })
+    .sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0));
 
   return (
     <HomeClient
@@ -147,7 +140,6 @@ export default async function HomePage() {
       recommendedCommunities={recommendedCommunities}
       friends={friends}
       pendingRequests={pendingRequests.map((r) => ({ id: r.id, sender: r.sender }))}
-      activity={activity}
     />
   );
 }
