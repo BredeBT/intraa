@@ -1,3 +1,17 @@
+## Intraa Update — 14. april 2026 (3)
+
+### Nytt
+- Feed-siden redesignet — én sentrert kolonne uten sidebar
+- Ny community-header med banner-bilde, logo, stats og LIVE-badge
+- Stats-grid viser innlegg siste uke, antall medlemmer, online nå og opprettelsesdato
+- LIVE-badge vises kun når stream faktisk er aktiv
+
+### Forbedringer
+- Sidebar er fjernet — mer fokus og renere layout
+- Innlegg-kort og compose-boks har fått mørkere kortdesign som matcher resten av appen
+
+---
+
 ## Intraa Update — 14. april 2026 (2)
 
 ### Nytt
