@@ -51,6 +51,7 @@ interface Props {
   welcomeMessage?: string | null;
   orgSlug?:        string | null;
   liveEnabled?:    boolean;
+  initialIsLive?:  boolean;
 }
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
@@ -71,7 +72,7 @@ function UserAvatar({ name, size = "md" }: { name: string; size?: "sm" | "md" })
 export default function FeedClient({
   initialPosts, orgId, userName, userId, isSuperAdmin,
   bannerUrl, logoUrl, avatarPreset, orgName, orgType, orgColor, memberCount, welcomeMessage,
-  orgSlug, liveEnabled,
+  orgSlug, liveEnabled, initialIsLive,
 }: Props) {
   const [posts,            setPosts]            = useState<PostWithAuthor[]>(initialPosts);
   const [open,             setOpen]             = useState(false);
@@ -86,7 +87,9 @@ export default function FeedClient({
   const [isUploading,      setIsUploading]      = useState(false);
   const [pasteToast,       setPasteToast]       = useState<string | null>(null);
 
-  const [liveStream, setLiveStream] = useState<{ isLive: boolean; title: string } | null>(null);
+  const [liveStream] = useState<{ isLive: boolean; title: string } | null>(
+    initialIsLive ? { isLive: true, title: "" } : null
+  );
 
   const pasteToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef     = useRef<HTMLTextAreaElement>(null);
@@ -174,19 +177,6 @@ export default function FeedClient({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openKey]);
 
-  // Poll live status (for mobile banner)
-  useEffect(() => {
-    if (!liveEnabled || !orgId) return;
-    const check = () => {
-      fetch(`/api/stream/status?orgId=${orgId}`)
-        .then((r) => r.ok ? r.json() as Promise<{ isLive: boolean; title: string }> : Promise.reject())
-        .then((data) => setLiveStream(data))
-        .catch(() => null);
-    };
-    check();
-    const interval = setInterval(check, 60_000);
-    return () => clearInterval(interval);
-  }, [orgId, liveEnabled]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
 

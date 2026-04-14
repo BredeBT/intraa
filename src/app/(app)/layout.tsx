@@ -481,9 +481,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [org?.id]);
 
-  // Poll unread count every 30s, paused when tab is hidden
+  // Poll unread count every 60s, paused when tab is hidden
   useEffect(() => {
-    const INTERVAL = 30_000;
+    const INTERVAL = 60_000;
     let id: ReturnType<typeof setInterval>;
     const check = () => {
       fetch("/api/user/unread")

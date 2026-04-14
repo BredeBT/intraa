@@ -29,7 +29,7 @@ export default async function FeedPage() {
 
   const { db } = await import("@/server/db");
 
-  const [posts, org, theme, memberCount] = await Promise.all([
+  const [posts, org, theme, memberCount, liveSession] = await Promise.all([
     getPosts(ctx.organizationId),
     db.organization.findUnique({
       where:  { id: ctx.organizationId },
@@ -40,6 +40,10 @@ export default async function FeedPage() {
       select: { bannerUrl: true, bannerPreset: true, avatarPreset: true, logoUrl: true, welcomeMessage: true },
     }),
     db.membership.count({ where: { organizationId: ctx.organizationId } }),
+    db.streamSession.findFirst({
+      where:  { organizationId: ctx.organizationId, endedAt: null },
+      select: { id: true },
+    }),
   ]);
 
   const isCommunity = org?.type === "COMMUNITY";
@@ -85,6 +89,7 @@ export default async function FeedPage() {
             welcomeMessage={theme?.welcomeMessage ?? null}
             orgSlug={org?.slug ?? null}
             liveEnabled={sidebar?.liveEnabled ?? false}
+            initialIsLive={!!liveSession}
           />
         </div>
       </div>
