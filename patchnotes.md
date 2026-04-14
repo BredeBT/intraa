@@ -1,3 +1,20 @@
+## Intraa Update — 14. april 2026 (2)
+
+### Nytt
+- Hjemside redesignet — kompakt liste-visning for communities du er med i
+- Venner-panel i høyre kolonne viser hvem som er online akkurat nå
+- Online-teller per community basert på aktivitet siste 5 minutter
+- Innlegg-teller per community viser aktivitet siste 7 dager
+- Live-badge på community-kort vises kun når stream faktisk er aktiv
+
+### Forbedringer
+- Hjemside er raskere og mindre rotete — søkefelt, "Online nå"-blokk og aktivitetsstrøm er fjernet
+- Community-kort er kompakte og klikkbare — hele kortet tar deg inn i communityet
+- Venner er sortert med online øverst
+- Venneforespørsler vises over venner i sidebaren
+
+---
+
 ## Intraa Update — 14. april 2026
 
 ### Nytt
