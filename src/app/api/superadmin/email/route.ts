@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth }   from "@/auth";
 import { db }     from "@/server/db";
-import { resend } from "@/lib/resend";
+import { getResend } from "@/lib/resend";
 
 const EMAIL_FROM = process.env.EMAIL_FROM ?? "noreply@intraa.net";
 
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
   const text    = body.content.trim();
 
   for (let i = 0; i < emails.length; i += 50) {
-    await resend.emails.send({
+    await getResend().emails.send({
       from:    EMAIL_FROM,
       to:      emails.slice(i, i + 50),
       subject,
