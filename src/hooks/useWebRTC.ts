@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useContext } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { ICE_SERVERS } from "@/lib/webrtc-config";
+import { callSounds } from "@/lib/call-sounds";
+import { WebRTCContext } from "@/context/WebRTCContext";
 import type SimplePeerType from "simple-peer";
 
 export type CallState = "idle" | "calling" | "receiving" | "connected" | "ended";
@@ -15,7 +17,7 @@ export interface IncomingCall {
   signal: any;
 }
 
-export function useWebRTC(currentUserId: string, friendId: string) {
+export function useWebRTC(currentUserId: string, friendId: string, userName?: string) {
   const [callState,            setCallState]            = useState<CallState>("idle");
   const [callType,             setCallType]             = useState<CallType>("audio");
   const [localStream,          setLocalStream]          = useState<MediaStream | null>(null);
@@ -26,17 +28,23 @@ export function useWebRTC(currentUserId: string, friendId: string) {
   const [callError,            setCallError]            = useState<string | null>(null);
   const [needsUserInteraction, setNeedsUserInteraction] = useState(false);
 
-  const peerRef        = useRef<SimplePeerType.Instance | null>(null);
-  const localVideoRef  = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const channelRef     = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const localStreamRef = useRef<MediaStream | null>(null);
+  const peerRef          = useRef<SimplePeerType.Instance | null>(null);
+  const localVideoRef    = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef   = useRef<HTMLVideoElement>(null);
+  const channelRef       = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const localStreamRef   = useRef<MediaStream | null>(null);
+  const dialCleanupRef   = useRef<(() => void) | null>(null);
 
   const signalingChannel = [currentUserId, friendId].filter(Boolean).sort().join(":");
+
+  // Read global context (for cross-page incoming call signal handoff)
+  const globalCtx = useContext(WebRTCContext);
 
   // ── Cleanup ────────────────────────────────────────────────────────────────
   const cleanupPeer = useCallback(() => {
     console.log("[WebRTC] cleanupPeer");
+    dialCleanupRef.current?.();
+    dialCleanupRef.current = null;
     peerRef.current?.destroy();
     peerRef.current = null;
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
@@ -51,6 +59,21 @@ export function useWebRTC(currentUserId: string, friendId: string) {
     setNeedsUserInteraction(false);
   }, []);
 
+  // ── Pick up pending incoming call from global context ──────────────────────
+  // Triggered when user navigates to /meldinger after answering from global banner
+  useEffect(() => {
+    if (!globalCtx) return;
+    const { incomingCall: pending, clearIncomingCall } = globalCtx;
+    if (pending && pending.from === friendId && callState === "idle") {
+      console.log("[WebRTC] Picking up pending call from global context");
+      setIncomingCall({ from: pending.from, type: pending.type, signal: pending.signal });
+      setCallType(pending.type);
+      setCallState("receiving");
+      clearIncomingCall();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [globalCtx?.incomingCall, friendId, callState]);
+
   // ── Signaling channel ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!friendId || !currentUserId) return;
@@ -61,6 +84,8 @@ export function useWebRTC(currentUserId: string, friendId: string) {
       .on("broadcast", { event: "call-offer" }, ({ payload }: { payload: { to: string; from: string; type: CallType; signal: unknown } }) => {
         console.log("[WebRTC] call-offer fra:", payload.from, "→", payload.to, "| meg:", currentUserId);
         if (payload.to !== currentUserId) { console.log("[WebRTC] Ignorerer — ikke til meg"); return; }
+        // Dismiss global banner since we're handling it locally in the DM view
+        globalCtx?.clearIncomingCall();
         console.log("[WebRTC] Setter incomingCall, type:", payload.type);
         setIncomingCall({ from: payload.from, type: payload.type, signal: payload.signal });
         setCallType(payload.type);
@@ -98,6 +123,7 @@ export function useWebRTC(currentUserId: string, friendId: string) {
       void supabase.removeChannel(ch);
       channelRef.current = null;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUserId, friendId, signalingChannel, cleanupPeer]);
 
   // ── Get user media ────────────────────────────────────────────────────────
@@ -143,7 +169,6 @@ export function useWebRTC(currentUserId: string, friendId: string) {
     const SP = (await import("simple-peer")).default;
 
     // trickle:false → single SDP offer/answer that includes all ICE candidates.
-    // Eliminates timing issues where ICE candidates arrive before peer is ready.
     const peer = new SP({ initiator, trickle: false, stream, config: ICE_SERVERS });
 
     peer.on("signal", (data: unknown) => {
@@ -154,10 +179,16 @@ export function useWebRTC(currentUserId: string, friendId: string) {
 
     peer.on("connect", () => {
       console.log("[WebRTC] Peer tilkoblet — data-kanal oppe!");
+      // Stop dialing sound when connection is established
+      dialCleanupRef.current?.();
+      dialCleanupRef.current = null;
     });
 
     peer.on("stream", async (remote: MediaStream) => {
       console.log("[WebRTC] GOT REMOTE STREAM!", remote.getTracks().map((t) => t.kind));
+      // Stop dialing sound when remote stream arrives
+      dialCleanupRef.current?.();
+      dialCleanupRef.current = null;
       setRemoteStream(remote);
       setCallState("connected");
 
@@ -189,6 +220,28 @@ export function useWebRTC(currentUserId: string, friendId: string) {
     return peer;
   }, [cleanupPeer]);
 
+  // ── Send notification to friend's personal channel ────────────────────────
+  const sendCallNotification = useCallback((signal: unknown, type: CallType) => {
+    if (!friendId) return;
+    const ch = supabase.channel(`notify:calls:${friendId}`);
+    ch.subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        void ch.send({
+          type:    "broadcast",
+          event:   "incoming-call",
+          payload: {
+            from:     currentUserId,
+            fromName: userName ?? "Noen",
+            to:       friendId,
+            type,
+            signal,
+          },
+        });
+        setTimeout(() => void supabase.removeChannel(ch), 3000);
+      }
+    });
+  }, [friendId, currentUserId, userName]);
+
   // ── Start call (initiator) ────────────────────────────────────────────────
   const startCall = useCallback(async (type: CallType) => {
     console.log("[WebRTC] startCall type:", type);
@@ -205,23 +258,27 @@ export function useWebRTC(currentUserId: string, friendId: string) {
     setLocalStream(stream);
     attachLocalVideo(stream);
 
+    // Start dialing sound
+    dialCleanupRef.current = callSounds.startDialing();
+
     const peer = await createPeer(true, stream, (signal) => {
       console.log("[WebRTC] Sender call-offer til:", friendId);
       channelRef.current?.send({
         type: "broadcast", event: "call-offer",
         payload: { from: currentUserId, to: friendId, type, signal },
       });
+      // Also notify friend's personal channel (for global banner)
+      sendCallNotification(signal, type);
     });
 
     peerRef.current = peer;
-  }, [getMedia, createPeer, cleanupPeer, attachLocalVideo, currentUserId, friendId]);
+  }, [getMedia, createPeer, cleanupPeer, attachLocalVideo, currentUserId, friendId, sendCallNotification]);
 
   // ── Answer call (receiver) ────────────────────────────────────────────────
   const answerCall = useCallback(async () => {
     if (!incomingCall) return;
     const { from: callerFrom, signal: callerSignal, type } = incomingCall;
     console.log("[WebRTC] answerCall, type:", type, "fra:", callerFrom);
-    console.log("[WebRTC] incomingCall signal:", callerSignal);
     setCallError(null);
 
     // Render overlay FIRST so video refs are available
@@ -255,9 +312,22 @@ export function useWebRTC(currentUserId: string, friendId: string) {
   // ── End / reject ──────────────────────────────────────────────────────────
   const endCall = useCallback(() => {
     console.log("[WebRTC] endCall");
+    dialCleanupRef.current?.();
+    dialCleanupRef.current = null;
     channelRef.current?.send({
       type: "broadcast", event: "call-ended",
       payload: { from: currentUserId, to: friendId },
+    });
+    // Notify via personal channel so global banner on caller's side dismisses
+    const notifyCh = supabase.channel(`notify:calls:${friendId}`);
+    notifyCh.subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        void notifyCh.send({
+          type: "broadcast", event: "call-ended-notify",
+          payload: { to: friendId },
+        });
+        setTimeout(() => void supabase.removeChannel(notifyCh), 1000);
+      }
     });
     cleanupPeer();
   }, [cleanupPeer, currentUserId, friendId]);

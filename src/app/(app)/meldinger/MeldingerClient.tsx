@@ -493,7 +493,7 @@ export default function MeldingerClient({
 
   // WebRTC — always called; friendId is empty string when not in a DM
   const activeDMFriendId = active?.type === "dm" ? active.userId : "";
-  const webrtc = useWebRTC(currentUserId, activeDMFriendId);
+  const webrtc = useWebRTC(currentUserId, activeDMFriendId, currentUserName);
 
   // Supabase Presence — track who is online
   useEffect(() => {

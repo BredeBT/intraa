@@ -1,3 +1,23 @@
+## Intraa Update — 14. april 2026
+
+### Nytt
+- Ringelyd og oppringelyd — du horer nå en lyd nar noen ringer deg, og en ringetone nar du ringer ut
+- Globalt anropsvarsel — nar noen ringer deg, vises banneret oppe pa skjermen uansett hvilken side du er pa
+- Varselbanneret forsvinner automatisk hvis du svarer eller avslår, og vises ikke dobbelt nar du allerede er i meldingsvisningen
+- Svar pa anrop fra varselbanneret sender deg direkte inn i samtalen
+- Nettlesarnotifikasjon (Safari/Chrome) vises nar fanen ikke er aktiv og noen ringer
+
+### Forbedringer
+- Meldingsbobler er bredere pa mobil (75%) og smalere pa desktop (65%) — teksten far mer plass
+- Meldingstekst brytes riktig ved lange ord og bevarer linjeskift fra avsenderen
+- Dobbelttoolbar i meldingsfeltet er fjernet — kun Tiptap-verktoylinjen vises
+- Videokall pa mobil vises i portrettmodus (FaceTime-stil) — full hogde, fokus pa ansikt
+- Lokal video i hjornet vises i portrettformat (3:4) og plasseres over knappene
+- Kontrollknapper i videokall er plassert trygt over hjemknapp-omradet pa iPhone
+- Selfie-kamera er nå speilet — slik det ser ut i FaceTime
+
+---
+
 ## Intraa Update — 12. april 2026
 
 ### Forbedringer
