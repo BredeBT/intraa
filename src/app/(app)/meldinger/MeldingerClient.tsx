@@ -11,6 +11,8 @@ import SafeHtml from "@/components/SafeHtml";
 import type { UserSearchResult } from "@/app/api/users/search/route";
 import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase-client";
+import { useWebRTC } from "@/hooks/useWebRTC";
+import { Phone, Video, MicOff, VideoOff, PhoneOff } from "lucide-react";
 
 const ChannelView = dynamic(() => import("./ChannelView"), { ssr: false });
 const GroupView   = dynamic(() => import("./GroupView"),   { ssr: false });
@@ -495,6 +497,10 @@ export default function MeldingerClient({
   const [showNewGroup, setShowNewGroup] = useState(false);
   const [onlineUsers,  setOnlineUsers] = useState<string[]>([]);
 
+  // WebRTC — always called; friendId is empty string when not in a DM
+  const activeDMFriendId = active?.type === "dm" ? active.userId : "";
+  const webrtc = useWebRTC(currentUserId, activeDMFriendId);
+
   // Supabase Presence — track who is online
   useEffect(() => {
     const ch = supabase.channel("presence:global")
@@ -835,6 +841,26 @@ export default function MeldingerClient({
                 <p className="text-xs text-white/30">{chatHeader.subtitle}</p>
               ) : null}
             </div>
+
+            {/* Call buttons — only for DM, not during active call */}
+            {active?.type === "dm" && webrtc.callState === "idle" && (
+              <div className="ml-auto flex gap-2">
+                <button
+                  onClick={() => void webrtc.startCall("audio")}
+                  title="Lydsamtale"
+                  className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.10] transition-all"
+                >
+                  <Phone className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => void webrtc.startCall("video")}
+                  title="Videosamtale"
+                  className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.10] transition-all"
+                >
+                  <Video className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -881,12 +907,120 @@ export default function MeldingerClient({
             onDeleted={() => { setGroups((prev) => prev.filter((g) => g.id !== active.groupId)); setActive(null); setMobileView("list"); }}
           />
         ) : (
-          <DMView
-            key={active.userId}
-            friendId={active.userId}
-            friend={activeConvFriend ?? { id: active.userId, name: null, avatarUrl: null }}
-            currentUserId={currentUserId}
-          />
+          <div className="relative flex flex-1 flex-col overflow-hidden min-h-0">
+
+            {/* ── Incoming call banner ──────────────────────────────────────── */}
+            {webrtc.incomingCall && (
+              <div className="mx-4 mt-3 shrink-0 flex items-center gap-4 rounded-2xl border border-purple-500/30 p-4" style={{ background: "#1a1a2e" }}>
+                <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-lg animate-pulse">
+                  {webrtc.incomingCall.type === "video" ? "📹" : "📞"}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white">{activeConvFriend?.name ?? "Noen"} ringer...</p>
+                  <p className="text-xs text-white/50">{webrtc.incomingCall.type === "video" ? "Videosamtale" : "Lydsamtale"}</p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={webrtc.rejectCall}
+                    className="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center text-red-400 hover:bg-red-500/30 transition-all"
+                  >
+                    <PhoneOff className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => void webrtc.answerCall()}
+                    className="w-10 h-10 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400 hover:bg-green-500/30 transition-all"
+                  >
+                    <Phone className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── Permission error ──────────────────────────────────────────── */}
+            {webrtc.callError && (
+              <div className="mx-4 mt-3 shrink-0 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
+                {webrtc.callError}
+              </div>
+            )}
+
+            <DMView
+              key={active.userId}
+              friendId={active.userId}
+              friend={activeConvFriend ?? { id: active.userId, name: null, avatarUrl: null }}
+              currentUserId={currentUserId}
+            />
+
+            {/* ── Call overlay ──────────────────────────────────────────────── */}
+            {(webrtc.callState === "connected" || webrtc.callState === "calling") && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-50 backdrop-blur-sm" style={{ background: "#0a0a1499" }}>
+
+                {webrtc.callType === "video" ? (
+                  <div className="relative w-full max-w-lg mx-4">
+                    <video
+                      ref={webrtc.remoteVideoRef}
+                      autoPlay
+                      playsInline
+                      className="w-full aspect-video bg-black rounded-2xl object-cover"
+                    />
+                    <video
+                      ref={webrtc.localVideoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="absolute bottom-3 right-3 w-28 aspect-video bg-black rounded-xl object-cover border-2 border-white/10"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-24 h-24 rounded-full bg-purple-500/20 border-2 border-purple-500/30 flex items-center justify-center text-4xl font-bold text-white animate-pulse">
+                      {(activeConvFriend?.name ?? "?").charAt(0).toUpperCase()}
+                    </div>
+                    <p className="text-lg font-medium text-white">{activeConvFriend?.name ?? "Ukjent"}</p>
+                    <p className="text-sm text-white/50">
+                      {webrtc.callState === "calling" ? "Ringer..." : "Samtale pågår"}
+                    </p>
+                  </div>
+                )}
+
+                {/* Controls */}
+                <div className="flex gap-4 mt-8">
+                  <button
+                    onClick={webrtc.toggleMute}
+                    title={webrtc.isMuted ? "Slå på mikrofon" : "Demp mikrofon"}
+                    className={`w-14 h-14 rounded-full flex items-center justify-center transition-all border ${
+                      webrtc.isMuted
+                        ? "bg-red-500/30 border-red-500/50 text-red-400"
+                        : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+                    }`}
+                  >
+                    <MicOff className="w-5 h-5" />
+                  </button>
+
+                  {webrtc.callType === "video" && (
+                    <button
+                      onClick={webrtc.toggleCamera}
+                      title={webrtc.isCameraOff ? "Slå på kamera" : "Slå av kamera"}
+                      className={`w-14 h-14 rounded-full flex items-center justify-center transition-all border ${
+                        webrtc.isCameraOff
+                          ? "bg-red-500/30 border-red-500/50 text-red-400"
+                          : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+                      }`}
+                    >
+                      <VideoOff className="w-5 h-5" />
+                    </button>
+                  )}
+
+                  <button
+                    onClick={webrtc.endCall}
+                    title="Avslutt samtale"
+                    className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-all"
+                  >
+                    <PhoneOff className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
