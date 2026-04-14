@@ -16,6 +16,7 @@ const USER_SELECT = {
   socialLinks: true,
   isPublic:    true,
   createdAt:   true,
+  lastActive:  true,
   memberships: {
     include: {
       organization: {
@@ -70,6 +71,9 @@ export default async function UserProfilePage({
     friendshipId = receivedRequest.id;
   }
 
+  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+  const isOnline   = profileUser.lastActive ? profileUser.lastActive >= fiveMinAgo : false;
+
   const [friendCount, purchases, totalCoinsAgg, activeFanpass] = await Promise.all([
     db.friendship.count({
       where: {
@@ -115,7 +119,7 @@ export default async function UserProfilePage({
     }));
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-[#0d0d14]">
       <ProfileClient
         profile={{
           id:          profileUser.id,
@@ -135,6 +139,7 @@ export default async function UserProfilePage({
         friendCount={friendCount}
         communities={communities}
         currentUserId={session.user.id}
+        isOnline={isOnline}
         badges={showFullProfile ? badges.map((b) => ({
           id:           b.id,
           shopItem:     { name: b.shopItem.name, value: b.shopItem.value },
