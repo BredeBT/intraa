@@ -982,6 +982,19 @@ export default function MeldingerClient({
                   </div>
                 )}
 
+                {/* Autoplay fallback — Safari blocks unmuted video.play() */}
+                {webrtc.needsUserInteraction && (
+                  <button
+                    onClick={() => {
+                      void webrtc.remoteVideoRef.current?.play();
+                      webrtc.setNeedsUserInteraction(false);
+                    }}
+                    className="absolute top-4 left-1/2 -translate-x-1/2 bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Trykk for å aktivere lyd
+                  </button>
+                )}
+
                 {/* Controls */}
                 <div className="flex gap-4 mt-8">
                   <button
