@@ -228,9 +228,10 @@ export default function ClickerPage() {
           });
           // IKKE overskriv serverCoins med body.coins —
           // klienten er fasit under aktiv spilling.
-          // Trekk kun fra sendt delta lokalt.
-          localDelta.current -= delta;
-          clickCount.current -= clicks;
+          // Flytt sendt delta fra localDelta til serverCoins.
+          localDelta.current  -= delta;
+          serverCoins.current += delta;
+          clickCount.current  -= clicks;
           setTotalClicks((t) => t + clicks);
         } else {
           console.warn("[SYNC #4 FEIL]", { status: res.status });
