@@ -31,11 +31,11 @@ export function useWebRTC(currentUserId: string, friendId: string) {
   const channelRef     = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
 
-  // Stable signalingChannel — both sides sort IDs the same way
   const signalingChannel = [currentUserId, friendId].filter(Boolean).sort().join(":");
 
-  // ── Cleanup helper (no dep on state — uses refs) ───────────────────────────
+  // ── Cleanup helper ────────────────────────────────────────────────────────
   const cleanupPeer = useCallback(() => {
+    console.log("[WebRTC] cleanupPeer");
     peerRef.current?.destroy();
     peerRef.current = null;
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
@@ -49,38 +49,53 @@ export function useWebRTC(currentUserId: string, friendId: string) {
     setCallError(null);
   }, []);
 
-  // ── Signaling channel ──────────────────────────────────────────────────────
+  // ── Signaling channel ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!friendId || !currentUserId) return;
 
+    console.log("[WebRTC] Setter opp signalerings-kanal:", `call:${signalingChannel}`);
+
     const ch = supabase.channel(`call:${signalingChannel}`)
       .on("broadcast", { event: "call-offer" }, ({ payload }: { payload: { to: string; from: string; type: CallType; signal: unknown } }) => {
-        if (payload.to !== currentUserId) return;
+        console.log("[WebRTC] Mottok call-offer fra:", payload.from, "→ til:", payload.to, "| min id:", currentUserId);
+        if (payload.to !== currentUserId) { console.log("[WebRTC] Ignorerer — ikke til meg"); return; }
+        console.log("[WebRTC] Setter incomingCall, type:", payload.type);
         setIncomingCall({ from: payload.from, type: payload.type, signal: payload.signal });
         setCallType(payload.type);
         setCallState("receiving");
       })
       .on("broadcast", { event: "call-answer" }, ({ payload }: { payload: { to: string; signal: unknown } }) => {
+        console.log("[WebRTC] Mottok call-answer, til:", payload.to, "| min id:", currentUserId);
         if (payload.to !== currentUserId) return;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        peerRef.current?.signal(payload.signal as any);
+        if (peerRef.current) {
+          console.log("[WebRTC] Signalerer peer med svar");
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          peerRef.current.signal(payload.signal as any);
+        } else {
+          console.error("[WebRTC] peerRef er null ved mottak av call-answer!");
+        }
       })
       .on("broadcast", { event: "call-ended" }, ({ payload }: { payload: { to: string } }) => {
+        console.log("[WebRTC] Mottok call-ended, til:", payload.to);
         if (payload.to !== currentUserId) return;
         cleanupPeer();
       });
 
-    ch.subscribe();
+    ch.subscribe((status) => {
+      console.log("[WebRTC] Kanal-status:", status);
+    });
     channelRef.current = ch;
 
     return () => {
+      console.log("[WebRTC] Fjerner signalerings-kanal");
       void supabase.removeChannel(ch);
       channelRef.current = null;
     };
   }, [currentUserId, friendId, signalingChannel, cleanupPeer]);
 
-  // ── Get user media (with error handling) ──────────────────────────────────
+  // ── Get user media ────────────────────────────────────────────────────────
   const getMedia = useCallback(async (type: CallType): Promise<MediaStream | null> => {
+    console.log("[WebRTC] Ber om media-tillatelse, type:", type);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
@@ -88,9 +103,13 @@ export function useWebRTC(currentUserId: string, friendId: string) {
           ? { facingMode: { ideal: "user" }, width: { ideal: 640 }, height: { ideal: 480 } }
           : false,
       });
+      console.log("[WebRTC] Stream mottatt:", stream.getTracks().map((t) => ({
+        kind: t.kind, enabled: t.enabled, readyState: t.readyState,
+      })));
       return stream;
     } catch (err) {
-      const e = err as { name: string };
+      const e = err as { name: string; message: string };
+      console.error("[WebRTC] getUserMedia feilet:", e.name, e.message);
       if (e.name === "NotAllowedError") {
         setCallError("Du må gi tillatelse til mikrofon/kamera for å ringe");
       } else if (e.name === "NotFoundError") {
@@ -102,40 +121,81 @@ export function useWebRTC(currentUserId: string, friendId: string) {
     }
   }, []);
 
-  // ── Create peer (lazily imports simple-peer to avoid SSR) ─────────────────
+  // ── Create peer ───────────────────────────────────────────────────────────
   const createPeer = useCallback(async (
     initiator: boolean,
     stream:    MediaStream,
     onSignal:  (signal: unknown) => void,
   ): Promise<SimplePeerType.Instance> => {
+    console.log("[WebRTC] createPeer, initiator:", initiator);
     const SP = (await import("simple-peer")).default;
     const peer = new SP({ initiator, trickle: true, stream, config: ICE_SERVERS });
 
-    peer.on("signal", onSignal);
+    peer.on("signal", (signal: { type?: string }) => {
+      console.log("[WebRTC] Sender signal:", signal.type ?? "candidate");
+      onSignal(signal);
+    });
+
+    peer.on("connect", () => {
+      console.log("[WebRTC] Peer tilkoblet! Data-kanal oppe.");
+    });
 
     peer.on("stream", (remote: MediaStream) => {
+      console.log("[WebRTC] Mottok remote stream!", remote.getTracks().map((t) => t.kind));
       setRemoteStream(remote);
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remote;
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remote;
+        remoteVideoRef.current.play().catch((e: Error) => console.error("[WebRTC] Remote play feilet:", e));
+        console.log("[WebRTC] Remote video satt");
+      } else {
+        console.error("[WebRTC] remoteVideoRef er null ved stream-mottak!");
+      }
       setCallState("connected");
     });
 
-    peer.on("error", () => cleanupPeer());
-    peer.on("close", () => cleanupPeer());
+    peer.on("error", (err: Error) => {
+      console.error("[WebRTC] Peer feil:", err);
+      cleanupPeer();
+    });
+
+    peer.on("close", () => {
+      console.log("[WebRTC] Peer lukket");
+      cleanupPeer();
+    });
 
     return peer;
   }, [cleanupPeer]);
 
-  // ── Start call (initiator) ─────────────────────────────────────────────────
+  // ── Assign local stream to video element ──────────────────────────────────
+  // Called after state update so the overlay (and video ref) is rendered
+  const attachLocalVideo = useCallback((stream: MediaStream) => {
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+      localVideoRef.current.play().catch((e: Error) => console.error("[WebRTC] Local play feilet:", e));
+      console.log("[WebRTC] Local video satt");
+    } else {
+      console.error("[WebRTC] localVideoRef er null! Overlay ikke rendret ennå?");
+    }
+  }, []);
+
+  // ── Start call (initiator) ────────────────────────────────────────────────
   const startCall = useCallback(async (type: CallType) => {
+    console.log("[WebRTC] startCall kalt med type:", type);
     setCallError(null);
+    setCallType(type);
+
+    // Set state FIRST so the overlay renders and video ref becomes available
+    setCallState("calling");
+
+    // Give React one frame to render the overlay before we need the ref
+    await new Promise<void>((resolve) => setTimeout(resolve, 100));
+
     const stream = await getMedia(type);
     if (!stream) { cleanupPeer(); return; }
 
     localStreamRef.current = stream;
     setLocalStream(stream);
-    setCallType(type);
-    setCallState("calling");
-    if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+    attachLocalVideo(stream);
 
     const peer = await createPeer(true, stream, (signal) => {
       channelRef.current?.send({
@@ -145,22 +205,26 @@ export function useWebRTC(currentUserId: string, friendId: string) {
     });
 
     peerRef.current = peer;
-  }, [getMedia, createPeer, cleanupPeer, currentUserId, friendId]);
+  }, [getMedia, createPeer, cleanupPeer, attachLocalVideo, currentUserId, friendId]);
 
   // ── Answer call (receiver) ────────────────────────────────────────────────
   const answerCall = useCallback(async () => {
     if (!incomingCall) return;
+    console.log("[WebRTC] answerCall, type:", incomingCall.type);
     setCallError(null);
+
+    // Set state FIRST so overlay renders
+    setCallState("connected");
+    await new Promise<void>((resolve) => setTimeout(resolve, 100));
 
     const stream = await getMedia(incomingCall.type);
     if (!stream) { cleanupPeer(); return; }
 
     localStreamRef.current = stream;
     setLocalStream(stream);
-    setCallState("connected");
-    if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+    attachLocalVideo(stream);
 
-    const callerFrom = incomingCall.from;
+    const callerFrom   = incomingCall.from;
     const callerSignal = incomingCall.signal;
 
     const peer = await createPeer(false, stream, (signal) => {
@@ -170,13 +234,15 @@ export function useWebRTC(currentUserId: string, friendId: string) {
       });
     });
 
-    peer.signal(callerSignal);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    peer.signal(callerSignal as any);
     peerRef.current = peer;
     setIncomingCall(null);
-  }, [incomingCall, getMedia, createPeer, cleanupPeer, currentUserId]);
+  }, [incomingCall, getMedia, createPeer, cleanupPeer, attachLocalVideo, currentUserId]);
 
   // ── End / reject call ──────────────────────────────────────────────────────
   const endCall = useCallback(() => {
+    console.log("[WebRTC] endCall");
     channelRef.current?.send({
       type: "broadcast", event: "call-ended",
       payload: { from: currentUserId, to: friendId },
@@ -186,6 +252,7 @@ export function useWebRTC(currentUserId: string, friendId: string) {
 
   const rejectCall = useCallback(() => {
     if (!incomingCall) return;
+    console.log("[WebRTC] rejectCall");
     channelRef.current?.send({
       type: "broadcast", event: "call-ended",
       payload: { from: currentUserId, to: incomingCall.from },
@@ -194,7 +261,7 @@ export function useWebRTC(currentUserId: string, friendId: string) {
     setCallState("idle");
   }, [incomingCall, currentUserId]);
 
-  // ── Audio / camera toggles ─────────────────────────────────────────────────
+  // ── Toggles ───────────────────────────────────────────────────────────────
   const toggleMute = useCallback(() => {
     localStreamRef.current?.getAudioTracks().forEach((t) => { t.enabled = !t.enabled; });
     setIsMuted((prev) => !prev);
@@ -205,7 +272,7 @@ export function useWebRTC(currentUserId: string, friendId: string) {
     setIsCameraOff((prev) => !prev);
   }, []);
 
-  // ── Cleanup on unmount ─────────────────────────────────────────────────────
+  // ── Cleanup on unmount ────────────────────────────────────────────────────
   useEffect(() => () => { cleanupPeer(); }, [cleanupPeer]);
 
   return {
