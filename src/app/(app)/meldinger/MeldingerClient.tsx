@@ -4,12 +4,13 @@ import { useState, useEffect, useRef, useTransition } from "react";
 import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
 import {
   Search, Send, MessageSquare, ChevronDown, ChevronLeft,
-  Hash, Plus, X, Users, Check, UserPlus, Clock, Edit,
+  Hash, Plus, X, Check, UserPlus, Clock,
 } from "lucide-react";
 import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
 import SafeHtml from "@/components/SafeHtml";
 import type { UserSearchResult } from "@/app/api/users/search/route";
 import dynamic from "next/dynamic";
+import { supabase } from "@/lib/supabase-client";
 
 const ChannelView = dynamic(() => import("./ChannelView"), { ssr: false });
 const GroupView   = dynamic(() => import("./GroupView"),   { ssr: false });
@@ -98,14 +99,17 @@ function strip(html: string, max = 45) {
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 
-function Avatar({ avatarUrl, name, size = 10 }: { avatarUrl: string | null; name: string | null; size?: number }) {
+function Avatar({ avatarUrl, name, size = 10, isOnline }: { avatarUrl: string | null; name: string | null; size?: number; isOnline?: boolean }) {
   const cls = `h-${size} w-${size} shrink-0 rounded-full object-cover`;
-  if (avatarUrl) return <img src={avatarUrl} alt="" className={cls} />;  // eslint-disable-line @next/next/no-img-element
-  return (
-    <div className={`${cls} flex items-center justify-center bg-gradient-to-br from-zinc-600 to-zinc-700 text-xs font-bold text-white`}>
-      {initials(name)}
-    </div>
-  );
+  const dot = isOnline ? (
+    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#12121e]" />
+  ) : null;
+  const inner = avatarUrl
+    // eslint-disable-next-line @next/next/no-img-element
+    ? <img src={avatarUrl} alt="" className={cls} />
+    : <div className={`${cls} flex items-center justify-center bg-gradient-to-br from-zinc-600 to-zinc-700 text-xs font-bold text-white`}>{initials(name)}</div>;
+  if (!isOnline) return inner;
+  return <div className="relative shrink-0">{inner}{dot}</div>;
 }
 
 function OrgAvatar({ logoUrl, name }: { logoUrl: string | null; name: string }) {
@@ -307,74 +311,66 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto bg-zinc-950 px-4 py-6 space-y-5">
+      <div className="flex-1 overflow-y-auto px-4 py-4">
         {messages.length === 0 && (
           <div className="flex h-full items-center justify-center">
             <div className="text-center">
               <Avatar avatarUrl={friend.avatarUrl} name={friend.name} size={14} />
               <p className="mt-3 text-sm font-semibold text-white">{friend.name ?? "Ukjent"}</p>
-              <p className="mt-1 text-xs text-zinc-600">Starten på samtalen din med {friend.name?.split(" ")[0] ?? "denne personen"}</p>
+              <p className="mt-1 text-xs text-white/30">Starten på samtalen din med {friend.name?.split(" ")[0] ?? "denne personen"}</p>
             </div>
           </div>
         )}
 
-        {groups.map((group, gi) => {
-          const isMe = group.senderId === currentUserId;
-          // Show day separator between groups with > 15 min gap
-          const prevGroup = groups[gi - 1];
-          const showSep   = !prevGroup || new Date(group.firstAt).getTime() - new Date(prevGroup.lastAt).getTime() > 15 * 60_000;
+        {messages.map((msg, index) => {
+          const isMe = msg.senderId === currentUserId;
+          const prev = messages[index - 1];
+          const next = messages[index + 1];
+          const GAP  = 5 * 60_000;
+          const isFirstInGroup = !prev || prev.senderId !== msg.senderId || new Date(msg.createdAt).getTime() - new Date(prev.createdAt).getTime() > GAP;
+          const isLastInGroup  = !next || next.senderId !== msg.senderId || new Date(next.createdAt).getTime() - new Date(msg.createdAt).getTime() > GAP;
+
+          // Day separator — show when date changes or > 15 min from prev
+          const showDaySep = !prev || new Date(msg.createdAt).getTime() - new Date(prev.createdAt).getTime() > 15 * 60_000;
 
           return (
-            <div key={group.firstAt + group.senderId}>
-              {showSep && (
-                <div className="flex items-center gap-3 my-2">
-                  <div className="flex-1 h-px bg-zinc-800" />
-                  <span className="text-[10px] text-zinc-600 shrink-0">{dayLabel(group.firstAt)}</span>
-                  <div className="flex-1 h-px bg-zinc-800" />
+            <div key={msg.id}>
+              {showDaySep && (
+                <div className="flex items-center gap-3 my-5">
+                  <div className="flex-1 h-px bg-white/[0.06]" />
+                  <span className="text-[11px] text-white/30 font-medium">{dayLabel(msg.createdAt)}</span>
+                  <div className="flex-1 h-px bg-white/[0.06]" />
                 </div>
               )}
 
-              <div className={`flex items-end gap-2.5 ${isMe ? "flex-row-reverse" : ""}`}>
-                {/* Avatar — only for others, shown once per group */}
-                {!isMe && <Avatar avatarUrl={group.sender.avatarUrl} name={group.sender.name} size={7} />}
-
-                <div className={`flex flex-col gap-0.5 max-w-[72%] ${isMe ? "items-end" : "items-start"}`}>
-                  {/* Sender name — only for others, only on first in group */}
-                  {!isMe && (
-                    <span className="mb-0.5 ml-1 text-[11px] font-medium text-zinc-500">{group.sender.name ?? "Ukjent"}</span>
-                  )}
-
-                  {group.msgs.map((msg, mi) => {
-                    const isFirst = mi === 0;
-                    const isLast  = mi === group.msgs.length - 1;
-                    return (
-                      <div key={msg.id}
-                        className={`px-3.5 py-2 text-sm leading-relaxed break-words
-                          ${isMe
-                            ? `bg-gradient-to-br from-violet-600 to-indigo-600 text-white
-                               ${isFirst  ? "rounded-2xl rounded-br-md" : ""}
-                               ${isLast && !isFirst ? "rounded-2xl rounded-tr-md" : ""}
-                               ${!isFirst && !isLast ? "rounded-xl rounded-r-md" : ""}`
-                            : `bg-zinc-800 text-zinc-100
-                               ${isFirst  ? "rounded-2xl rounded-bl-md" : ""}
-                               ${isLast && !isFirst ? "rounded-2xl rounded-tl-md" : ""}
-                               ${!isFirst && !isLast ? "rounded-xl rounded-l-md" : ""}`
-                          }`}
-                      >
-                        <SafeHtml content={msg.content} />
-                      </div>
-                    );
-                  })}
-
-                  {/* Timestamp at end of group */}
-                  <span className={`mt-0.5 text-[10px] text-zinc-600 ${isMe ? "mr-1" : "ml-1"}`}>
-                    {msgTime(group.lastAt)}
-                  </span>
+              {isMe ? (
+                /* Own messages — right aligned */
+                <div className={`flex flex-col items-end gap-0.5 ${isLastInGroup ? "mb-4" : "mb-0.5"}`}>
+                  {isFirstInGroup && <span className="text-[11px] text-white/30 mr-1 mb-0.5">{friend.name ? "Du" : "Du"}</span>}
+                  <div className="max-w-[65%] bg-purple-600 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm leading-relaxed break-words">
+                    <SafeHtml content={msg.content} />
+                  </div>
+                  {isLastInGroup && <span className="text-[11px] text-white/20 px-1">{msgTime(msg.createdAt)}</span>}
                 </div>
-
-                {/* Spacer for "my" messages (no avatar) */}
-                {isMe && <div className="w-7 shrink-0" />}
-              </div>
+              ) : (
+                /* Other's messages — left aligned */
+                <div className={`flex gap-2.5 ${isLastInGroup ? "mb-4" : "mb-0.5"}`}>
+                  {isFirstInGroup ? (
+                    <div className="w-8 h-8 shrink-0 self-end">
+                      <Avatar avatarUrl={msg.sender.avatarUrl} name={msg.sender.name} size={8} />
+                    </div>
+                  ) : (
+                    <div className="w-8 shrink-0" />
+                  )}
+                  <div className="flex flex-col gap-0.5">
+                    {isFirstInGroup && <span className="text-xs text-white/40 ml-1">{msg.sender.name ?? "Ukjent"}</span>}
+                    <div className="max-w-[65%] bg-white/[0.08] text-white rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm leading-relaxed break-words">
+                      <SafeHtml content={msg.content} />
+                    </div>
+                    {isLastInGroup && <span className="text-[11px] text-white/20 ml-1">{msgTime(msg.createdAt)}</span>}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
@@ -382,21 +378,29 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
       </div>
 
       {/* Input */}
-      <div className="shrink-0 border-t border-zinc-800 bg-zinc-900/80 px-4 py-3 backdrop-blur">
-        <div className="flex items-end gap-2 rounded-2xl border border-zinc-700 bg-zinc-800 px-3 py-2 focus-within:border-zinc-600 transition-colors">
-          <RichTextEditor
-            ref={editorRef}
-            placeholder="Skriv en melding…"
-            onEnter={() => void send()}
-            className="flex-1 min-h-[1.5rem] max-h-32 overflow-y-auto bg-transparent text-sm text-white"
-          />
+      <div className="shrink-0 border-t border-white/[0.06] px-4 py-3">
+        <div className="flex gap-1 mb-2 opacity-60 hover:opacity-100 transition-opacity">
+          <button className="px-2 py-1 rounded text-xs text-white/50 hover:bg-white/[0.08] hover:text-white font-bold">B</button>
+          <button className="px-2 py-1 rounded text-xs text-white/50 hover:bg-white/[0.08] hover:text-white italic">I</button>
+          <button className="px-2 py-1 rounded text-xs text-white/50 hover:bg-white/[0.08] hover:text-white underline">U</button>
+          <button className="px-2 py-1 rounded text-xs text-white/50 hover:bg-white/[0.08] hover:text-white font-mono">&lt;/&gt;</button>
+        </div>
+        <div className="flex items-end gap-3">
+          <div className="flex-1 bg-white/[0.06] border border-white/[0.08] rounded-xl px-4 py-2.5 focus-within:border-purple-500/30 focus-within:bg-white/[0.08] transition-all">
+            <RichTextEditor
+              ref={editorRef}
+              placeholder="Skriv en melding…"
+              onEnter={() => void send()}
+              className="min-h-[1.5rem] max-h-32 overflow-y-auto bg-transparent text-sm text-white"
+            />
+          </div>
           <button
             onClick={() => void send()}
             disabled={sending}
-            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all ${
+            className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
               !sending
-                ? "bg-violet-600 text-white hover:bg-violet-500"
-                : "bg-zinc-700 text-zinc-500"
+                ? "bg-purple-600 text-white hover:bg-purple-700"
+                : "bg-white/[0.06] text-white/20"
             }`}
           >
             <Send className="h-3.5 w-3.5" />
@@ -424,26 +428,25 @@ function InboxItem({
   return (
     <button
       onClick={onClick}
-      className={`relative flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-zinc-800/60 ${
-        isActive ? "bg-zinc-800/80 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-violet-500" : ""
-      }`}
+      style={isActive ? { background: "#6c47ff18", borderLeft: "2px solid #6c47ff" } : { borderLeft: "2px solid transparent" }}
+      className="relative flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.04]"
     >
       {avatar}
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <span className={`truncate text-sm ${unread > 0 ? "font-semibold text-white" : "font-medium text-zinc-300"}`}>{title}</span>
-          {time && <span className="shrink-0 text-[10px] text-zinc-600">{time}</span>}
+          <span className={`truncate text-sm ${unread > 0 ? "font-semibold text-white" : "font-medium text-white/70"}`}>{title}</span>
+          {time && <span className="shrink-0 text-[10px] text-white/30">{time}</span>}
         </div>
         {(subtitle || preview) && (
-          <p className="truncate text-[11px] text-zinc-500 mt-0.5">
-            {subtitle && <span className="text-zinc-600">{subtitle}</span>}
+          <p className="truncate text-[11px] text-white/30 mt-0.5">
+            {subtitle && <span className="text-white/20">{subtitle}</span>}
             {subtitle && preview && " · "}
             {preview}
           </p>
         )}
       </div>
       {unread > 0 && (
-        <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-violet-600 px-1.5 text-[10px] font-bold text-white">
+        <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-purple-600 px-1.5 text-[10px] font-bold text-white">
           {unread > 99 ? "99+" : unread}
         </span>
       )}
@@ -465,10 +468,10 @@ function SectionHeader({
   return (
     <div className="flex items-center gap-2 px-4 pt-4 pb-1.5">
       <button onClick={onToggle} className="flex flex-1 items-center gap-1.5 text-left group">
-        <ChevronDown className={`h-3 w-3 text-zinc-500 transition-transform ${expanded ? "" : "-rotate-90"}`} />
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{label}</span>
+        <ChevronDown className={`h-3 w-3 text-white/30 transition-transform ${expanded ? "" : "-rotate-90"}`} />
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-white/30">{label}</span>
         {count > 0 && (
-          <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-violet-600/80 px-1 text-[9px] font-bold text-white">
+          <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-purple-600/80 px-1 text-[9px] font-bold text-white">
             {count}
           </span>
         )}
@@ -490,6 +493,23 @@ export default function MeldingerClient({
   );
   const [groups,       setGroups]      = useState(initialGroups);
   const [showNewGroup, setShowNewGroup] = useState(false);
+  const [onlineUsers,  setOnlineUsers] = useState<string[]>([]);
+
+  // Supabase Presence — track who is online
+  useEffect(() => {
+    const ch = supabase.channel("presence:global")
+      .on("presence", { event: "sync" }, () => {
+        const state = ch.presenceState();
+        const ids = Object.values(state).flat().map((p) => (p as unknown as { userId: string }).userId);
+        setOnlineUsers(ids);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await ch.track({ userId: currentUserId });
+        }
+      });
+    return () => { void supabase.removeChannel(ch); };
+  }, [currentUserId]);
 
   // Section collapse state
   const [showDMs,       setShowDMs]       = useState(true);
@@ -596,22 +616,26 @@ export default function MeldingerClient({
   })();
 
   return (
-    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] overflow-hidden bg-zinc-950">
+    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] overflow-hidden" style={{ background: "#0d0d14" }}>
 
       {/* ─── Sidebar ────────────────────────────────────────────────────────── */}
-      <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-80 shrink-0 flex-col border-r border-zinc-800/60 bg-zinc-900`}>
+      <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-72 shrink-0 flex-col border-r border-white/[0.06]`} style={{ background: "#12121e" }}>
 
         {/* Search */}
-        <div className="shrink-0 px-4 py-3 border-b border-zinc-800/60">
-          <div className="flex items-center gap-2.5 rounded-xl border border-zinc-800 bg-zinc-800/60 px-3.5 py-2.5 focus-within:border-zinc-600 transition-colors">
-            <Search className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+        <div className="shrink-0 p-3 border-b border-white/[0.06]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Søk i samtaler..."
-              className="flex-1 bg-transparent text-sm text-white placeholder:text-zinc-500 outline-none"
+              className="w-full bg-white/[0.06] border border-white/[0.08] rounded-lg py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-purple-500/30 transition-colors"
             />
-            {search && <button onClick={() => setSearch("")}><X className="h-3.5 w-3.5 text-zinc-500 hover:text-white transition-colors" /></button>}
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                <X className="h-3.5 w-3.5 text-white/30 hover:text-white transition-colors" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -666,10 +690,11 @@ export default function MeldingerClient({
               ? <p className="px-4 pb-3 text-xs text-zinc-600">{search ? "Ingen treff" : "Ingen venner ennå."}</p>
               : filteredConvs.map(({ friend, lastMessage, unreadCount }) => {
                   const dmUnread = dmUnreads[friend.id] ?? unreadCount;
+                  const isOnline = onlineUsers.includes(friend.id);
                   return (
                     <InboxItem
                       key={friend.id}
-                      avatar={<Avatar avatarUrl={friend.avatarUrl} name={friend.name} size={10} />}
+                      avatar={<Avatar avatarUrl={friend.avatarUrl} name={friend.name} size={10} isOnline={isOnline} />}
                       title={friend.name ?? "Ukjent"}
                       preview={lastMessage ? strip(lastMessage.content) : undefined}
                       time={lastMessage ? relTime(lastMessage.createdAt) : undefined}
@@ -768,34 +793,47 @@ export default function MeldingerClient({
           <div className="h-4" />
         </div>
 
-        {/* New conversation FAB row */}
-        <div className="shrink-0 border-t border-zinc-800/60 px-4 py-3">
+        {/* New conversation button */}
+        <div className="shrink-0 border-t border-white/[0.06]">
           <button
             onClick={() => { setSearch(""); document.querySelector<HTMLInputElement>('input[placeholder="Søk i samtaler..."]')?.focus(); }}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600/10 border border-violet-500/20 px-4 py-2.5 text-sm font-medium text-violet-400 hover:bg-violet-600/20 transition-colors"
+            className="m-3 flex w-[calc(100%-1.5rem)] items-center justify-center gap-2 rounded-xl bg-purple-500/10 border border-purple-500/20 py-2.5 text-sm text-purple-300 hover:bg-purple-500/20 transition-colors"
           >
-            <Edit className="h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Ny samtale
           </button>
         </div>
       </div>
 
       {/* ─── Chat area ──────────────────────────────────────────────────────── */}
-      <div className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 bg-zinc-950`}>
+      <div className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0`} style={{ background: "#0d0d14" }}>
 
         {/* Header */}
         {chatHeader && (
-          <div className="flex shrink-0 items-center gap-3 border-b border-zinc-800/60 bg-zinc-900 px-5 py-3">
+          <div className="flex shrink-0 items-center gap-3 border-b border-white/[0.06] px-5 py-3.5">
             <button
-              className="md:hidden shrink-0 rounded-lg p-1 text-zinc-400 hover:text-white transition-colors"
+              className="md:hidden shrink-0 rounded-lg p-1 text-white/40 hover:text-white transition-colors"
               onClick={() => setMobileView("list")}
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
-            {chatHeader.avatar}
+            <div className="relative">
+              {chatHeader.avatar}
+              {active?.type === "dm" && onlineUsers.includes(active.userId) && (
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#12121e]" />
+              )}
+            </div>
             <div>
-              <p className="text-sm font-semibold text-white">{chatHeader.title}</p>
-              {chatHeader.subtitle && <p className="text-[11px] text-zinc-500">{chatHeader.subtitle}</p>}
+              <p className="text-[15px] font-medium text-white">{chatHeader.title}</p>
+              {active?.type === "dm" ? (
+                onlineUsers.includes(active.userId)
+                  ? <p className="text-xs text-green-400">Online nå</p>
+                  : chatHeader.subtitle
+                    ? <p className="text-xs text-white/30">{chatHeader.subtitle}</p>
+                    : null
+              ) : chatHeader.subtitle ? (
+                <p className="text-xs text-white/30">{chatHeader.subtitle}</p>
+              ) : null}
             </div>
           </div>
         )}
