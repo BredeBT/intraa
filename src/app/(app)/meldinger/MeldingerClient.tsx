@@ -350,7 +350,7 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
                 <div className={`flex flex-col items-end gap-0.5 ${isLastInGroup ? "mb-4" : "mb-0.5"}`}>
                   {isFirstInGroup && <span className="text-[11px] text-white/30 mr-1 mb-0.5">{friend.name ? "Du" : "Du"}</span>}
                   <div className="max-w-[75%] md:max-w-[65%] bg-purple-600 text-white rounded-2xl rounded-tr-sm px-4 py-2.5">
-                    <p className="text-[14px] leading-relaxed break-words whitespace-pre-wrap"><SafeHtml content={msg.content} /></p>
+                    <SafeHtml content={msg.content} className="text-[14px] leading-relaxed" />
                   </div>
                   {isLastInGroup && <span className="text-[11px] text-white/20 px-1">{msgTime(msg.createdAt)}</span>}
                 </div>
@@ -364,10 +364,10 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
                   ) : (
                     <div className="w-8 shrink-0" />
                   )}
-                  <div className="flex flex-col gap-0.5">
+                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                     {isFirstInGroup && <span className="text-xs text-white/40 ml-1">{msg.sender.name ?? "Ukjent"}</span>}
                     <div className="max-w-[75%] md:max-w-[65%] bg-white/[0.08] text-white rounded-2xl rounded-tl-sm px-4 py-2.5">
-                      <p className="text-[14px] leading-relaxed break-words whitespace-pre-wrap"><SafeHtml content={msg.content} /></p>
+                      <SafeHtml content={msg.content} className="text-[14px] leading-relaxed" />
                     </div>
                     {isLastInGroup && <span className="text-[11px] text-white/20 ml-1">{msgTime(msg.createdAt)}</span>}
                   </div>

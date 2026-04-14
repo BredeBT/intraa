@@ -19,8 +19,10 @@ interface Props {
  */
 export default function SafeHtml({ content, className = "" }: Props) {
   if (IS_HTML.test(content)) {
+    // Use div (block) so Tiptap's <p> children are valid — a <span> containing <p>
+    // causes browsers to close the outer element early, breaking bubble layout.
     return (
-      <span
+      <div
         className={`msg-html ${className}`}
         dangerouslySetInnerHTML={{ __html: sanitize(content) }}
       />
