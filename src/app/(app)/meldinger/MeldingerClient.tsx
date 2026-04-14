@@ -349,8 +349,8 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
                 /* Own messages — right aligned */
                 <div className={`flex flex-col items-end gap-0.5 ${isLastInGroup ? "mb-4" : "mb-0.5"}`}>
                   {isFirstInGroup && <span className="text-[11px] text-white/30 mr-1 mb-0.5">{friend.name ? "Du" : "Du"}</span>}
-                  <div className="max-w-[65%] bg-purple-600 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm leading-relaxed break-words">
-                    <SafeHtml content={msg.content} />
+                  <div className="max-w-[75%] md:max-w-[65%] bg-purple-600 text-white rounded-2xl rounded-tr-sm px-4 py-2.5">
+                    <p className="text-[14px] leading-relaxed break-words whitespace-pre-wrap"><SafeHtml content={msg.content} /></p>
                   </div>
                   {isLastInGroup && <span className="text-[11px] text-white/20 px-1">{msgTime(msg.createdAt)}</span>}
                 </div>
@@ -366,8 +366,8 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
                   )}
                   <div className="flex flex-col gap-0.5">
                     {isFirstInGroup && <span className="text-xs text-white/40 ml-1">{msg.sender.name ?? "Ukjent"}</span>}
-                    <div className="max-w-[65%] bg-white/[0.08] text-white rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm leading-relaxed break-words">
-                      <SafeHtml content={msg.content} />
+                    <div className="max-w-[75%] md:max-w-[65%] bg-white/[0.08] text-white rounded-2xl rounded-tl-sm px-4 py-2.5">
+                      <p className="text-[14px] leading-relaxed break-words whitespace-pre-wrap"><SafeHtml content={msg.content} /></p>
                     </div>
                     {isLastInGroup && <span className="text-[11px] text-white/20 ml-1">{msgTime(msg.createdAt)}</span>}
                   </div>
@@ -381,12 +381,6 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
 
       {/* Input */}
       <div className="shrink-0 border-t border-white/[0.06] px-4 py-3">
-        <div className="flex gap-1 mb-2 opacity-60 hover:opacity-100 transition-opacity">
-          <button className="px-2 py-1 rounded text-xs text-white/50 hover:bg-white/[0.08] hover:text-white font-bold">B</button>
-          <button className="px-2 py-1 rounded text-xs text-white/50 hover:bg-white/[0.08] hover:text-white italic">I</button>
-          <button className="px-2 py-1 rounded text-xs text-white/50 hover:bg-white/[0.08] hover:text-white underline">U</button>
-          <button className="px-2 py-1 rounded text-xs text-white/50 hover:bg-white/[0.08] hover:text-white font-mono">&lt;/&gt;</button>
-        </div>
         <div className="flex items-end gap-3">
           <div className="flex-1 bg-white/[0.06] border border-white/[0.08] rounded-xl px-4 py-2.5 focus-within:border-purple-500/30 focus-within:bg-white/[0.08] transition-all">
             <RichTextEditor
@@ -955,19 +949,20 @@ export default function MeldingerClient({
               <div className="absolute inset-0 flex flex-col items-center justify-center z-50 backdrop-blur-sm" style={{ background: "#0a0a1499" }}>
 
                 {webrtc.callType === "video" ? (
-                  <div className="relative w-full max-w-lg mx-4">
+                  <div className="relative w-full h-full md:h-auto md:max-w-lg md:mx-4">
                     <video
                       ref={webrtc.remoteVideoRef}
                       autoPlay
                       playsInline
-                      className="w-full aspect-video bg-black rounded-2xl object-cover"
+                      className="w-full h-full md:h-auto md:aspect-video bg-black rounded-none md:rounded-2xl object-cover object-top"
                     />
                     <video
                       ref={webrtc.localVideoRef}
                       autoPlay
                       playsInline
                       muted
-                      className="absolute bottom-3 right-3 w-28 aspect-video bg-black rounded-xl object-cover border-2 border-white/10"
+                      style={{ transform: "scaleX(-1)" }}
+                      className="absolute bottom-32 right-4 md:bottom-3 md:right-3 w-24 md:w-28 aspect-[3/4] md:aspect-video bg-black rounded-xl object-cover border-2 border-white/20"
                     />
                   </div>
                 ) : (
@@ -996,7 +991,8 @@ export default function MeldingerClient({
                 )}
 
                 {/* Controls */}
-                <div className="flex gap-4 mt-8">
+                <div className="absolute bottom-8 md:bottom-auto md:relative left-1/2 -translate-x-1/2 flex gap-4"
+                     style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
                   <button
                     onClick={webrtc.toggleMute}
                     title={webrtc.isMuted ? "Slå på mikrofon" : "Demp mikrofon"}
