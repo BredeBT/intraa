@@ -126,7 +126,11 @@ export async function GET(request: Request) {
   if (!membership) return NextResponse.json({ error: "Ingen tilgang" }, { status: 403 });
 
   const cached = getCached(orgId);
-  if (cached) return NextResponse.json(cached);
+  if (cached) {
+    return NextResponse.json(cached, {
+      headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" },
+    });
+  }
 
   const settings = await db.streamSettings.findUnique({ where: { organizationId: orgId } });
   if (!settings) {
@@ -163,5 +167,7 @@ export async function GET(request: Request) {
   } catch { /* non-critical — don't fail the response */ }
 
   setCached(orgId, status);
-  return NextResponse.json(status);
+  return NextResponse.json(status, {
+    headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" },
+  });
 }

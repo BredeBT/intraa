@@ -18,7 +18,8 @@ export async function GET(request: Request) {
 
   // Verify membership
   const membership = await db.membership.findFirst({
-    where: { userId: session.user.id, organizationId: orgId },
+    where:  { userId: session.user.id, organizationId: orgId },
+    select: { id: true },
   });
   if (!membership) return NextResponse.json({ error: "Ikke autorisert" }, { status: 403 });
 
@@ -26,11 +27,16 @@ export async function GET(request: Request) {
     where:   { orgId },
     include: {
       author:   { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } },
-      comments: { include: { author: { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } } }, orderBy: { createdAt: "asc" } },
+      comments: {
+        include:  { author: { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } } },
+        orderBy:  { createdAt: "asc" },
+        take:     5, // load first 5 comments; more are fetched on demand via /api/comments
+      },
       _count:   { select: { likes: true } },
       likes:    { where: { userId: session.user.id }, select: { id: true } },
     },
     orderBy: { createdAt: "desc" },
+    take:    20, // show 20 most recent posts
   });
 
   return NextResponse.json(

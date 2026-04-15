@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Users, Globe, Lock, Star } from "lucide-react";
 
+export const revalidate = 3600; // static community info — revalidate hourly
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
