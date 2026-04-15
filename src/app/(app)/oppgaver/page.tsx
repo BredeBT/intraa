@@ -127,7 +127,7 @@ export default function OppgaverPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden px-8 py-8">
+    <div className="flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden px-4 py-5 md:px-8 md:py-8">
       <h1 className="mb-6 text-xl font-semibold text-white">Oppgaver</h1>
 
       <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>

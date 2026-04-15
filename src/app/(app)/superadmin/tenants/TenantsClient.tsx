@@ -594,7 +594,7 @@ export default function TenantsClient({ initialTenants }: { initialTenants: Tena
   }
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-4 py-5 md:px-8 md:py-8">
       {/* Header */}
       <div className="mb-6 flex items-start justify-between">
         <div>

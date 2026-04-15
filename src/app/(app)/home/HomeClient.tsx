@@ -372,7 +372,7 @@ function NewUserHome({ communities }: { communities: Community[] }) {
       )}
 
       {!search.trim() && (
-        <div className="grid grid-cols-3 gap-3 mt-8" style={fadeStyle(160)}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-8" style={fadeStyle(160)}>
           {STEPS.map((step) => (
             <div
               key={step.title}

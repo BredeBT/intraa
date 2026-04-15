@@ -66,7 +66,7 @@ export default function CommunityAdminPage() {
   }
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-4 py-5 md:px-8 md:py-8">
       <h1 className="mb-6 text-xl font-semibold text-white">Community Admin</h1>
 
       {/* Stats */}

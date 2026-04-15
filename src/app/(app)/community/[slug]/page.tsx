@@ -66,7 +66,7 @@ export default async function CommunityForsidePage({ params }: Props) {
       <div className={`h-40 w-full bg-gradient-to-br ${community.bannerColor}`} />
 
       {/* Info section */}
-      <div className="px-8 pb-8">
+      <div className="px-4 pb-6 md:px-8 md:pb-8">
         {/* Avatar + header row */}
         <div className="flex items-end gap-5 -mt-8 mb-6">
           <div className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 border-zinc-950 ${community.accentColor} text-2xl font-bold text-white shadow-lg`}>
@@ -120,7 +120,7 @@ export default async function CommunityForsidePage({ params }: Props) {
         )}
 
         {/* Quick links */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
             { label: "Feed",         href: `/community/${slug}/feed` },
             { label: "Rangering",    href: `/community/${slug}/rangering` },

@@ -624,7 +624,7 @@ export default function InnstillingerClient({ initialTab, org: initialOrg, theme
 
             {/* Banner-presets */}
             <Section title="Ferdiglagde bannere" desc="Velg en gradient eller last opp eget bilde over.">
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                 {BANNER_PRESETS.map((preset) => (
                   <button
                     key={preset.id}
@@ -652,7 +652,7 @@ export default function InnstillingerClient({ initialTab, org: initialOrg, theme
 
             {/* Avatar-presets */}
             <Section title="Ferdiglagde org-avatarer" desc="Velg en avatar eller last opp eget logobilde over.">
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                 {AVATAR_PRESETS.map((preset) => (
                   <button
                     key={preset.id}

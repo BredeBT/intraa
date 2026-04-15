@@ -43,7 +43,7 @@ export default async function FilerPage() {
   });
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-4 py-5 md:px-8 md:py-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-white">Filer</h1>
       </div>

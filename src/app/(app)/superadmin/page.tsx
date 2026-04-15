@@ -159,7 +159,12 @@ export default async function SuperAdminPage() {
   ];
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-4 py-5 md:px-8 md:py-8">
+      {/* Mobile notice */}
+      <div className="md:hidden mb-6 rounded-xl border border-zinc-700 bg-zinc-900 p-8 text-center text-white/50">
+        Superadmin-panelet er best brukt på desktop.
+      </div>
+
       {/* Header */}
       <div className="mb-1 flex items-center gap-2">
         <ShieldAlert className="h-5 w-5 text-slate-500" />

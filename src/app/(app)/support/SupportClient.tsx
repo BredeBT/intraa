@@ -93,7 +93,7 @@ export default function SupportClient({ activeTickets, resolvedTickets }: Props)
   const currentList = tab === "active" ? activeTickets : resolvedTickets;
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-4 py-5 md:px-8 md:py-8">
       <div className="mb-1 flex items-center gap-2">
         <LifeBuoy className="h-5 w-5 text-indigo-400" />
         <h1 className="text-xl font-semibold text-white">Mine support-henvendelser</h1>
