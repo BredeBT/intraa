@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useTransition } from "react";
 import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
 import {
   Search, Send, MessageSquare, ChevronDown, ChevronLeft,
-  Hash, Plus, X, Check, UserPlus, Clock,
+  Hash, Plus, X, Check, UserPlus, Clock, Paperclip, Loader2,
 } from "lucide-react";
 import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
 import SafeHtml from "@/components/SafeHtml";
@@ -140,6 +140,7 @@ function GroupAvatar({ members }: { members: { name: string | null }[] }) {
 interface DMMessage {
   id:        string;
   content:   string;
+  imageUrl?: string | null;
   createdAt: string;
   senderId:  string;
   sender:    { id: string; name: string | null; avatarUrl: string | null };
@@ -267,9 +268,12 @@ function NewGroupModal({
 // ─── DM View ──────────────────────────────────────────────────────────────────
 
 function DMView({ friendId, friend, currentUserId }: { friendId: string; friend: Friend; currentUserId: string }) {
-  const [messages, setMessages] = useState<DMMessage[]>([]);
-  const [sending,  setSending]  = useState(false);
-  const [hasText,  setHasText]  = useState(false);
+  const [messages,     setMessages]     = useState<DMMessage[]>([]);
+  const [sending,      setSending]      = useState(false);
+  const [hasText,      setHasText]      = useState(false);
+  const [pastePreview, setPastePreview] = useState<string | null>(null);
+  const [uploadedUrl,  setUploadedUrl]  = useState<string | null>(null);
+  const [isUploading,  setIsUploading]  = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<RichTextEditorRef>(null);
   const [, start] = useTransition();
@@ -290,15 +294,49 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  async function uploadImage(file: File): Promise<string | null> {
+    const form = new FormData();
+    form.append("file", file);
+    setIsUploading(true);
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      const data = await res.json() as { url?: string };
+      return data.url ?? null;
+    } catch { return null; }
+    finally { setIsUploading(false); }
+  }
+
+  useEffect(() => {
+    async function onPaste(e: ClipboardEvent) {
+      const items = Array.from(e.clipboardData?.items ?? []);
+      const img   = items.find((i) => i.type.startsWith("image/"));
+      if (!img) return;
+      e.preventDefault();
+      const file = img.getAsFile();
+      if (!file) return;
+      setPastePreview(URL.createObjectURL(file));
+      const url = await uploadImage(file);
+      if (url) { setPastePreview(url); setUploadedUrl(url); }
+      else      { setPastePreview(null); }
+    }
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function send() {
-    if (!editorRef.current || editorRef.current.isEmpty() || sending) return;
-    const html = editorRef.current.getHTML();
+    const editorEmpty = editorRef.current?.isEmpty() ?? true;
+    if ((editorEmpty && !uploadedUrl) || sending) return;
+    const html      = editorRef.current?.getHTML() ?? "";
+    const imageUrl  = uploadedUrl ?? undefined;
     setSending(true);
-    editorRef.current.clear();
+    editorRef.current?.clear();
     setHasText(false);
+    setPastePreview(null);
+    setUploadedUrl(null);
     const res = await fetch(`/api/dm/${friendId}`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body:   JSON.stringify({ content: html }),
+      body:   JSON.stringify({ content: html || " ", imageUrl }),
     });
     if (res.ok) {
       const data = await res.json() as { message: DMMessage };
@@ -348,10 +386,16 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
               {isMe ? (
                 /* Own messages — right aligned */
                 <div className={`flex flex-col items-end gap-0.5 ${isLastInGroup ? "mb-4" : "mb-0.5"}`}>
-                  {isFirstInGroup && <span className="text-[11px] text-white/30 mr-1 mb-0.5">{friend.name ? "Du" : "Du"}</span>}
-                  <div className="w-fit max-w-[75%] md:max-w-[65%] bg-purple-600 text-white rounded-2xl rounded-tr-sm px-4 py-2.5">
-                    <SafeHtml content={msg.content} className="text-[14px] leading-relaxed" />
-                  </div>
+                  {isFirstInGroup && <span className="text-[11px] text-white/30 mr-1 mb-0.5">Du</span>}
+                  {msg.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={msg.imageUrl} alt="Bilde" className="max-w-[60%] rounded-2xl rounded-tr-sm object-cover" />
+                  )}
+                  {msg.content.trim() && msg.content.trim() !== "&nbsp;" && (
+                    <div className="w-fit max-w-[75%] md:max-w-[65%] bg-purple-600 text-white rounded-2xl rounded-tr-sm px-4 py-2.5">
+                      <SafeHtml content={msg.content} className="text-[14px] leading-relaxed" />
+                    </div>
+                  )}
                   {isLastInGroup && <span className="text-[11px] text-white/20 px-1">{msgTime(msg.createdAt)}</span>}
                 </div>
               ) : (
@@ -366,9 +410,15 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
                   )}
                   <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                     {isFirstInGroup && <span className="text-xs text-white/40 ml-1">{msg.sender.name ?? "Ukjent"}</span>}
-                    <div className="w-fit max-w-[75%] md:max-w-[65%] bg-white/[0.08] text-white rounded-2xl rounded-tl-sm px-4 py-2.5">
-                      <SafeHtml content={msg.content} className="text-[14px] leading-relaxed" />
-                    </div>
+                    {msg.imageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={msg.imageUrl} alt="Bilde" className="max-w-[60%] rounded-2xl rounded-tl-sm object-cover" />
+                    )}
+                    {msg.content.trim() && msg.content.trim() !== "&nbsp;" && (
+                      <div className="w-fit max-w-[75%] md:max-w-[65%] bg-white/[0.08] text-white rounded-2xl rounded-tl-sm px-4 py-2.5">
+                        <SafeHtml content={msg.content} className="text-[14px] leading-relaxed" />
+                      </div>
+                    )}
                     {isLastInGroup && <span className="text-[11px] text-white/20 ml-1">{msgTime(msg.createdAt)}</span>}
                   </div>
                 </div>
@@ -379,9 +429,48 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
         <div ref={bottomRef} />
       </div>
 
+      {/* Paste preview */}
+      {pastePreview && (
+        <div className="relative mx-4 mb-2 w-fit">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={pastePreview} alt="Bilde" className="h-20 w-auto rounded-lg border border-white/10 object-cover" />
+          {isUploading && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/60">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            </div>
+          )}
+          {!isUploading && (
+            <button
+              onClick={() => { setPastePreview(null); setUploadedUrl(null); }}
+              className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-zinc-700 text-white hover:bg-zinc-600"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Input */}
       <div className="shrink-0 border-t border-white/[0.06] px-4 py-3">
-        <div className="flex items-end gap-3">
+        <div className="flex items-end gap-2">
+          <label className="shrink-0 cursor-pointer p-2 text-white/30 transition-colors hover:text-white/60" title="Last opp bilde (eller lim inn med Ctrl+V)">
+            <Paperclip className="h-4 w-4" />
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="sr-only"
+              disabled={isUploading}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                e.target.value = "";
+                setPastePreview(URL.createObjectURL(file));
+                const url = await uploadImage(file);
+                if (url) { setPastePreview(url); setUploadedUrl(url); }
+                else      { setPastePreview(null); }
+              }}
+            />
+          </label>
           <div className="flex-1 bg-white/[0.06] border border-white/[0.08] rounded-xl px-4 py-2.5 focus-within:border-purple-500/30 focus-within:bg-white/[0.08] transition-all">
             <RichTextEditor
               ref={editorRef}
@@ -392,14 +481,14 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
           </div>
           <button
             onClick={() => void send()}
-            disabled={sending}
+            disabled={sending || isUploading}
             className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
-              !sending
+              !sending && !isUploading
                 ? "bg-purple-600 text-white hover:bg-purple-700"
                 : "bg-white/[0.06] text-white/20"
             }`}
           >
-            <Send className="h-3.5 w-3.5" />
+            {isUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
           </button>
         </div>
       </div>

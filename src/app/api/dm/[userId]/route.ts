@@ -62,14 +62,15 @@ export async function POST(
     return NextResponse.json({ error: "Dere er ikke venner" }, { status: 403 });
   }
 
-  const { content } = await req.json() as { content?: string };
-  if (!content?.trim()) return NextResponse.json({ error: "Innhold er påkrevd" }, { status: 400 });
+  const { content, imageUrl } = await req.json() as { content?: string; imageUrl?: string };
+  if (!content?.trim() && !imageUrl) return NextResponse.json({ error: "Innhold er påkrevd" }, { status: 400 });
 
   const message = await db.directMessage.create({
     data: {
       senderId:   session.user.id,
       receiverId: userId,
-      content:    content.trim(),
+      content:    content?.trim() ?? " ",
+      ...(imageUrl ? { imageUrl } : {}),
     },
     include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
   });
