@@ -4,15 +4,34 @@ import { getUserOrg } from "@/server/getUserOrg";
 import { db } from "@/server/db";
 import { checkFeature } from "@/server/checkFeature";
 
-const PODIUM_STYLE = {
-  0: { bg: "bg-amber-500/10",  ring: "ring-amber-500/40",  avatar: "bg-amber-500",  medal: "🥇", height: "h-24" },
-  1: { bg: "bg-zinc-800/60",   ring: "ring-zinc-600/40",   avatar: "bg-zinc-600",   medal: "🥈", height: "h-16" },
-  2: { bg: "bg-orange-500/10", ring: "ring-orange-500/40", avatar: "bg-orange-700", medal: "🥉", height: "h-12" },
-} as const;
-
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 }
+
+function Avatar({ name, avatarUrl, size = "md", ring }: { name: string; avatarUrl: string | null; size?: "sm" | "md" | "lg"; ring?: string }) {
+  const dims = size === "lg" ? "h-16 w-16 text-base" : size === "md" ? "h-10 w-10 text-sm" : "h-8 w-8 text-xs";
+  if (avatarUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatarUrl}
+        alt={name}
+        className={`${dims} rounded-full object-cover shrink-0 ${ring ?? ""}`}
+      />
+    );
+  }
+  return (
+    <div className={`${dims} rounded-full bg-violet-700 flex items-center justify-center font-bold text-white shrink-0 ${ring ?? ""}`}>
+      {initials(name)}
+    </div>
+  );
+}
+
+const PODIUM = [
+  { label: "2.", medalColor: "text-zinc-400", barH: "h-20", barBg: "bg-zinc-700/50", ring: "ring-2 ring-zinc-500/60" },
+  { label: "1.", medalColor: "text-amber-400", barH: "h-28", barBg: "bg-amber-500/20", ring: "ring-2 ring-amber-500/60" },
+  { label: "3.", medalColor: "text-orange-400", barH: "h-14", barBg: "bg-orange-700/20", ring: "ring-2 ring-orange-600/50" },
+] as const;
 
 export default async function RangeringPage() {
   await checkFeature("community_leaderboard");
@@ -21,26 +40,29 @@ export default async function RangeringPage() {
 
   const memberships = await db.membership.findMany({
     where:   { organizationId: ctx.organizationId },
-    include: { user: { select: { id: true, name: true } } },
+    include: { user: { select: { id: true, name: true, avatarUrl: true } } },
     orderBy: { points: "desc" },
+    take:    100,
   });
 
   const board = memberships.map((m, i) => ({
-    rank:   i + 1,
-    userId: m.userId,
-    name:   m.user.name ?? "Ukjent",
-    points: m.points,
-    isMe:   m.userId === ctx.userId,
+    rank:      i + 1,
+    userId:    m.userId,
+    name:      m.user.name ?? "Ukjent",
+    avatarUrl: m.user.avatarUrl,
+    points:    m.points,
+    isMe:      m.userId === ctx.userId,
   }));
 
-  const top3   = [board[1], board[0], board[2]].filter(Boolean);  // podium: 2nd, 1st, 3rd
-  const rest   = board.slice(3);
-  const myRow  = board.find((m) => m.isMe);
+  // Podium: centre=1st, left=2nd, right=3rd
+  const podiumOrder = [board[1], board[0], board[2]].filter(Boolean) as typeof board;
+  const rest  = board.slice(3);
+  const myRow = board.find((m) => m.isMe);
 
   return (
-    <div className="px-8 py-8">
+    <div className="min-h-screen bg-[#0d0d14] px-4 py-8 md:px-8">
       <h1 className="mb-1 text-xl font-semibold text-white">Rangering</h1>
-      <p className="mb-6 text-sm text-zinc-500">Topp bidragsytere i communityet</p>
+      <p className="mb-8 text-sm text-zinc-500">Topp bidragsytere i communityet</p>
 
       {board.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-zinc-600">
@@ -49,61 +71,55 @@ export default async function RangeringPage() {
         </div>
       ) : (
         <>
-          {/* Podium */}
-          {top3.length >= 1 && (
+          {/* ── Podium ── */}
+          {podiumOrder.length >= 1 && (
             <div className="mb-10 flex items-end justify-center gap-4">
-              {top3.map((member, idx) => {
-                // top3 is [2nd, 1st, 3rd] — idx 0=silver, 1=gold, 2=bronze
-                const styleKey = idx as 0 | 1 | 2;
-                const s = PODIUM_STYLE[styleKey];
+              {podiumOrder.map((member, idx) => {
+                const s = PODIUM[idx];
                 return (
-                  <div key={member.userId} className="flex flex-col items-center gap-3">
-                    <span className="text-xs font-semibold text-zinc-400">{member.points.toLocaleString("no-NO")} p</span>
-                    <div className={`flex h-14 w-14 items-center justify-center rounded-full text-sm font-bold text-white ring-2 ${s.avatar} ${s.ring}`}>
-                      {initials(member.name)}
-                    </div>
-                    <p className="max-w-[80px] text-center text-xs font-medium leading-tight text-white">{member.name}</p>
-                    <div className={`flex w-20 flex-col items-center justify-end rounded-t-xl pb-3 ring-1 ${s.bg} ${s.ring} ${s.height}`}>
-                      <span className="text-2xl">{s.medal}</span>
-                    </div>
+                  <div key={member.userId} className="flex flex-col items-center gap-2">
+                    <span className={`text-xs font-bold ${s.medalColor}`}>{s.label}</span>
+                    <p className="max-w-[80px] text-center text-xs font-medium leading-tight text-white truncate">{member.name}</p>
+                    <Avatar name={member.name} avatarUrl={member.avatarUrl} size="lg" ring={s.ring} />
+                    <span className="text-xs text-zinc-400">{member.points.toLocaleString("nb-NO")} p</span>
+                    <div className={`w-20 rounded-t-xl ${s.barH} ${s.barBg} border border-white/5`} />
                   </div>
                 );
               })}
             </div>
           )}
 
-          {/* Rest */}
+          {/* ── Rest of the list ── */}
           {rest.length > 0 && (
-            <div className="mb-6 overflow-hidden rounded-xl border border-zinc-800">
+            <div className="mb-6 overflow-hidden rounded-2xl border border-white/[0.06] bg-[#12121e]">
               {rest.map((member, i) => (
                 <div
                   key={member.userId}
-                  className={`flex items-center gap-4 px-5 py-3.5 transition-colors ${
-                    member.isMe ? "bg-violet-500/5" : "hover:bg-zinc-900"
-                  } ${i < rest.length - 1 ? "border-b border-zinc-800" : ""}`}
+                  className={`flex items-center gap-3 px-4 py-3 transition-colors ${
+                    member.isMe ? "bg-violet-500/10" : "hover:bg-white/[0.03]"
+                  } ${i < rest.length - 1 ? "border-b border-white/[0.04]" : ""}`}
                 >
-                  <span className="w-6 text-sm font-semibold text-zinc-500">{member.rank}</span>
-                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white ${member.isMe ? "bg-violet-600" : "bg-zinc-700"}`}>
-                    {initials(member.name)}
-                  </div>
+                  <span className="w-7 text-sm font-semibold text-zinc-500 text-right">{member.rank}</span>
+                  <Avatar name={member.name} avatarUrl={member.avatarUrl} size="sm" />
                   <p className={`flex-1 text-sm font-medium ${member.isMe ? "text-violet-300" : "text-white"}`}>
-                    {member.name}{member.isMe && " (deg)"}
+                    {member.name}{member.isMe && <span className="ml-1.5 text-xs text-violet-500">(deg)</span>}
                   </p>
-                  <span className="text-sm font-semibold text-white">{member.points.toLocaleString("no-NO")}</span>
+                  <span className="text-sm font-semibold text-white">{member.points.toLocaleString("nb-NO")}</span>
                 </div>
               ))}
             </div>
           )}
 
-          {/* My position */}
-          {myRow && (
-            <div className="rounded-xl border border-violet-500/30 bg-violet-500/5 p-4 ring-1 ring-violet-500/20">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-violet-400">Din plassering</p>
+          {/* ── My position ── */}
+          {myRow && myRow.rank > 3 && (
+            <div className="rounded-2xl border border-violet-500/30 bg-violet-500/5 p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-violet-400">Din plassering</p>
               <div className="flex items-center gap-4">
                 <span className="text-3xl font-bold text-white">#{myRow.rank}</span>
+                <Avatar name={myRow.name} avatarUrl={myRow.avatarUrl} size="md" />
                 <div className="flex-1">
                   <p className="font-semibold text-white">{myRow.name}</p>
-                  <p className="text-sm text-zinc-400">{myRow.points.toLocaleString("no-NO")} poeng</p>
+                  <p className="text-sm text-zinc-400">{myRow.points.toLocaleString("nb-NO")} poeng</p>
                 </div>
               </div>
             </div>

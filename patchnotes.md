@@ -1,3 +1,13 @@
+## Intraa Update — 15. april 2026 (4)
+
+### Forbedringer
+- Rangering-siden er redesignet — mørkt kortdesign (`#12121e`), podium med profilbilder og fargede søyler
+- Avatarbilder vises på podiet og i listen — med initialer som fallback
+- «Din plassering»-kortet vises kun når du er utenfor topp 3
+- Spørringen henter nå avatarUrl og begrenses til 100 medlemmer
+
+---
+
 ## Intraa Update — 15. april 2026 (3)
 
 ### Forbedringer
