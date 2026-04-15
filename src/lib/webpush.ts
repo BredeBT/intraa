@@ -2,6 +2,18 @@ import "server-only";
 import webpush from "web-push";
 import { db } from "@/server/db";
 
+export function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 100);
+}
+
 webpush.setVapidDetails(
   process.env.VAPID_SUBJECT!, // mailto:brede_bt@hotmail.com
   process.env.VAPID_PUBLIC_KEY!,
