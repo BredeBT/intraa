@@ -1,3 +1,14 @@
+## Intraa Update — 15. april 2026 (3)
+
+### Forbedringer
+- Feed laster vesentlig raskere — henter nå maksimalt 20 innlegg med 5 kommentarer per innlegg i stedet for alle
+- Stream-status mellomlagres nå i Vercel-edge i 30 sekunder — reduserer Twitch/YouTube API-kall
+
+### Fikset
+- Feed-spørringen hadde ingen grense — kunne hente hundrevis av innlegg og alle kommentarer ved første lasting
+
+---
+
 ## Intraa Update — 15. april 2026 (2)
 
 ### Forbedringer
