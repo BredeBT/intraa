@@ -240,6 +240,12 @@ export function useWebRTC(currentUserId: string, friendId: string, userName?: st
         setTimeout(() => void supabase.removeChannel(ch), 3000);
       }
     });
+    // Also send push notification (for when the app is in the background)
+    void fetch("/api/push/call", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ calleeId: friendId, type }),
+    }).catch(() => {});
   }, [friendId, currentUserId, userName]);
 
   // ── Start call (initiator) ────────────────────────────────────────────────

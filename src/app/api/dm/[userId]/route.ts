@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { sendPushToUser } from "@/lib/webpush";
 
 async function areFriends(userId1: string, userId2: string) {
   const f = await db.friendship.findFirst({
@@ -72,6 +73,13 @@ export async function POST(
     },
     include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
   });
+
+  // Fire-and-forget push notification to receiver
+  void sendPushToUser(userId, {
+    title: message.sender.name ?? "Ny melding",
+    body:  message.content.slice(0, 100),
+    url:   "/meldinger",
+  }).catch(() => {});
 
   return NextResponse.json({ message }, { status: 201 });
 }

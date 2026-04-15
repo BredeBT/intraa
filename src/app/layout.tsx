@@ -18,6 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Intraa",
   description: "Din arbeidsplass. Din community.",
+  manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {

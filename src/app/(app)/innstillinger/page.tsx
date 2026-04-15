@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, MessageSquare, Globe, Monitor, Loader2, Eye, EyeOff } from "lucide-react";
+import { Check, MessageSquare, Monitor, Loader2, Eye, EyeOff } from "lucide-react";
+import { PushNotificationButton } from "@/components/PushNotificationButton";
 import { useUser } from "@/lib/hooks/useUser";
 import { useRouter } from "next/navigation";
 import ProfilTab from "./ProfilTab";
@@ -265,7 +266,7 @@ function VarslerTab() {
           </div>
         ))}
       </div>
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         <button onClick={save} disabled={saving}
           className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:opacity-50">
           {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
@@ -273,6 +274,10 @@ function VarslerTab() {
         </button>
         {saved  && <span className="flex items-center gap-1.5 text-sm text-emerald-400"><Check className="h-4 w-4" /> Lagret</span>}
         {error  && <span className="text-sm text-rose-400">{error}</span>}
+      </div>
+      <div className="mt-6">
+        <p className="mb-2 text-xs font-semibold text-zinc-400">Enhetsvarsler</p>
+        <PushNotificationButton />
       </div>
     </div>
   );
