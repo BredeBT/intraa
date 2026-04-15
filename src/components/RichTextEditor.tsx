@@ -1,11 +1,13 @@
 "use client";
 
-import { forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useImperativeHandle, useState, useCallback } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Bold, Italic, Underline as UnderlineIcon, Code } from "lucide-react";
+import { GifPicker } from "./GifPicker";
+import { EmojiPicker } from "./EmojiPicker";
 
 // ─── Public ref API ───────────────────────────────────────────────────────────
 
@@ -31,12 +33,14 @@ interface Props {
   className?:     string;
   /** Extra nodes rendered on the right side of the toolbar (e.g. Paperclip button) */
   toolbarExtra?:  React.ReactNode;
+  /** Called when the user selects a GIF — receives a direct image URL */
+  onSendWithImage?: (imageUrl: string) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEditor(
-  { placeholder = "Skriv en melding…", disabled = false, onChange, onEnter, className = "", toolbarExtra },
+  { placeholder = "Skriv en melding…", disabled = false, onChange, onEnter, className = "", toolbarExtra, onSendWithImage },
   ref,
 ) {
   const editor = useEditor({
@@ -61,6 +65,18 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
       onChange(text, textBefore);
     },
   });
+
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [showGif,   setShowGif]   = useState(false);
+
+  const handleEmojiSelect = useCallback((emoji: string) => {
+    editor?.commands.insertContent(emoji);
+    editor?.commands.focus();
+  }, [editor]);
+
+  const handleGifSelect = useCallback((url: string) => {
+    onSendWithImage?.(url);
+  }, [onSendWithImage]);
 
   // ── Expose ref API ────────────────────────────────────────────────────────
 
@@ -128,7 +144,40 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
         <ToolBtn active={editor.isActive("code")} onClick={() => editor.chain().focus().toggleCode().run()} title="Kode">
           <Code className="h-3.5 w-3.5" />
         </ToolBtn>
-        {toolbarExtra && <div className="ml-auto flex items-center">{toolbarExtra}</div>}
+        <div className="ml-auto flex items-center gap-0.5">
+          <div className="relative">
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); setShowEmoji((v) => !v); setShowGif(false); }}
+              title="Emoji"
+              className="flex h-6 w-6 items-center justify-center rounded transition-colors text-zinc-500 hover:text-zinc-300"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M8 13s1.5 2 4 2 4-2 4-2"/>
+                <line x1="9" y1="9" x2="9.01" y2="9"/>
+                <line x1="15" y1="9" x2="15.01" y2="9"/>
+              </svg>
+            </button>
+            {showEmoji && (
+              <EmojiPicker onSelect={handleEmojiSelect} onClose={() => setShowEmoji(false)} />
+            )}
+          </div>
+          <div className="relative">
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); setShowGif((v) => !v); setShowEmoji(false); }}
+              title="Send GIF"
+              className="flex h-6 items-center justify-center rounded px-1 transition-colors text-zinc-500 hover:text-zinc-300"
+            >
+              <span className="text-[11px] font-bold leading-none">GIF</span>
+            </button>
+            {showGif && (
+              <GifPicker onSelect={handleGifSelect} onClose={() => setShowGif(false)} />
+            )}
+          </div>
+          {toolbarExtra}
+        </div>
       </div>
 
       {/* Content area */}

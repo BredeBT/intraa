@@ -345,6 +345,20 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
               placeholder={`Skriv i #${channelName}…`}
               onChange={handleEditorChange}
               onEnter={() => void doSend()}
+              onSendWithImage={async (imageUrl) => {
+                startTransition(async () => {
+                  try {
+                    const msg = await sendMessage(channelId, " ", undefined, imageUrl);
+                    setMessages((prev) => {
+                      const ids = new Set(prev.map((m) => m.id));
+                      if (ids.has(msg.id)) return prev;
+                      return [...prev, msg as LocalMessage];
+                    });
+                    isAtBottomRef.current = true;
+                    void broadcast(msg as LocalMessage);
+                  } catch { /* silent */ }
+                });
+              }}
             />
           </div>
           <button

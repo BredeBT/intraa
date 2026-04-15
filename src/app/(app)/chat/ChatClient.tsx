@@ -683,6 +683,20 @@ export default function ChatClient({
               onChange={handleEditorChange}
               onEnter={handleSend}
               className="flex-1"
+              onSendWithImage={(imageUrl) => {
+                if (!resolvedChannelId) return;
+                startTransition(async () => {
+                  try {
+                    const newMsg = await sendMessage(resolvedChannelId, " ", undefined, imageUrl);
+                    setMessages((prev) => {
+                      const ids = new Set(prev.map((m) => m.id));
+                      return ids.has(newMsg.id) ? prev : [...prev, newMsg as LocalMessage];
+                    });
+                    setTimeout(scrollToBottom, 50);
+                    void broadcast(newMsg as LocalMessage);
+                  } catch { /* silent */ }
+                });
+              }}
             />
             <button onClick={handleSend}
               disabled={isPending || isUploading || (!activeChannel && !activeDm) || (isAnnouncementChannel && !isAdmin)}
