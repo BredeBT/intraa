@@ -1,3 +1,16 @@
+## Intraa Update — 15. april 2026 (2)
+
+### Forbedringer
+- Navigasjon er raskere — hjemside, feed og community-feed viser nå et skjelett-skjermbilde mens data lastes inn
+- Sidebytte fra navigasjonsmenyen føles raskere med umiddelbar visuell respons
+
+### Fikset
+- Minnelekkasje i meldingssystemet: Supabase-kanaler ble opprettet men aldri fjernet ved sending — nå ryddet opp
+- Layout hentet funksjoner og tema i to separate API-kall — erstattet med ett kombinert kall
+- Community-medlemsliste hentet to datasett sekvensielt — kjøres nå parallelt
+
+---
+
 ## Intraa Update — 15. april 2026
 
 ### Forbedringer
