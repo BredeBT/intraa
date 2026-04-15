@@ -77,6 +77,7 @@ export default function ChatClient({
   const [pastePreview,     setPastePreview]     = useState<string | null>(null);
   const [pasteToast,       setPasteToast]       = useState<string | null>(null);
   const [isUploading,      setIsUploading]      = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const pasteToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const ctxMenuRef    = useRef<HTMLDivElement>(null);
@@ -191,6 +192,7 @@ export default function ChatClient({
     setPasteImageFile(null);
     setPastePreview(null);
     setPasteToast(null);
+    setUploadedImageUrl(null);
   }
 
   // ── Input / Mention handling ─────────────────────────────────────────────────
@@ -244,17 +246,19 @@ export default function ChatClient({
 
   function handleSend() {
     const editorEmpty = editorRef.current?.isEmpty() ?? true;
-    if ((editorEmpty && !pasteImageFile) || !resolvedChannelId) return;
+    if ((editorEmpty && !pasteImageFile && !uploadedImageUrl) || !resolvedChannelId) return;
     const html = editorRef.current?.getHTML() ?? "";
     const imageFile = pasteImageFile;
+    const preUploadedUrl = uploadedImageUrl;
     editorRef.current?.clear();
     setMentionQuery(null);
     clearPasteImage();
 
     startTransition(async () => {
       try {
-        let imageUrl: string | undefined;
-        if (imageFile) {
+        let imageUrl: string | undefined = preUploadedUrl ?? undefined;
+        // Only upload if file hasn't been pre-uploaded (e.g. paste still pending)
+        if (imageFile && !preUploadedUrl) {
           setIsUploading(true);
           try {
             const form = new FormData();
@@ -413,30 +417,36 @@ export default function ChatClient({
     setChanModalBusy(false);
   }
 
-  // File attachment
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  // File attachment — upload immediately, show preview with spinner
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file || !activeChannel) return;
-    const url = URL.createObjectURL(file);
-    const type: Attachment["type"] = file.type.startsWith("image/") ? "image" : "file";
-    const msg: LocalMessage = {
-      id: `opt-file-${Date.now()}`,
-      content: "",
-      imageUrl: null,
-      createdAt: new Date(),
-      editedAt: null,
-      isPinned: false,
-      channelId: activeId,
-      authorId: userId,
-      parentMessageId: null,
-      author: { id: userId, name: userName, email: "", avatarUrl: null, createdAt: new Date() },
-      reactions: [],
-      replyCount: 0,
-      replies: [],
-      attachment: { name: file.name, url, type, size: file.size },
-    };
-    setMessages((prev) => [...prev, msg]);
+    if (!file) return;
     if (fileInputRef.current) fileInputRef.current.value = "";
+
+    const localUrl = URL.createObjectURL(file);
+    setPastePreview(localUrl);
+    setPasteImageFile(file);
+    setIsUploading(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json() as { url?: string };
+      if (data.url) {
+        setPastePreview(data.url);
+        setPasteImageFile(null);
+        setUploadedImageUrl(data.url);
+      } else {
+        clearPasteImage();
+        showToast("Opplasting feilet");
+      }
+    } catch {
+      clearPasteImage();
+      showToast("Opplasting feilet");
+    } finally {
+      setIsUploading(false);
+    }
   }
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -619,12 +629,19 @@ export default function ChatClient({
               <div className="relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={pastePreview} alt="Forhåndsvisning" className="max-h-32 max-w-xs rounded-lg object-cover ring-1 ring-zinc-700" />
-                <button
-                  onClick={clearPasteImage}
-                  className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-zinc-900 text-white hover:opacity-80"
-                >
-                  <X className="h-3 w-3" />
-                </button>
+                {isUploading && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/60">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  </div>
+                )}
+                {!isUploading && (
+                  <button
+                    onClick={clearPasteImage}
+                    className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-zinc-900 text-white hover:opacity-80"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -648,11 +665,11 @@ export default function ChatClient({
           )}
 
           <div className="flex items-end gap-3">
-            <button onClick={() => fileInputRef.current?.click()} disabled={!activeChannel}
-              className="shrink-0 pb-2 text-zinc-400 transition-colors hover:text-indigo-400 disabled:opacity-30" title="Legg ved fil">
+            <button onClick={() => fileInputRef.current?.click()} disabled={!activeChannel || isUploading}
+              className="shrink-0 p-2 text-white/50 transition-colors hover:text-white disabled:opacity-30" title="Last opp bilde (eller lim inn med Ctrl+V)">
               <Paperclip className="h-4 w-4" />
             </button>
-            <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
+            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={(e) => void handleFileChange(e)} />
             <RichTextEditor
               ref={editorRef}
               placeholder={

@@ -35,6 +35,7 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
   const [pastePreview,   setPastePreview]   = useState<string | null>(null);
   const [pasteToast,     setPasteToast]     = useState<string | null>(null);
   const [isUploading,    setIsUploading]    = useState(false);
+  const [uploadedUrl,    setUploadedUrl]    = useState<string | null>(null);
 
   const bottomRef      = useRef<HTMLDivElement>(null);
   const scrollRef      = useRef<HTMLDivElement>(null);
@@ -94,19 +95,41 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
   }, []);
 
   useEffect(() => {
-    function onPaste(e: ClipboardEvent) {
+    async function onPaste(e: ClipboardEvent) {
       const items = Array.from(e.clipboardData?.items ?? []);
       const img = items.find((i) => i.type.startsWith("image/"));
       if (!img) return;
       e.preventDefault();
       const file = img.getAsFile();
       if (!file) return;
-      setPasteImageFile(file);
       setPastePreview(URL.createObjectURL(file));
-      showPasteToast("Bilde klar til sending");
+      setPasteImageFile(file);
+      setIsUploading(true);
+      const form = new FormData();
+      form.append("file", file);
+      try {
+        const res = await fetch("/api/upload", { method: "POST", body: form });
+        const data = await res.json() as { url?: string };
+        if (data.url) {
+          setPastePreview(data.url);
+          setUploadedUrl(data.url);
+          showPasteToast("Bilde klar til sending");
+        } else {
+          setPastePreview(null);
+          setPasteImageFile(null);
+          showPasteToast("Opplasting feilet");
+        }
+      } catch {
+        setPastePreview(null);
+        setPasteImageFile(null);
+        showPasteToast("Opplasting feilet");
+      } finally {
+        setIsUploading(false);
+      }
     }
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPasteToast]);
 
   // ── @mention handling ────────────────────────────────────────────────────────
@@ -124,10 +147,9 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
 
   // ── Send ─────────────────────────────────────────────────────────────────────
 
-  async function uploadAndGetUrl(file: File): Promise<string | null> {
+  async function uploadFile(file: File): Promise<string | null> {
     const form = new FormData();
     form.append("file", file);
-    form.append("folder", "chat");
     setIsUploading(true);
     try {
       const res = await fetch("/api/upload", { method: "POST", body: form });
@@ -139,15 +161,12 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
 
   async function doSend() {
     const editorEmpty = editorRef.current?.isEmpty() ?? true;
-    if ((editorEmpty && !pasteImageFile) || isPending) return;
+    if ((editorEmpty && !uploadedUrl) || isPending) return;
 
-    let imageUrl: string | undefined;
-    if (pasteImageFile) {
-      const url = await uploadAndGetUrl(pasteImageFile);
-      if (url) imageUrl = url;
-      setPasteImageFile(null);
-      setPastePreview(null);
-    }
+    const imageUrl = uploadedUrl ?? undefined;
+    setPasteImageFile(null);
+    setPastePreview(null);
+    setUploadedUrl(null);
 
     const html = editorRef.current?.getHTML() ?? "";
     editorRef.current?.clear();
@@ -259,12 +278,19 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
         <div className="relative mx-5 mb-2 w-fit">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={pastePreview} alt="Bilde" className="h-20 w-auto rounded-lg border border-zinc-700 object-cover" />
-          <button
-            onClick={() => { setPasteImageFile(null); setPastePreview(null); }}
-            className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-zinc-700 text-white hover:bg-zinc-600"
-          >
-            <X className="h-3 w-3" />
-          </button>
+          {isUploading && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/60">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            </div>
+          )}
+          {!isUploading && (
+            <button
+              onClick={() => { setPasteImageFile(null); setPastePreview(null); setUploadedUrl(null); }}
+              className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-zinc-700 text-white hover:bg-zinc-600"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
         </div>
       )}
 
@@ -294,23 +320,32 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
       {/* Input */}
       <div className="shrink-0 border-t border-zinc-800 bg-zinc-900 px-5 py-3">
         <div className="flex items-end gap-2">
-          <div className="relative flex-1">
+          <label className="shrink-0 cursor-pointer p-2 text-white/50 transition-colors hover:text-white" title="Last opp bilde (eller lim inn med Ctrl+V)">
+            <Paperclip className="h-4 w-4" />
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              e.target.value = "";
+              setPastePreview(URL.createObjectURL(file));
+              setPasteImageFile(file);
+              const url = await uploadFile(file);
+              if (url) {
+                setPastePreview(url);
+                setUploadedUrl(url);
+              } else {
+                setPastePreview(null);
+                setPasteImageFile(null);
+                showPasteToast("Opplasting feilet");
+              }
+            }} />
+          </label>
+          <div className="flex-1">
             <RichTextEditor
               ref={editorRef}
               placeholder={`Skriv i #${channelName}…`}
               onChange={handleEditorChange}
               onEnter={() => void doSend()}
             />
-            <label className="absolute bottom-2 right-3 cursor-pointer text-zinc-500 hover:text-zinc-300 transition-colors">
-              <Paperclip className="h-4 w-4" />
-              <input type="file" accept="image/*" className="sr-only" onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setPasteImageFile(file);
-                setPastePreview(URL.createObjectURL(file));
-                e.target.value = "";
-              }} />
-            </label>
           </div>
           <button
             onClick={() => void doSend()}
