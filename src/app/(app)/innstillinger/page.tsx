@@ -1,36 +1,52 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, MessageSquare, Monitor, Loader2, Eye, EyeOff } from "lucide-react";
-import { PushNotificationButton } from "@/components/PushNotificationButton";
+import { Check, Loader2, Eye, EyeOff } from "lucide-react";
 import { useUser } from "@/lib/hooks/useUser";
 import { useRouter } from "next/navigation";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import ProfilTab from "./ProfilTab";
 
-type Tab = "profil" | "konto" | "abonnement" | "varsler" | "personvern" | "integrasjoner";
+type Tab = "profil" | "konto" | "abonnement" | "varsler" | "personvern";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "profil",        label: "Profil" },
-  { id: "konto",         label: "Konto" },
-  { id: "abonnement",    label: "Abonnement" },
-  { id: "varsler",       label: "Varsler" },
-  { id: "personvern",    label: "Personvern" },
-  { id: "integrasjoner", label: "Integrasjoner" },
+  { id: "profil",     label: "Profil" },
+  { id: "konto",      label: "Konto" },
+  { id: "abonnement", label: "Abonnement" },
+  { id: "varsler",    label: "Varsler" },
+  { id: "personvern", label: "Personvern" },
 ];
 
 // ─── Notification config (maps UI labels → API field names) ───────────────────
 
-const NOTIF_ROWS: { id: string; emailKey: string; pushKey: string; label: string; desc: string }[] = [
-  { id: "message", emailKey: "emailOnMessage", pushKey: "pushOnMessage", label: "Nye meldinger",        desc: "Når noen sender deg en direkte melding" },
-  { id: "ticket",  emailKey: "emailOnTicket",  pushKey: "pushOnTicket",  label: "Ticket-oppdateringer", desc: "Statusendringer på tickets du følger" },
-  { id: "comment", emailKey: "emailOnComment", pushKey: "pushOnComment", label: "Kommentarer",          desc: "Nye kommentarer på dine innlegg" },
-  { id: "mention", emailKey: "emailOnMention", pushKey: "pushOnMention", label: "Nevnt (@)",            desc: "Når noen nevner deg i en melding" },
-  { id: "file",    emailKey: "emailOnFile",    pushKey: "pushOnFile",    label: "Nye filer",            desc: "Når noen laster opp filer i dine mapper" },
-];
-
-const INTEGRATIONS = [
-  { id: "slack",     name: "Slack",         desc: "Motta varsler og send meldinger direkte fra Slack.",    icon: MessageSquare, iconColor: "text-purple-400", iconBg: "bg-purple-500/10", connected: false },
-  { id: "microsoft", name: "Microsoft 365", desc: "Integrer med Teams, Outlook og OneDrive.",              icon: Monitor,       iconColor: "text-sky-400",    iconBg: "bg-sky-500/10",    connected: false },
+const NOTIF_ROWS: {
+  emailKey: string; pushKey: string; label: string; desc: string;
+  iconBg: string; icon: React.ReactNode;
+}[] = [
+  {
+    emailKey: "emailOnMessage", pushKey: "pushOnMessage",
+    label: "Nye meldinger", desc: "Direkte meldinger fra andre",
+    iconBg: "rgba(108,71,255,0.2)",
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+  },
+  {
+    emailKey: "emailOnTicket", pushKey: "pushOnTicket",
+    label: "Ticket-oppdateringer", desc: "Statusendringer på dine tickets",
+    iconBg: "rgba(251,191,36,0.15)",
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="m8 21 4-4 4 4"/></svg>,
+  },
+  {
+    emailKey: "emailOnComment", pushKey: "pushOnComment",
+    label: "Kommentarer", desc: "Nye kommentarer på dine innlegg",
+    iconBg: "rgba(52,211,153,0.15)",
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>,
+  },
+  {
+    emailKey: "emailOnMention", pushKey: "pushOnMention",
+    label: "Nevnt (@)", desc: "Når noen nevner deg i en melding",
+    iconBg: "rgba(96,165,250,0.15)",
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -207,12 +223,25 @@ const DEFAULT_PREFS: NotifPrefs = {
   pushOnMessage:  true,  pushOnTicket:  false, pushOnComment:  false, pushOnMention:  true,  pushOnFile:  false,
 };
 
+function PushToggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`relative flex h-6 w-10 shrink-0 items-center rounded-full px-0.5 transition-colors ${on ? "bg-[#6c47ff]" : "bg-white/10"}`}
+    >
+      <span className={`h-5 w-5 rounded-full bg-white shadow transition-transform ${on ? "translate-x-4" : "translate-x-0"}`} />
+    </button>
+  );
+}
+
 function VarslerTab() {
   const [prefs,   setPrefs]   = useState<NotifPrefs>(DEFAULT_PREFS);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
   const [saved,   setSaved]   = useState(false);
   const [error,   setError]   = useState("");
+  const { supported, permission, subscribed, subscribe, unsubscribe } = usePushNotifications();
 
   useEffect(() => {
     fetch("/api/user/notifications")
@@ -237,48 +266,83 @@ function VarslerTab() {
   if (loading) return <div className="flex h-32 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-zinc-500" /></div>;
 
   return (
-    <div>
-      <div className="mb-3 flex items-center justify-between">
-        <div className="hidden grid-cols-[1fr_80px_80px] gap-4 px-5 sm:grid w-full">
-          <span />
-          <span className="text-center text-xs font-semibold text-zinc-500">E-post</span>
-          <span className="text-center text-xs font-semibold text-zinc-500">Push</span>
+    <div className="max-w-2xl">
+      {/* Push card */}
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-white/30">Enhetsvarsler</p>
+      <div className="mb-6 flex items-center gap-4 rounded-2xl border border-[#6c47ff]/35 bg-[#6c47ff]/15 px-5 py-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#6c47ff]">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
         </div>
-      </div>
-      <div className="overflow-hidden rounded-xl border border-zinc-800">
-        {NOTIF_ROWS.map((n, i) => (
-          <div key={n.id}
-            className={`grid grid-cols-1 gap-3 px-5 py-4 transition-colors hover:bg-zinc-900 sm:grid-cols-[1fr_80px_80px] sm:items-center ${
-              i < NOTIF_ROWS.length - 1 ? "border-b border-zinc-800" : ""}`}
+        <div className="min-w-0 flex-1">
+          <p className="text-[15px] font-medium text-white">Push-varsler</p>
+          <p className="text-[13px] text-white/40">
+            {!supported
+              ? "Ikke støttet i denne nettleseren"
+              : permission === "denied"
+              ? "Blokkert — endre i nettleserinnstillinger"
+              : subscribed
+              ? "Aktivert på denne enheten"
+              : "Få varsler selv når appen er lukket"}
+          </p>
+        </div>
+        {supported && permission !== "denied" && (
+          <button
+            onClick={subscribed ? unsubscribe : subscribe}
+            className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
+              subscribed
+                ? "border border-[#6c47ff]/40 bg-[#6c47ff]/30 text-white/70 hover:bg-[#6c47ff]/40"
+                : "bg-[#6c47ff] text-white hover:bg-[#5a3de0]"
+            }`}
           >
-            <div>
-              <p className="text-sm font-medium text-white">{n.label}</p>
-              <p className="text-xs text-zinc-500">{n.desc}</p>
+            {subscribed ? "Deaktiver" : "Aktiver"}
+          </button>
+        )}
+      </div>
+
+      {/* Notification type rows */}
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-white/30">Varseltyper</p>
+      <div className="mb-6 overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.04]">
+        {NOTIF_ROWS.map((n, i) => (
+          <div
+            key={n.emailKey}
+            className={`flex items-center gap-3 px-5 py-4 ${i < NOTIF_ROWS.length - 1 ? "border-b border-white/[0.06]" : ""}`}
+          >
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px]"
+              style={{ background: n.iconBg }}
+            >
+              {n.icon}
             </div>
-            <div className="flex items-center gap-2 sm:justify-center">
-              <span className="text-xs text-zinc-500 sm:hidden">E-post</span>
-              <Toggle checked={prefs[n.emailKey] ?? false} onChange={() => setPrefs(p => ({ ...p, [n.emailKey]: !p[n.emailKey] }))} />
+            <div className="min-w-0 flex-1">
+              <p className="text-[15px] text-white">{n.label}</p>
+              <p className="truncate text-[12px] text-white/35">{n.desc}</p>
             </div>
-            <div className="flex items-center gap-2 sm:justify-center">
-              <span className="text-xs text-zinc-500 sm:hidden">Push</span>
-              <Toggle checked={prefs[n.pushKey] ?? false} onChange={() => setPrefs(p => ({ ...p, [n.pushKey]: !p[n.pushKey] }))} />
+            <div className="flex shrink-0 items-center gap-4">
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-[11px] text-white/30">E-post</span>
+                <PushToggle on={prefs[n.emailKey] ?? false} onToggle={() => setPrefs(p => ({ ...p, [n.emailKey]: !p[n.emailKey] }))} />
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-[11px] text-white/30">Push</span>
+                <PushToggle on={prefs[n.pushKey] ?? false} onToggle={() => setPrefs(p => ({ ...p, [n.pushKey]: !p[n.pushKey] }))} />
+              </div>
             </div>
           </div>
         ))}
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button onClick={save} disabled={saving}
-          className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:opacity-50">
-          {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-          Lagre varselinnstillinger
-        </button>
-        {saved  && <span className="flex items-center gap-1.5 text-sm text-emerald-400"><Check className="h-4 w-4" /> Lagret</span>}
-        {error  && <span className="text-sm text-rose-400">{error}</span>}
-      </div>
-      <div className="mt-6">
-        <p className="mb-2 text-xs font-semibold text-zinc-400">Enhetsvarsler</p>
-        <PushNotificationButton />
-      </div>
+
+      <button
+        onClick={save}
+        disabled={saving}
+        className="w-full rounded-2xl bg-[#6c47ff] py-4 text-base font-medium text-white transition-colors hover:bg-[#5a3de0] disabled:opacity-50"
+      >
+        {saving ? "Lagrer..." : "Lagre innstillinger"}
+      </button>
+      {saved && <p className="mt-3 flex items-center gap-1.5 text-sm text-emerald-400"><Check className="h-4 w-4" /> Lagret</p>}
+      {error && <p className="mt-3 text-sm text-rose-400">{error}</p>}
     </div>
   );
 }
@@ -318,47 +382,6 @@ function PersonvernTab() {
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-// ─── Integrasjoner tab ────────────────────────────────────────────────────────
-
-function IntegrasjonerTab() {
-  const [connected, setConnected] = useState<Record<string, boolean>>(
-    Object.fromEntries(INTEGRATIONS.map(i => [i.id, i.connected]))
-  );
-
-  return (
-    <div className="flex flex-col gap-4">
-      {INTEGRATIONS.map(intg => {
-        const isConnected = connected[intg.id];
-        return (
-          <div key={intg.id} className="flex items-center gap-4 rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${intg.iconBg}`}>
-              <intg.icon className={`h-5 w-5 ${intg.iconColor}`} />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-white">{intg.name}</p>
-              <p className="text-xs text-zinc-500">{intg.desc}</p>
-            </div>
-            {isConnected ? (
-              <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1 text-xs text-emerald-400"><Check className="h-3.5 w-3.5" /> Tilkoblet</span>
-                <button onClick={() => setConnected(p => ({ ...p, [intg.id]: false }))}
-                  className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-rose-500/40 hover:text-rose-400">
-                  Koble fra
-                </button>
-              </div>
-            ) : (
-              <button onClick={() => setConnected(p => ({ ...p, [intg.id]: true }))}
-                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-500">
-                Koble til
-              </button>
-            )}
-          </div>
-        );
-      })}
     </div>
   );
 }
@@ -474,7 +497,6 @@ export default function InnstillingerPage() {
       {tab === "abonnement"    && <AbonnementTab />}
       {tab === "varsler"       && <VarslerTab />}
       {tab === "personvern"    && <PersonvernTab />}
-      {tab === "integrasjoner" && <IntegrasjonerTab />}
     </div>
   );
 }
