@@ -1,3 +1,18 @@
+## Intraa Update — 15. april 2026
+
+### Forbedringer
+- Alle innholdssider har nå kortere marg på mobil — mer plass til selve innholdet
+- Superadmin-panelet viser tydelig advarsel på mobilskjerm — ment for desktop
+- Banner- og avatar-velgeren i admin-innstillinger er nå lesbar på mobil
+
+### Fikset
+- Hjemside-guide (for nye brukere) viste 3 kolonner side om side på mobil — vises nå stablet
+- Community-forside hadde store marger og 3-kolonne layout på mobil — fikset
+- Live-siden hadde allerede mobiltabs — verifisert og fungerer
+- Meldinger, feed og profil var allerede responsive — ingen endringer nødvendig
+
+---
+
 ## Intraa Update — 14. april 2026 (4)
 
 ### Nytt
