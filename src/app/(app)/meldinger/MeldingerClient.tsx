@@ -453,30 +453,31 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
       {/* Input */}
       <div className="shrink-0 border-t border-white/[0.06] px-4 py-3">
         <div className="flex items-end gap-2">
-          <label className="shrink-0 cursor-pointer p-2 text-white/30 transition-colors hover:text-white/60" title="Last opp bilde (eller lim inn med Ctrl+V)">
-            <Paperclip className="h-4 w-4" />
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              className="sr-only"
-              disabled={isUploading}
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                e.target.value = "";
-                setPastePreview(URL.createObjectURL(file));
-                const url = await uploadImage(file);
-                if (url) { setPastePreview(url); setUploadedUrl(url); }
-                else      { setPastePreview(null); }
-              }}
-            />
-          </label>
-          <div className="flex-1 bg-white/[0.06] border border-white/[0.08] rounded-xl px-4 py-2.5 focus-within:border-purple-500/30 focus-within:bg-white/[0.08] transition-all">
+          <div className="flex-1">
             <RichTextEditor
               ref={editorRef}
               placeholder="Skriv en melding…"
               onEnter={() => void send()}
-              className="min-h-[1.5rem] max-h-32 overflow-y-auto bg-transparent text-sm text-white"
+              toolbarExtra={
+                <label className="cursor-pointer p-1 text-zinc-500 transition-colors hover:text-zinc-300" title="Last opp bilde (eller lim inn med Ctrl+V)">
+                  <Paperclip className="h-3.5 w-3.5" />
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="sr-only"
+                    disabled={isUploading}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      e.target.value = "";
+                      setPastePreview(URL.createObjectURL(file));
+                      const url = await uploadImage(file);
+                      if (url) { setPastePreview(url); setUploadedUrl(url); }
+                      else      { setPastePreview(null); }
+                    }}
+                  />
+                </label>
+              }
             />
           </div>
           <button

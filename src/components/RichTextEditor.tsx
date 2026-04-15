@@ -21,20 +21,22 @@ export interface RichTextEditorRef {
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
-  placeholder?: string;
-  disabled?:    boolean;
+  placeholder?:   string;
+  disabled?:      boolean;
   /** Called on every keystroke; receives plain-text content and text-before-cursor */
-  onChange?:    (text: string, textBeforeCursor: string) => void;
+  onChange?:      (text: string, textBeforeCursor: string) => void;
   /** Called when the user presses Enter (without Shift) */
-  onEnter?:     () => void;
+  onEnter?:       () => void;
   /** Extra classes applied to the outer wrapper div */
-  className?:   string;
+  className?:     string;
+  /** Extra nodes rendered on the right side of the toolbar (e.g. Paperclip button) */
+  toolbarExtra?:  React.ReactNode;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEditor(
-  { placeholder = "Skriv en melding…", disabled = false, onChange, onEnter, className = "" },
+  { placeholder = "Skriv en melding…", disabled = false, onChange, onEnter, className = "", toolbarExtra },
   ref,
 ) {
   const editor = useEditor({
@@ -126,6 +128,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
         <ToolBtn active={editor.isActive("code")} onClick={() => editor.chain().focus().toggleCode().run()} title="Kode">
           <Code className="h-3.5 w-3.5" />
         </ToolBtn>
+        {toolbarExtra && <div className="ml-auto flex items-center">{toolbarExtra}</div>}
       </div>
 
       {/* Content area */}
