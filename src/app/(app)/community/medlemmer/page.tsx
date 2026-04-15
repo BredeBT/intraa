@@ -14,17 +14,17 @@ export default async function CommunityMedlemmerPage() {
   const ctx = await getUserOrg();
   if (!ctx) redirect("/login");
 
-  const memberships = await db.membership.findMany({
-    where:   { organizationId: ctx.organizationId },
-    include: { user: { select: { id: true, name: true } } },
-    orderBy: { points: "desc" },
-  });
-
-  // Follows the current user has in this org
-  const myFollows = await db.follow.findMany({
-    where:  { followerId: ctx.userId, organizationId: ctx.organizationId },
-    select: { followingId: true },
-  });
+  const [memberships, myFollows] = await Promise.all([
+    db.membership.findMany({
+      where:   { organizationId: ctx.organizationId },
+      include: { user: { select: { id: true, name: true } } },
+      orderBy: { points: "desc" },
+    }),
+    db.follow.findMany({
+      where:  { followerId: ctx.userId, organizationId: ctx.organizationId },
+      select: { followingId: true },
+    }),
+  ]);
   const followingSet = new Set(myFollows.map((f) => f.followingId));
 
   const members = memberships.map((m) => ({

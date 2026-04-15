@@ -460,13 +460,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setEnabledFeatures(null); // clear stale features immediately on org change
-    void Promise.all([
-      fetch("/api/org/features").then((r) => r.ok ? r.json() as Promise<{ features: string[] }> : Promise.reject()),
-      fetch("/api/tenant/theme").then((r) => r.ok ? r.json() as Promise<{ theme: TenantTheme | null }> : Promise.reject()),
-    ]).then(([featData, themeData]) => {
-      setEnabledFeatures(featData.features);
-      if (themeData.theme) setTenantTheme(themeData.theme);
-    }).catch(() => setEnabledFeatures(null));
+    fetch("/api/layout/bootstrap")
+      .then((r) => r.ok ? r.json() as Promise<{ features: string[]; theme: TenantTheme | null }> : Promise.reject())
+      .then((data) => {
+        setEnabledFeatures(data.features);
+        if (data.theme) setTenantTheme(data.theme);
+      })
+      .catch(() => setEnabledFeatures(null));
   }, [org?.id]);
 
   // Poll live status every 60s
