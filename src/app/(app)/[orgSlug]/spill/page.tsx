@@ -22,7 +22,7 @@ export default async function SpillPage({
       href:        `/${orgSlug}/spill/sjakk`,
       emoji:       "♟️",
       title:       "Sjakk",
-      description: "Utfordre en venn til en klassisk sjakkpartie. Sanntidsoppdateringer via Supabase.",
+      description: "Utfordre en venn til en klassisk sjakkpartie. Trekk vises i sanntid.",
       badge:       "2 spillere",
       badgeColor:  "bg-emerald-500/20 text-emerald-300",
       gradient:    "from-emerald-600/20 to-teal-800/10",

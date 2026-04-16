@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, ChevronRight, Clock } from "lucide-react";
+import { Plus, Search, ChevronRight, Clock, Check, X, Swords } from "lucide-react";
 
 interface Member { id: string; name: string | null; avatarUrl: string | null }
 interface Game {
@@ -14,13 +14,17 @@ interface Game {
   moves:     any;
   updatedAt: Date | string;
 }
+interface ReceivedInvite { id: string; sender: Member }
+interface SentInvite     { id: string; receiver: Member }
 
 interface Props {
-  orgId:       string;
-  orgSlug:     string;
-  userId:      string;
-  members:     Member[];
-  activeGames: Game[];
+  orgId:          string;
+  orgSlug:        string;
+  userId:         string;
+  members:        Member[];
+  activeGames:    Game[];
+  receivedInvites: ReceivedInvite[];
+  sentInvites:    SentInvite[];
 }
 
 function Avatar({ user, size = 8 }: { user: Member; size?: number }) {
@@ -44,28 +48,83 @@ function relTime(iso: string) {
   return `${Math.floor(h / 24)}d siden`;
 }
 
-export default function ChessLobby({ orgId, orgSlug, userId, members, activeGames }: Props) {
-  const router  = useRouter();
-  const [showPicker, setShowPicker] = useState(false);
-  const [search,     setSearch]     = useState("");
-  const [loading,    setLoading]    = useState(false);
+export default function ChessLobby({
+  orgId, orgSlug, userId, members, activeGames,
+  receivedInvites: initialReceived,
+  sentInvites:     initialSent,
+}: Props) {
+  const router = useRouter();
+  const [showPicker,     setShowPicker]     = useState(false);
+  const [search,         setSearch]         = useState("");
+  const [loading,        setLoading]        = useState(false);
+  const [inviteSent,     setInviteSent]     = useState<string | null>(null); // receiver name
+  const [receivedInvites, setReceivedInvites] = useState(initialReceived);
+  const [sentInvites,     setSentInvites]     = useState(initialSent);
+  const [actionLoading,  setActionLoading]  = useState<string | null>(null);
 
   const filtered = members.filter((m) =>
     !search || (m.name ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
-  async function startGame(opponentId: string) {
+  async function sendInvite(opponentId: string, opponentName: string | null) {
     setLoading(true);
     try {
-      const res  = await fetch("/api/chess", {
+      const res = await fetch("/api/chess", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ orgId, opponentId }),
       });
-      const data = await res.json() as { game: { id: string } };
-      router.push(`/${orgSlug}/spill/sjakk/${data.game.id}`);
-    } catch {
+      if (res.ok) {
+        setShowPicker(false);
+        setInviteSent(opponentName ?? "motstanderen");
+      }
+    } finally {
       setLoading(false);
+    }
+  }
+
+  async function acceptInvite(inviteId: string) {
+    setActionLoading(inviteId);
+    try {
+      const res  = await fetch(`/api/chess/invite/${inviteId}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ action: "accept" }),
+      });
+      const data = await res.json() as { game?: { id: string } };
+      if (res.ok && data.game) {
+        router.push(`/${orgSlug}/spill/sjakk/${data.game.id}`);
+      }
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function declineInvite(inviteId: string) {
+    setActionLoading(inviteId);
+    try {
+      await fetch(`/api/chess/invite/${inviteId}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ action: "decline" }),
+      });
+      setReceivedInvites((prev) => prev.filter((i) => i.id !== inviteId));
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function cancelInvite(inviteId: string) {
+    setActionLoading(inviteId);
+    try {
+      await fetch(`/api/chess/invite/${inviteId}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ action: "cancel" }),
+      });
+      setSentInvites((prev) => prev.filter((i) => i.id !== inviteId));
+    } finally {
+      setActionLoading(null);
     }
   }
 
@@ -79,13 +138,82 @@ export default function ChessLobby({ orgId, orgSlug, userId, members, activeGame
             <p className="text-sm text-white/40">Utfordre en venn</p>
           </div>
           <button
-            onClick={() => setShowPicker(true)}
+            onClick={() => { setShowPicker(true); setInviteSent(null); }}
             className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 transition-colors"
           >
             <Plus className="h-4 w-4" />
-            Ny kamp
+            Ny utfordring
           </button>
         </div>
+
+        {/* Invite sent confirmation */}
+        {inviteSent && (
+          <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+            ✓ Utfordring sendt til <strong>{inviteSent}</strong>! Venter på svar.
+          </div>
+        )}
+
+        {/* Received invites */}
+        {receivedInvites.length > 0 && (
+          <div className="mb-6">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/30">Utfordringer til deg</p>
+            <div className="flex flex-col gap-2">
+              {receivedInvites.map((inv) => (
+                <div key={inv.id} className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                  <Avatar user={inv.sender} size={10} />
+                  <div className="flex-1 min-w-0">
+                    <span className="font-semibold text-white text-sm">{inv.sender.name ?? "Ukjent"}</span>
+                    <p className="text-xs text-white/40 mt-0.5">vil spille sjakk mot deg</p>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      onClick={() => void acceptInvite(inv.id)}
+                      disabled={!!actionLoading}
+                      className="flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      Godta
+                    </button>
+                    <button
+                      onClick={() => void declineInvite(inv.id)}
+                      disabled={!!actionLoading}
+                      className="flex items-center gap-1 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/60 hover:text-white hover:border-white/30 disabled:opacity-50 transition-colors"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      Avslå
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Sent invites (pending) */}
+        {sentInvites.length > 0 && (
+          <div className="mb-6">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/30">Ventende utfordringer</p>
+            <div className="flex flex-col gap-2">
+              {sentInvites.map((inv) => (
+                <div key={inv.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4">
+                  <Avatar user={inv.receiver} size={10} />
+                  <div className="flex-1 min-w-0">
+                    <span className="font-semibold text-white text-sm">{inv.receiver.name ?? "Ukjent"}</span>
+                    <p className="text-xs text-white/40 mt-0.5">Venter på svar…</p>
+                  </div>
+                  <button
+                    onClick={() => void cancelInvite(inv.id)}
+                    disabled={!!actionLoading}
+                    className="flex items-center gap-1 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/50 hover:text-white/80 disabled:opacity-50 transition-colors"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    Kanseller
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Active games */}
         {activeGames.length > 0 && (
@@ -126,11 +254,12 @@ export default function ChessLobby({ orgId, orgSlug, userId, members, activeGame
           </div>
         )}
 
-        {activeGames.length === 0 && (
+        {/* Empty state */}
+        {activeGames.length === 0 && receivedInvites.length === 0 && sentInvites.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <span className="text-5xl mb-4">♟️</span>
+            <Swords className="h-12 w-12 mb-4 text-white/10" />
             <p className="text-white/50 text-sm">Ingen aktive kamper</p>
-            <p className="text-white/30 text-xs mt-1">Trykk «Ny kamp» for å utfordre noen</p>
+            <p className="text-white/30 text-xs mt-1">Trykk «Ny utfordring» for å utfordre noen</p>
           </div>
         )}
       </div>
@@ -162,7 +291,7 @@ export default function ChessLobby({ orgId, orgSlug, userId, members, activeGame
               {filtered.map((m) => (
                 <button
                   key={m.id}
-                  onClick={() => { setShowPicker(false); void startGame(m.id); }}
+                  onClick={() => void sendInvite(m.id, m.name)}
                   disabled={loading}
                   className="flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-white/5 transition-colors disabled:opacity-50"
                 >

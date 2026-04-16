@@ -138,6 +138,7 @@ model Organization {
   clickerEvents          ClickerEvent[]
   fanPasses              FanPass[]
   chessGames             ChessGame[]
+  chessInvites           ChessInvite[]
   coinTransactions       CoinTransaction[]
   shopItems              ShopItem[]
   shopPurchases          ShopPurchase[]
@@ -234,6 +235,9 @@ model User {
   pushSubscriptions       PushSubscription[]
   chessGamesAsWhite       ChessGame[]      @relation("ChessWhite")
   chessGamesAsBlack       ChessGame[]      @relation("ChessBlack")
+  chessMessages           ChessMessage[]
+  chessInvitesSent        ChessInvite[]    @relation("ChessInviteSender")
+  chessInvitesReceived    ChessInvite[]    @relation("ChessInviteReceiver")
 
   @@index([username])
 }
@@ -815,9 +819,42 @@ model ChessGame {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  white        User         @relation("ChessWhite", fields: [whiteId], references: [id])
-  black        User         @relation("ChessBlack", fields: [blackId], references: [id])
+  organization Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  white        User          @relation("ChessWhite", fields: [whiteId], references: [id])
+  black        User          @relation("ChessBlack", fields: [blackId], references: [id])
+  messages     ChessMessage[]
+  invite       ChessInvite?
+
+  @@index([orgId, status, createdAt(sort: Desc)])
+}
+
+model ChessMessage {
+  id        String   @id @default(cuid())
+  gameId    String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  game   ChessGame @relation(fields: [gameId],   references: [id], onDelete: Cascade)
+  author User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([gameId, createdAt(sort: Asc)])
+}
+
+model ChessInvite {
+  id         String   @id @default(cuid())
+  orgId      String
+  senderId   String
+  receiverId String
+  // "pending" | "accepted" | "declined" | "cancelled"
+  status     String   @default("pending")
+  gameId     String?  @unique
+  createdAt  DateTime @default(now())
+
+  organization Organization @relation(fields: [orgId],       references: [id], onDelete: Cascade)
+  sender       User         @relation("ChessInviteSender",   fields: [senderId],   references: [id], onDelete: Cascade)
+  receiver     User         @relation("ChessInviteReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  game         ChessGame?   @relation(fields: [gameId],      references: [id])
 
   @@index([orgId, status, createdAt(sort: Desc)])
 }

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Chess, type Square, type PieceSymbol, type Color } from "chess.js";
 import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
-import { ArrowLeft, Flag, RotateCcw } from "lucide-react";
+import { ArrowLeft, Flag, RotateCcw, Send } from "lucide-react";
 import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -22,10 +22,23 @@ interface GameData {
 }
 
 interface RealtimeMove {
-  fen:  string;
-  move: string;
-  moves: string[];
+  type:   "move";
+  fen:    string;
+  move:   string;
+  moves:  string[];
   status: string;
+}
+
+interface ChatMessage {
+  id:        string;
+  content:   string;
+  createdAt: string;
+  author:    Player;
+}
+
+interface RealtimeChat {
+  type:    "chat";
+  message: ChatMessage;
 }
 
 // ─── Piece rendering ──────────────────────────────────────────────────────────
@@ -36,15 +49,15 @@ const PIECE_UNICODE: Record<string, string> = {
 };
 
 function Piece({ color, type }: { color: Color; type: PieceSymbol }) {
-  const key  = `${color}${type.toUpperCase()}`;
+  const key   = `${color}${type.toUpperCase()}`;
   const glyph = PIECE_UNICODE[key] ?? "?";
   return (
     <span
       className="select-none leading-none"
       style={{
-        fontSize: "clamp(20px, 5.5vw, 44px)",
-        color:           color === "w" ? "#fff" : "#1c1410",
-        filter:          color === "w"
+        fontSize:         "clamp(20px, 5.5vw, 52px)",
+        color:            color === "w" ? "#fff" : "#1c1410",
+        filter:           color === "w"
           ? "drop-shadow(0 1px 3px rgba(0,0,0,0.9))"
           : "drop-shadow(0 1px 2px rgba(255,255,255,0.15))",
         WebkitTextStroke: color === "w" ? "0.5px rgba(0,0,0,0.3)" : "none",
@@ -74,17 +87,15 @@ function ChessBoard({
   const [legalMoves, setLegalMoves] = useState<Square[]>([]);
   const [promoting,  setPromoting]  = useState<{ from: Square; to: Square } | null>(null);
 
-  const board = chess.board();
-  const files  = flipped ? ["h","g","f","e","d","c","b","a"] : ["a","b","c","d","e","f","g","h"];
-  const ranks  = flipped ? [1,2,3,4,5,6,7,8]                : [8,7,6,5,4,3,2,1];
+  const files = flipped ? ["h","g","f","e","d","c","b","a"] : ["a","b","c","d","e","f","g","h"];
+  const ranks = flipped ? [1,2,3,4,5,6,7,8]                : [8,7,6,5,4,3,2,1];
 
   function handleSquareClick(sq: Square) {
     if (disabled) return;
 
     if (selected) {
       if (legalMoves.includes(sq)) {
-        // Check if pawn promotion
-        const piece = chess.get(selected);
+        const piece  = chess.get(selected);
         const toRank = sq[1];
         if (piece?.type === "p" && (toRank === "8" || toRank === "1")) {
           setPromoting({ from: selected, to: sq });
@@ -99,7 +110,6 @@ function ChessBoard({
       }
       setSelected(null);
       setLegalMoves([]);
-      // Fall through to select new piece if clicked on own piece
     }
 
     const piece = chess.get(sq);
@@ -111,16 +121,14 @@ function ChessBoard({
 
   return (
     <>
-      <div
-        className="relative w-full"
-        style={{ maxWidth: "min(100vw - 2rem, 520px)", aspectRatio: "1" }}
-      >
-        {/* Rank/file labels */}
+      <div className="relative w-full" style={{ aspectRatio: "1" }}>
+        {/* Rank labels */}
         <div className="absolute -left-5 inset-y-0 flex flex-col justify-around pointer-events-none">
           {ranks.map((r) => (
             <span key={r} className="text-[10px] text-white/30 text-right">{r}</span>
           ))}
         </div>
+        {/* File labels */}
         <div className="absolute -bottom-5 inset-x-0 flex justify-around pointer-events-none">
           {files.map((f) => (
             <span key={f} className="text-[10px] text-white/30 text-center">{f}</span>
@@ -131,18 +139,18 @@ function ChessBoard({
         <div className="grid grid-cols-8 w-full h-full rounded-lg overflow-hidden shadow-2xl">
           {ranks.map((rank) =>
             files.map((file) => {
-              const sq   = `${file}${rank}` as Square;
-              const fi   = files.indexOf(file);
-              const ri   = ranks.indexOf(rank);
+              const sq        = `${file}${rank}` as Square;
+              const fi        = files.indexOf(file);
+              const ri        = ranks.indexOf(rank);
               const isLight   = (fi + ri) % 2 === 0;
-              const isSelected = selected === sq;
-              const isLegal   = legalMoves.includes(sq);
-              const isLastFrom = lastMove?.from === sq;
-              const isLastTo   = lastMove?.to   === sq;
+              const isSelected  = selected === sq;
+              const isLegal     = legalMoves.includes(sq);
+              const isLastFrom  = lastMove?.from === sq;
+              const isLastTo    = lastMove?.to   === sq;
               const piece = chess.get(sq);
 
               let bg = isLight ? "#f0d9b5" : "#b58863";
-              if (isSelected)        bg = "#7fc97f";
+              if (isSelected)               bg = "#7fc97f";
               else if (isLastFrom || isLastTo) bg = isLight ? "#cdd16e" : "#a9a93e";
 
               return (
@@ -152,7 +160,6 @@ function ChessBoard({
                   className="relative flex items-center justify-center cursor-pointer"
                   style={{ backgroundColor: bg, aspectRatio: "1" }}
                 >
-                  {/* Legal move dot */}
                   {isLegal && !piece && (
                     <div className="absolute h-[28%] w-[28%] rounded-full bg-black/20 pointer-events-none" />
                   )}
@@ -235,6 +242,122 @@ function PlayerCard({
   );
 }
 
+// ─── Chat panel ───────────────────────────────────────────────────────────────
+
+function ChatPanel({
+  gameId,
+  userId,
+  white,
+  black,
+  status,
+  initialMessages,
+  newMessage,
+  onBroadcastChat,
+}: {
+  gameId:          string;
+  userId:          string;
+  white:           Player;
+  black:           Player;
+  status:          string;
+  initialMessages: ChatMessage[];
+  newMessage:      ChatMessage | null;
+  onBroadcastChat: (msg: ChatMessage) => void;
+}) {
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [input,    setInput]    = useState("");
+  const [sending,  setSending]  = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Append incoming real-time message
+  useEffect(() => {
+    if (!newMessage) return;
+    setMessages((prev) => {
+      if (prev.some((m) => m.id === newMessage.id)) return prev;
+      return [...prev, newMessage];
+    });
+  }, [newMessage]);
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  async function send() {
+    const text = input.trim();
+    if (!text || sending) return;
+    setSending(true);
+    setInput("");
+    try {
+      const res  = await fetch(`/api/chess/${gameId}/chat`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ content: text }),
+      });
+      const data = await res.json() as { message: ChatMessage };
+      if (res.ok) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === data.message.id)) return prev;
+          return [...prev, data.message];
+        });
+        onBroadcastChat(data.message);
+      }
+    } finally {
+      setSending(false);
+    }
+  }
+
+  function getPlayerName(authorId: string) {
+    if (authorId === white.id) return white.name ?? "Hvit";
+    if (authorId === black.id) return black.name ?? "Svart";
+    return "Ukjent";
+  }
+
+  return (
+    <div className="flex flex-col h-full min-h-0">
+      <p className="text-xs text-white/40 mb-2 font-semibold uppercase tracking-wider shrink-0">Spillchat</p>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto flex flex-col gap-2 min-h-0 pr-1">
+        {messages.length === 0 && (
+          <p className="text-xs text-white/20 text-center mt-4">Ingen meldinger ennå</p>
+        )}
+        {messages.map((msg) => {
+          const isMe = msg.author.id === userId;
+          return (
+            <div key={msg.id} className={`flex flex-col gap-0.5 ${isMe ? "items-end" : "items-start"}`}>
+              <span className="text-[10px] text-white/30 px-1">{getPlayerName(msg.author.id)}</span>
+              <div className={`max-w-[85%] rounded-xl px-3 py-2 text-xs ${isMe ? "bg-emerald-600/80 text-white" : "bg-white/10 text-white/90"}`}>
+                {msg.content}
+              </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      {status === "active" && (
+        <div className="flex gap-2 mt-2 shrink-0">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }}
+            placeholder="Skriv en melding…"
+            className="flex-1 min-w-0 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-white/20"
+          />
+          <button
+            onClick={() => void send()}
+            disabled={!input.trim() || sending}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            <Send className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ChessGame({
@@ -248,27 +371,46 @@ export default function ChessGame({
 }) {
   const router = useRouter();
 
-  const [fen,    setFen]    = useState(initialGame.fen);
-  const [moves,  setMoves]  = useState<string[]>(initialGame.moves);
-  const [status, setStatus] = useState(initialGame.status);
+  const [fen,      setFen]      = useState(initialGame.fen);
+  const [moves,    setMoves]    = useState<string[]>(initialGame.moves);
+  const [status,   setStatus]   = useState(initialGame.status);
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
 
-  const chess = new Chess(fen);
-  const myColor = initialGame.white.id === userId ? "w" : initialGame.black.id === userId ? "b" : null;
-  const flipped = myColor === "b";
+  // Chat
+  const [chatMessages,  setChatMessages]  = useState<ChatMessage[]>([]);
+  const [newChatMsg,    setNewChatMsg]    = useState<ChatMessage | null>(null);
+  const [showMobileChat, setShowMobileChat] = useState(false);
+
+  const chess    = new Chess(fen);
+  const myColor  = initialGame.white.id === userId ? "w" : initialGame.black.id === userId ? "b" : null;
+  const flipped  = myColor === "b";
   const isMyTurn = isPlayer && chess.turn() === myColor && status === "active";
 
-  // Realtime: receive opponent's moves
-  const { broadcast } = useRealtimeChannel<RealtimeMove>(`chess:${initialGame.id}`, (payload) => {
-    setFen(payload.fen);
-    setMoves(payload.moves);
-    setStatus(payload.status);
+  // Fetch initial chat messages
+  useEffect(() => {
+    void fetch(`/api/chess/${initialGame.id}/chat`)
+      .then((r) => r.json())
+      .then((d: { messages: ChatMessage[] }) => setChatMessages(d.messages));
+  }, [initialGame.id]);
+
+  // Realtime: moves and chat on the same channel
+  const { broadcast } = useRealtimeChannel<RealtimeMove | RealtimeChat>(`chess:${initialGame.id}`, (payload) => {
+    if (payload.type === "move") {
+      setFen(payload.fen);
+      setMoves(payload.moves);
+      setStatus(payload.status);
+    } else if (payload.type === "chat") {
+      setNewChatMsg(payload.message);
+    }
   });
+
+  function broadcastChat(msg: ChatMessage) {
+    void broadcast({ type: "chat", message: msg });
+  }
 
   async function handleMove(from: Square, to: Square, promotion?: string) {
     if (!isMyTurn) return;
 
-    // Optimistic local update
     const tempChess = new Chess(fen);
     let result;
     try {
@@ -280,9 +422,8 @@ export default function ChessGame({
     setMoves((p) => [...p, result.san]);
     setLastMove({ from, to });
 
-    // Send to server
     try {
-      const res = await fetch(`/api/chess/${initialGame.id}`, {
+      const res  = await fetch(`/api/chess/${initialGame.id}`, {
         method:  "PATCH",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ move: { from, to, promotion: promotion ?? "q" } }),
@@ -292,9 +433,8 @@ export default function ChessGame({
         setFen(data.game.fen);
         setMoves(data.game.moves);
         setStatus(data.game.status);
-        void broadcast({ fen: data.game.fen, move: result.san, moves: data.game.moves, status: data.game.status });
+        void broadcast({ type: "move", fen: data.game.fen, move: result.san, moves: data.game.moves, status: data.game.status });
       } else {
-        // Rollback
         setFen(fen);
         setMoves(moves);
         setLastMove(null);
@@ -308,16 +448,14 @@ export default function ChessGame({
 
   async function resign() {
     if (!confirm("Er du sikker på at du vil gi opp?")) return;
-    const loserColor = myColor === "w" ? "white" : "black";
     await fetch(`/api/chess/${initialGame.id}`, {
       method:  "PATCH",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ move: "__resign__", loserColor }),
+      body:    JSON.stringify({ move: "__resign__" }),
     });
     router.refresh();
   }
 
-  // Captured pieces
   function getCaptured(forColor: "w" | "b"): PieceSymbol[] {
     const tempChess = new Chess();
     const captured: PieceSymbol[] = [];
@@ -344,14 +482,17 @@ export default function ChessGame({
   const topColor     = flipped ? "white"           : "black";
   const bottomColor  = flipped ? "black"           : "white";
 
+  // Max board size: use CSS clamp to adapt to available space
+  const boardMaxW = "min(100vw - 2rem, 660px)";
+
   return (
     <div className="min-h-screen bg-[#0d0d14] text-white">
-      <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4 md:flex-row md:items-start md:gap-6 md:py-8">
+      <div className="mx-auto flex max-w-[1300px] flex-col gap-4 px-4 py-4 md:flex-row md:items-start md:gap-6 md:py-8">
 
         {/* ── Board column ── */}
-        <div className="flex flex-col items-center gap-3 md:flex-1">
+        <div className="flex flex-col items-center gap-3 md:flex-1 min-w-0">
           {/* Top player */}
-          <div className="w-full" style={{ maxWidth: "min(100vw - 2rem, 520px)" }}>
+          <div className="w-full" style={{ maxWidth: boardMaxW }}>
             <PlayerCard
               player={topPlayer}
               color={topColor}
@@ -362,7 +503,7 @@ export default function ChessGame({
           </div>
 
           {/* Board */}
-          <div className="pl-5 pb-5">
+          <div className="pl-5 pb-5 w-full" style={{ maxWidth: `calc(${boardMaxW} + 1.25rem)` }}>
             <ChessBoard
               chess={chess}
               flipped={flipped}
@@ -373,7 +514,7 @@ export default function ChessGame({
           </div>
 
           {/* Bottom player */}
-          <div className="w-full" style={{ maxWidth: "min(100vw - 2rem, 520px)" }}>
+          <div className="w-full" style={{ maxWidth: boardMaxW }}>
             <PlayerCard
               player={bottomPlayer}
               color={bottomColor}
@@ -385,17 +526,25 @@ export default function ChessGame({
 
           {/* Status message */}
           {statusMsg() && (
-            <div className="w-full text-center rounded-xl bg-white/10 py-3 px-4 text-sm font-semibold" style={{ maxWidth: "min(100vw - 2rem, 520px)" }}>
+            <div className="w-full text-center rounded-xl bg-white/10 py-3 px-4 text-sm font-semibold" style={{ maxWidth: boardMaxW }}>
               {statusMsg()}
             </div>
           )}
 
           {/* Mobile controls */}
-          <div className="flex w-full gap-2 md:hidden" style={{ maxWidth: "min(100vw - 2rem, 520px)" }}>
+          <div className="flex w-full gap-2 md:hidden" style={{ maxWidth: boardMaxW }}>
             <Link href={`/${initialGame.orgSlug}/spill/sjakk`}
               className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 py-2.5 text-sm text-white/60 hover:text-white transition-colors">
               <ArrowLeft className="h-4 w-4" /> Tilbake
             </Link>
+            {isPlayer && (
+              <button
+                onClick={() => setShowMobileChat((v) => !v)}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 py-2.5 text-sm text-white/60 hover:text-white transition-colors"
+              >
+                💬 Chat
+              </button>
+            )}
             {isPlayer && status === "active" && (
               <button onClick={() => void resign()}
                 className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-rose-500/30 py-2.5 text-sm text-rose-400 hover:bg-rose-500/10 transition-colors">
@@ -403,10 +552,26 @@ export default function ChessGame({
               </button>
             )}
           </div>
+
+          {/* Mobile chat */}
+          {showMobileChat && (
+            <div className="w-full rounded-xl border border-white/10 bg-white/5 p-4 md:hidden" style={{ maxWidth: boardMaxW, height: "320px", display: "flex", flexDirection: "column" }}>
+              <ChatPanel
+                gameId={initialGame.id}
+                userId={userId}
+                white={initialGame.white}
+                black={initialGame.black}
+                status={status}
+                initialMessages={chatMessages}
+                newMessage={newChatMsg}
+                onBroadcastChat={broadcastChat}
+              />
+            </div>
+          )}
         </div>
 
         {/* ── Sidebar — desktop only ── */}
-        <aside className="hidden md:flex flex-col gap-4 w-64 shrink-0 pt-12">
+        <aside className="hidden md:flex flex-col gap-3 w-80 shrink-0 pt-12" style={{ minHeight: "calc(100vh - 8rem)" }}>
           {/* Nav */}
           <Link href={`/${initialGame.orgSlug}/spill/sjakk`}
             className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
@@ -414,7 +579,7 @@ export default function ChessGame({
           </Link>
 
           {/* Turn indicator */}
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
             <p className="text-xs text-white/40 mb-2 font-semibold uppercase tracking-wider">Tur</p>
             <div className="flex items-center gap-2">
               <div className={`h-4 w-4 rounded-full border-2 ${chess.turn() === "w" ? "bg-white border-white" : "bg-zinc-800 border-zinc-600"}`} />
@@ -427,12 +592,12 @@ export default function ChessGame({
           </div>
 
           {/* Move history */}
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4 flex-1">
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
             <p className="text-xs text-white/40 mb-2 font-semibold uppercase tracking-wider">Trekk</p>
             {moves.length === 0
               ? <p className="text-xs text-white/30">Ingen trekk ennå</p>
               : (
-                <div className="flex flex-col gap-0.5 max-h-64 overflow-y-auto">
+                <div className="flex flex-col gap-0.5 max-h-36 overflow-y-auto">
                   {Array.from({ length: Math.ceil(moves.length / 2) }).map((_, i) => (
                     <div key={i} className="flex gap-2 text-xs">
                       <span className="text-white/30 w-5 shrink-0">{i + 1}.</span>
@@ -445,9 +610,25 @@ export default function ChessGame({
             }
           </div>
 
+          {/* Chat panel — takes remaining space */}
+          {isPlayer && (
+            <div className="flex-1 rounded-xl border border-white/10 bg-white/5 p-4 min-h-0">
+              <ChatPanel
+                gameId={initialGame.id}
+                userId={userId}
+                white={initialGame.white}
+                black={initialGame.black}
+                status={status}
+                initialMessages={chatMessages}
+                newMessage={newChatMsg}
+                onBroadcastChat={broadcastChat}
+              />
+            </div>
+          )}
+
           {/* Game result */}
           {status !== "active" && (
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-center">
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-center shrink-0">
               <p className="font-bold text-white">{statusMsg()}</p>
               <button
                 onClick={() => router.push(`/${initialGame.orgSlug}/spill/sjakk`)}
@@ -461,7 +642,7 @@ export default function ChessGame({
           {/* Resign */}
           {isPlayer && status === "active" && (
             <button onClick={() => void resign()}
-              className="flex items-center justify-center gap-2 rounded-xl border border-rose-500/30 py-2.5 text-sm text-rose-400 hover:bg-rose-500/10 transition-colors">
+              className="flex shrink-0 items-center justify-center gap-2 rounded-xl border border-rose-500/30 py-2.5 text-sm text-rose-400 hover:bg-rose-500/10 transition-colors">
               <Flag className="h-4 w-4" /> Gi opp
             </button>
           )}
