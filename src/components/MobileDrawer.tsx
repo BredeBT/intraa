@@ -161,7 +161,7 @@ export default function MobileDrawer({
                   <NavItem key={href} href={href} label={label} icon={Icon} />
                 ))}
                 {isCommunity && org.slug && (
-                  <NavItem href={`/${org.slug}/clicker`} label="Spill" icon={Coins} />
+                  <NavItem href={`/${org.slug}/spill`} label="Spill" icon={Coins} />
                 )}
               </div>
             </div>
