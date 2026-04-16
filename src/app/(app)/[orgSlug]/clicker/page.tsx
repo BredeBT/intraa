@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { WORLDS, getWorldUpgrades, getUpgradeCost } from "@/lib/clickerUpgrades";
-import { Zap, Clock, Trophy, X, MessageSquare, Send, Lock } from "lucide-react";
+import { WORLDS, MAX_WORLD, getWorldUpgrades, getUpgradeCost, PRESTIGE_PERKS, calcPerkConfig } from "@/lib/clickerUpgrades";
+import { Zap, Clock, Trophy, X, MessageSquare, Send, Lock, ShoppingBag } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -13,11 +13,13 @@ interface ClickerProfile {
   totalClicks:      number;
   coinsPerClick:    number;
   coinsPerSecond:   number;
-  lastSeen:         string;
-  prestigeLevel:    number;
-  prestigeWorld:    number;
-  permanentBonus:   number;
-  totalPrestige:    number;
+  lastSeen:            string;
+  prestigeLevel:       number;
+  prestigeWorld:       number;
+  permanentBonus:      number;
+  totalPrestige:       number;
+  prestigeShop:        Record<string, number>;
+  prestigePointsSpent: number;
 }
 
 interface UpgradeState  { upgradeId: string; level: number }
@@ -94,8 +96,11 @@ export default function ClickerPage() {
   const [buying,        setBuying]        = useState<string | null>(null);
   const [displayCoins,  setDisplayCoins]  = useState(0);
   const [logoUrl,       setLogoUrl]       = useState<string | null>(null);
-  const [prestigeModal, setPrestigeModal] = useState(false);
-  const [prestiging,    setPrestiging]    = useState(false);
+  const [prestigeModal,     setPrestigeModal]     = useState(false);
+  const [prestiging,        setPrestiging]        = useState(false);
+  const [shopModal,         setShopModal]         = useState(false);
+  const [shopBuying,        setShopBuying]        = useState<string | null>(null);
+  const [shopResetting,     setShopResetting]     = useState(false);
   const [totalClicks,   setTotalClicks]   = useState(0);
   const [hasFanpass,    setHasFanpass]    = useState(false);
   const [isMobile,      setIsMobile]      = useState(false);
@@ -171,12 +176,15 @@ export default function ClickerPage() {
 
     fetch(`/api/clicker?orgId=${orgId}`)
       .then((r) => r.json())
-      .then((data: { profile: ClickerProfile; upgrades: UpgradeState[]; offlineEarned: number; activeEvent: ActiveEvent | null }) => {
+      .then((data: { profile: ClickerProfile & { prestigeShop?: Record<string, number>; prestigePointsSpent?: number }; upgrades: UpgradeState[]; offlineEarned: number; activeEvent: ActiveEvent | null }) => {
         const dbCoins = typeof data.profile.coins === "number" && isFinite(data.profile.coins)
           ? data.profile.coins : 0;
         serverCoins.current = dbCoins;
         const safeLocalDelta = isFinite(localDelta.current) ? localDelta.current : 0;
         localDelta.current   = safeLocalDelta;
+        // Ensure shop fields exist
+        data.profile.prestigeShop        = data.profile.prestigeShop ?? {};
+        data.profile.prestigePointsSpent = data.profile.prestigePointsSpent ?? 0;
         setProfile(data.profile);
         console.log("[setCoins #2 DB-fetch]", { dbCoins, safeLocalDelta, result: dbCoins + safeLocalDelta, rawCoins: data.profile.coins });
         setDisplayCoins(dbCoins + safeLocalDelta);
@@ -194,9 +202,10 @@ export default function ClickerPage() {
 
   // ── Passive income tick ───────────────────────────────────────────────────
   const coinsPerSecond = profile?.coinsPerSecond ?? 0;
+  const passivePerkMul = profile ? calcPerkConfig(profile.prestigeShop ?? {}).incomeBonus * calcPerkConfig(profile.prestigeShop ?? {}).passiveBonus : 1;
   useEffect(() => {
     if (!coinsPerSecond) return;
-    const tick = coinsPerSecond * (hasFanpass ? 2 : 1);
+    const tick = coinsPerSecond * (hasFanpass ? 2 : 1) * passivePerkMul;
     const id = setInterval(() => {
       localDelta.current += tick;
       const val3 = Math.floor(serverCoins.current + localDelta.current);
@@ -204,7 +213,7 @@ export default function ClickerPage() {
       setDisplayCoins(val3);
     }, 1000);
     return () => clearInterval(id);
-  }, [coinsPerSecond, hasFanpass]);
+  }, [coinsPerSecond, hasFanpass, passivePerkMul]);
 
   // ── Delta sync every 5s ───────────────────────────────────────────────────
   useEffect(() => {
@@ -287,7 +296,14 @@ export default function ClickerPage() {
   const handleClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     if (!profile) return;
     const multiplier = activeEvent?.type === "multiplier" ? activeEvent.multiplier : 1;
-    const cpc = profile.coinsPerClick * multiplier * (hasFanpass ? 1.5 : 1);
+    const shop    = profile.prestigeShop ?? {};
+    const pCfg    = calcPerkConfig(shop);
+    let baseCpc   = profile.coinsPerClick * multiplier * (hasFanpass ? 1.5 : 1) * pCfg.incomeBonus * pCfg.clickBonus;
+    // Lucky click: X% chance for 3×
+    if (pCfg.luckyChance > 0 && Math.random() < pCfg.luckyChance) baseCpc *= 3;
+    // Mega click: Y% chance for 10× (rolls independently)
+    if (pCfg.megaChance > 0 && Math.random() < pCfg.megaChance) baseCpc *= 10;
+    const cpc = baseCpc;
     localDelta.current += cpc;
     clickCount.current += 1;
     const val5 = serverCoins.current + localDelta.current;
@@ -357,17 +373,58 @@ export default function ClickerPage() {
     });
     if (res.ok) {
       const data = await res.json() as { profile: ClickerProfile };
+      data.profile.prestigeShop        = data.profile.prestigeShop ?? {};
+      data.profile.prestigePointsSpent = data.profile.prestigePointsSpent ?? 0;
       setProfile(data.profile);
-      serverCoins.current = 0;
+      const startCoins = data.profile.coins ?? 0;
+      serverCoins.current = startCoins;
       localDelta.current  = 0;
       clickCount.current  = 0;
-      console.log("[setCoins #8 PRESTIGE — reset til 0]");
-      setDisplayCoins(0);
+      console.log("[setCoins #8 PRESTIGE — reset]");
+      setDisplayCoins(startCoins);
       setUpgrades([]);
       clearCache();
     }
     setPrestigeModal(false);
     setPrestiging(false);
+  }
+
+  // ── Prestige shop ─────────────────────────────────────────────────────────
+  async function buyPerk(perkId: string) {
+    if (!orgId || !profile || shopBuying) return;
+    setShopBuying(perkId);
+    const res = await fetch("/api/clicker/prestige-shop", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ orgId, action: "buy", perkId }),
+    });
+    if (res.ok) {
+      const data = await res.json() as { prestigeShop: Record<string, number>; prestigePointsSpent: number };
+      setProfile((prev) => prev ? {
+        ...prev,
+        prestigeShop:        data.prestigeShop,
+        prestigePointsSpent: data.prestigePointsSpent,
+      } : prev);
+    }
+    setShopBuying(null);
+  }
+
+  async function resetShop() {
+    if (!orgId || !profile || shopResetting) return;
+    setShopResetting(true);
+    const res = await fetch("/api/clicker/prestige-shop", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ orgId, action: "reset" }),
+    });
+    if (res.ok) {
+      setProfile((prev) => prev ? {
+        ...prev,
+        prestigeShop:        {},
+        prestigePointsSpent: 0,
+      } : prev);
+    }
+    setShopResetting(false);
   }
 
   // ── Chat send ─────────────────────────────────────────────────────────────
@@ -401,22 +458,27 @@ export default function ClickerPage() {
   }
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  const world         = (profile.prestigeWorld ?? 1) as 1 | 2 | 3;
+  const world         = profile.prestigeWorld ?? 1;
   const worldDef      = WORLDS[world];
-  const prestigeCost  = worldDef.prestigeCost;
-  const prestigePct   = Math.min(100, (displayCoins / prestigeCost) * 100);
-  const canPrestige   = displayCoins >= prestigeCost && world < 3;
-  const nextWorld     = Math.min(world + 1, 3) as 1 | 2 | 3;
+  const prestigeCost  = worldDef?.prestigeCost ?? 0;
+  const canPrestige   = prestigeCost > 0 && displayCoins >= prestigeCost;
+  const nextWorld     = Math.min(world + 1, MAX_WORLD);
+  const prestigePct   = prestigeCost > 0 ? Math.min(100, (displayCoins / prestigeCost) * 100) : 100;
   const multiplier    = activeEvent?.type === "multiplier" ? activeEvent.multiplier : 1;
   const totalPrestige = profile.totalPrestige;
-  const effectiveCpc  = profile.coinsPerClick * multiplier * (hasFanpass ? 1.5 : 1);
-  const effectiveCps  = profile.coinsPerSecond * (hasFanpass ? 2 : 1);
+  const shopData      = profile.prestigeShop ?? {};
+  const pointsSpent   = profile.prestigePointsSpent ?? 0;
+  const pointsAvail   = totalPrestige - pointsSpent;
+  const perkCfg       = calcPerkConfig(shopData);
+  const effectiveCpc  = profile.coinsPerClick * multiplier * (hasFanpass ? 1.5 : 1) * perkCfg.incomeBonus * perkCfg.clickBonus;
+  const effectiveCps  = profile.coinsPerSecond * (hasFanpass ? 2 : 1) * perkCfg.incomeBonus * perkCfg.passiveBonus;
 
   const worldUpgrades = getWorldUpgrades(world);
   const upgradeRows = worldUpgrades.map((def) => {
     const owned     = upgrades.find((u) => u.upgradeId === def.id);
     const level     = owned?.level ?? 0;
-    const cost      = getUpgradeCost(def.id, level);
+    const rawCost   = getUpgradeCost(def.id, level);
+    const cost      = Math.floor(rawCost * perkCfg.costMultiplier);
     const canAfford = displayCoins >= cost && level < def.maxLevel;
     return { ...def, level, cost, canAfford };
   }).sort((a, b) => {
@@ -433,14 +495,11 @@ export default function ClickerPage() {
         Verdener
       </p>
 
-      {([
-        { n: 1 as const, label: "Tech"    },
-        { n: 2 as const, label: "Eventyr" },
-        { n: 3 as const, label: "Romfart" },
-      ]).map(({ n, label }) => {
+      {Array.from({ length: MAX_WORLD }, (_, i) => i + 1).map((n) => {
         const isActive  = world === n;
-        const unlocked  = n === 1 || (n === 2 && totalPrestige >= 1) || (n === 3 && totalPrestige >= 2);
-        const completed = (n === 1 && totalPrestige >= 1) || (n === 2 && totalPrestige >= 2);
+        const unlocked  = totalPrestige >= n - 1;
+        const completed = totalPrestige >= n;
+        const isFinal   = n === MAX_WORLD;
         const wDef      = WORLDS[n];
         return (
           <div
@@ -461,33 +520,30 @@ export default function ClickerPage() {
               <div className="min-w-0 flex-1">
                 <p
                   className="truncate text-xs leading-tight"
-                  style={{
-                    fontWeight: 500,
-                    color: isActive ? "#a78bfa" : "rgba(255,255,255,0.5)",
-                  }}
+                  style={{ fontWeight: 500, color: isActive ? "#a78bfa" : "rgba(255,255,255,0.5)" }}
                 >
-                  Verden {n} — {label}
+                  {n}. {wDef.name}
                 </p>
                 {!unlocked && (
                   <p className="text-[10px] leading-tight" style={{ color: "rgba(255,255,255,0.25)" }}>
                     Lås opp med prestige
                   </p>
                 )}
-                {completed && (
-                  <p className="text-[10px] leading-tight" style={{ color: "#34d399" }}>Fullført</p>
+                {completed && !isActive && (
+                  <p className="text-[10px] leading-tight" style={{ color: "#34d399" }}>Fullført ✓</p>
                 )}
-                {isActive && !completed && (
+                {isActive && isFinal && (
+                  <p className="text-[10px] leading-tight" style={{ color: "#fbbf24" }}>Siste verden 👑</p>
+                )}
+                {isActive && !isFinal && !completed && (
                   <p className="text-[10px] leading-tight" style={{ color: "#a78bfa" }}>Du er her</p>
                 )}
               </div>
             </div>
 
-            {isActive && world < 3 && (
+            {isActive && !isFinal && (
               <div className="mt-2">
-                <div
-                  className="h-[3px] overflow-hidden rounded-full"
-                  style={{ background: "rgba(255,255,255,0.06)" }}
-                >
+                <div className="h-[3px] overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{ width: `${prestigePct.toFixed(2)}%`, background: "#6c47ff" }}
@@ -499,23 +555,23 @@ export default function ClickerPage() {
         );
       })}
 
-      {/* World 4 — coming soon */}
-      <div
-        style={{
-          background: "rgba(255,255,255,0.01)",
-          border: "1px dashed rgba(255,255,255,0.1)",
-          borderRadius: 10,
-          opacity: 0.3,
-        }}
-        className="p-2.5"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-base">❓</span>
-          <div>
-            <p className="text-xs leading-tight" style={{ color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>Verden 4</p>
-            <p className="text-[10px] leading-tight" style={{ color: "rgba(255,255,255,0.2)" }}>Kommer snart</p>
+      {/* Prestige shop */}
+      <div className="mt-3">
+        <button
+          onClick={() => setShopModal(true)}
+          className="w-full rounded-xl px-3 py-2.5 text-left transition-all hover:brightness-110"
+          style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10 }}
+        >
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="h-4 w-4 shrink-0" style={{ color: "#fbbf24" }} />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold leading-tight" style={{ color: "#fbbf24" }}>Prestige-butikk</p>
+              <p className="text-[10px] leading-tight" style={{ color: "rgba(255,255,255,0.4)" }}>
+                {pointsAvail} poeng tilgjengelig
+              </p>
+            </div>
           </div>
-        </div>
+        </button>
       </div>
     </div>
   );
@@ -680,27 +736,26 @@ export default function ClickerPage() {
         >
           PRESTIGE! Verden {world} → {nextWorld}
           <span className="mt-0.5 block text-xs font-normal opacity-80">
-            Nullstill + {worldDef.fanpassCoins} Fanpass-coins + 10% bonus
+            Nullstill + {worldDef?.fanpassCoins ?? 0} Fanpass-coins + {Math.round((0.10 + perkCfg.prestigeExtraBonus) * 100)}% bonus
           </span>
         </button>
-      ) : world < 3 ? (
+      ) : prestigeCost > 0 ? (
         <div className="mb-6 w-full">
           <div className="mb-1.5 flex justify-between">
             <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>Prestige fremgang</span>
             <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>{fmt(displayCoins)} / {fmt(prestigeCost)}</span>
           </div>
-          <div
-            className="overflow-hidden rounded-full"
-            style={{ height: 6, background: "rgba(255,255,255,0.06)" }}
-          >
+          <div className="overflow-hidden rounded-full" style={{ height: 6, background: "rgba(255,255,255,0.06)" }}>
             <div
               className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${prestigePct.toFixed(2)}%`,
-                background: "linear-gradient(to right, #6c47ff, #a78bfa)",
-              }}
+              style={{ width: `${prestigePct.toFixed(2)}%`, background: "linear-gradient(to right, #6c47ff, #a78bfa)" }}
             />
           </div>
+        </div>
+      ) : world === MAX_WORLD ? (
+        <div className="mb-6 w-full rounded-xl px-4 py-3 text-center" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
+          <p className="text-sm font-semibold" style={{ color: "#fbbf24" }}>👑 Du er i den siste verden!</p>
+          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Ingen prestige herfra</p>
         </div>
       ) : null}
 
@@ -725,9 +780,9 @@ export default function ClickerPage() {
           </div>
           <div className="flex flex-col gap-2.5">
             {leaderboard.map((entry, i) => {
-              const w     = (entry.prestigeWorld ?? 1) as 1 | 2 | 3;
-              const wDef  = WORLDS[w];
-              const wColor = w === 1 ? "#a78bfa" : w === 2 ? "#fbbf24" : "#67e8f9";
+              const w     = entry.prestigeWorld ?? 1;
+              const wDef  = WORLDS[w] ?? WORLDS[1];
+              const wColor = w <= 1 ? "#a78bfa" : w === 2 ? "#fbbf24" : w <= 3 ? "#67e8f9" : w <= 5 ? "#34d399" : w <= 7 ? "#fb923c" : "#f59e0b";
               const medalColor =
                 i === 0 ? "#fbbf24"
                 : i === 1 ? "#94a3b8"
@@ -935,10 +990,11 @@ export default function ClickerPage() {
               Nullstiller alle coins og oppgraderinger for Verden {world}.
             </p>
             <ul className="mb-5 space-y-2 text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
-              <li>🪙 <strong style={{ color: "#fbbf24" }}>{worldDef.fanpassCoins} Fanpass-coins</strong></li>
-              <li>{worldDef.badge} Badge lagt til profilen</li>
-              <li>⚡ <strong style={{ color: "#34d399" }}>+10% permanent bonus</strong></li>
-              {world < 3 && (
+              <li>🪙 <strong style={{ color: "#fbbf24" }}>{worldDef?.fanpassCoins ?? 0} Fanpass-coins</strong></li>
+              <li>{worldDef?.badge} Badge lagt til profilen</li>
+              <li>⚡ <strong style={{ color: "#34d399" }}>+{Math.round((0.10 + perkCfg.prestigeExtraBonus) * 100)}% permanent bonus</strong></li>
+              <li>🏆 <strong style={{ color: "#a78bfa" }}>+1 Prestige-poeng til butikken</strong></li>
+              {world < MAX_WORLD && WORLDS[nextWorld] && (
                 <li>🌍 Låser opp <strong className="text-white">Verden {nextWorld}: {WORLDS[nextWorld].name} {WORLDS[nextWorld].emoji}</strong></li>
               )}
             </ul>
@@ -958,6 +1014,102 @@ export default function ClickerPage() {
               >
                 {prestiging ? "Prestiger…" : "Ja, Prestige!"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Prestige shop modal */}
+      {shopModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div
+            className="flex w-full max-w-md flex-col rounded-2xl"
+            style={{ background: "#12121e", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "85vh" }}
+          >
+            {/* Header */}
+            <div className="flex shrink-0 items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+              <div>
+                <h3 className="text-base font-bold text-white">Prestige-butikk</h3>
+                <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                  {pointsAvail} poeng tilgjengelig · {pointsSpent} brukt av {totalPrestige} totalt
+                </p>
+              </div>
+              <button onClick={() => setShopModal(false)} style={{ color: "rgba(255,255,255,0.35)" }} className="hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Perk list */}
+            <div className="scrollbar-hide flex-1 overflow-y-auto p-4 space-y-3">
+              {(["income", "quality", "special"] as const).map((cat) => {
+                const catLabel = { income: "💰 Inntekt", quality: "✨ Livskvalitet", special: "🎲 Spesial" }[cat];
+                const perks = PRESTIGE_PERKS.filter((p) => p.category === cat);
+                return (
+                  <div key={cat}>
+                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>{catLabel}</p>
+                    <div className="space-y-2">
+                      {perks.map((perk) => {
+                        const owned    = shopData[perk.id] ?? 0;
+                        const maxed    = owned >= perk.maxPurchases;
+                        const canBuy   = !maxed && pointsAvail >= perk.cost;
+                        return (
+                          <div
+                            key={perk.id}
+                            className="flex items-center gap-3 rounded-xl p-3"
+                            style={{
+                              background: maxed ? "rgba(52,211,153,0.06)" : canBuy ? "rgba(108,71,255,0.07)" : "rgba(255,255,255,0.03)",
+                              border: maxed ? "1px solid rgba(52,211,153,0.2)" : canBuy ? "1px solid rgba(108,71,255,0.25)" : "1px solid rgba(255,255,255,0.06)",
+                              borderRadius: 10,
+                            }}
+                          >
+                            <span className="text-xl shrink-0">{perk.emoji}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-white leading-tight">{perk.name}</p>
+                              <p className="text-[11px] leading-tight" style={{ color: "rgba(255,255,255,0.4)" }}>{perk.description}</p>
+                              <div className="mt-1 flex items-center gap-2">
+                                <span className="text-[10px] font-semibold" style={{ color: maxed ? "#34d399" : "#a78bfa" }}>
+                                  {maxed ? `Maks (${owned}/${perk.maxPurchases})` : `${owned}/${perk.maxPurchases} kjøpt`}
+                                </span>
+                                <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>{perk.effect}</span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => void buyPerk(perk.id)}
+                              disabled={!canBuy || shopBuying === perk.id}
+                              className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 disabled:opacity-40"
+                              style={{
+                                background: maxed ? "rgba(52,211,153,0.15)" : canBuy ? "#6c47ff" : "rgba(255,255,255,0.06)",
+                                color: maxed ? "#34d399" : canBuy ? "#fff" : "rgba(255,255,255,0.3)",
+                                cursor: canBuy ? "pointer" : "default",
+                              }}
+                            >
+                              {shopBuying === perk.id ? "…" : maxed ? "Maks" : `${perk.cost}p`}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer with reset */}
+            <div className="shrink-0 px-5 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              {pointsSpent > 0 ? (
+                <button
+                  onClick={() => void resetShop()}
+                  disabled={shopResetting}
+                  className="w-full rounded-lg py-2.5 text-sm transition-colors hover:brightness-110 disabled:opacity-50"
+                  style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}
+                >
+                  {shopResetting ? "Nullstiller…" : "Nullstill alle kjøp (refunderer poeng)"}
+                </button>
+              ) : (
+                <p className="text-center text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+                  Ingen kjøp å nullstille ennå
+                </p>
+              )}
             </div>
           </div>
         </div>

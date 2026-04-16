@@ -608,6 +608,8 @@ model ClickerProfile {
   prestigeWorld  Int      @default(1)
   permanentBonus Float    @default(1.0)
   totalPrestige  Int      @default(0)
+  prestigeShop       Json     @default("{}")
+  prestigePointsSpent Int     @default(0)
   createdAt      DateTime @default(now())
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)

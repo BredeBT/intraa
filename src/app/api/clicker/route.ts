@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { calcCoinsPerClick, calcCoinsPerSecond, MAX_OFFLINE_HOURS } from "@/lib/clickerUpgrades";
-
-const MAX_OFFLINE_SECONDS = MAX_OFFLINE_HOURS * 3600;
+import { calcPerkConfig, MAX_OFFLINE_HOURS } from "@/lib/clickerUpgrades";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -28,22 +26,20 @@ export async function GET(req: NextRequest) {
     select: { upgradeId: true, level: true },
   });
 
+  // Apply offline_hours perk
+  const shop = (profile.prestigeShop ?? {}) as Record<string, number>;
+  const perkCfg = calcPerkConfig(shop);
+  const maxOfflineHours = MAX_OFFLINE_HOURS + perkCfg.offlineHours;
+  const maxOfflineSeconds = maxOfflineHours * 3600;
+
   const now = new Date();
   const offlineSeconds = Math.min(
     (now.getTime() - profile.lastSeen.getTime()) / 1000,
-    MAX_OFFLINE_SECONDS,
+    maxOfflineSeconds,
   );
-  // coinsPerSecond is already stored as base × permanentBonus (see calcCoinsPerSecond).
-  // Do NOT multiply by permanentBonus again — that would double-apply the prestige bonus.
   const cps = Number(profile.coinsPerSecond);
   const offlineEarned = offlineSeconds > 5 ? offlineSeconds * cps : 0;
   const safeOffline   = isFinite(offlineEarned) ? offlineEarned : 0;
-
-  console.log("[Offline] lastSeen:", profile.lastSeen.toISOString());
-  console.log("[Offline] timeDiff sekunder:", offlineSeconds.toFixed(1));
-  console.log("[Offline] coinsPerSecond:", cps);
-  console.log("[Offline] beregnet offline:", (offlineSeconds * cps).toFixed(2));
-  console.log("[Offline] faktisk lagt til:", safeOffline.toFixed(2));
 
   const activeEvent = await db.clickerEvent.findFirst({
     where: { organizationId: orgId, active: true, endsAt: { gt: now } },
@@ -57,35 +53,39 @@ export async function GET(req: NextRequest) {
       lastSeen: now,
     },
     select: {
-      coins:          true,
-      coinsPerClick:  true,
-      coinsPerSecond: true,
-      totalClicks:    true,
-      allTimeHighCoins: true,
-      prestigeWorld:  true,
-      prestigeLevel:  true,
-      permanentBonus: true,
-      totalPrestige:  true,
-      lastSeen:       true,
-      id:             true,
-      userId:         true,
+      coins:               true,
+      coinsPerClick:       true,
+      coinsPerSecond:      true,
+      totalClicks:         true,
+      allTimeHighCoins:    true,
+      prestigeWorld:       true,
+      prestigeLevel:       true,
+      permanentBonus:      true,
+      totalPrestige:       true,
+      lastSeen:            true,
+      id:                  true,
+      userId:              true,
+      prestigeShop:        true,
+      prestigePointsSpent: true,
     },
   });
 
   return NextResponse.json({
     profile: {
-      id:             updatedProfile.id,
-      userId:         updatedProfile.userId,
-      coins:          Number(updatedProfile.coins),
-      coinsPerClick:  Number(updatedProfile.coinsPerClick),
-      coinsPerSecond: Number(updatedProfile.coinsPerSecond),
-      totalClicks:    updatedProfile.totalClicks,
+      id:               updatedProfile.id,
+      userId:           updatedProfile.userId,
+      coins:            Number(updatedProfile.coins),
+      coinsPerClick:    Number(updatedProfile.coinsPerClick),
+      coinsPerSecond:   Number(updatedProfile.coinsPerSecond),
+      totalClicks:      updatedProfile.totalClicks,
       allTimeHighCoins: Number(updatedProfile.allTimeHighCoins),
-      prestigeWorld:  updatedProfile.prestigeWorld,
-      prestigeLevel:  updatedProfile.prestigeLevel,
-      permanentBonus: Number(updatedProfile.permanentBonus),
-      totalPrestige:  updatedProfile.totalPrestige,
-      lastSeen:       updatedProfile.lastSeen.toISOString(),
+      prestigeWorld:    updatedProfile.prestigeWorld,
+      prestigeLevel:    updatedProfile.prestigeLevel,
+      permanentBonus:   Number(updatedProfile.permanentBonus),
+      totalPrestige:    updatedProfile.totalPrestige,
+      lastSeen:         updatedProfile.lastSeen.toISOString(),
+      prestigeShop:     (updatedProfile.prestigeShop ?? {}) as Record<string, number>,
+      prestigePointsSpent: updatedProfile.prestigePointsSpent,
     },
     upgrades,
     offlineEarned: Math.floor(safeOffline),
