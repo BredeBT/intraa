@@ -19,6 +19,7 @@ import { useOrg } from "@/lib/context/OrgContext";
 import { useUser } from "@/lib/hooks/useUser";
 import { WebRTCProvider } from "@/context/WebRTCContext";
 import { IncomingCallBanner } from "@/components/IncomingCallBanner";
+import { GlobalCallBar } from "@/components/GlobalCallBar";
 
 // ─── Nav definitions ──────────────────────────────────────────────────────────
 
@@ -571,7 +572,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <WebRTCProvider userId={user?.id ?? ""}>
+    <WebRTCProvider userId={user?.id ?? ""} userName={user?.name ?? undefined}>
     <div className="min-h-screen bg-zinc-950 text-white">
       {/* Desktop sidebar — hidden when in admin (admin has its own) */}
       <aside className={`fixed left-0 top-0 z-30 hidden h-screen flex-col border-r border-zinc-800 bg-zinc-900 transition-all duration-200 ease-in-out md:flex ${sidebarW}`}>
@@ -659,6 +660,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       <IncomingCallBanner />
+      <GlobalCallBar />
     </div>
     </WebRTCProvider>
   );
