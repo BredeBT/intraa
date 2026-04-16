@@ -17,6 +17,9 @@ const DAILY_CAPS: Record<string, { coins: number; maxPerDay: number }> = {
   clicker:          { coins: 1,    maxPerDay: 20   }, // maks 20 coins fra klikking
   prestige:         { coins: 9999, maxPerDay: 999  }, // uncapped — prestige sets its own amount
   fanpass_bonus:    { coins: 50,   maxPerDay: 1    },
+  game_2048:        { coins: 10,   maxPerDay: 10   }, // 10 coins per award, maks 10×/dag
+  game_2048_bonus:  { coins: 50,   maxPerDay: 3    }, // 50 coins per milestone (512/1024/2048)
+  wordle:           { coins: 15,   maxPerDay: 1    }, // 15 coins for å fullføre daglig wordle
 };
 
 /**

@@ -28,6 +28,26 @@ export default async function SpillPage({
       gradient:    "from-emerald-600/20 to-teal-800/10",
       border:      "border-emerald-500/20",
     },
+    {
+      href:        `/${orgSlug}/spill/2048`,
+      emoji:       "🔢",
+      title:       "2048",
+      description: "Slå sammen brikker og nå 2048. Enkel å lære, umulig å stoppe.",
+      badge:       "Solo",
+      badgeColor:  "bg-violet-500/20 text-violet-300",
+      gradient:    "from-violet-600/20 to-purple-800/10",
+      border:      "border-violet-500/20",
+    },
+    {
+      href:        `/${orgSlug}/spill/wordle`,
+      emoji:       "🟩",
+      title:       "Wordle",
+      description: "Gjett det norske ordet på 6 forsøk. Nytt ord hver dag.",
+      badge:       "Daglig",
+      badgeColor:  "bg-green-500/20 text-green-300",
+      gradient:    "from-green-600/20 to-emerald-900/10",
+      border:      "border-green-500/20",
+    },
   ];
 
   return (
