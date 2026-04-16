@@ -458,6 +458,19 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
               ref={editorRef}
               placeholder="Skriv en melding…"
               onEnter={() => void send()}
+              onSendWithImage={async (imageUrl) => {
+                setSending(true);
+                const res = await fetch(`/api/dm/${friendId}`, {
+                  method: "POST", headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ content: " ", imageUrl }),
+                });
+                if (res.ok) {
+                  const data = await res.json() as { message: DMMessage };
+                  setMessages((prev) => [...prev, data.message]);
+                  void broadcast(data.message);
+                }
+                setSending(false);
+              }}
               toolbarExtra={
                 <label className="cursor-pointer p-1 text-zinc-500 transition-colors hover:text-zinc-300" title="Last opp bilde (eller lim inn med Ctrl+V)">
                   <Paperclip className="h-3.5 w-3.5" />
