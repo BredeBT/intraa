@@ -72,7 +72,7 @@ export function GifPicker({ onSelect, onClose }: Props) {
   return (
     <div
       ref={containerRef}
-      className="absolute bottom-full mb-2 left-0 z-50 w-80 bg-[#1a1a2e] border border-white/10 rounded-2xl shadow-xl overflow-hidden"
+      className="absolute bottom-full mb-2 right-0 z-50 w-80 max-w-[calc(100vw-2rem)] bg-[#1a1a2e] border border-white/10 rounded-2xl shadow-xl overflow-hidden"
     >
       <div className="p-3 border-b border-white/10">
         <input

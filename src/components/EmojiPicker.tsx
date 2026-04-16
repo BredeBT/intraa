@@ -22,7 +22,7 @@ export function EmojiPicker({ onSelect, onClose }: Props) {
   }, [onClose]);
 
   return (
-    <div ref={containerRef} className="absolute bottom-full mb-2 left-0 z-50">
+    <div ref={containerRef} className="absolute bottom-full mb-2 right-0 z-50">
       <Picker
         data={async () => {
           const response = await fetch("https://cdn.jsdelivr.net/npm/@emoji-mart/data");
