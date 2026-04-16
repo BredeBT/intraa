@@ -137,6 +137,7 @@ model Organization {
   clickerUpgrades        ClickerUpgrade[]
   clickerEvents          ClickerEvent[]
   fanPasses              FanPass[]
+  chessGames             ChessGame[]
   coinTransactions       CoinTransaction[]
   shopItems              ShopItem[]
   shopPurchases          ShopPurchase[]
@@ -231,6 +232,8 @@ model User {
   reportsMade             UserReport[]    @relation("ReportedBy")
   fanpassWaitlist         FanpassWaitlist?
   pushSubscriptions       PushSubscription[]
+  chessGamesAsWhite       ChessGame[]      @relation("ChessWhite")
+  chessGamesAsBlack       ChessGame[]      @relation("ChessBlack")
 
   @@index([username])
 }
@@ -798,4 +801,23 @@ model PushSubscription {
   auth      String
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ChessGame {
+  id      String @id @default(cuid())
+  orgId   String
+  whiteId String
+  blackId String
+  // "active" | "white_wins" | "black_wins" | "draw" | "abandoned"
+  status  String @default("active")
+  fen     String @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+  moves   Json   @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  white        User         @relation("ChessWhite", fields: [whiteId], references: [id])
+  black        User         @relation("ChessBlack", fields: [blackId], references: [id])
+
+  @@index([orgId, status, createdAt(sort: Desc)])
 }

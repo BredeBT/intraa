@@ -1,0 +1,472 @@
+"use client";
+
+import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Chess, type Square, type PieceSymbol, type Color } from "chess.js";
+import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
+import { ArrowLeft, Flag, RotateCcw } from "lucide-react";
+import Link from "next/link";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface Player { id: string; name: string | null; avatarUrl: string | null }
+
+interface GameData {
+  id:      string;
+  fen:     string;
+  status:  string;
+  moves:   string[];
+  white:   Player;
+  black:   Player;
+  orgSlug: string;
+}
+
+interface RealtimeMove {
+  fen:  string;
+  move: string;
+  moves: string[];
+  status: string;
+}
+
+// ─── Piece rendering ──────────────────────────────────────────────────────────
+
+const PIECE_UNICODE: Record<string, string> = {
+  wK: "♔", wQ: "♕", wR: "♖", wB: "♗", wN: "♘", wP: "♙",
+  bK: "♚", bQ: "♛", bR: "♜", bB: "♝", bN: "♞", bP: "♟",
+};
+
+function Piece({ color, type }: { color: Color; type: PieceSymbol }) {
+  const key  = `${color}${type.toUpperCase()}`;
+  const glyph = PIECE_UNICODE[key] ?? "?";
+  return (
+    <span
+      className="select-none leading-none"
+      style={{
+        fontSize: "clamp(20px, 5.5vw, 44px)",
+        color:           color === "w" ? "#fff" : "#1c1410",
+        filter:          color === "w"
+          ? "drop-shadow(0 1px 3px rgba(0,0,0,0.9))"
+          : "drop-shadow(0 1px 2px rgba(255,255,255,0.15))",
+        WebkitTextStroke: color === "w" ? "0.5px rgba(0,0,0,0.3)" : "none",
+      }}
+    >
+      {glyph}
+    </span>
+  );
+}
+
+// ─── Board ────────────────────────────────────────────────────────────────────
+
+function ChessBoard({
+  chess,
+  flipped,
+  disabled,
+  lastMove,
+  onMove,
+}: {
+  chess:    Chess;
+  flipped:  boolean;
+  disabled: boolean;
+  lastMove: { from: Square; to: Square } | null;
+  onMove:   (from: Square, to: Square, promotion?: string) => void;
+}) {
+  const [selected,   setSelected]   = useState<Square | null>(null);
+  const [legalMoves, setLegalMoves] = useState<Square[]>([]);
+  const [promoting,  setPromoting]  = useState<{ from: Square; to: Square } | null>(null);
+
+  const board = chess.board();
+  const files  = flipped ? ["h","g","f","e","d","c","b","a"] : ["a","b","c","d","e","f","g","h"];
+  const ranks  = flipped ? [1,2,3,4,5,6,7,8]                : [8,7,6,5,4,3,2,1];
+
+  function handleSquareClick(sq: Square) {
+    if (disabled) return;
+
+    if (selected) {
+      if (legalMoves.includes(sq)) {
+        // Check if pawn promotion
+        const piece = chess.get(selected);
+        const toRank = sq[1];
+        if (piece?.type === "p" && (toRank === "8" || toRank === "1")) {
+          setPromoting({ from: selected, to: sq });
+          setSelected(null);
+          setLegalMoves([]);
+        } else {
+          onMove(selected, sq);
+          setSelected(null);
+          setLegalMoves([]);
+        }
+        return;
+      }
+      setSelected(null);
+      setLegalMoves([]);
+      // Fall through to select new piece if clicked on own piece
+    }
+
+    const piece = chess.get(sq);
+    if (!piece || piece.color !== chess.turn()) return;
+    setSelected(sq);
+    const moves = chess.moves({ square: sq, verbose: true });
+    setLegalMoves(moves.map((m) => m.to as Square));
+  }
+
+  return (
+    <>
+      <div
+        className="relative w-full"
+        style={{ maxWidth: "min(100vw - 2rem, 520px)", aspectRatio: "1" }}
+      >
+        {/* Rank/file labels */}
+        <div className="absolute -left-5 inset-y-0 flex flex-col justify-around pointer-events-none">
+          {ranks.map((r) => (
+            <span key={r} className="text-[10px] text-white/30 text-right">{r}</span>
+          ))}
+        </div>
+        <div className="absolute -bottom-5 inset-x-0 flex justify-around pointer-events-none">
+          {files.map((f) => (
+            <span key={f} className="text-[10px] text-white/30 text-center">{f}</span>
+          ))}
+        </div>
+
+        {/* Grid */}
+        <div className="grid grid-cols-8 w-full h-full rounded-lg overflow-hidden shadow-2xl">
+          {ranks.map((rank) =>
+            files.map((file) => {
+              const sq   = `${file}${rank}` as Square;
+              const fi   = files.indexOf(file);
+              const ri   = ranks.indexOf(rank);
+              const isLight   = (fi + ri) % 2 === 0;
+              const isSelected = selected === sq;
+              const isLegal   = legalMoves.includes(sq);
+              const isLastFrom = lastMove?.from === sq;
+              const isLastTo   = lastMove?.to   === sq;
+              const piece = chess.get(sq);
+
+              let bg = isLight ? "#f0d9b5" : "#b58863";
+              if (isSelected)        bg = "#7fc97f";
+              else if (isLastFrom || isLastTo) bg = isLight ? "#cdd16e" : "#a9a93e";
+
+              return (
+                <div
+                  key={sq}
+                  onClick={() => handleSquareClick(sq)}
+                  className="relative flex items-center justify-center cursor-pointer"
+                  style={{ backgroundColor: bg, aspectRatio: "1" }}
+                >
+                  {/* Legal move dot */}
+                  {isLegal && !piece && (
+                    <div className="absolute h-[28%] w-[28%] rounded-full bg-black/20 pointer-events-none" />
+                  )}
+                  {isLegal && piece && (
+                    <div className="absolute inset-0 rounded-sm ring-4 ring-inset ring-black/25 pointer-events-none" />
+                  )}
+                  {piece && <Piece color={piece.color} type={piece.type} />}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* Promotion modal */}
+      {promoting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+          <div className="rounded-2xl border border-white/10 bg-[#1a1a2e] p-6 shadow-2xl">
+            <p className="mb-4 text-center text-sm font-semibold text-white">Velg brikke</p>
+            <div className="flex gap-3">
+              {(["q","r","b","n"] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => { onMove(promoting.from, promoting.to, p); setPromoting(null); }}
+                  className="flex h-16 w-16 items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  <Piece color={chess.turn()} type={p} />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── Player card ──────────────────────────────────────────────────────────────
+
+function PlayerCard({
+  player, color, isActive, isYou, captured,
+}: {
+  player:   Player;
+  color:    "white" | "black";
+  isActive: boolean;
+  isYou:    boolean;
+  captured: PieceSymbol[];
+}) {
+  const capturedGlyphs: Record<PieceSymbol, string> = {
+    q: color === "white" ? "♛" : "♕",
+    r: color === "white" ? "♜" : "♖",
+    b: color === "white" ? "♝" : "♗",
+    n: color === "white" ? "♞" : "♘",
+    p: color === "white" ? "♟" : "♙",
+    k: color === "white" ? "♚" : "♔",
+  };
+  return (
+    <div className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${isActive ? "bg-white/10 ring-1 ring-white/20" : "bg-white/5"}`}>
+      <div className="relative shrink-0">
+        {player.avatarUrl
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img src={player.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+          : <div className="h-9 w-9 rounded-full bg-zinc-700 flex items-center justify-center text-sm font-bold text-white">{(player.name ?? "?").charAt(0).toUpperCase()}</div>
+        }
+        <span className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#1a1a2e] ${color === "white" ? "bg-white" : "bg-zinc-800"}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-sm font-semibold text-white truncate">{player.name ?? "Ukjent"}</span>
+          {isYou && <span className="text-[10px] text-white/40">(deg)</span>}
+          {isActive && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />}
+        </div>
+        {captured.length > 0 && (
+          <div className="flex flex-wrap gap-0 text-[11px] leading-tight opacity-60">
+            {captured.map((p, i) => <span key={i}>{capturedGlyphs[p]}</span>)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+export default function ChessGame({
+  game: initialGame,
+  userId,
+  isPlayer,
+}: {
+  game:     GameData;
+  userId:   string;
+  isPlayer: boolean;
+}) {
+  const router = useRouter();
+
+  const [fen,    setFen]    = useState(initialGame.fen);
+  const [moves,  setMoves]  = useState<string[]>(initialGame.moves);
+  const [status, setStatus] = useState(initialGame.status);
+  const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
+
+  const chess = new Chess(fen);
+  const myColor = initialGame.white.id === userId ? "w" : initialGame.black.id === userId ? "b" : null;
+  const flipped = myColor === "b";
+  const isMyTurn = isPlayer && chess.turn() === myColor && status === "active";
+
+  // Realtime: receive opponent's moves
+  const { broadcast } = useRealtimeChannel<RealtimeMove>(`chess:${initialGame.id}`, (payload) => {
+    setFen(payload.fen);
+    setMoves(payload.moves);
+    setStatus(payload.status);
+  });
+
+  async function handleMove(from: Square, to: Square, promotion?: string) {
+    if (!isMyTurn) return;
+
+    // Optimistic local update
+    const tempChess = new Chess(fen);
+    let result;
+    try {
+      result = tempChess.move({ from, to, promotion: promotion ?? "q" });
+    } catch { return; }
+    if (!result) return;
+
+    setFen(tempChess.fen());
+    setMoves((p) => [...p, result.san]);
+    setLastMove({ from, to });
+
+    // Send to server
+    try {
+      const res = await fetch(`/api/chess/${initialGame.id}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ move: { from, to, promotion: promotion ?? "q" } }),
+      });
+      const data = await res.json() as { game: { fen: string; moves: string[]; status: string } };
+      if (res.ok) {
+        setFen(data.game.fen);
+        setMoves(data.game.moves);
+        setStatus(data.game.status);
+        void broadcast({ fen: data.game.fen, move: result.san, moves: data.game.moves, status: data.game.status });
+      } else {
+        // Rollback
+        setFen(fen);
+        setMoves(moves);
+        setLastMove(null);
+      }
+    } catch {
+      setFen(fen);
+      setMoves(moves);
+      setLastMove(null);
+    }
+  }
+
+  async function resign() {
+    if (!confirm("Er du sikker på at du vil gi opp?")) return;
+    const loserColor = myColor === "w" ? "white" : "black";
+    await fetch(`/api/chess/${initialGame.id}`, {
+      method:  "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ move: "__resign__", loserColor }),
+    });
+    router.refresh();
+  }
+
+  // Captured pieces
+  function getCaptured(forColor: "w" | "b"): PieceSymbol[] {
+    const tempChess = new Chess();
+    const captured: PieceSymbol[] = [];
+    for (const san of moves) {
+      const m = tempChess.move(san);
+      if (m?.captured && tempChess.turn() !== forColor) captured.push(m.captured);
+    }
+    return captured;
+  }
+
+  const statusMsg = useCallback(() => {
+    if (status === "active") {
+      if (chess.isCheck()) return chess.turn() === myColor ? "⚠️ Du er i sjakk!" : "Sjakk!";
+      return null;
+    }
+    if (status === "white_wins") return initialGame.white.id === userId ? "🏆 Du vant!" : "Du tapte.";
+    if (status === "black_wins") return initialGame.black.id === userId ? "🏆 Du vant!" : "Du tapte.";
+    if (status === "draw") return "🤝 Remis";
+    return "Spillet er avsluttet";
+  }, [status, chess, myColor, userId, initialGame]);
+
+  const topPlayer    = flipped ? initialGame.white : initialGame.black;
+  const bottomPlayer = flipped ? initialGame.black : initialGame.white;
+  const topColor     = flipped ? "white"           : "black";
+  const bottomColor  = flipped ? "black"           : "white";
+
+  return (
+    <div className="min-h-screen bg-[#0d0d14] text-white">
+      <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4 md:flex-row md:items-start md:gap-6 md:py-8">
+
+        {/* ── Board column ── */}
+        <div className="flex flex-col items-center gap-3 md:flex-1">
+          {/* Top player */}
+          <div className="w-full" style={{ maxWidth: "min(100vw - 2rem, 520px)" }}>
+            <PlayerCard
+              player={topPlayer}
+              color={topColor}
+              isActive={chess.turn() === (flipped ? "w" : "b") && status === "active"}
+              isYou={topPlayer.id === userId}
+              captured={getCaptured(flipped ? "b" : "w")}
+            />
+          </div>
+
+          {/* Board */}
+          <div className="pl-5 pb-5">
+            <ChessBoard
+              chess={chess}
+              flipped={flipped}
+              disabled={!isMyTurn}
+              lastMove={lastMove}
+              onMove={handleMove}
+            />
+          </div>
+
+          {/* Bottom player */}
+          <div className="w-full" style={{ maxWidth: "min(100vw - 2rem, 520px)" }}>
+            <PlayerCard
+              player={bottomPlayer}
+              color={bottomColor}
+              isActive={chess.turn() === (flipped ? "b" : "w") && status === "active"}
+              isYou={bottomPlayer.id === userId}
+              captured={getCaptured(flipped ? "w" : "b")}
+            />
+          </div>
+
+          {/* Status message */}
+          {statusMsg() && (
+            <div className="w-full text-center rounded-xl bg-white/10 py-3 px-4 text-sm font-semibold" style={{ maxWidth: "min(100vw - 2rem, 520px)" }}>
+              {statusMsg()}
+            </div>
+          )}
+
+          {/* Mobile controls */}
+          <div className="flex w-full gap-2 md:hidden" style={{ maxWidth: "min(100vw - 2rem, 520px)" }}>
+            <Link href={`/${initialGame.orgSlug}/spill/sjakk`}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 py-2.5 text-sm text-white/60 hover:text-white transition-colors">
+              <ArrowLeft className="h-4 w-4" /> Tilbake
+            </Link>
+            {isPlayer && status === "active" && (
+              <button onClick={() => void resign()}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-rose-500/30 py-2.5 text-sm text-rose-400 hover:bg-rose-500/10 transition-colors">
+                <Flag className="h-4 w-4" /> Gi opp
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ── Sidebar — desktop only ── */}
+        <aside className="hidden md:flex flex-col gap-4 w-64 shrink-0 pt-12">
+          {/* Nav */}
+          <Link href={`/${initialGame.orgSlug}/spill/sjakk`}
+            className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
+            <ArrowLeft className="h-4 w-4" /> Tilbake til lobby
+          </Link>
+
+          {/* Turn indicator */}
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <p className="text-xs text-white/40 mb-2 font-semibold uppercase tracking-wider">Tur</p>
+            <div className="flex items-center gap-2">
+              <div className={`h-4 w-4 rounded-full border-2 ${chess.turn() === "w" ? "bg-white border-white" : "bg-zinc-800 border-zinc-600"}`} />
+              <span className="text-sm font-semibold text-white">
+                {chess.turn() === "w" ? initialGame.white.name : initialGame.black.name}
+                {chess.turn() === myColor && status === "active" && <span className="ml-1 text-emerald-400">(deg)</span>}
+              </span>
+            </div>
+            {chess.isCheck() && <p className="mt-2 text-xs font-bold text-amber-400">⚠️ Sjakk!</p>}
+          </div>
+
+          {/* Move history */}
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 flex-1">
+            <p className="text-xs text-white/40 mb-2 font-semibold uppercase tracking-wider">Trekk</p>
+            {moves.length === 0
+              ? <p className="text-xs text-white/30">Ingen trekk ennå</p>
+              : (
+                <div className="flex flex-col gap-0.5 max-h-64 overflow-y-auto">
+                  {Array.from({ length: Math.ceil(moves.length / 2) }).map((_, i) => (
+                    <div key={i} className="flex gap-2 text-xs">
+                      <span className="text-white/30 w-5 shrink-0">{i + 1}.</span>
+                      <span className="text-white/80 w-12">{moves[i * 2]}</span>
+                      {moves[i * 2 + 1] && <span className="text-white/80">{moves[i * 2 + 1]}</span>}
+                    </div>
+                  ))}
+                </div>
+              )
+            }
+          </div>
+
+          {/* Game result */}
+          {status !== "active" && (
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-center">
+              <p className="font-bold text-white">{statusMsg()}</p>
+              <button
+                onClick={() => router.push(`/${initialGame.orgSlug}/spill/sjakk`)}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2 text-sm font-semibold text-white hover:bg-emerald-500 transition-colors"
+              >
+                <RotateCcw className="h-4 w-4" /> Ny kamp
+              </button>
+            </div>
+          )}
+
+          {/* Resign */}
+          {isPlayer && status === "active" && (
+            <button onClick={() => void resign()}
+              className="flex items-center justify-center gap-2 rounded-xl border border-rose-500/30 py-2.5 text-sm text-rose-400 hover:bg-rose-500/10 transition-colors">
+              <Flag className="h-4 w-4" /> Gi opp
+            </button>
+          )}
+        </aside>
+      </div>
+    </div>
+  );
+}

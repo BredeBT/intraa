@@ -383,10 +383,10 @@ function SidebarContent({
 
         {/* Spill — bare for community på org-sider */}
         {showOrgLinks && isCommunity && org?.slug && (
-          <Link href={`/${org.slug}/clicker`} onClick={onNavClick}
+          <Link href={`/${org.slug}/spill`} onClick={onNavClick}
             title={collapsed ? "Spill" : undefined}
             className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${collapsed ? "justify-center" : ""} ${
-              pathname.endsWith("/clicker")
+              pathname.includes("/spill") || pathname.endsWith("/clicker")
                 ? `${accentActive} text-white`
                 : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
             }`}
