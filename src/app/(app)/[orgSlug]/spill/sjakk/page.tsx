@@ -18,7 +18,7 @@ export default async function SjakkPage({
   });
   if (!org) redirect("/home");
 
-  // Get current user's membership + co-members for opponent picker
+  // Co-members for opponent picker
   const members = await db.membership.findMany({
     where:  { organizationId: org.id, userId: { not: session.user.id } },
     select: { user: { select: { id: true, name: true, avatarUrl: true } } },
@@ -39,18 +39,33 @@ export default async function SjakkPage({
     },
   });
 
-  // Pending invites received by this user
-  const receivedInvites = await db.chessInvite.findMany({
-    where:   { orgId: org.id, receiverId: session.user.id, status: "pending" },
-    orderBy: { createdAt: "desc" },
-    include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
+  // Pending invites
+  const [receivedInvites, sentInvites] = await Promise.all([
+    db.chessInvite.findMany({
+      where:   { orgId: org.id, receiverId: session.user.id, status: "pending" },
+      orderBy: { createdAt: "desc" },
+      include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
+    }),
+    db.chessInvite.findMany({
+      where:   { orgId: org.id, senderId: session.user.id, status: "pending" },
+      orderBy: { createdAt: "desc" },
+      include: { receiver: { select: { id: true, name: true, avatarUrl: true } } },
+    }),
+  ]);
+
+  // Current user's chess profile (get-or-create via upsert)
+  const myProfile = await db.chessProfile.upsert({
+    where:  { userId_orgId: { userId: session.user.id, orgId: org.id } },
+    create: { userId: session.user.id, orgId: org.id },
+    update: {},
   });
 
-  // Pending invites sent by this user
-  const sentInvites = await db.chessInvite.findMany({
-    where:   { orgId: org.id, senderId: session.user.id, status: "pending" },
-    orderBy: { createdAt: "desc" },
-    include: { receiver: { select: { id: true, name: true, avatarUrl: true } } },
+  // Top 10 leaderboard for this org
+  const leaderboard = await db.chessProfile.findMany({
+    where:   { orgId: org.id },
+    orderBy: { rating: "desc" },
+    take:    10,
+    include: { user: { select: { id: true, name: true, avatarUrl: true } } },
   });
 
   return (
@@ -62,6 +77,14 @@ export default async function SjakkPage({
       activeGames={myGames}
       receivedInvites={receivedInvites.map((i) => ({ id: i.id, sender: i.sender }))}
       sentInvites={sentInvites.map((i) => ({ id: i.id, receiver: i.receiver }))}
+      myProfile={{ rating: myProfile.rating, wins: myProfile.wins, losses: myProfile.losses, draws: myProfile.draws }}
+      leaderboard={leaderboard.map((p) => ({
+        user:   p.user,
+        rating: p.rating,
+        wins:   p.wins,
+        losses: p.losses,
+        draws:  p.draws,
+      }))}
     />
   );
 }

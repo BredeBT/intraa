@@ -200,13 +200,14 @@ function ChessBoard({
 // ─── Player card ──────────────────────────────────────────────────────────────
 
 function PlayerCard({
-  player, color, isActive, isYou, captured,
+  player, color, isActive, isYou, captured, rating,
 }: {
   player:   Player;
   color:    "white" | "black";
   isActive: boolean;
   isYou:    boolean;
   captured: PieceSymbol[];
+  rating:   number;
 }) {
   const capturedGlyphs: Record<PieceSymbol, string> = {
     q: color === "white" ? "♛" : "♕",
@@ -231,6 +232,7 @@ function PlayerCard({
           <span className="text-sm font-semibold text-white truncate">{player.name ?? "Ukjent"}</span>
           {isYou && <span className="text-[10px] text-white/40">(deg)</span>}
           {isActive && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />}
+          <span className="text-[11px] text-white/40 font-medium">♟ {rating}</span>
         </div>
         {captured.length > 0 && (
           <div className="flex flex-wrap gap-0 text-[11px] leading-tight opacity-60">
@@ -364,10 +366,14 @@ export default function ChessGame({
   game: initialGame,
   userId,
   isPlayer,
+  whiteRating,
+  blackRating,
 }: {
-  game:     GameData;
-  userId:   string;
-  isPlayer: boolean;
+  game:        GameData;
+  userId:      string;
+  isPlayer:    boolean;
+  whiteRating: number;
+  blackRating: number;
 }) {
   const router = useRouter();
 
@@ -499,6 +505,7 @@ export default function ChessGame({
               isActive={chess.turn() === (flipped ? "w" : "b") && status === "active"}
               isYou={topPlayer.id === userId}
               captured={getCaptured(flipped ? "b" : "w")}
+              rating={flipped ? whiteRating : blackRating}
             />
           </div>
 
@@ -521,6 +528,7 @@ export default function ChessGame({
               isActive={chess.turn() === (flipped ? "b" : "w") && status === "active"}
               isYou={bottomPlayer.id === userId}
               captured={getCaptured(flipped ? "w" : "b")}
+              rating={flipped ? blackRating : whiteRating}
             />
           </div>
 

@@ -25,6 +25,20 @@ export default async function ChessGamePage({
 
   const isPlayer = game.whiteId === session.user.id || game.blackId === session.user.id;
 
+  // Fetch both players' chess profiles (ratings)
+  const [whiteProfile, blackProfile] = await Promise.all([
+    db.chessProfile.upsert({
+      where:  { userId_orgId: { userId: game.whiteId, orgId: game.orgId } },
+      create: { userId: game.whiteId, orgId: game.orgId },
+      update: {},
+    }),
+    db.chessProfile.upsert({
+      where:  { userId_orgId: { userId: game.blackId, orgId: game.orgId } },
+      create: { userId: game.blackId, orgId: game.orgId },
+      update: {},
+    }),
+  ]);
+
   return (
     <ChessGame
       game={{
@@ -38,6 +52,8 @@ export default async function ChessGamePage({
       }}
       userId={session.user.id}
       isPlayer={isPlayer}
+      whiteRating={whiteProfile.rating}
+      blackRating={blackProfile.rating}
     />
   );
 }

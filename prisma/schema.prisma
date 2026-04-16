@@ -139,6 +139,7 @@ model Organization {
   fanPasses              FanPass[]
   chessGames             ChessGame[]
   chessInvites           ChessInvite[]
+  chessProfiles          ChessProfile[]
   coinTransactions       CoinTransaction[]
   shopItems              ShopItem[]
   shopPurchases          ShopPurchase[]
@@ -233,6 +234,7 @@ model User {
   reportsMade             UserReport[]    @relation("ReportedBy")
   fanpassWaitlist         FanpassWaitlist?
   pushSubscriptions       PushSubscription[]
+  chessProfiles           ChessProfile[]
   chessGamesAsWhite       ChessGame[]      @relation("ChessWhite")
   chessGamesAsBlack       ChessGame[]      @relation("ChessBlack")
   chessMessages           ChessMessage[]
@@ -805,6 +807,22 @@ model PushSubscription {
   auth      String
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ChessProfile {
+  id      String @id @default(cuid())
+  userId  String
+  orgId   String
+  rating  Int    @default(1200)
+  wins    Int    @default(0)
+  losses  Int    @default(0)
+  draws   Int    @default(0)
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [orgId],  references: [id], onDelete: Cascade)
+
+  @@unique([userId, orgId])
+  @@index([orgId, rating(sort: Desc)])
 }
 
 model ChessGame {
