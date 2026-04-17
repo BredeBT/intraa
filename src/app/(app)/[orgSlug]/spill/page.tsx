@@ -90,6 +90,8 @@ export default async function SpillPage({
     },
   ];
 
+  const TOTAL_GAMES = GAMES.length + 1; // +1 for chess vs machine
+
   return (
     <div className="min-h-screen px-4 py-8 md:py-12" style={{ background: "#0d0d14" }}>
       <div className="mx-auto max-w-5xl">
@@ -98,15 +100,75 @@ export default async function SpillPage({
         <div className="mb-8">
           <h1 className="mb-1 text-3xl font-black text-white tracking-tight">🎮 Spill</h1>
           <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
-            {GAMES.length} spill tilgjengelig
+            {TOTAL_GAMES} spill tilgjengelig
           </p>
         </div>
 
         {/* Main layout: cards + sidebar */}
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
 
-          {/* ── Game cards grid ─────────────────────────────────────── */}
-          <div className="flex-1 min-w-0">
+          {/* ── Game cards ─────────────────────────────────────────── */}
+          <div className="flex-1 min-w-0 flex flex-col gap-4">
+
+            {/* Featured card: Sjakk mot maskin */}
+            <Link
+              href={`/${orgSlug}/spill/sjakk/maskin`}
+              className="group flex overflow-hidden rounded-2xl transition-all duration-200 hover:scale-[1.01] hover:brightness-110"
+              style={{
+                background:  "rgba(255,255,255,0.04)",
+                border:      "1px solid rgba(139,92,246,0.3)",
+                minHeight:   "120px",
+              }}
+            >
+              {/* Left accent bar */}
+              <div
+                className="w-1 shrink-0"
+                style={{ background: "linear-gradient(to bottom, #a78bfa, #34d399)" }}
+              />
+
+              <div className="flex flex-1 items-center gap-5 p-5">
+                {/* Icon */}
+                <div
+                  className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-4xl"
+                  style={{ background: "rgba(139,92,246,0.2)" }}
+                >
+                  🤖
+                </div>
+
+                {/* Text */}
+                <div className="flex-1 min-w-0">
+                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                    <span className="text-lg font-bold text-white">Sjakk mot maskin</span>
+                    <span
+                      className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+                      style={{ background: "rgba(139,92,246,0.2)", color: "#c4b5fd" }}
+                    >
+                      Solo
+                    </span>
+                    <span
+                      className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+                      style={{ background: "rgba(16,185,129,0.15)", color: "#34d399" }}
+                    >
+                      AI-motstander
+                    </span>
+                  </div>
+                  <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
+                    Øv mot en AI-motstander. Velg vanskelighetsgrad — fra Enkel til Umulig.
+                  </p>
+                </div>
+
+                {/* CTA */}
+                <div
+                  className="hidden sm:flex shrink-0 items-center gap-1.5 text-sm font-semibold transition-colors"
+                  style={{ color: "#a78bfa" }}
+                >
+                  Spill nå
+                  <span className="transition-transform group-hover:translate-x-1">→</span>
+                </div>
+              </div>
+            </Link>
+
+            {/* 2×2 grid for the remaining games */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {GAMES.map((g) => (
                 <Link
@@ -116,13 +178,11 @@ export default async function SpillPage({
                   style={{
                     background: "rgba(255,255,255,0.04)",
                     border: `1px solid ${g.borderColor}`,
+                    minHeight: "200px",
                   }}
                 >
                   {/* Top accent bar */}
-                  <div
-                    className="h-1 w-full"
-                    style={{ background: g.accentColor }}
-                  />
+                  <div className="h-1 w-full" style={{ background: g.accentColor }} />
 
                   <div className="flex flex-1 flex-col p-5">
                     {/* Icon + badge row */}
@@ -153,7 +213,10 @@ export default async function SpillPage({
                     </p>
 
                     {/* CTA */}
-                    <div className="mt-4 flex items-center gap-1.5 text-sm font-semibold transition-colors" style={{ color: g.accentColor }}>
+                    <div
+                      className="mt-4 flex items-center gap-1.5 text-sm font-semibold transition-colors"
+                      style={{ color: g.accentColor }}
+                    >
                       Spill nå
                       <span className="transition-transform group-hover:translate-x-1">→</span>
                     </div>
@@ -163,10 +226,7 @@ export default async function SpillPage({
             </div>
 
             {/* Coin info note */}
-            <p
-              className="mt-5 text-xs"
-              style={{ color: "rgba(255,255,255,0.2)" }}
-            >
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
               🪙 Alle spill gir Fanpass-coins. Sjakk, 2048 og Wordle gir ekstra daglige coins.
             </p>
           </div>
