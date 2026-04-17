@@ -195,90 +195,121 @@ function SidebarContent({
   unreadCount:       number;
   mounted:           boolean;
 }) {
-  const isCommunity  = org?.type === "COMMUNITY";
-  const allLinks     = isCommunity && org?.slug ? communityNav(org.slug) : COMPANY_NAV;
-  const navLinks     = enabledFeatures === null
+  const isCommunity = org?.type === "COMMUNITY";
+  const allLinks    = isCommunity && org?.slug ? communityNav(org.slug) : COMPANY_NAV;
+  const navLinks    = enabledFeatures === null
     ? allLinks
     : allLinks.filter((l) => enabledFeatures.includes(l.feature));
-  const accentActive  = isCommunity ? "bg-violet-600" : "bg-indigo-600";
-  const liveEnabled   = enabledFeatures === null || enabledFeatures.includes("live");
-  const liveIsOnline  = liveStatus?.isLive;
-  const liveActive    = pathname.endsWith("/live");
 
+  const accentActiveBg   = isCommunity ? "bg-violet-500/15" : "bg-indigo-500/15";
+  const accentActiveText = isCommunity ? "text-violet-200"  : "text-indigo-200";
+  const accentActive     = `${accentActiveBg} ${accentActiveText}`;
+
+  const liveEnabled  = enabledFeatures === null || enabledFeatures.includes("live");
+  const liveIsOnline = liveStatus?.isLive;
+  const liveActive   = pathname.endsWith("/live");
+
+  const initials = userName
+    ? userName.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()
+    : "?";
+
+  const item = (active: boolean) =>
+    `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150 ${
+      active
+        ? accentActive
+        : "text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-100"
+    }`;
+
+  // ── Header ───────────────────────────────────────────────────────────
   const orgSwitcher = (
-    <div className="flex h-14 shrink-0 items-center border-b border-zinc-800 px-4">
+    <div className="flex h-14 shrink-0 items-center border-b border-zinc-800/60 px-4">
       {!mobile && onToggleCollapse ? (
         <button
           onClick={onToggleCollapse}
-          className="flex items-center gap-2 text-zinc-400 transition-colors hover:text-white"
+          className="flex items-center gap-2.5 text-zinc-500 transition-colors hover:text-zinc-200"
         >
           {collapsed ? (
-            <Menu className="h-5 w-5 shrink-0" />
+            <Menu className="h-[18px] w-[18px] shrink-0" />
           ) : (
             <>
-              <X className="h-5 w-5 shrink-0" />
-              <span className="text-sm">Skjul meny</span>
+              <X className="h-[18px] w-[18px] shrink-0" />
+              <span className="text-sm font-medium">Skjul meny</span>
             </>
           )}
         </button>
       ) : (
-        <Menu className="h-5 w-5 text-zinc-400" />
+        <Menu className="h-[18px] w-[18px] text-zinc-500" />
       )}
     </div>
   );
 
+  // ── Bottom section ────────────────────────────────────────────────────
   const bottomSection = (
-    <div className="shrink-0 border-t border-zinc-800 px-3 py-3">
+    <div className="shrink-0 border-t border-zinc-800/60 px-2 py-3 space-y-0.5">
       <Link href="/hjelp" onClick={onNavClick}
         title={collapsed ? "Hjelp" : undefined}
-        className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${collapsed ? "justify-center" : ""} ${
-          pathname === "/hjelp" ? `${accentActive} text-white` : "text-zinc-500 hover:bg-zinc-800 hover:text-white"
-        }`}
+        className={`${item(pathname === "/hjelp")} ${collapsed ? "justify-center" : ""}`}
       >
         <HelpCircle className="h-4 w-4 shrink-0" />
-        {!collapsed && "Hjelp"}
+        {!collapsed && <span className="flex-1">Hjelp</span>}
       </Link>
+
       <Link href="/support" onClick={onNavClick}
         title={collapsed ? "Support-saker" : undefined}
-        className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${collapsed ? "justify-center" : ""} ${
-          pathname.startsWith("/support") ? `${accentActive} text-white` : "text-zinc-500 hover:bg-zinc-800 hover:text-white"
-        }`}
+        className={`${item(pathname.startsWith("/support"))} ${collapsed ? "justify-center" : ""}`}
       >
         <LifeBuoy className="h-4 w-4 shrink-0" />
-        {!collapsed && "Support-saker"}
+        {!collapsed && <span className="flex-1">Support-saker</span>}
       </Link>
+
       <button
         onClick={() => { onNavClick(); onOpenSupport(); }}
         title={collapsed ? "Kontakt support" : undefined}
-        className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${collapsed ? "justify-center" : ""} text-zinc-500 hover:bg-zinc-800 hover:text-white`}
+        className={`${item(false)} w-full ${collapsed ? "justify-center" : ""}`}
       >
         <MessageCircle className="h-4 w-4 shrink-0" />
-        {!collapsed && "Kontakt support"}
+        {!collapsed && <span className="flex-1">Kontakt support</span>}
       </button>
+
       {mounted && orgLoaded && (org?.userRole === "OWNER" || org?.userRole === "ADMIN") && (
         <Link href="/admin" onClick={onNavClick}
           title={collapsed ? "Admin" : undefined}
-          className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${collapsed ? "justify-center" : ""} text-zinc-500 hover:bg-zinc-800 hover:text-white`}
+          className={`${item(pathname.startsWith("/admin"))} ${collapsed ? "justify-center" : ""}`}
         >
           <Settings className="h-4 w-4 shrink-0" />
-          {!collapsed && "Admin"}
+          {!collapsed && <span className="flex-1">Admin</span>}
         </Link>
       )}
-      <div className={`mt-3 flex items-center gap-2 rounded-md px-3 py-2 ${collapsed ? "justify-center" : ""}`}
-        title={collapsed ? userName : undefined}
-      >
-        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-[10px] font-semibold text-white">
-          {userName ? userName.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase() : "?"}
-        </div>
-        {!collapsed && (
-          <>
-            <span className="flex-1 truncate text-xs text-zinc-500">{userName}</span>
+
+      {/* User card */}
+      <div className="pt-1">
+        {!collapsed ? (
+          <div
+            className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
+            style={{ background: "rgba(255,255,255,0.04)" }}
+            title={userName}
+          >
+            <div
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+              style={{ background: "linear-gradient(135deg, #6c47ff 0%, #a78bfa 100%)" }}
+            >
+              {initials}
+            </div>
+            <span className="flex-1 truncate text-xs font-medium text-zinc-300">{userName}</span>
             {isSuperAdmin && (
-              <span className="rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-violet-400">
+              <span className="rounded-md bg-violet-500/25 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-violet-300">
                 SA
               </span>
             )}
-          </>
+          </div>
+        ) : (
+          <div
+            className="mx-auto flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold text-white"
+            style={{ background: "linear-gradient(135deg, #6c47ff 0%, #a78bfa 100%)" }}
+            title={userName}
+          >
+            {initials}
+          </div>
         )}
       </div>
     </div>
@@ -306,60 +337,80 @@ function SidebarContent({
       {orgSwitcher}
 
       {/* Scrollable nav */}
-      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-3">
+      <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-3 scrollbar-hide">
         {/* Global links */}
         {GLOBAL_NAV.map(({ href, label, icon: Icon, badge }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link key={href} href={href} onClick={onNavClick}
               title={collapsed ? label : undefined}
-              className={`relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${collapsed ? "justify-center" : ""} ${
-                active ? `${accentActive} text-white` : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
-              }`}
+              className={`relative ${item(active)} ${collapsed ? "justify-center" : ""}`}
             >
               <Icon className="h-4 w-4 shrink-0" />
               {!collapsed && (
                 <>
                   <span className="flex-1">{label}</span>
                   {badge > 0 && (
-                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                    <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
                       {badge > 99 ? "99+" : badge}
                     </span>
                   )}
                 </>
               )}
               {collapsed && badge > 0 && (
-                <span className="absolute top-1 right-1 flex h-3 w-3 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white" />
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500" />
               )}
             </Link>
           );
         })}
 
-        {/* Org-specific section — hidden on global pages (home, meldinger, profil…) */}
+        {/* Org-specific section */}
         {showOrgLinks && (
           <>
-            <div className="my-1 border-t border-zinc-800" />
+            {/* Section label */}
+            {!collapsed ? (
+              <div className="mx-1 mb-1 mt-3 flex items-center gap-2">
+                <div className="h-px flex-1 bg-zinc-800" />
+                <span className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600">
+                  {isCommunity ? "Community" : "Bedrift"}
+                </span>
+                <div className="h-px flex-1 bg-zinc-800" />
+              </div>
+            ) : (
+              <div className="my-2 border-t border-zinc-800" />
+            )}
 
             {/* Live link */}
             {liveEnabled && (
               <Link href={`/${org.slug}/live`} onClick={onNavClick}
                 title={collapsed ? "Live" : undefined}
-                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${collapsed ? "justify-center" : ""} ${
+                className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150 ${collapsed ? "justify-center" : ""} ${
                   liveActive
-                    ? "bg-rose-500/20 text-rose-300"
+                    ? "bg-rose-500/15 text-rose-200"
                     : liveIsOnline
-                      ? "text-rose-400 hover:bg-rose-500/10"
-                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                      ? "text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
+                      : "text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-100"
                 }`}
               >
-                <Radio className="h-3.5 w-3.5 shrink-0" />
+                <Radio className="h-4 w-4 shrink-0" />
                 {!collapsed && (
                   <>
                     <span className="flex-1">Live</span>
                     {liveIsOnline && (
-                      <span className="ml-auto rounded bg-red-950/50 px-1.5 py-0.5 text-[10px] font-bold text-red-400">LIVE</span>
+                      <span className="relative flex h-2 w-2 shrink-0">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+                      </span>
                     )}
                   </>
+                )}
+                {collapsed && liveIsOnline && (
+                  <span className="absolute right-1.5 top-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+                    </span>
+                  </span>
                 )}
               </Link>
             )}
@@ -369,9 +420,7 @@ function SidebarContent({
               return (
                 <Link key={href} href={href} onClick={onNavClick}
                   title={collapsed ? label : undefined}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${collapsed ? "justify-center" : ""} ${
-                    active ? `${accentActive} text-white` : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
-                  }`}
+                  className={`${item(active)} ${collapsed ? "justify-center" : ""}`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
                   {!collapsed && <span className="flex-1">{label}</span>}
@@ -385,11 +434,7 @@ function SidebarContent({
         {showOrgLinks && isCommunity && org?.slug && (
           <Link href={`/${org.slug}/spill`} onClick={onNavClick}
             title={collapsed ? "Spill" : undefined}
-            className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${collapsed ? "justify-center" : ""} ${
-              pathname.includes("/spill") || pathname.endsWith("/clicker")
-                ? `${accentActive} text-white`
-                : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
-            }`}
+            className={`${item(pathname.includes("/spill") || pathname.endsWith("/clicker"))} ${collapsed ? "justify-center" : ""}`}
           >
             <Coins className="h-4 w-4 shrink-0" />
             {!collapsed && <span className="flex-1">🎮 Spill</span>}
