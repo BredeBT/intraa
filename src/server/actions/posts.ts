@@ -32,6 +32,23 @@ export async function getPosts(orgId: string): Promise<PostWithAuthor[]> {
     take:    20, // show 20 most recent posts
   });
 
+  // Batch-check fanpass for all unique authors (posts + comments)
+  const authorIds = [...new Set([
+    ...posts.map((p) => p.authorId),
+    ...posts.flatMap((p) => p.comments.map((c) => c.authorId)),
+  ])];
+  const now = new Date();
+  const fanpassRows = await db.fanPass.findMany({
+    where: {
+      organizationId: orgId,
+      userId:  { in: authorIds },
+      status:  "ACTIVE",
+      endDate: { gt: now },
+    },
+    select: { userId: true },
+  });
+  const fanpassSet = new Set(fanpassRows.map((r) => r.userId));
+
   return posts.map((p) => ({
     id:        p.id,
     content:   p.content,
@@ -39,8 +56,8 @@ export async function getPosts(orgId: string): Promise<PostWithAuthor[]> {
     createdAt: p.createdAt,
     orgId:     p.orgId,
     authorId:  p.authorId,
-    author:    p.author,
-    comments:  p.comments,
+    author:    { ...p.author, hasFanpass: fanpassSet.has(p.authorId) },
+    comments:  p.comments.map((c) => ({ ...c, author: { ...c.author, hasFanpass: fanpassSet.has(c.authorId) } })),
     likeCount: p._count.likes,
     likedByMe: p.likes.length > 0,
   }));

@@ -25,6 +25,7 @@ export type User = {
   name: string | null;
   avatarUrl: string | null;
   createdAt: Date;
+  hasFanpass?: boolean;
 };
 
 export type Membership = {

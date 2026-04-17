@@ -25,8 +25,10 @@ export default async function ChessGamePage({
 
   const isPlayer = game.whiteId === session.user.id || game.blackId === session.user.id;
 
-  // Fetch both players' chess profiles (ratings)
-  const [whiteProfile, blackProfile] = await Promise.all([
+  const now = new Date();
+
+  // Fetch both players' chess profiles (ratings) + fanpass status
+  const [whiteProfile, blackProfile, fanpassRows] = await Promise.all([
     db.chessProfile.upsert({
       where:  { userId_orgId: { userId: game.whiteId, orgId: game.orgId } },
       create: { userId: game.whiteId, orgId: game.orgId },
@@ -37,7 +39,18 @@ export default async function ChessGamePage({
       create: { userId: game.blackId, orgId: game.orgId },
       update: {},
     }),
+    db.fanPass.findMany({
+      where: {
+        organizationId: game.orgId,
+        userId:  { in: [game.whiteId, game.blackId] },
+        status:  "ACTIVE",
+        endDate: { gt: now },
+      },
+      select: { userId: true },
+    }),
   ]);
+
+  const fanpassSet = new Set(fanpassRows.map((f) => f.userId));
 
   return (
     <ChessGame
@@ -46,8 +59,8 @@ export default async function ChessGamePage({
         fen:     game.fen,
         status:  game.status,
         moves:   game.moves as string[],
-        white:   game.white,
-        black:   game.black,
+        white:   { ...game.white, hasFanpass: fanpassSet.has(game.whiteId) },
+        black:   { ...game.black, hasFanpass: fanpassSet.has(game.blackId) },
         orgSlug,
       }}
       userId={session.user.id}

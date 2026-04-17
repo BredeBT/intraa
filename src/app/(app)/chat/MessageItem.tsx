@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Reply, Trash2, Pencil, Pin, PinOff, Paperclip, ChevronDown, ChevronRight, Send, X } from "lucide-react";
 import type { MessageWithAuthor } from "@/lib/types";
 import SafeHtml from "@/components/SafeHtml";
+import { FanpassBadge } from "@/components/FanpassBadge";
 
 export interface Attachment {
   name: string;
@@ -93,8 +94,9 @@ export default function MessageItem({
 
         {/* Content */}
         <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-2">
+          <div className="flex items-center gap-1.5">
             <span className="text-sm font-medium text-white">{message.author.name ?? ""}</span>
+            {message.author.hasFanpass && <FanpassBadge />}
             <span className="text-xs text-zinc-400">{formatTime(message.createdAt)}</span>
             {message.editedAt && (
               <span className="text-[10px] text-zinc-400 opacity-60">(redigert)</span>

@@ -30,7 +30,7 @@ type PrismaMsg = {
   _count: { replies: number };
 };
 
-function mapMessage(m: PrismaMsg, userId: string): MessageWithAuthor {
+function mapMessage(m: PrismaMsg, userId: string, fanpassSet?: Set<string>): MessageWithAuthor {
   const grouped: Record<string, ReactionGroup> = {};
   for (const r of m.reactions) {
     if (!grouped[r.emoji]) grouped[r.emoji] = { emoji: r.emoji, count: 0, reactedByMe: false };
@@ -48,16 +48,33 @@ function mapMessage(m: PrismaMsg, userId: string): MessageWithAuthor {
     authorId:        m.authorId,
     parentMessageId: m.parentMessageId,
     author: {
-      id:        m.author.id,
-      email:     m.author.email,
-      name:      m.author.name,
-      avatarUrl: m.author.avatarUrl,
-      createdAt: m.author.createdAt,
+      id:         m.author.id,
+      email:      m.author.email,
+      name:       m.author.name,
+      avatarUrl:  m.author.avatarUrl,
+      createdAt:  m.author.createdAt,
+      hasFanpass: fanpassSet ? fanpassSet.has(m.author.id) : false,
     },
     reactions:  Object.values(grouped),
     replyCount: m._count.replies,
-    replies:    (m.replies ?? []).map((r) => mapMessage(r as PrismaMsg, userId)),
+    replies:    (m.replies ?? []).map((r) => mapMessage(r as PrismaMsg, userId, fanpassSet)),
   };
+}
+
+/** Batch-fetch fanpass status for a set of userIds in a given org. */
+async function getFanpassSet(userIds: string[], orgId: string): Promise<Set<string>> {
+  if (userIds.length === 0) return new Set();
+  const now = new Date();
+  const rows = await db.fanPass.findMany({
+    where: {
+      organizationId: orgId,
+      userId:  { in: userIds },
+      status:  "ACTIVE",
+      endDate: { gt: now },
+    },
+    select: { userId: true },
+  });
+  return new Set(rows.map((r) => r.userId));
 }
 
 const AUTHOR_SELECT = { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } } as const;
@@ -99,7 +116,14 @@ export async function getMessages(channelId: string, afterId?: string): Promise<
     ...(afterId ? { cursor: { id: afterId }, skip: 1 } : {}),
   });
 
-  return rows.map((m) => mapMessage(m as unknown as PrismaMsg, session.user!.id!));
+  // Batch-check fanpass for all unique authors
+  const authorIds = [...new Set([
+    ...rows.map((m) => m.authorId),
+    ...rows.flatMap((m) => (m.replies ?? []).map((r) => r.authorId)),
+  ])];
+  const fanpassSet = await getFanpassSet(authorIds, channel.orgId);
+
+  return rows.map((m) => mapMessage(m as unknown as PrismaMsg, session.user!.id!, fanpassSet));
 }
 
 export async function getPinnedMessages(channelId: string): Promise<MessageWithAuthor[]> {
@@ -177,7 +201,8 @@ export async function sendMessage(
   void notifyMentions(content, channel.orgId, session.user.id, channelId);
 
   void awardCoins({ userId: session.user.id, organizationId: channel.orgId, amount: 2, reason: "chat", description: "Sendte en melding i chat" });
-  return mapMessage(message as unknown as PrismaMsg, session.user.id);
+  const fanpassSet = await getFanpassSet([session.user.id], channel.orgId);
+  return mapMessage(message as unknown as PrismaMsg, session.user.id, fanpassSet);
 }
 
 export async function editMessage(messageId: string, content: string): Promise<MessageWithAuthor> {

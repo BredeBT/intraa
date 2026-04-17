@@ -4,12 +4,26 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Chess, type Square, type PieceSymbol, type Color } from "chess.js";
 import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
-import { ArrowLeft, Flag, RotateCcw, Send } from "lucide-react";
+import { ArrowLeft, Flag, RotateCcw, Send, Palette } from "lucide-react";
+import { FanpassBadge } from "@/components/FanpassBadge";
 import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface Player { id: string; name: string | null; avatarUrl: string | null }
+interface Player { id: string; name: string | null; avatarUrl: string | null; hasFanpass?: boolean }
+
+// ─── Board themes ─────────────────────────────────────────────────────────────
+
+type BoardThemeDef = { light: string; dark: string; selected: string; moved: { light: string; dark: string }; name: string; fanpassOnly: boolean };
+
+const BOARD_THEMES: Record<string, BoardThemeDef> = {
+  classic:  { light: "#f0d9b5", dark: "#b58863", selected: "#7fc97f", moved: { light: "#cdd16e", dark: "#a9a93e" }, name: "Klassisk",  fanpassOnly: false },
+  midnight: { light: "#aec6e8", dark: "#4a6fa5", selected: "#7fc9c9", moved: { light: "#7cb8d4", dark: "#3d7fa5" }, name: "Midnatt",   fanpassOnly: true  },
+  emerald:  { light: "#dcefdc", dark: "#4d8c57", selected: "#a8d8a8", moved: { light: "#b8d8b8", dark: "#3d7c47" }, name: "Smaragd",   fanpassOnly: true  },
+  gold:     { light: "#fef3c7", dark: "#d97706", selected: "#fde68a", moved: { light: "#fcd34d", dark: "#b45309" }, name: "Gull",      fanpassOnly: true  },
+};
+
+type BoardTheme = keyof typeof BOARD_THEMES;
 
 interface GameData {
   id:      string;
@@ -76,12 +90,14 @@ function ChessBoard({
   disabled,
   lastMove,
   onMove,
+  theme = "classic",
 }: {
   chess:    Chess;
   flipped:  boolean;
   disabled: boolean;
   lastMove: { from: Square; to: Square } | null;
   onMove:   (from: Square, to: Square, promotion?: string) => void;
+  theme?:   BoardTheme;
 }) {
   const [selected,   setSelected]   = useState<Square | null>(null);
   const [legalMoves, setLegalMoves] = useState<Square[]>([]);
@@ -149,9 +165,10 @@ function ChessBoard({
               const isLastTo    = lastMove?.to   === sq;
               const piece = chess.get(sq);
 
-              let bg = isLight ? "#f0d9b5" : "#b58863";
-              if (isSelected)               bg = "#7fc97f";
-              else if (isLastFrom || isLastTo) bg = isLight ? "#cdd16e" : "#a9a93e";
+              const t  = BOARD_THEMES[theme];
+              let bg = isLight ? t.light : t.dark;
+              if (isSelected)                  bg = t.selected;
+              else if (isLastFrom || isLastTo) bg = isLight ? t.moved.light : t.moved.dark;
 
               return (
                 <div
@@ -230,6 +247,7 @@ function PlayerCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-sm font-semibold text-white truncate">{player.name ?? "Ukjent"}</span>
+          {player.hasFanpass && <FanpassBadge size={12} />}
           {isYou && <span className="text-[10px] text-white/40">(deg)</span>}
           {isActive && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />}
           <span className="text-[11px] text-white/40 font-medium">♟ {rating}</span>
@@ -377,15 +395,18 @@ export default function ChessGame({
 }) {
   const router = useRouter();
 
-  const [fen,      setFen]      = useState(initialGame.fen);
-  const [moves,    setMoves]    = useState<string[]>(initialGame.moves);
-  const [status,   setStatus]   = useState(initialGame.status);
-  const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
+  const [fen,         setFen]         = useState(initialGame.fen);
+  const [moves,       setMoves]       = useState<string[]>(initialGame.moves);
+  const [status,      setStatus]      = useState(initialGame.status);
+  const [lastMove,    setLastMove]    = useState<{ from: Square; to: Square } | null>(null);
+  const [boardTheme,  setBoardTheme]  = useState<BoardTheme>("classic");
 
   // Chat
   const [chatMessages,  setChatMessages]  = useState<ChatMessage[]>([]);
   const [newChatMsg,    setNewChatMsg]    = useState<ChatMessage | null>(null);
   const [showMobileChat, setShowMobileChat] = useState(false);
+
+  const hasFanpass = initialGame.white.hasFanpass || initialGame.black.hasFanpass;
 
   const chess    = new Chess(fen);
   const myColor  = initialGame.white.id === userId ? "w" : initialGame.black.id === userId ? "b" : null;
@@ -517,8 +538,38 @@ export default function ChessGame({
               disabled={!isMyTurn}
               lastMove={lastMove}
               onMove={handleMove}
+              theme={boardTheme}
             />
           </div>
+
+          {/* Board theme picker — only shown if either player has fanpass */}
+          {hasFanpass && (
+            <div className="w-full" style={{ maxWidth: boardMaxW }}>
+              <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2">
+                <Palette className="h-3.5 w-3.5 shrink-0 text-violet-400" />
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-violet-400 mr-1">Tema</span>
+                <div className="flex gap-1.5">
+                  {(Object.entries(BOARD_THEMES) as [BoardTheme, typeof BOARD_THEMES[BoardTheme]][]).map(([key, t]) => (
+                    <button
+                      key={key}
+                      onClick={() => setBoardTheme(key)}
+                      title={t.name}
+                      className="relative flex items-center overflow-hidden rounded transition-all"
+                      style={{
+                        width: 28,
+                        height: 20,
+                        outline: boardTheme === key ? "2px solid #a78bfa" : "1px solid rgba(255,255,255,0.1)",
+                        outlineOffset: 1,
+                      }}
+                    >
+                      <span className="flex-1 h-full" style={{ background: t.light }} />
+                      <span className="flex-1 h-full" style={{ background: t.dark }} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Bottom player */}
           <div className="w-full" style={{ maxWidth: boardMaxW }}>

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X } from "lucide-react";
+import { FanpassBadge } from "@/components/FanpassBadge";
 import { createPost, deletePost } from "@/server/actions/posts";
 import type { PostWithAuthor, CommentWithAuthor } from "@/lib/types";
 import SafeHtml from "@/components/SafeHtml";
@@ -482,7 +483,10 @@ export default function FeedClient({
                     {initials(post.author.name ?? "")}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white">{post.author.name ?? ""}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-medium text-white">{post.author.name ?? ""}</p>
+                      {post.author.hasFanpass && <FanpassBadge />}
+                    </div>
                     <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{relativeTime(post.createdAt)}</p>
                   </div>
                   {canDelete && (
@@ -545,8 +549,9 @@ export default function FeedClient({
                           {initials(comment.author.name ?? "")}
                         </div>
                         <div className="flex-1 rounded-xl px-3 py-2" style={{ background: "rgba(255,255,255,0.05)" }}>
-                          <div className="mb-0.5 flex items-baseline gap-2">
+                          <div className="mb-0.5 flex items-center gap-1.5">
                             <span className="text-xs font-semibold text-white">{comment.author.name}</span>
+                            {comment.author.hasFanpass && <FanpassBadge size={10} />}
                             <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>{relativeTime(comment.createdAt)}</span>
                           </div>
                           <div className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
