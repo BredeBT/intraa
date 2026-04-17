@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Newspaper, Ticket, Folder, Settings,
-  Search, CalendarDays, CheckSquare, HelpCircle, Menu, X,
+  Search, CalendarDays, CheckSquare, Menu, X,
   Trophy, Swords, Star, Radio, Gamepad2,
   LifeBuoy, MessageCircle,
   Home, Mail, UserCircle,
@@ -61,8 +61,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/notifikasjoner":     "Notifikasjoner",
   "/soek":               "Søk",
   "/innstillinger":      "Innstillinger",
-  "/hjelp":              "Hjelp & Support",
-  "/support":            "Mine support-saker",
+  "/support":            "Support",
   "/bytt-org":           "Bytt organisasjon",
   "/community/rangering":    "Rangering",
   "/community/konkurranser": "Konkurranser",
@@ -71,96 +70,6 @@ const PAGE_TITLES: Record<string, string> = {
   "/community/abonnement":   "Abonnement",
   "/community/admin":        "Admin",
 };
-
-// ─── Support Modal ────────────────────────────────────────────────────────────
-
-const SUPPORT_CATEGORIES = ["Teknisk problem", "Faktura", "Funksjonalitet", "Annet"];
-
-function SupportModal({ onClose }: { onClose: () => void }) {
-  const [title, setTitle]   = useState("");
-  const [desc, setDesc]     = useState("");
-  const [cat, setCat]       = useState(SUPPORT_CATEGORIES[0]);
-  const [error, setError]   = useState("");
-  const [ok, setOk]         = useState(false);
-  const [pending, setPending] = useState(false);
-
-  async function submit() {
-    if (!title.trim() || !desc.trim()) { setError("Fyll ut alle felt"); return; }
-    setPending(true);
-    setError("");
-    const res = await fetch("/api/support/ticket", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ title, description: desc, category: cat }),
-    });
-    if (res.ok) { setOk(true); }
-    else {
-      const data = await res.json() as { error?: string };
-      setError(data.error ?? "Noe gikk galt");
-    }
-    setPending(false);
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
-          <h2 className="text-sm font-semibold text-white">Kontakt Intraa support</h2>
-          <button onClick={onClose} className="text-zinc-400 transition-colors hover:text-white"><X className="h-4 w-4" /></button>
-        </div>
-        {ok ? (
-          <div className="px-5 py-8 text-center">
-            <p className="text-2xl">✅</p>
-            <p className="mt-2 text-sm font-medium text-white">Henvendelsen er sendt!</p>
-            <p className="mt-1 text-xs text-zinc-500">Vi svarer vanligvis innen 1–2 arbeidsdager.</p>
-            <button onClick={onClose} className="mt-5 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:opacity-80">Lukk</button>
-          </div>
-        ) : (
-          <>
-            <div className="flex flex-col gap-4 px-5 py-5">
-              {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-400">{error}</p>}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-zinc-400">Tittel</label>
-                <input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Hva gjelder henvendelsen?"
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-zinc-400">Beskrivelse</label>
-                <textarea
-                  rows={3}
-                  value={desc}
-                  onChange={(e) => setDesc(e.target.value)}
-                  placeholder="Beskriv problemet eller spørsmålet ditt…"
-                  className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-zinc-400">Kategori</label>
-                <select
-                  value={cat}
-                  onChange={(e) => setCat(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500"
-                >
-                  {SUPPORT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 border-t border-zinc-800 px-5 py-4">
-              <button onClick={onClose} className="rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-400 transition-colors hover:text-white">Avbryt</button>
-              <button onClick={submit} disabled={pending} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:opacity-80 disabled:opacity-40">
-                {pending ? "Sender…" : "Send"}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -177,7 +86,7 @@ interface LiveStatus {
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 function SidebarContent({
-  pathname, org, orgLoaded, onNavClick, isSuperAdmin, userName, enabledFeatures, tenantTheme, liveStatus, mobile, collapsed, onToggleCollapse, onOpenSupport, unreadCount, mounted,
+  pathname, org, orgLoaded, onNavClick, isSuperAdmin, userName, enabledFeatures, tenantTheme, liveStatus, mobile, collapsed, onToggleCollapse, unreadCount, mounted,
 }: {
   pathname:          string;
   org:               ReturnType<typeof useOrg>["org"] | null;
@@ -191,7 +100,6 @@ function SidebarContent({
   mobile?:           boolean;
   collapsed?:        boolean;
   onToggleCollapse?: () => void;
-  onOpenSupport:     () => void;
   unreadCount:       number;
   mounted:           boolean;
 }) {
@@ -246,30 +154,13 @@ function SidebarContent({
   // ── Bottom section ────────────────────────────────────────────────────
   const bottomSection = (
     <div className="shrink-0 border-t border-zinc-800/60 px-2 py-3 space-y-0.5">
-      <Link href="/hjelp" onClick={onNavClick}
-        title={collapsed ? "Hjelp" : undefined}
-        className={`${item(pathname === "/hjelp")} ${collapsed ? "justify-center" : ""}`}
-      >
-        <HelpCircle className="h-4 w-4 shrink-0" />
-        {!collapsed && <span className="flex-1">Hjelp</span>}
-      </Link>
-
       <Link href="/support" onClick={onNavClick}
-        title={collapsed ? "Support-saker" : undefined}
+        title={collapsed ? "Support" : undefined}
         className={`${item(pathname.startsWith("/support"))} ${collapsed ? "justify-center" : ""}`}
       >
         <LifeBuoy className="h-4 w-4 shrink-0" />
-        {!collapsed && <span className="flex-1">Support-saker</span>}
+        {!collapsed && <span className="flex-1">Support</span>}
       </Link>
-
-      <button
-        onClick={() => { onNavClick(); onOpenSupport(); }}
-        title={collapsed ? "Kontakt support" : undefined}
-        className={`${item(false)} w-full ${collapsed ? "justify-center" : ""}`}
-      >
-        <MessageCircle className="h-4 w-4 shrink-0" />
-        {!collapsed && <span className="flex-1">Kontakt support</span>}
-      </button>
 
       {mounted && orgLoaded && (org?.userRole === "OWNER" || org?.userRole === "ADMIN") && (
         <Link href="/admin" onClick={onNavClick}
@@ -325,7 +216,7 @@ function SidebarContent({
   // Org-specific links are hidden on "global" pages regardless of whether org is set
   const GLOBAL_PREFIXES = [
     "/home", "/meldinger", "/profil", "/u/", "/soek", "/innstillinger",
-    "/hjelp", "/support", "/bytt-org", "/notifikasjoner", "/superadmin",
+    "/support", "/bytt-org", "/notifikasjoner", "/superadmin",
   ];
   const isOnGlobalPage = GLOBAL_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(p + "/") || (p.endsWith("/") && pathname.startsWith(p))
@@ -451,7 +342,7 @@ function SidebarContent({
 
 // Paths accessible without any org membership
 const NO_ORG_PATHS = [
-  "/home", "/hjelp", "/support", "/innstillinger", "/notifikasjoner",
+  "/home", "/support", "/innstillinger", "/notifikasjoner",
   "/meldinger", "/bytt-org", "/profil", "/soek",
 ];
 
@@ -485,7 +376,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [drawerOpen,        setDrawerOpen]         = useState(false);
   const [desktopCollapsed,  setDesktopCollapsed]   = useState(false);
   const [mounted,           setMounted]             = useState(false);
-  const [supportOpen,       setSupportOpen]        = useState(false);
   const [enabledFeatures,   setEnabledFeatures]    = useState<string[] | null>(null);
   const [tenantTheme,       setTenantTheme]         = useState<TenantTheme | null>(null);
   const [liveStatus,        setLiveStatus]          = useState<LiveStatus | null>(null);
@@ -613,7 +503,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     mounted,
     collapsed:        effectiveCollapsed,
     onToggleCollapse: toggleDesktopCollapsed,
-    onOpenSupport:    () => setSupportOpen(true),
   };
 
   return (
@@ -679,7 +568,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
-      {supportOpen && <SupportModal onClose={() => setSupportOpen(false)} />}
 
       {/* Mobile bottom bar — hidden in admin */}
       {!inAdmin && (
@@ -699,7 +587,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             enabledFeatures={enabledFeatures}
             liveStatus={liveStatus}
             isSuperAdmin={user?.isSuperAdmin ?? false}
-            onOpenSupport={() => setSupportOpen(true)}
           />
         </>
       )}

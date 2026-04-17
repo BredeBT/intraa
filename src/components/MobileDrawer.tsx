@@ -3,9 +3,9 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import {
-  X, Rss, MessageCircle, Ticket, Folder,
-  CalendarDays, CheckSquare, Home, HelpCircle, LifeBuoy,
-  Trophy, Swords, Star, Radio, Coins, Settings,
+  X, Newspaper, MessageCircle, Ticket, Folder,
+  CalendarDays, CheckSquare, Home, LifeBuoy,
+  Trophy, Swords, Star, Radio, Gamepad2, Settings,
 } from "lucide-react";
 
 interface NavLink {
@@ -34,11 +34,10 @@ interface Props {
   enabledFeatures: string[] | null;
   liveStatus:      LiveStatus | null;
   isSuperAdmin:    boolean;
-  onOpenSupport:   () => void;
 }
 
 const COMPANY_NAV: NavLink[] = [
-  { href: "/feed",     label: "Feed",     icon: Rss,           feature: "feed" },
+  { href: "/feed",     label: "Feed",     icon: Newspaper,     feature: "feed" },
   { href: "/chat",     label: "Chat",     icon: MessageCircle, feature: "chat" },
   { href: "/tickets",  label: "Tickets",  icon: Ticket,        feature: "tickets" },
   { href: "/kalender", label: "Kalender", icon: CalendarDays,  feature: "calendar" },
@@ -48,7 +47,7 @@ const COMPANY_NAV: NavLink[] = [
 
 function communityNav(slug: string): NavLink[] {
   return [
-    { href: `/${slug}/feed`,         label: "Feed",         icon: Rss,           feature: "community_feed" },
+    { href: `/${slug}/feed`,         label: "Feed",         icon: Newspaper,     feature: "community_feed" },
     { href: `/chat`,                 label: "Chat",         icon: MessageCircle, feature: "community_chat" },
     { href: `/${slug}/rangering`,    label: "Rangering",    icon: Trophy,        feature: "community_leaderboard" },
     { href: `/${slug}/konkurranser`, label: "Konkurranser", icon: Swords,        feature: "community_contests" },
@@ -57,7 +56,7 @@ function communityNav(slug: string): NavLink[] {
 }
 
 export default function MobileDrawer({
-  open, onClose, pathname, org, enabledFeatures, liveStatus, isSuperAdmin, onOpenSupport,
+  open, onClose, pathname, org, enabledFeatures, liveStatus, isSuperAdmin,
 }: Props) {
   // Lock body scroll when open
   useEffect(() => {
@@ -69,7 +68,6 @@ export default function MobileDrawer({
 
   const isCommunity = org?.type === "COMMUNITY";
   const accent      = isCommunity ? "bg-violet-600" : "bg-indigo-600";
-  const accentText  = isCommunity ? "text-violet-400" : "text-indigo-400";
 
   const allLinks = isCommunity && org?.slug ? communityNav(org.slug) : COMPANY_NAV;
   const navLinks = enabledFeatures === null
@@ -125,10 +123,9 @@ export default function MobileDrawer({
           <div>
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-600">Generelt</p>
             <div className="grid grid-cols-4 gap-2">
-              <NavItem href="/home" label="Hjem" icon={Home} />
+              <NavItem href="/home"     label="Hjem"    icon={Home} />
               <NavItem href="/meldinger" label="Meldinger" icon={MessageCircle} />
-              <NavItem href="/hjelp" label="Hjelp" icon={HelpCircle} />
-              <NavItem href="/support" label="Support" icon={LifeBuoy} />
+              <NavItem href="/support"  label="Support" icon={LifeBuoy} />
             </div>
           </div>
 
@@ -161,7 +158,7 @@ export default function MobileDrawer({
                   <NavItem key={href} href={href} label={label} icon={Icon} />
                 ))}
                 {isCommunity && org.slug && (
-                  <NavItem href={`/${org.slug}/spill`} label="Spill" icon={Coins} />
+                  <NavItem href={`/${org.slug}/spill`} label="Spill" icon={Gamepad2} />
                 )}
               </div>
             </div>
@@ -176,14 +173,6 @@ export default function MobileDrawer({
               </div>
             </div>
           )}
-
-          {/* Contact support button */}
-          <button
-            onClick={() => { onClose(); onOpenSupport(); }}
-            className="w-full rounded-xl border border-zinc-700 py-2.5 text-xs font-medium text-zinc-400 hover:border-zinc-600 hover:text-white transition-colors"
-          >
-            Kontakt support
-          </button>
         </div>
       </div>
     </>
