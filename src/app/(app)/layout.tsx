@@ -15,7 +15,7 @@ import NotificationBell from "@/components/NotificationBell";
 import SearchOverlay from "@/components/SearchOverlay";
 import BottomBar from "@/components/BottomBar";
 import MobileDrawer from "@/components/MobileDrawer";
-import { useOrg } from "@/lib/context/OrgContext";
+import { useOrg, type Org } from "@/lib/context/OrgContext";
 import { useUser } from "@/lib/hooks/useUser";
 import { WebRTCProvider } from "@/context/WebRTCContext";
 import { IncomingCallBanner } from "@/components/IncomingCallBanner";
@@ -77,6 +77,17 @@ interface TenantTheme {
   logoUrl: string | null;
 }
 
+interface OrgSummary {
+  id:          string;
+  slug:        string;
+  name:        string;
+  initials:    string;
+  type:        string;
+  plan:        string;
+  accentColor: string;
+  userRole:    string;
+}
+
 interface LiveStatus {
   isLive:      boolean;
   title:       string;
@@ -86,7 +97,7 @@ interface LiveStatus {
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 function SidebarContent({
-  pathname, org, orgLoaded, onNavClick, isSuperAdmin, userName, enabledFeatures, tenantTheme, liveStatus, mobile, collapsed, onToggleCollapse, unreadCount, mounted,
+  pathname, org, orgLoaded, onNavClick, isSuperAdmin, userName, enabledFeatures, tenantTheme, liveStatus, mobile, collapsed, onToggleCollapse, unreadCount, mounted, allCommunities, onSwitchOrg,
 }: {
   pathname:          string;
   org:               ReturnType<typeof useOrg>["org"] | null;
@@ -102,6 +113,8 @@ function SidebarContent({
   onToggleCollapse?: () => void;
   unreadCount:       number;
   mounted:           boolean;
+  allCommunities:    OrgSummary[];
+  onSwitchOrg:       (c: OrgSummary) => void;
 }) {
   const isCommunity = org?.type === "COMMUNITY";
   const allLinks    = isCommunity && org?.slug ? communityNav(org.slug) : COMPANY_NAV;
@@ -213,15 +226,7 @@ function SidebarContent({
     { href: "/profil/meg",  label: "Min profil", icon: UserCircle, badge: 0 },
   ];
 
-  // Org-specific links are hidden on "global" pages regardless of whether org is set
-  const GLOBAL_PREFIXES = [
-    "/home", "/meldinger", "/profil", "/u/", "/soek", "/innstillinger",
-    "/support", "/bytt-org", "/notifikasjoner", "/superadmin",
-  ];
-  const isOnGlobalPage = GLOBAL_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(p + "/") || (p.endsWith("/") && pathname.startsWith(p))
-  );
-  const showOrgLinks = !isOnGlobalPage && mounted && orgLoaded && !!org;
+  const showOrgLinks = mounted && orgLoaded && !!org;
 
   return (
     <>
@@ -258,17 +263,72 @@ function SidebarContent({
         {/* Org-specific section */}
         {showOrgLinks && (
           <>
-            {/* Section label */}
+            {/* Section label — shows org name */}
             {!collapsed ? (
               <div className="mx-1 mb-1 mt-3 flex items-center gap-2">
                 <div className="h-px flex-1 bg-zinc-800" />
-                <span className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600">
-                  {isCommunity ? "Community" : "Bedrift"}
+                <span className="max-w-[96px] truncate text-[9px] font-semibold uppercase tracking-widest text-zinc-600">
+                  {org.name}
                 </span>
                 <div className="h-px flex-1 bg-zinc-800" />
               </div>
             ) : (
               <div className="my-2 border-t border-zinc-800" />
+            )}
+
+            {/* Community quick-switcher — shown when user belongs to multiple communities */}
+            {!collapsed && isCommunity && allCommunities.length > 1 && (
+              <div className="mb-1 flex flex-col gap-0.5">
+                {allCommunities.map((c) => {
+                  const isActive = org.id === c.id;
+                  return (
+                    <Link
+                      key={c.id}
+                      href={`/${c.slug}/feed`}
+                      onClick={() => { onSwitchOrg(c); onNavClick(); }}
+                      className={`flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-150 ${
+                        isActive
+                          ? "bg-violet-500/15 text-violet-200"
+                          : "text-zinc-500 hover:bg-white/[0.06] hover:text-zinc-100"
+                      }`}
+                    >
+                      <div
+                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[9px] font-bold text-white"
+                        style={{ background: c.accentColor }}
+                      >
+                        {c.initials}
+                      </div>
+                      <span className="flex-1 truncate">{c.name}</span>
+                      {isActive && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />}
+                    </Link>
+                  );
+                })}
+                <div className="mx-1 my-1 h-px bg-zinc-800" />
+              </div>
+            )}
+
+            {/* Collapsed: small community dots for switching */}
+            {collapsed && isCommunity && allCommunities.length > 1 && (
+              <div className="mb-1 flex flex-col items-center gap-1">
+                {allCommunities.map((c) => {
+                  const isActive = org.id === c.id;
+                  return (
+                    <Link
+                      key={c.id}
+                      href={`/${c.slug}/feed`}
+                      onClick={() => { onSwitchOrg(c); onNavClick(); }}
+                      title={c.name}
+                      className={`flex h-7 w-7 items-center justify-center rounded text-[9px] font-bold text-white transition-all duration-150 ${
+                        isActive ? "ring-2 ring-violet-400" : "opacity-60 hover:opacity-100"
+                      }`}
+                      style={{ background: c.accentColor }}
+                    >
+                      {c.initials}
+                    </Link>
+                  );
+                })}
+                <div className="my-1 w-4 border-t border-zinc-800" />
+              </div>
             )}
 
             {/* Live link */}
@@ -380,7 +440,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [tenantTheme,       setTenantTheme]         = useState<TenantTheme | null>(null);
   const [liveStatus,        setLiveStatus]          = useState<LiveStatus | null>(null);
   const [unreadCount,       setUnreadCount]         = useState(0);
-  const { org, orgLoaded } = useOrg();
+  const [allCommunities,    setAllCommunities]       = useState<OrgSummary[]>([]);
+  const { org, orgLoaded, setOrg } = useOrg();
   const { user }           = useUser();
 
   // Redirect to /home when user has no org and tries to access an org-specific page
@@ -404,6 +465,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       })
       .catch(() => setEnabledFeatures(null));
   }, [org?.id]);
+
+  // Fetch all communities once on mount for quick-switcher
+  useEffect(() => {
+    fetch("/api/user/orgs")
+      .then((r) => r.ok ? r.json() as Promise<OrgSummary[]> : Promise.reject())
+      .then((data) => setAllCommunities(data.filter((o) => o.type === "COMMUNITY")))
+      .catch(() => {});
+  }, []);
 
   // Poll live status every 60s
   useEffect(() => {
@@ -503,6 +572,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     mounted,
     collapsed:        effectiveCollapsed,
     onToggleCollapse: toggleDesktopCollapsed,
+    allCommunities,
+    onSwitchOrg: (c: OrgSummary) => setOrg(c as unknown as Org),
   };
 
   return (

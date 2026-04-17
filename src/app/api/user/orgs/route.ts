@@ -38,6 +38,7 @@ export async function GET() {
       type:        o.type,
       plan:        o.plan,
       accentColor: orgColor(o.id),
+      userRole:    m.role,
     };
   });
 
