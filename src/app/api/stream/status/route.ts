@@ -151,17 +151,21 @@ export async function GET(request: Request) {
     status = { isLive: false, title: "", viewerCount: 0, thumbnailUrl: null, platform: null };
   }
 
-  // Track live → offline transitions via StreamSession
+  // Reconcile StreamSession records with actual live status
   try {
-    const prev = getCached(orgId);
-    if (prev?.isLive && !status.isLive) {
+    if (status.isLive) {
+      // Ensure exactly one open session exists
+      const existing = await db.streamSession.findFirst({
+        where: { organizationId: orgId, endedAt: null },
+      });
+      if (!existing) {
+        await db.streamSession.create({ data: { organizationId: orgId } });
+      }
+    } else {
+      // Always close stale sessions when stream is confirmed offline
       await db.streamSession.updateMany({
         where: { organizationId: orgId, endedAt: null },
         data:  { endedAt: new Date() },
-      });
-    } else if (!prev?.isLive && status.isLive) {
-      await db.streamSession.create({
-        data: { organizationId: orgId },
       });
     }
   } catch { /* non-critical — don't fail the response */ }

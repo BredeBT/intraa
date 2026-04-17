@@ -11,8 +11,9 @@ export default async function HomePage() {
   if (!session?.user?.id) redirect("/login");
   const userId = session.user.id;
 
-  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
-  const weekAgo    = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const fiveMinAgo  = new Date(Date.now() - 5 * 60 * 1000);
+  const weekAgo     = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
   const [myMemberships, allCommunities, friendships, pendingRequests] = await Promise.all([
     db.membership.findMany({
@@ -24,7 +25,7 @@ export default async function HomePage() {
             _count:         { select: { memberships: true } },
             theme:          { select: { logoUrl: true, bannerUrl: true } },
             streamSettings: { select: { twitchChannel: true } },
-            streamSessions: { where: { endedAt: null }, select: { id: true }, take: 1 },
+            streamSessions: { where: { endedAt: null, startedAt: { gte: fourHoursAgo } }, select: { id: true }, take: 1 },
           },
         },
       },
@@ -36,7 +37,7 @@ export default async function HomePage() {
         _count:         { select: { memberships: true } },
         theme:          { select: { logoUrl: true, bannerUrl: true } },
         streamSettings: { select: { twitchChannel: true } },
-        streamSessions: { where: { endedAt: null }, select: { id: true }, take: 1 },
+        streamSessions: { where: { endedAt: null, startedAt: { gte: fourHoursAgo } }, select: { id: true }, take: 1 },
       },
       orderBy: { memberships: { _count: "desc" } },
       take:    30,
