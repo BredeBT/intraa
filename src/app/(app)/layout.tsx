@@ -4,9 +4,9 @@ import { useCallback, useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
-  Rss, Ticket, Folder, Settings,
+  Newspaper, Ticket, Folder, Settings,
   Search, CalendarDays, CheckSquare, HelpCircle, Menu, X,
-  Trophy, Swords, Star, Radio, Coins,
+  Trophy, Swords, Star, Radio, Gamepad2,
   LifeBuoy, MessageCircle,
   Home, Mail, UserCircle,
 } from "lucide-react";
@@ -24,7 +24,7 @@ import { GlobalCallBar } from "@/components/GlobalCallBar";
 // ─── Nav definitions ──────────────────────────────────────────────────────────
 
 const COMPANY_NAV = [
-  { href: "/feed",     label: "Feed",     icon: Rss,           feature: "feed" },
+  { href: "/feed",     label: "Feed",     icon: Newspaper,           feature: "feed" },
   { href: "/chat",     label: "Chat",     icon: MessageCircle, feature: "chat" },
   { href: "/tickets",  label: "Tickets",  icon: Ticket,        feature: "tickets" },
   { href: "/kalender", label: "Kalender", icon: CalendarDays,  feature: "calendar" },
@@ -34,7 +34,7 @@ const COMPANY_NAV = [
 
 function communityNav(slug: string) {
   return [
-    { href: `/${slug}/feed`,         label: "Feed",         icon: Rss,            feature: "community_feed" },
+    { href: `/${slug}/feed`,         label: "Feed",         icon: Newspaper,            feature: "community_feed" },
     { href: `/chat`,                 label: "Chat",         icon: MessageCircle,  feature: "community_chat" },
     { href: `/${slug}/rangering`,    label: "Rangering",    icon: Trophy,         feature: "community_leaderboard" },
     { href: `/${slug}/konkurranser`, label: "Konkurranser", icon: Swords,         feature: "community_contests" },
@@ -436,8 +436,8 @@ function SidebarContent({
             title={collapsed ? "Spill" : undefined}
             className={`${item(pathname.includes("/spill") || pathname.endsWith("/clicker"))} ${collapsed ? "justify-center" : ""}`}
           >
-            <Coins className="h-4 w-4 shrink-0" />
-            {!collapsed && <span className="flex-1">🎮 Spill</span>}
+            <Gamepad2 className="h-4 w-4 shrink-0" />
+            {!collapsed && <span className="flex-1">Spill</span>}
           </Link>
         )}
       </nav>
