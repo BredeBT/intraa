@@ -2,8 +2,8 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
+  --background: #0d0809;
+  --foreground: #fef9f0;
 }
 
 @theme inline {
@@ -13,9 +13,46 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* ── Sunset Warmth palette remap ────────────────────────────────────────
+   Override Tailwind's violet/indigo to warm orange/amber so existing
+   `bg-violet-500`, `text-indigo-400` etc inherit the new brand colors
+   without touching every file. Zinc-950/900 warmed up too. */
+@theme {
+  /* Violet → Orange */
+  --color-violet-50:  #fff7ed;
+  --color-violet-100: #ffedd5;
+  --color-violet-200: #fed7aa;
+  --color-violet-300: #fdba74;
+  --color-violet-400: #fb923c;
+  --color-violet-500: #f97316;
+  --color-violet-600: #ea580c;
+  --color-violet-700: #c2410c;
+  --color-violet-800: #9a3412;
+  --color-violet-900: #7c2d12;
+  --color-violet-950: #431407;
+
+  /* Indigo → Amber */
+  --color-indigo-50:  #fffbeb;
+  --color-indigo-100: #fef3c7;
+  --color-indigo-200: #fde68a;
+  --color-indigo-300: #fcd34d;
+  --color-indigo-400: #fbbf24;
+  --color-indigo-500: #f59e0b;
+  --color-indigo-600: #d97706;
+  --color-indigo-700: #b45309;
+  --color-indigo-800: #92400e;
+  --color-indigo-900: #78350f;
+  --color-indigo-950: #451a03;
+
+  /* Warm the deep neutrals to match the landing page */
+  --color-zinc-950: #0d0809;
+  --color-zinc-900: #1a1213;
+  --color-zinc-800: #221718;
+}
+
 body {
-  background: #09090b;
-  color: #fafafa;
+  background: #0d0809;
+  color: #fef9f0;
   font-family: system-ui, sans-serif;
 }
 
@@ -49,7 +86,7 @@ body {
   z-index: 10;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #a78bfa;
+  color: #f7b733;
   white-space: nowrap;
 }
 

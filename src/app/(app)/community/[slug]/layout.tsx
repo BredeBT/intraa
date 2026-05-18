@@ -12,7 +12,7 @@ const MOCK_COMMUNITY = {
   slug: "intraa",
   initials: "IC",
   description: "creators & byggere",
-  accentColor: "#7c3aed",
+  accentColor: "#ea580c",
 };
 
 export default function CommunitySlugLayout({ children }: { children: React.ReactNode }) {

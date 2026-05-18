@@ -10,8 +10,8 @@ export function FanpassBadge({ size = 11 }: { size?: number }) {
       style={{
         fontSize:   size,
         lineHeight: 1,
-        color:      "#a78bfa",
-        filter:     "drop-shadow(0 0 3px rgba(167,139,250,0.6))",
+        color:      "#f7b733",
+        filter:     "drop-shadow(0 0 3px rgba(247,183,51,0.6))",
         flexShrink: 0,
         display:    "inline-block",
         userSelect: "none",

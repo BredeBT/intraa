@@ -431,7 +431,7 @@ export default function ChessVsMachine({
   // ── Difficulty selection screen ───────────────────────────────────────────
   if (!difficulty || !chess) {
     return (
-      <div className="min-h-screen bg-[#0d0d14] text-white flex flex-col">
+      <div className="min-h-screen bg-[#0d0809] text-white flex flex-col">
         <div className="mx-auto w-full max-w-lg px-4 py-10 flex flex-col gap-8">
 
           <Link
@@ -510,7 +510,7 @@ export default function ChessVsMachine({
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] text-white">
+    <div className="min-h-screen bg-[#0d0809] text-white">
       <div className="mx-auto flex max-w-[1100px] flex-col gap-4 px-4 py-4 md:flex-row md:items-start md:gap-6 md:py-8">
 
         {/* ── Board column ── */}

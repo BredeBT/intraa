@@ -21,7 +21,7 @@ export default async function TenantLayout({
   if (!org) notFound();
 
   return (
-    <div className="grid min-h-full" style={{ gridTemplateColumns: "220px 1fr", background: "#0d0d14" }}>
+    <div className="grid min-h-full" style={{ gridTemplateColumns: "220px 1fr", background: "#0d0809" }}>
       {/* Sidebar */}
       <aside
         className="flex flex-col px-3 py-5"

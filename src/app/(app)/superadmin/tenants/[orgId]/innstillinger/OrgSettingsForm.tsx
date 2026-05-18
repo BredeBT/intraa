@@ -169,7 +169,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
           onClick={() => void handleSave()}
           disabled={!hasChanges || saving}
           className="w-full rounded-lg px-4 py-2 text-sm font-medium text-white transition-all disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
-          style={{ background: "#6c47ff" }}
+          style={{ background: "#ff6b35" }}
         >
           {saving ? "Lagrer…" : "Lagre endringer"}
         </button>
@@ -252,7 +252,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                     onClick={() => mark(setPlan)(p)}
                     className="truncate rounded-lg px-2 py-2 text-xs font-medium transition-all"
                     style={plan === p
-                      ? { background: "rgba(108,71,255,0.2)", border: "1px solid rgba(108,71,255,0.5)", color: "#c4b5fd" }
+                      ? { background: "rgba(255,107,53,0.2)", border: "1px solid rgba(255,107,53,0.5)", color: "#fcd34d" }
                       : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.45)" }
                     }
                   >
@@ -271,7 +271,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                   <span
                     className="rounded-full px-2.5 py-0.5 text-xs font-medium"
                     style={org.type === "COMMUNITY"
-                      ? { background: "rgba(139,92,246,0.15)", color: "#c4b5fd", border: "1px solid rgba(139,92,246,0.3)" }
+                      ? { background: "rgba(249,115,22,0.15)", color: "#fcd34d", border: "1px solid rgba(249,115,22,0.3)" }
                       : { background: "rgba(59,130,246,0.15)",  color: "#93c5fd", border: "1px solid rgba(59,130,246,0.3)" }
                     }
                   >
@@ -301,7 +301,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                     onClick={() => mark(setVisibility)(opt.value)}
                     className="w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-left transition-all"
                     style={active
-                      ? { background: "rgba(108,71,255,0.15)", border: "1px solid rgba(108,71,255,0.4)" }
+                      ? { background: "rgba(255,107,53,0.15)", border: "1px solid rgba(255,107,53,0.4)" }
                       : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }
                     }
                   >
@@ -310,7 +310,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                       <div className="min-w-0">
                         <span
                           className="text-sm font-medium"
-                          style={{ color: active ? "#c4b5fd" : "white" }}
+                          style={{ color: active ? "#fcd34d" : "white" }}
                         >
                           {opt.label}
                         </span>
@@ -324,7 +324,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                       {active && (
                         <span
                           className="ml-2 shrink-0 rounded-full px-2 py-0.5 text-xs"
-                          style={{ background: "rgba(108,71,255,0.25)", color: "#c4b5fd" }}
+                          style={{ background: "rgba(255,107,53,0.25)", color: "#fcd34d" }}
                         >
                           Aktiv
                         </span>
@@ -355,7 +355,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                     onClick={inviteToken ? copyInviteLink : generateInviteLink}
                     disabled={genLoading}
                     className="rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-opacity disabled:opacity-50"
-                    style={{ background: "#6c47ff" }}
+                    style={{ background: "#ff6b35" }}
                   >
                     {genLoading ? "Genererer…" : inviteToken ? "Kopier invitasjonslenke" : "Generer invitasjonslenke"}
                   </button>

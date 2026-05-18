@@ -124,7 +124,7 @@ function TenantCard({
   const bannerStyle = tenant.theme?.bannerUrl
     ? { backgroundImage: `url(${tenant.theme.bannerUrl})`, backgroundSize: "cover", backgroundPosition: "top" }
     : { background: tenant.type === "COMMUNITY"
-        ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
+        ? "linear-gradient(135deg, #6366f1 0%, #f97316 100%)"
         : "linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)" };
 
   return (
@@ -151,7 +151,7 @@ function TenantCard({
             ) : (
               <div
                 className="flex h-10 w-10 items-center justify-center rounded-lg text-base font-bold text-white"
-                style={{ background: tenant.type === "COMMUNITY" ? "#6c47ff" : "#1d4ed8" }}
+                style={{ background: tenant.type === "COMMUNITY" ? "#ff6b35" : "#1d4ed8" }}
               >
                 {tenant.name[0].toUpperCase()}
               </div>
@@ -166,7 +166,7 @@ function TenantCard({
               <span
                 className="rounded-full px-2 py-0.5 text-[10px] font-medium"
                 style={tenant.type === "COMMUNITY"
-                  ? { background: "rgba(139,92,246,0.15)", color: "#a78bfa" }
+                  ? { background: "rgba(249,115,22,0.15)", color: "#f7b733" }
                   : { background: "rgba(59,130,246,0.15)", color: "#60a5fa" }}
               >
                 {TYPE_LABELS[tenant.type]}
@@ -379,7 +379,7 @@ function NewTenantModal({
             <div
               key={s}
               className="h-1 flex-1 rounded-full transition-all"
-              style={{ background: s <= step ? "#6c47ff" : "rgba(255,255,255,0.1)" }}
+              style={{ background: s <= step ? "#ff6b35" : "rgba(255,255,255,0.1)" }}
             />
           ))}
         </div>
@@ -423,7 +423,7 @@ function NewTenantModal({
                     onClick={() => setForm((f) => ({ ...f, type: t }))}
                     className="rounded-xl py-3 text-sm font-medium transition-all"
                     style={form.type === t
-                      ? { background: "rgba(108,71,255,0.2)", border: "1px solid #6c47ff", color: "#a78bfa" }
+                      ? { background: "rgba(255,107,53,0.2)", border: "1px solid #ff6b35", color: "#f7b733" }
                       : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}
                   >
                     {TYPE_LABELS[t]}
@@ -480,7 +480,7 @@ function NewTenantModal({
                     onClick={() => setForm((f) => ({ ...f, plan: p }))}
                     className="rounded-xl py-3 text-sm font-medium transition-all"
                     style={form.plan === p
-                      ? { background: "rgba(108,71,255,0.2)", border: "1px solid #6c47ff", color: "#a78bfa" }
+                      ? { background: "rgba(255,107,53,0.2)", border: "1px solid #ff6b35", color: "#f7b733" }
                       : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}
                   >
                     {p}
@@ -538,7 +538,7 @@ function NewTenantModal({
               onClick={() => setStep((s) => (s + 1) as 2 | 3)}
               disabled={!form.name.trim() || !form.slug || !slugValid}
               className="flex items-center gap-1.5 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition-all disabled:opacity-40 hover:brightness-110"
-              style={{ background: "#6c47ff" }}
+              style={{ background: "#ff6b35" }}
             >
               Neste <ChevronRight className="h-4 w-4" />
             </button>
@@ -547,7 +547,7 @@ function NewTenantModal({
               onClick={() => void handleCreate()}
               disabled={saving || !form.name.trim() || !slugValid}
               className="flex items-center gap-1.5 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition-all disabled:opacity-40 hover:brightness-110"
-              style={{ background: "#6c47ff" }}
+              style={{ background: "#ff6b35" }}
             >
               {saving ? "Oppretter…" : "Opprett tenant"}
             </button>
@@ -606,7 +606,7 @@ export default function TenantsClient({ initialTenants }: { initialTenants: Tena
         <button
           onClick={() => setShowNew(true)}
           className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all hover:brightness-110"
-          style={{ background: "#6c47ff", boxShadow: "0 4px 16px rgba(108,71,255,0.35)" }}
+          style={{ background: "#ff6b35", boxShadow: "0 4px 16px rgba(255,107,53,0.35)" }}
         >
           <Plus className="h-4 w-4" /> Ny tenant
         </button>

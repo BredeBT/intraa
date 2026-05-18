@@ -43,7 +43,7 @@ interface Props {
 
 // ─── Category Modal ────────────────────────────────────────────────────────────
 
-const PRESET_COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#f97316", "#ec4899"];
+const PRESET_COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#f97316", "#06b6d4", "#f97316", "#ec4899"];
 const PRESET_EMOJIS = ["📋", "💼", "🖥️", "💰", "👥", "🏠", "🔧", "📦", "🎯", "🔒"];
 
 function CategoryModal({

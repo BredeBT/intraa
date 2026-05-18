@@ -149,7 +149,7 @@ export default function ChessLobby({
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] px-4 py-8">
+    <div className="min-h-screen bg-[#0d0809] px-4 py-8">
       <div className="mx-auto max-w-lg">
 
         {/* Header */}

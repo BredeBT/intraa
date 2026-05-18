@@ -20,7 +20,7 @@ interface Theme {
 // ─── Presets ──────────────────────────────────────────────────────────────────
 
 const PRESETS: { name: string; colors: Pick<Theme, "primaryColor" | "accentColor" | "backgroundColor" | "sidebarColor"> }[] = [
-  { name: "Standard",   colors: { primaryColor: "#7c3aed", accentColor: "#a855f7", backgroundColor: "#09090b", sidebarColor: "#18181b" } },
+  { name: "Standard",   colors: { primaryColor: "#ea580c", accentColor: "#a855f7", backgroundColor: "#09090b", sidebarColor: "#18181b" } },
   { name: "Midnatt",    colors: { primaryColor: "#2563eb", accentColor: "#3b82f6", backgroundColor: "#020617", sidebarColor: "#0f172a" } },
   { name: "Skog",       colors: { primaryColor: "#16a34a", accentColor: "#22c55e", backgroundColor: "#052e16", sidebarColor: "#14532d" } },
   { name: "Solnedgang", colors: { primaryColor: "#ea580c", accentColor: "#f97316", backgroundColor: "#0c0a09", sidebarColor: "#1c1917" } },

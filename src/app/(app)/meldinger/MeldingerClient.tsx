@@ -527,7 +527,7 @@ function InboxItem({
   return (
     <button
       onClick={onClick}
-      style={isActive ? { background: "#6c47ff18", borderLeft: "2px solid #6c47ff" } : { borderLeft: "2px solid transparent" }}
+      style={isActive ? { background: "#ff6b3518", borderLeft: "2px solid #ff6b35" } : { borderLeft: "2px solid transparent" }}
       className="relative flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.04]"
     >
       {avatar}
@@ -719,7 +719,7 @@ export default function MeldingerClient({
   })();
 
   return (
-    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] overflow-hidden" style={{ background: "#0d0d14" }}>
+    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] overflow-hidden" style={{ background: "#0d0809" }}>
 
       {/* ─── Sidebar ────────────────────────────────────────────────────────── */}
       <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-72 shrink-0 flex-col border-r border-white/[0.06]`} style={{ background: "#12121e" }}>
@@ -909,7 +909,7 @@ export default function MeldingerClient({
       </div>
 
       {/* ─── Chat area ──────────────────────────────────────────────────────── */}
-      <div className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0`} style={{ background: "#0d0d14" }}>
+      <div className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0`} style={{ background: "#0d0809" }}>
 
         {/* Header */}
         {chatHeader && (

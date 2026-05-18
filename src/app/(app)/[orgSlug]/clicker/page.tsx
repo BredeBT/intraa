@@ -451,8 +451,8 @@ export default function ClickerPage() {
   // ── Loading ───────────────────────────────────────────────────────────────
   if (!profile) {
     return (
-      <div className="flex h-full items-center justify-center" style={{ background: "#0d0d14" }}>
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" style={{ borderColor: "#6c47ff", borderTopColor: "transparent" }} />
+      <div className="flex h-full items-center justify-center" style={{ background: "#0d0809" }}>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" style={{ borderColor: "#ff6b35", borderTopColor: "transparent" }} />
       </div>
     );
   }
@@ -506,7 +506,7 @@ export default function ClickerPage() {
             key={n}
             style={
               isActive
-                ? { background: "rgba(108,71,255,0.13)", border: "1px solid rgba(108,71,255,0.38)", borderRadius: 10 }
+                ? { background: "rgba(255,107,53,0.13)", border: "1px solid rgba(255,107,53,0.38)", borderRadius: 10 }
                 : unlocked
                 ? { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, opacity: 0.7 }
                 : { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 10, opacity: 0.5 }
@@ -520,7 +520,7 @@ export default function ClickerPage() {
               <div className="min-w-0 flex-1">
                 <p
                   className="truncate text-xs leading-tight"
-                  style={{ fontWeight: 500, color: isActive ? "#a78bfa" : "rgba(255,255,255,0.5)" }}
+                  style={{ fontWeight: 500, color: isActive ? "#f7b733" : "rgba(255,255,255,0.5)" }}
                 >
                   {n}. {wDef.name}
                 </p>
@@ -536,7 +536,7 @@ export default function ClickerPage() {
                   <p className="text-[10px] leading-tight" style={{ color: "#fbbf24" }}>Siste verden 👑</p>
                 )}
                 {isActive && !isFinal && !completed && (
-                  <p className="text-[10px] leading-tight" style={{ color: "#a78bfa" }}>Du er her</p>
+                  <p className="text-[10px] leading-tight" style={{ color: "#f7b733" }}>Du er her</p>
                 )}
               </div>
             </div>
@@ -546,7 +546,7 @@ export default function ClickerPage() {
                 <div className="h-[3px] overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
                   <div
                     className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${prestigePct.toFixed(2)}%`, background: "#6c47ff" }}
+                    style={{ width: `${prestigePct.toFixed(2)}%`, background: "#ff6b35" }}
                   />
                 </div>
               </div>
@@ -582,13 +582,13 @@ export default function ClickerPage() {
       {offlineMsg !== null && (
         <div
           className="mb-4 w-full flex items-start gap-3 p-3 rounded-xl"
-          style={{ background: "rgba(108,71,255,0.1)", border: "1px solid rgba(108,71,255,0.25)" }}
+          style={{ background: "rgba(255,107,53,0.1)", border: "1px solid rgba(255,107,53,0.25)" }}
         >
           <span className="text-xl">😴</span>
           <div className="flex-1">
             <p className="text-sm font-semibold text-white">Velkommen tilbake!</p>
             <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
-              +<span className="font-bold" style={{ color: "#a78bfa" }}>{fmt(offlineMsg)}</span> coins mens du var borte.
+              +<span className="font-bold" style={{ color: "#f7b733" }}>{fmt(offlineMsg)}</span> coins mens du var borte.
             </p>
           </div>
           <button onClick={() => setOfflineMsg(null)} style={{ color: "rgba(255,255,255,0.3)" }} className="hover:text-white transition-colors">
@@ -628,13 +628,13 @@ export default function ClickerPage() {
             <>
               <span
                 className="rounded-full px-2.5 py-0.5 text-xs"
-                style={{ background: "rgba(108,71,255,0.2)", color: "#a78bfa" }}
+                style={{ background: "rgba(255,107,53,0.2)", color: "#f7b733" }}
               >
                 Fanpass 1.5x klikk
               </span>
               <span
                 className="rounded-full px-2.5 py-0.5 text-xs"
-                style={{ background: "rgba(108,71,255,0.2)", color: "#a78bfa" }}
+                style={{ background: "rgba(255,107,53,0.2)", color: "#f7b733" }}
               >
                 Fanpass 2x passiv
               </span>
@@ -674,8 +674,8 @@ export default function ClickerPage() {
             style={{
               width: 200,
               height: 200,
-              background: "rgba(108,71,255,0.12)",
-              border: "2px solid rgba(108,71,255,0.2)",
+              background: "rgba(255,107,53,0.12)",
+              border: "2px solid rgba(255,107,53,0.2)",
             }}
           />
         )}
@@ -687,7 +687,7 @@ export default function ClickerPage() {
             width: 196,
             height: 196,
             background: "#1e1b4b",
-            border: "2px solid rgba(108,71,255,0.25)",
+            border: "2px solid rgba(255,107,53,0.25)",
           }}
         >
           {/* Floating damage numbers */}
@@ -703,11 +703,11 @@ export default function ClickerPage() {
             style={{
               width: 160,
               height: 160,
-              background: "#6c47ff",
+              background: "#ff6b35",
               borderRadius: "50%",
               touchAction: "manipulation",
               transition: "transform 0.1s ease",
-              boxShadow: "0 0 32px rgba(108,71,255,0.4), inset 0 1px 0 rgba(255,255,255,0.15)",
+              boxShadow: "0 0 32px rgba(255,107,53,0.4), inset 0 1px 0 rgba(255,255,255,0.15)",
             }}
             className="relative flex select-none items-center justify-center active:scale-[0.96] hover:brightness-110"
           >
@@ -748,7 +748,7 @@ export default function ClickerPage() {
           <div className="overflow-hidden rounded-full" style={{ height: 6, background: "rgba(255,255,255,0.06)" }}>
             <div
               className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${prestigePct.toFixed(2)}%`, background: "linear-gradient(to right, #6c47ff, #a78bfa)" }}
+              style={{ width: `${prestigePct.toFixed(2)}%`, background: "linear-gradient(to right, #ff6b35, #f7b733)" }}
             />
           </div>
         </div>
@@ -782,7 +782,7 @@ export default function ClickerPage() {
             {leaderboard.map((entry, i) => {
               const w     = entry.prestigeWorld ?? 1;
               const wDef  = WORLDS[w] ?? WORLDS[1];
-              const wColor = w <= 1 ? "#a78bfa" : w === 2 ? "#fbbf24" : w <= 3 ? "#67e8f9" : w <= 5 ? "#34d399" : w <= 7 ? "#fb923c" : "#f59e0b";
+              const wColor = w <= 1 ? "#f7b733" : w === 2 ? "#fbbf24" : w <= 3 ? "#67e8f9" : w <= 5 ? "#34d399" : w <= 7 ? "#fb923c" : "#f59e0b";
               const medalColor =
                 i === 0 ? "#fbbf24"
                 : i === 1 ? "#94a3b8"
@@ -801,7 +801,7 @@ export default function ClickerPage() {
                   <div
                     className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
                     style={{
-                      background: "rgba(108,71,255,0.25)",
+                      background: "rgba(255,107,53,0.25)",
                       outline: `1.5px solid ${avatarRing}`,
                     }}
                   >
@@ -813,7 +813,7 @@ export default function ClickerPage() {
                       {wDef.emoji} Verden {w}
                     </p>
                   </div>
-                  <span className="shrink-0 text-xs font-semibold" style={{ color: "#a78bfa" }}>
+                  <span className="shrink-0 text-xs font-semibold" style={{ color: "#f7b733" }}>
                     {fmt(entry.allTimeHighCoins)}
                   </span>
                 </div>
@@ -844,9 +844,9 @@ export default function ClickerPage() {
             key={upg.id}
             className="flex items-center gap-3 rounded-xl p-3 transition-all"
             style={{
-              background: upg.canAfford ? "rgba(108,71,255,0.08)" : "rgba(255,255,255,0.03)",
+              background: upg.canAfford ? "rgba(255,107,53,0.08)" : "rgba(255,255,255,0.03)",
               border: upg.canAfford
-                ? "1px solid rgba(108,71,255,0.3)"
+                ? "1px solid rgba(255,107,53,0.3)"
                 : upg.level > 0
                 ? "1px solid rgba(255,255,255,0.08)"
                 : "1px solid rgba(255,255,255,0.05)",
@@ -856,7 +856,7 @@ export default function ClickerPage() {
             {/* Icon */}
             <div
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl"
-              style={{ background: "rgba(108,71,255,0.2)" }}
+              style={{ background: "rgba(255,107,53,0.2)" }}
             >
               {upg.emoji}
             </div>
@@ -874,7 +874,7 @@ export default function ClickerPage() {
               {upg.level > 0 && (
                 <span
                   className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-                  style={{ background: "rgba(108,71,255,0.25)", color: "#a78bfa" }}
+                  style={{ background: "rgba(255,107,53,0.25)", color: "#f7b733" }}
                 >
                   Lv {upg.level}
                 </span>
@@ -887,7 +887,7 @@ export default function ClickerPage() {
                   background: upg.level >= upg.maxLevel
                     ? "rgba(255,255,255,0.05)"
                     : upg.canAfford
-                    ? "#6c47ff"
+                    ? "#ff6b35"
                     : "rgba(255,255,255,0.05)",
                   color: upg.level >= upg.maxLevel
                     ? "rgba(255,255,255,0.25)"
@@ -911,9 +911,9 @@ export default function ClickerPage() {
             key={upg.id}
             className="flex items-center gap-2 rounded-xl p-2.5 transition-all"
             style={{
-              background: upg.canAfford ? "rgba(108,71,255,0.08)" : "rgba(255,255,255,0.04)",
+              background: upg.canAfford ? "rgba(255,107,53,0.08)" : "rgba(255,255,255,0.04)",
               border: upg.canAfford
-                ? "1px solid rgba(108,71,255,0.28)"
+                ? "1px solid rgba(255,107,53,0.28)"
                 : upg.level > 0
                 ? "1px solid rgba(255,255,255,0.07)"
                 : "1px solid rgba(255,255,255,0.04)",
@@ -923,7 +923,7 @@ export default function ClickerPage() {
             {/* Icon */}
             <div
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg leading-none"
-              style={{ background: "rgba(108,71,255,0.2)" }}
+              style={{ background: "rgba(255,107,53,0.2)" }}
             >
               {upg.emoji}
             </div>
@@ -943,7 +943,7 @@ export default function ClickerPage() {
               {upg.level > 0 && (
                 <span
                   className="rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none"
-                  style={{ background: "rgba(108,71,255,0.25)", color: "#a78bfa" }}
+                  style={{ background: "rgba(255,107,53,0.25)", color: "#f7b733" }}
                 >
                   Lv {upg.level}
                 </span>
@@ -956,7 +956,7 @@ export default function ClickerPage() {
                   color: upg.level >= upg.maxLevel
                     ? "rgba(255,255,255,0.2)"
                     : upg.canAfford
-                    ? "#a78bfa"
+                    ? "#f7b733"
                     : "rgba(255,255,255,0.2)",
                   cursor: upg.canAfford && upg.level < upg.maxLevel ? "pointer" : "default",
                   fontWeight: upg.canAfford ? 600 : 400,
@@ -976,7 +976,7 @@ export default function ClickerPage() {
   return (
     <div
       className="relative flex flex-col md:flex-row h-[calc(100dvh-7rem)] md:h-[calc(100vh-56px)]"
-      style={{ background: "#0d0d14" }}
+      style={{ background: "#0d0809" }}
     >
       {/* Prestige modal */}
       {prestigeModal && (
@@ -993,7 +993,7 @@ export default function ClickerPage() {
               <li>🪙 <strong style={{ color: "#fbbf24" }}>{worldDef?.fanpassCoins ?? 0} Fanpass-coins</strong></li>
               <li>{worldDef?.badge} Badge lagt til profilen</li>
               <li>⚡ <strong style={{ color: "#34d399" }}>+{Math.round((0.10 + perkCfg.prestigeExtraBonus) * 100)}% permanent bonus</strong></li>
-              <li>🏆 <strong style={{ color: "#a78bfa" }}>+1 Prestige-poeng til butikken</strong></li>
+              <li>🏆 <strong style={{ color: "#f7b733" }}>+1 Prestige-poeng til butikken</strong></li>
               {world < MAX_WORLD && WORLDS[nextWorld] && (
                 <li>🌍 Låser opp <strong className="text-white">Verden {nextWorld}: {WORLDS[nextWorld].name} {WORLDS[nextWorld].emoji}</strong></li>
               )}
@@ -1057,8 +1057,8 @@ export default function ClickerPage() {
                             key={perk.id}
                             className="flex items-center gap-3 rounded-xl p-3"
                             style={{
-                              background: maxed ? "rgba(52,211,153,0.06)" : canBuy ? "rgba(108,71,255,0.07)" : "rgba(255,255,255,0.03)",
-                              border: maxed ? "1px solid rgba(52,211,153,0.2)" : canBuy ? "1px solid rgba(108,71,255,0.25)" : "1px solid rgba(255,255,255,0.06)",
+                              background: maxed ? "rgba(52,211,153,0.06)" : canBuy ? "rgba(255,107,53,0.07)" : "rgba(255,255,255,0.03)",
+                              border: maxed ? "1px solid rgba(52,211,153,0.2)" : canBuy ? "1px solid rgba(255,107,53,0.25)" : "1px solid rgba(255,255,255,0.06)",
                               borderRadius: 10,
                             }}
                           >
@@ -1067,7 +1067,7 @@ export default function ClickerPage() {
                               <p className="text-sm font-semibold text-white leading-tight">{perk.name}</p>
                               <p className="text-[11px] leading-tight" style={{ color: "rgba(255,255,255,0.4)" }}>{perk.description}</p>
                               <div className="mt-1 flex items-center gap-2">
-                                <span className="text-[10px] font-semibold" style={{ color: maxed ? "#34d399" : "#a78bfa" }}>
+                                <span className="text-[10px] font-semibold" style={{ color: maxed ? "#34d399" : "#f7b733" }}>
                                   {maxed ? `Maks (${owned}/${perk.maxPurchases})` : `${owned}/${perk.maxPurchases} kjøpt`}
                                 </span>
                                 <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>{perk.effect}</span>
@@ -1078,7 +1078,7 @@ export default function ClickerPage() {
                               disabled={!canBuy || shopBuying === perk.id}
                               className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 disabled:opacity-40"
                               style={{
-                                background: maxed ? "rgba(52,211,153,0.15)" : canBuy ? "#6c47ff" : "rgba(255,255,255,0.06)",
+                                background: maxed ? "rgba(52,211,153,0.15)" : canBuy ? "#ff6b35" : "rgba(255,255,255,0.06)",
                                 color: maxed ? "#34d399" : canBuy ? "#fff" : "rgba(255,255,255,0.3)",
                                 cursor: canBuy ? "pointer" : "default",
                               }}
@@ -1129,7 +1129,7 @@ export default function ClickerPage() {
           style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
         >
           <div className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" style={{ color: "#a78bfa" }} />
+            <MessageSquare className="h-4 w-4" style={{ color: "#f7b733" }} />
             <span className="text-sm font-semibold text-white">Stream Chat</span>
           </div>
           <button
@@ -1147,12 +1147,12 @@ export default function ClickerPage() {
               <div key={msg.id} className="flex gap-2">
                 <div
                   className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                  style={{ background: "rgba(108,71,255,0.4)" }}
+                  style={{ background: "rgba(255,107,53,0.4)" }}
                 >
                   {initials(msg.author.name)}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold" style={{ color: "#a78bfa" }}>{msg.author.name ?? "Ukjent"}</p>
+                  <p className="text-xs font-semibold" style={{ color: "#f7b733" }}>{msg.author.name ?? "Ukjent"}</p>
                   <p className="break-words text-sm text-white">{msg.content}</p>
                 </div>
               </div>
@@ -1177,7 +1177,7 @@ export default function ClickerPage() {
               onClick={() => void sendChatMessage()}
               disabled={!chatInput.trim() || chatSending}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition-all hover:brightness-110 disabled:opacity-40"
-              style={{ background: "#6c47ff" }}
+              style={{ background: "#ff6b35" }}
             >
               <Send className="h-4 w-4" />
             </button>
@@ -1198,8 +1198,8 @@ export default function ClickerPage() {
               onClick={() => setMobileTab(tab)}
               className="flex-1 py-2.5 text-xs font-semibold transition-colors"
               style={{
-                color: mobileTab === tab ? "#a78bfa" : "rgba(255,255,255,0.35)",
-                borderBottom: mobileTab === tab ? "2px solid #6c47ff" : "2px solid transparent",
+                color: mobileTab === tab ? "#f7b733" : "rgba(255,255,255,0.35)",
+                borderBottom: mobileTab === tab ? "2px solid #ff6b35" : "2px solid transparent",
               }}
             >
               {labels[tab]}
@@ -1235,8 +1235,8 @@ export default function ClickerPage() {
           onClick={() => setChatOpen(true)}
           className="fixed bottom-20 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full text-white transition-all hover:scale-110 hover:brightness-110 active:scale-95 md:bottom-6"
           style={{
-            background: "#6c47ff",
-            boxShadow: "0 4px 20px rgba(108,71,255,0.4)",
+            background: "#ff6b35",
+            boxShadow: "0 4px 20px rgba(255,107,53,0.4)",
           }}
         >
           <MessageSquare className="h-5 w-5" />

@@ -9,7 +9,7 @@ type CommunityType = "Gaming" | "IRL" | "Podcast" | "Annet";
 const COMMUNITY_TYPES: CommunityType[] = ["Gaming", "IRL", "Podcast", "Annet"];
 
 const ACCENT_COLORS = [
-  { label: "Violet",  value: "#7c3aed" },
+  { label: "Violet",  value: "#ea580c" },
   { label: "Indigo",  value: "#4f46e5" },
   { label: "Blå",     value: "#2563eb" },
   { label: "Cyan",    value: "#0891b2" },
@@ -28,7 +28,7 @@ export default function CommunityInnstillingerPage() {
     "En plass for creators, byggere og gründere som bruker Intraa."
   );
   const [communityType, setCommunityType] = useState<CommunityType>("Annet");
-  const [accentColor, setAccentColor] = useState("#7c3aed");
+  const [accentColor, setAccentColor] = useState("#ea580c");
   const [saved, setSaved] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 

@@ -47,13 +47,13 @@ export default async function SpillPage({
     {
       href:        `/${orgSlug}/clicker`,
       icon:        "🖱️",
-      iconBg:      "rgba(108,71,255,0.25)",
+      iconBg:      "rgba(255,107,53,0.25)",
       title:       "Klikker",
       badge:       "Solo",
-      badgeStyle:  { background: "rgba(108,71,255,0.2)", color: "#a78bfa" },
+      badgeStyle:  { background: "rgba(255,107,53,0.2)", color: "#f7b733" },
       description: "Klikk deg til rikdom, kjøp oppgraderinger og prestige gjennom 9 unike verdener.",
-      accentColor: "#6c47ff",
-      borderColor: "rgba(108,71,255,0.2)",
+      accentColor: "#ff6b35",
+      borderColor: "rgba(255,107,53,0.2)",
     },
     {
       href:        `/${orgSlug}/spill/sjakk`,
@@ -69,13 +69,13 @@ export default async function SpillPage({
     {
       href:        `/${orgSlug}/spill/2048`,
       icon:        "🔢",
-      iconBg:      "rgba(139,92,246,0.2)",
+      iconBg:      "rgba(249,115,22,0.2)",
       title:       "2048",
       badge:       "Solo",
-      badgeStyle:  { background: "rgba(139,92,246,0.15)", color: "#c4b5fd" },
+      badgeStyle:  { background: "rgba(249,115,22,0.15)", color: "#fcd34d" },
       description: "Slå sammen brikker og nå 2048. Bruk piltaster eller sveip. Enkel å lære, umulig å stoppe.",
-      accentColor: "#8b5cf6",
-      borderColor: "rgba(139,92,246,0.2)",
+      accentColor: "#f97316",
+      borderColor: "rgba(249,115,22,0.2)",
     },
     {
       href:        `/${orgSlug}/spill/wordle`,
@@ -93,7 +93,7 @@ export default async function SpillPage({
   const TOTAL_GAMES = GAMES.length + 1; // +1 for chess vs machine
 
   return (
-    <div className="min-h-screen px-4 py-8 md:py-12" style={{ background: "#0d0d14" }}>
+    <div className="min-h-screen px-4 py-8 md:py-12" style={{ background: "#0d0809" }}>
       <div className="mx-auto max-w-5xl">
 
         {/* Page header */}
@@ -116,21 +116,21 @@ export default async function SpillPage({
               className="group flex overflow-hidden rounded-2xl transition-all duration-200 hover:scale-[1.01] hover:brightness-110"
               style={{
                 background:  "rgba(255,255,255,0.04)",
-                border:      "1px solid rgba(139,92,246,0.3)",
+                border:      "1px solid rgba(249,115,22,0.3)",
                 minHeight:   "120px",
               }}
             >
               {/* Left accent bar */}
               <div
                 className="w-1 shrink-0"
-                style={{ background: "linear-gradient(to bottom, #a78bfa, #34d399)" }}
+                style={{ background: "linear-gradient(to bottom, #f7b733, #34d399)" }}
               />
 
               <div className="flex flex-1 items-center gap-5 p-5">
                 {/* Icon */}
                 <div
                   className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-4xl"
-                  style={{ background: "rgba(139,92,246,0.2)" }}
+                  style={{ background: "rgba(249,115,22,0.2)" }}
                 >
                   🤖
                 </div>
@@ -141,7 +141,7 @@ export default async function SpillPage({
                     <span className="text-lg font-bold text-white">Sjakk mot maskin</span>
                     <span
                       className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-                      style={{ background: "rgba(139,92,246,0.2)", color: "#c4b5fd" }}
+                      style={{ background: "rgba(249,115,22,0.2)", color: "#fcd34d" }}
                     >
                       Solo
                     </span>
@@ -160,7 +160,7 @@ export default async function SpillPage({
                 {/* CTA */}
                 <div
                   className="hidden sm:flex shrink-0 items-center gap-1.5 text-sm font-semibold transition-colors"
-                  style={{ color: "#a78bfa" }}
+                  style={{ color: "#f7b733" }}
                 >
                   Spill nå
                   <span className="transition-transform group-hover:translate-x-1">→</span>

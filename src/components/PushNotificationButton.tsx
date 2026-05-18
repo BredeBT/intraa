@@ -17,7 +17,7 @@ export function PushNotificationButton() {
   return (
     <button
       onClick={subscribed ? unsubscribe : subscribe}
-      className="flex items-center gap-2 rounded-lg border border-[#6c47ff]/30 bg-[#6c47ff]/20 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#6c47ff]/30"
+      className="flex items-center gap-2 rounded-lg border border-[#ff6b35]/30 bg-[#ff6b35]/20 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#ff6b35]/30"
     >
       {subscribed ? "🔔 Varsler aktivert — klikk for å deaktivere" : "🔕 Aktiver push-varsler"}
     </button>

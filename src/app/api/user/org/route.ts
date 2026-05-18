@@ -8,7 +8,7 @@ function toInitials(name: string): string {
 }
 
 const ACCENT_COLORS = [
-  "#6366f1", "#8b5cf6", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444",
+  "#6366f1", "#f97316", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444",
 ];
 
 function orgColor(id: string): string {

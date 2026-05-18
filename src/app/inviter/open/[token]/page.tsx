@@ -33,11 +33,11 @@ export default function OpenInvitePage({ params }: { params: Promise<{ token: st
   }, [token]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4" style={{ background: "#0d0d14" }}>
+    <div className="flex min-h-screen items-center justify-center px-4" style={{ background: "#0d0809" }}>
       <div className="w-full max-w-sm text-center">
         {/* Logo */}
         <div className="mb-8">
-          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl text-lg font-bold text-white shadow-lg" style={{ background: "linear-gradient(135deg, #6366f1, #7c3aed)" }}>
+          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl text-lg font-bold text-white shadow-lg" style={{ background: "linear-gradient(135deg, #6366f1, #ea580c)" }}>
             I
           </div>
           <div className="text-2xl font-bold tracking-tight text-white">Intraa</div>
@@ -46,7 +46,7 @@ export default function OpenInvitePage({ params }: { params: Promise<{ token: st
         <div className="rounded-2xl p-8 shadow-xl" style={{ background: "#12121e", border: "1px solid rgba(255,255,255,0.08)" }}>
           {state === "joining" && (
             <div className="flex flex-col items-center gap-4 py-4">
-              <div className="h-10 w-10 animate-spin rounded-full" style={{ border: "3px solid rgba(255,255,255,0.1)", borderTopColor: "#6c47ff" }} />
+              <div className="h-10 w-10 animate-spin rounded-full" style={{ border: "3px solid rgba(255,255,255,0.1)", borderTopColor: "#ff6b35" }} />
               <p className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>Bli med i community…</p>
             </div>
           )}
@@ -63,7 +63,7 @@ export default function OpenInvitePage({ params }: { params: Promise<{ token: st
               <Link
                 href="/home"
                 className="mt-2 rounded-lg px-5 py-2 text-sm font-medium text-white"
-                style={{ background: "#6c47ff" }}
+                style={{ background: "#ff6b35" }}
               >
                 Gå til hjemside
               </Link>

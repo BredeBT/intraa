@@ -60,7 +60,7 @@ export default async function RangeringPage() {
   const myRow = board.find((m) => m.isMe);
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] px-4 py-8 md:px-8">
+    <div className="min-h-screen bg-[#0d0809] px-4 py-8 md:px-8">
       <h1 className="mb-1 text-xl font-semibold text-white">Rangering</h1>
       <p className="mb-8 text-sm text-zinc-500">Topp bidragsytere i communityet</p>
 

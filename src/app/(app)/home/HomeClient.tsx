@@ -79,7 +79,7 @@ function CommunityCard({ c, index }: { c: Community; index: number }) {
         style={
           c.bannerUrl
             ? { backgroundImage: `url(${c.bannerUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
-            : { background: "linear-gradient(135deg, #4f35b8, #7c3aed)" }
+            : { background: "linear-gradient(135deg, #4f35b8, #ea580c)" }
         }
       >
         {c.isLive && (
@@ -250,7 +250,7 @@ function DiscoveryCommunityCard({
         className="h-28 w-full"
         style={c.bannerUrl
           ? { backgroundImage: `url(${c.bannerUrl})`, backgroundSize: "cover", backgroundPosition: "top" }
-          : { background: "linear-gradient(135deg, #4f35b8, #7c3aed)" }
+          : { background: "linear-gradient(135deg, #4f35b8, #ea580c)" }
         }
       />
       <div className="p-4">
@@ -259,7 +259,7 @@ function DiscoveryCommunityCard({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={c.logoUrl} alt="" className="h-10 w-10 rounded-xl object-cover shrink-0" style={{ border: "1px solid rgba(255,255,255,0.12)" }} />
           ) : (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-base font-bold text-white" style={{ background: "#6c47ff" }}>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-base font-bold text-white" style={{ background: "#ff6b35" }}>
               {c.name[0]}
             </div>
           )}
@@ -273,7 +273,7 @@ function DiscoveryCommunityCard({
             onClick={() => onJoin(c.id, c.slug)}
             disabled={joining}
             className="shrink-0 rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity disabled:opacity-60"
-            style={{ background: "#6c47ff" }}
+            style={{ background: "#ff6b35" }}
           >
             {joining ? "…" : "Bli med"}
           </button>
@@ -346,7 +346,7 @@ function NewUserHome({ communities }: { communities: Community[] }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:outline-none"
-            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", caretColor: "#a78bfa" }}
+            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", caretColor: "#f7b733" }}
           />
           {searching && (
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
@@ -416,14 +416,14 @@ export default function HomeClient({
 
   if (myCommunities.length === 0) {
     return (
-      <div className="min-h-screen" style={{ background: "#0d0d14" }}>
+      <div className="min-h-screen" style={{ background: "#0d0809" }}>
         <NewUserHome communities={recommendedCommunities} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen px-4 py-6" style={{ background: "#0d0d14" }}>
+    <div className="min-h-screen px-4 py-6" style={{ background: "#0d0809" }}>
       <div className="mx-auto max-w-5xl">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_260px]">
 

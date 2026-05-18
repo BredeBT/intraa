@@ -44,7 +44,7 @@ export default function TenantSideNav({
         ) : (
           <div
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white"
-            style={{ background: "#6c47ff" }}
+            style={{ background: "#ff6b35" }}
           >
             {orgName[0].toUpperCase()}
           </div>
@@ -68,7 +68,7 @@ export default function TenantSideNav({
               href={full}
               className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
               style={active
-                ? { background: "rgba(108,71,255,0.18)", color: "#a78bfa" }
+                ? { background: "rgba(255,107,53,0.18)", color: "#f7b733" }
                 : { color: "rgba(255,255,255,0.45)" }}
             >
               <Icon className="h-4 w-4 shrink-0" />

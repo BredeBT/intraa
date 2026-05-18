@@ -459,7 +459,7 @@ export default function ProfileClient({
         {/* Avatar */}
         <div className="relative">
           <div
-            className="w-20 h-20 rounded-full border-4 border-[#0d0d14] overflow-hidden -mt-10 bg-purple-600 flex items-center justify-center text-2xl font-bold"
+            className="w-20 h-20 rounded-full border-4 border-[#0d0809] overflow-hidden -mt-10 bg-purple-600 flex items-center justify-center text-2xl font-bold"
             style={profileFrame ? {
               outline:       `4px solid ${profileFrame.shopItem.value === "gold" ? "#facc15" : "#a855f7"}`,
               outlineOffset: "2px",
@@ -473,7 +473,7 @@ export default function ProfileClient({
             )}
           </div>
           {isOnline && (
-            <div className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-green-400 border-2 border-[#0d0d14]" />
+            <div className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-green-400 border-2 border-[#0d0809]" />
           )}
         </div>
 

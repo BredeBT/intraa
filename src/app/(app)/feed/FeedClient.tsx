@@ -286,12 +286,12 @@ export default function FeedClient({
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="mx-auto max-w-[680px] px-4 pb-10" style={{ background: "#0d0d14" }}>
+    <div className="mx-auto max-w-[680px] px-4 pb-10" style={{ background: "#0d0809" }}>
 
       {/* ── Banner ── */}
       <div
         className="h-36 md:h-40 -mx-4 relative overflow-hidden mb-0"
-        style={{ background: bannerBg ?? "linear-gradient(135deg, #2d1b69, #4f35b8, #7c3aed)" }}
+        style={{ background: bannerBg ?? "linear-gradient(135deg, #2d1b69, #4f35b8, #ea580c)" }}
       />
 
       {/* ── Logo + info ── */}
@@ -354,7 +354,7 @@ export default function FeedClient({
 
       {/* Velkomstmelding */}
       {welcomeMessage && (
-        <div className="mb-4 rounded-xl border border-purple-500/20 px-4 py-3" style={{ background: "rgba(108,71,255,0.08)" }}>
+        <div className="mb-4 rounded-xl border border-purple-500/20 px-4 py-3" style={{ background: "rgba(255,107,53,0.08)" }}>
           <p className="text-sm text-white/70">{welcomeMessage}</p>
         </div>
       )}

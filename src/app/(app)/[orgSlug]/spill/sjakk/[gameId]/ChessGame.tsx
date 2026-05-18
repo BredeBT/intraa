@@ -513,7 +513,7 @@ export default function ChessGame({
   const boardMaxW = "min(100vw - 2rem, 660px)";
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] text-white">
+    <div className="min-h-screen bg-[#0d0809] text-white">
       <div className="mx-auto flex max-w-[1300px] flex-col gap-4 px-4 py-4 md:flex-row md:items-start md:gap-6 md:py-8">
 
         {/* ── Board column ── */}
@@ -558,7 +558,7 @@ export default function ChessGame({
                       style={{
                         width: 28,
                         height: 20,
-                        outline: boardTheme === key ? "2px solid #a78bfa" : "1px solid rgba(255,255,255,0.1)",
+                        outline: boardTheme === key ? "2px solid #f7b733" : "1px solid rgba(255,255,255,0.1)",
                         outlineOffset: 1,
                       }}
                     >
