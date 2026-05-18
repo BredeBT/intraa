@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Users, TrendingUp, CreditCard, UserPlus, Settings, Users2, BarChart3 } from "lucide-react";
+import { Users, TrendingUp, CreditCard, UserPlus, Settings, Users2, BarChart3, Lock } from "lucide-react";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -34,9 +34,10 @@ export default async function CommunityAdminDashboard({ params }: Props) {
   ];
 
   const quickLinks = [
-    { label: "Rediger community",   href: `/community/${slug}/admin/innstillinger`, icon: Settings,  description: "Endre navn, banner, farger og mer" },
-    { label: "Administrer medlemmer", href: `/community/${slug}/medlemmer`,          icon: Users2,    description: "Roller, planer, tilgang" },
-    { label: "Abonnement & inntekt", href: `/community/${slug}/abonnement`,          icon: BarChart3, description: "Betalinger, planer, statistikk" },
+    { label: "Tilgang & Fanpass",     href: `/community/${slug}/admin/tilgang`,        icon: Lock,      description: "Velg om communityet er åpent, freemium eller eksklusivt" },
+    { label: "Rediger community",     href: `/community/${slug}/admin/innstillinger`,  icon: Settings,  description: "Endre navn, banner, farger og mer" },
+    { label: "Administrer medlemmer", href: `/community/${slug}/medlemmer`,            icon: Users2,    description: "Roller, planer, tilgang" },
+    { label: "Abonnement & inntekt",  href: `/community/${slug}/abonnement`,           icon: BarChart3, description: "Betalinger, planer, statistikk" },
   ];
 
   return (

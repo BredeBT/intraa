@@ -20,6 +20,27 @@ export async function POST(req: NextRequest) {
   });
   if (existing) return NextResponse.json({ ok: true, alreadyMember: true });
 
+  // EXCLUSIVE access mode: require active Fanpass before allowing join
+  if (org.accessMode === "EXCLUSIVE") {
+    const fanpass = await db.fanPass.findFirst({
+      where: {
+        userId:         session.user.id,
+        organizationId: orgId,
+        status:         "ACTIVE",
+        endDate:        { gt: new Date() },
+      },
+      select: { id: true },
+    });
+    if (!fanpass) {
+      return NextResponse.json({
+        ok:               false,
+        fanpassRequired:  true,
+        fanpassCheckout:  `/${org.slug}/fanpass`,
+        message:          "Dette communityet krever Fanpass for å bli medlem.",
+      }, { status: 402 });
+    }
+  }
+
   if (org.joinType === "OPEN") {
     await db.membership.create({
       data: { userId: session.user.id, organizationId: orgId, role: "MEMBER" },

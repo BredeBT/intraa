@@ -192,6 +192,38 @@ export async function sendMessage(
   });
   if (!channel) throw new Error("Ikke autorisert");
 
+  // BROADCAST channels: only OWNER/ADMIN can post (read-only for everyone else)
+  if (channel.type === "BROADCAST") {
+    const membership = await db.membership.findUnique({
+      where:  { userId_organizationId: { userId: session.user.id, organizationId: channel.orgId } },
+      select: { role: true },
+    });
+    if (!membership || (membership.role !== "OWNER" && membership.role !== "ADMIN")) {
+      throw new Error("Bare creator kan poste i broadcast-kanalen");
+    }
+  }
+
+  // Fanpass-gated channels: require active Fanpass to post (creator/admin bypassed above)
+  if (channel.requiresFanpass) {
+    const fanpass = await db.fanPass.findFirst({
+      where: {
+        userId:         session.user.id,
+        organizationId: channel.orgId,
+        status:         "ACTIVE",
+        endDate:        { gt: new Date() },
+      },
+      select: { id: true },
+    });
+    const membership = await db.membership.findUnique({
+      where:  { userId_organizationId: { userId: session.user.id, organizationId: channel.orgId } },
+      select: { role: true },
+    });
+    const isStaff = membership?.role === "OWNER" || membership?.role === "ADMIN";
+    if (!fanpass && !isStaff) {
+      throw new Error("Krever Fanpass-medlemskap");
+    }
+  }
+
   const message = await db.message.create({
     data:    { channelId, authorId: session.user.id, content, parentMessageId: parentMessageId ?? null, imageUrl: imageUrl ?? null },
     include: { ...MSG_INCLUDE },

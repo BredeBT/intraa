@@ -5,6 +5,7 @@ import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
 import {
   Search, Send, MessageSquare, ChevronDown, ChevronLeft,
   Hash, Plus, X, Check, UserPlus, Clock, Paperclip, Loader2,
+  Radio, Lock,
 } from "lucide-react";
 import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
 import SafeHtml from "@/components/SafeHtml";
@@ -14,20 +15,32 @@ import { supabase } from "@/lib/supabase-client";
 import { useWebRTC } from "@/hooks/useWebRTC";
 import { Phone, Video, MicOff, VideoOff, PhoneOff } from "lucide-react";
 
-const ChannelView = dynamic(() => import("./ChannelView"), { ssr: false });
-const GroupView   = dynamic(() => import("./GroupView"),   { ssr: false });
+const ChannelView         = dynamic(() => import("./ChannelView"),         { ssr: false });
+const GroupView           = dynamic(() => import("./GroupView"),           { ssr: false });
+const LockedChannelTeaser = dynamic(() => import("./LockedChannelTeaser"), { ssr: false });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface OrgChannel { id: string; name: string; type: string; unread: number }
+interface OrgChannel {
+  id:              string;
+  name:            string;
+  type:            string;
+  unread:          number;
+  requiresFanpass?: boolean;
+  description?:    string | null;
+  locked?:         boolean;
+}
 
 interface Community {
-  orgId:   string;
-  orgName: string;
-  orgType: string;
-  logoUrl: string | null;
-  role:    string;
-  channels: OrgChannel[];
+  orgId:      string;
+  orgName:    string;
+  orgType:    string;
+  orgSlug?:   string;
+  accessMode?: "OPEN" | "FREEMIUM" | "EXCLUSIVE";
+  hasFanpass?: boolean;
+  logoUrl:    string | null;
+  role:       string;
+  channels:   OrgChannel[];
 }
 
 interface Friend { id: string; name: string | null; avatarUrl: string | null }
@@ -48,7 +61,7 @@ interface Group {
 }
 
 interface ActiveDM      { type: "dm";      userId: string }
-interface ActiveChannel { type: "channel"; channelId: string; channelName: string; orgId: string; role: string; orgName: string; members: { id: string; name: string | null }[] }
+interface ActiveChannel { type: "channel"; channelId: string; channelName: string; orgId: string; orgSlug?: string; role: string; orgName: string; channelType?: string; locked?: boolean; members: { id: string; name: string | null }[] }
 interface ActiveGroup   { type: "group";   groupId: string; groupName: string; createdBy: string; members: { id: string; name: string | null; avatarUrl: string | null }[] }
 type Active = ActiveDM | ActiveChannel | ActiveGroup | null;
 
@@ -637,7 +650,7 @@ export default function MeldingerClient({
     if (initialChannelId) {
       for (const c of communities) {
         const ch = c.channels.find((ch) => ch.id === initialChannelId);
-        if (ch) { setActive({ type: "channel", channelId: ch.id, channelName: ch.name, orgId: c.orgId, orgName: c.orgName, role: c.role, members: allMembers }); return; }
+        if (ch) { setActive({ type: "channel", channelId: ch.id, channelName: ch.name, channelType: ch.type, locked: ch.locked, orgId: c.orgId, orgSlug: c.orgSlug, orgName: c.orgName, role: c.role, members: allMembers }); return; }
       }
     }
     if (initialGroupId) {
@@ -673,9 +686,23 @@ export default function MeldingerClient({
   }
 
   function openChannel(c: Community, ch: OrgChannel) {
-    setChannelUnreads((p) => ({ ...p, [ch.id]: 0 }));
-    fetch(`/api/channels/${ch.id}/read`, { method: "PATCH" }).catch(() => null);
-    setActive({ type: "channel", channelId: ch.id, channelName: ch.name, orgId: c.orgId, orgName: c.orgName, role: c.role, members: allMembers });
+    // Don't fire read-receipt for locked channels — user can't see content
+    if (!ch.locked) {
+      setChannelUnreads((p) => ({ ...p, [ch.id]: 0 }));
+      fetch(`/api/channels/${ch.id}/read`, { method: "PATCH" }).catch(() => null);
+    }
+    setActive({
+      type:        "channel",
+      channelId:   ch.id,
+      channelName: ch.name,
+      channelType: ch.type,
+      locked:      ch.locked,
+      orgId:       c.orgId,
+      orgSlug:     c.orgSlug,
+      orgName:     c.orgName,
+      role:        c.role,
+      members:     allMembers,
+    });
     setMobileView("chat");
   }
 
@@ -870,19 +897,41 @@ export default function MeldingerClient({
                 {orgExpanded && c.channels
                   .filter((ch) => !search || ch.name.toLowerCase().includes(search.toLowerCase()))
                   .map((ch) => {
-                    const chUnread = channelUnreads[ch.id] ?? ch.unread;
-                    const isActive = active?.type === "channel" && active.channelId === ch.id;
+                    const chUnread     = channelUnreads[ch.id] ?? ch.unread;
+                    const isActive     = active?.type === "channel" && active.channelId === ch.id;
+                    const isBroadcast  = ch.type === "BROADCAST";
+                    const isLocked     = !!ch.locked;
+                    const IconComp     = isBroadcast ? Radio : Hash;
                     return (
                       <button
                         key={ch.id}
                         onClick={() => openChannel(c, ch)}
+                        title={isLocked ? "Krever Fanpass for å lese" : ch.description ?? undefined}
                         className={`relative flex w-full items-center gap-2.5 py-2 pl-[4.5rem] pr-4 text-left transition-colors hover:bg-zinc-800/60 ${
                           isActive ? "bg-zinc-800/80 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-violet-500" : ""
-                        }`}
+                        } ${isLocked ? "opacity-60" : ""}`}
                       >
-                        <Hash className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
-                        <span className={`flex-1 truncate text-sm ${chUnread > 0 ? "font-semibold text-white" : "text-zinc-500"}`}>{ch.name}</span>
-                        {chUnread > 0 && (
+                        <IconComp
+                          className="h-3.5 w-3.5 shrink-0"
+                          style={isBroadcast ? { color: "#ff6b35" } : { color: "rgb(82,82,91)" }}
+                        />
+                        <span className={`flex-1 truncate text-sm ${chUnread > 0 ? "font-semibold text-white" : "text-zinc-500"}`}>
+                          {ch.name}
+                        </span>
+                        {isBroadcast && (
+                          <span
+                            className="text-[10px] shrink-0"
+                            style={{
+                              color:  "#f7b733",
+                              filter: "drop-shadow(0 0 3px rgba(247,183,51,0.6))",
+                            }}
+                            title="Fanpass-kanal"
+                          >
+                            ♛
+                          </span>
+                        )}
+                        {isLocked && <Lock className="h-3 w-3 shrink-0 text-zinc-500" />}
+                        {chUnread > 0 && !isLocked && (
                           <span className="flex h-4.5 min-w-4.5 shrink-0 items-center justify-center rounded-full bg-violet-600 px-1.5 text-[10px] font-bold text-white">{chUnread}</span>
                         )}
                       </button>
@@ -983,16 +1032,24 @@ export default function MeldingerClient({
             </div>
           </div>
         ) : active.type === "channel" ? (
-          <ChannelView
-            key={active.channelId}
-            channelId={active.channelId}
-            channelName={active.channelName}
-            orgId={active.orgId}
-            userId={currentUserId}
-            userName={currentUserName}
-            userRole={active.role}
-            members={active.members}
-          />
+          active.locked ? (
+            <LockedChannelTeaser
+              channelName={active.channelName}
+              orgName={active.orgName}
+              orgSlug={active.orgSlug ?? ""}
+            />
+          ) : (
+            <ChannelView
+              key={active.channelId}
+              channelId={active.channelId}
+              channelName={active.channelName}
+              orgId={active.orgId}
+              userId={currentUserId}
+              userName={currentUserName}
+              userRole={active.role}
+              members={active.members}
+            />
+          )
         ) : active.type === "group" ? (
           <GroupView
             key={active.groupId}

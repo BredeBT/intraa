@@ -18,21 +18,22 @@ export default async function MeldingerPage({
   const { userId: initialUserId, channelId: initialChannelId, groupId: initialGroupId } = await searchParams;
 
   // ── Fetch all data in parallel ───────────────────────────────────────────────
-  const [memberships, friendships, groupMemberships, channelReads] = await Promise.all([
+  const [memberships, friendships, groupMemberships, channelReads, activeFanpasses] = await Promise.all([
     db.membership.findMany({
       where: { userId },
       include: {
         organization: {
           select: {
-            id:   true,
-            name: true,
-            type: true,
-            slug: true,
+            id:         true,
+            name:       true,
+            type:       true,
+            slug:       true,
+            accessMode: true,
             theme: { select: { logoUrl: true } },
             channels: {
               where:   { type: { not: "DIRECT" } },
               orderBy: { name: "asc" },
-              select:  { id: true, name: true, type: true },
+              select:  { id: true, name: true, type: true, requiresFanpass: true, description: true },
             },
           },
         },
@@ -63,7 +64,16 @@ export default async function MeldingerPage({
       where:  { userId },
       select: { channelId: true, readAt: true },
     }),
+    db.fanPass.findMany({
+      where: {
+        userId,
+        status:  "ACTIVE",
+        endDate: { gt: new Date() },
+      },
+      select: { organizationId: true },
+    }),
   ]);
+  const fanpassOrgIds = new Set(activeFanpasses.map((f) => f.organizationId));
 
   // ── Channel unread counts — single groupBy query ─────────────────────────────
   const channelReadMap = new Map(channelReads.map((r) => [r.channelId, r.readAt]));
@@ -109,19 +119,28 @@ export default async function MeldingerPage({
     }
   }
 
-  const communities = memberships.map((m) => ({
-    orgId:   m.organization.id,
-    orgName: m.organization.name,
-    orgType: m.organization.type,
-    logoUrl: m.organization.theme?.logoUrl ?? null,
-    role:    m.role,
-    channels: m.organization.channels.map((ch) => ({
-      id:     ch.id,
-      name:   ch.name,
-      type:   ch.type,
-      unread: channelUnreadMap.get(ch.id) ?? 0,
-    })),
-  }));
+  const communities = memberships.map((m) => {
+    const hasFanpass = fanpassOrgIds.has(m.organization.id);
+    return {
+      orgId:      m.organization.id,
+      orgName:    m.organization.name,
+      orgType:    m.organization.type,
+      orgSlug:    m.organization.slug,
+      accessMode: m.organization.accessMode,
+      hasFanpass,
+      logoUrl:    m.organization.theme?.logoUrl ?? null,
+      role:       m.role,
+      channels: m.organization.channels.map((ch) => ({
+        id:              ch.id,
+        name:            ch.name,
+        type:            ch.type,
+        requiresFanpass: ch.requiresFanpass,
+        description:     ch.description,
+        unread:          channelUnreadMap.get(ch.id) ?? 0,
+        locked:          ch.requiresFanpass && !hasFanpass,
+      })),
+    };
+  });
 
   // ── Org members — single bulk query instead of N serial queries ───────────────
   const allOrgIds = memberships.map((m) => m.organization.id);
