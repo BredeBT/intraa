@@ -1,8 +1,32 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight, Radio, MessageSquare, Gamepad2, Crown,
+  Coins, Trophy, Send, Sparkles, ChevronRight,
+} from "lucide-react";
 import { db } from "@/server/db";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Sunset Warmth color tokens — applied via inline style for exact hex match.
+ */
+const C = {
+  bg:       "#0d0809",
+  surface:  "#1a1213",
+  surface2: "#221718",
+  line:     "rgba(255,249,240,0.08)",
+  lineHi:   "rgba(255,249,240,0.16)",
+  cream:    "#fef9f0",
+  muted:    "#a89a8b",
+  mutedHi:  "#cbb9a4",
+  orange:   "#ff6b35",
+  amber:    "#f7b733",
+  mint:     "#4ecdc4",
+  rose:     "#c44569",
+} as const;
+
+// Subtle film-grain noise — keeps the dark surface from looking flat.
+const NOISE = `url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 0.95  0 0 0 0 0.85  0 0 0 0.12 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")`;
 
 export default async function Home() {
   let orgCount = 0, userCount = 0, messageCount = 0, postCount = 0;
@@ -13,186 +37,748 @@ export default async function Home() {
       db.message.count(),
       db.post.count(),
     ]);
-  } catch { /* DB utilgjengelig under bygg — vis fallback-tall */ }
+  } catch { /* DB utilgjengelig under bygg */ }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div
+      className="min-h-screen relative overflow-x-hidden"
+      style={{
+        background:        C.bg,
+        color:             C.cream,
+        backgroundImage:   NOISE,
+        backgroundBlendMode: "overlay",
+      }}
+    >
+      {/* Atmospheric blobs */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 -right-40 h-[600px] w-[600px] rounded-full opacity-30 blur-[120px]"
+        style={{ background: `radial-gradient(circle, ${C.orange}, transparent 70%)` }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-[400px] -left-60 h-[500px] w-[500px] rounded-full opacity-20 blur-[120px]"
+        style={{ background: `radial-gradient(circle, ${C.rose}, transparent 70%)` }}
+      />
+
       {/* Nav */}
-      <nav className="flex items-center justify-between border-b border-zinc-800/60 px-8 py-4">
-        <span className="text-xl font-bold tracking-tight">Intraa</span>
-        <div className="flex items-center gap-6">
-          <Link href="#features" className="hidden text-sm text-zinc-400 transition-colors hover:text-white sm:block">Funksjoner</Link>
-          <Link href="#priser"   className="hidden text-sm text-zinc-400 transition-colors hover:text-white sm:block">Priser</Link>
-          <Link href="/login"    className="text-sm text-zinc-400 transition-colors hover:text-white">Logg inn</Link>
+      <nav
+        className="sticky top-0 z-40 flex items-center justify-between px-6 sm:px-10 py-5 backdrop-blur-md"
+        style={{
+          background:  "rgba(13,8,9,0.7)",
+          borderBottom: `1px solid ${C.line}`,
+        }}
+      >
+        <Link href="/" className="flex items-center gap-2">
+          <span
+            className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-sm font-black"
+            style={{
+              background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
+              color:      "#0d0809",
+              boxShadow:  `0 4px 20px ${C.orange}40`,
+            }}
+          >
+            i
+          </span>
+          <span className="text-lg font-bold tracking-tight" style={{ color: C.cream }}>intraa</span>
+        </Link>
+        <div className="flex items-center gap-7 text-sm">
+          <Link href="#funksjoner" className="hidden sm:block transition-colors" style={{ color: C.muted }}>Funksjoner</Link>
+          <Link href="#priser"     className="hidden sm:block transition-colors" style={{ color: C.muted }}>Priser</Link>
+          <Link href="/login"      className="transition-colors" style={{ color: C.muted }}>Logg inn</Link>
           <Link
             href="/registrer"
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
+            className="rounded-full px-4 py-2 text-sm font-semibold transition-transform hover:scale-[1.03]"
+            style={{
+              background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
+              color:      "#0d0809",
+              boxShadow:  `0 4px 16px ${C.orange}50`,
+            }}
           >
             Kom i gang
           </Link>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="mx-auto flex max-w-4xl flex-col items-center px-6 pb-24 pt-24 text-center">
-        <h1 className="text-5xl font-extrabold leading-tight tracking-tight sm:text-6xl lg:text-7xl">
-          Bygg ditt{" "}
-          <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
-            creator community.
-          </span>
-        </h1>
-        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-400">
-          Intraa gir deg alt du trenger for å samle fansen din på ett sted — live-integrasjon, spill, Fanpass og mye mer.
-        </p>
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href="/registrer"
-            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section className="relative mx-auto max-w-6xl px-6 sm:px-10 pt-20 pb-24 lg:pt-28 lg:pb-32">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-16 items-center">
+
+          {/* Left: copy */}
+          <div>
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium mb-6"
+              style={{
+                background: `${C.mint}10`,
+                color:      C.mint,
+                border:     `1px solid ${C.mint}30`,
+              }}
+            >
+              <span className="relative flex h-1.5 w-1.5">
+                <span
+                  className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60"
+                  style={{ background: C.mint }}
+                />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ background: C.mint }} />
+              </span>
+              For norske creators — i åpen beta
+            </div>
+
+            <h1
+              className="text-[clamp(2.5rem,6vw,4.75rem)] font-black leading-[0.95] tracking-tight text-balance"
+              style={{ color: C.cream }}
+            >
+              Communityet ditt.{" "}
+              <span
+                style={{
+                  background:           `linear-gradient(135deg, ${C.orange} 0%, ${C.amber} 50%, ${C.rose} 100%)`,
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor:  "transparent",
+                  backgroundClip:       "text",
+                }}
+              >
+                Hjemmet ditt.
+              </span>
+            </h1>
+
+            <p
+              className="mt-7 max-w-xl text-[17px] leading-relaxed"
+              style={{ color: C.mutedHi }}
+            >
+              Slutt å splitte fansen mellom Discord, Twitch og Patreon. Intraa er
+              alt-i-ett-plattformen der streamen, chatten, spillene og Fanpass-en
+              din lever sammen.
+            </p>
+
+            <div className="mt-9 flex flex-wrap items-center gap-3">
+              <Link
+                href="/registrer"
+                className="group flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition-transform hover:scale-[1.03]"
+                style={{
+                  background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
+                  color:      "#0d0809",
+                  boxShadow:  `0 8px 32px ${C.orange}40`,
+                }}
+              >
+                Start ditt community
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+              <Link
+                href="#funksjoner"
+                className="flex items-center gap-1.5 rounded-full px-5 py-3.5 text-sm font-medium transition-colors"
+                style={{
+                  border: `1px solid ${C.line}`,
+                  color:  C.mutedHi,
+                }}
+              >
+                Se hva som er inni
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <p className="mt-6 text-xs" style={{ color: C.muted }}>
+              Gratis å starte · Ingen kredittkort · Norsk support
+            </p>
+          </div>
+
+          {/* Right: floating UI mock */}
+          <div className="relative">
+            <HeroMock />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Features bento ───────────────────────────────────────────────── */}
+      <section id="funksjoner" className="relative mx-auto max-w-6xl px-6 sm:px-10 pb-24">
+        <div className="mb-12 max-w-2xl">
+          <p
+            className="text-xs font-semibold uppercase tracking-[0.2em] mb-3"
+            style={{ color: C.amber }}
           >
-            Opprett gratis konto <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-        <p className="mt-5 text-xs text-zinc-600">Gratis å komme i gang · Ingen binding</p>
-      </section>
-
-      {/* Stats */}
-      <section className="border-y border-zinc-800 bg-zinc-900/30 py-12 px-6">
-        <div className="max-w-4xl mx-auto grid grid-cols-4 gap-8 text-center">
-          <div>
-            <p className="text-4xl font-bold text-white">{orgCount}+</p>
-            <p className="text-sm text-zinc-400 mt-1">Communities</p>
-          </div>
-          <div>
-            <p className="text-4xl font-bold text-white">{userCount}+</p>
-            <p className="text-sm text-zinc-400 mt-1">Medlemmer</p>
-          </div>
-          <div>
-            <p className="text-4xl font-bold text-white">{messageCount + postCount}+</p>
-            <p className="text-sm text-zinc-400 mt-1">Innlegg og meldinger</p>
-          </div>
-          <div>
-            <p className="text-4xl font-bold text-white">99.9%</p>
-            <p className="text-sm text-zinc-400 mt-1">Oppetid</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section id="features" className="border-t border-zinc-800/60 bg-zinc-900/40 px-6 py-24">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-14 text-center">
-            <h2 className="text-3xl font-bold text-white">Alt du trenger, på ett sted</h2>
-            <p className="mt-3 text-zinc-400">En komplett plattform for creators og deres community.</p>
-          </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
-            <div className="rounded-2xl border border-violet-800/40 bg-violet-950/20 p-6">
-              <p className="text-2xl mb-3">📺</p>
-              <h3 className="text-base font-bold text-white mb-2">Live-integrasjon</h3>
-              <p className="text-zinc-400 text-sm">Koble til Twitch eller YouTube. Fansen ser når du er live direkte i appen.</p>
-            </div>
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
-              <p className="text-2xl mb-3">💬</p>
-              <h3 className="text-base font-bold text-white mb-2">Community-chat og feed</h3>
-              <p className="text-zinc-400 text-sm">Sanntids-chat, tråder og en feed der fansen kan dele og kommentere.</p>
-            </div>
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
-              <p className="text-2xl mb-3">🎮</p>
-              <h3 className="text-base font-bold text-white mb-2">Spill og minigames</h3>
-              <p className="text-zinc-400 text-sm">Sjakk, Wordle, 2048 og idle clicker med coin-belønninger for engasjement.</p>
-            </div>
-            <div className="rounded-2xl border border-violet-800/40 bg-violet-950/20 p-6">
-              <p className="text-2xl mb-3">♛</p>
-              <h3 className="text-base font-bold text-white mb-2">Fanpass</h3>
-              <p className="text-zinc-400 text-sm">Eksklusivt medlemskap med synlige fordeler, badges og premium funksjoner.</p>
-            </div>
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
-              <p className="text-2xl mb-3">🪙</p>
-              <h3 className="text-base font-bold text-white mb-2">Coin-system</h3>
-              <p className="text-zinc-400 text-sm">Fansen tjener coins ved å delta. De kan brukes i shop og belønninger.</p>
-            </div>
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
-              <p className="text-2xl mb-3">🏆</p>
-              <h3 className="text-base font-bold text-white mb-2">Rangeringer og stats</h3>
-              <p className="text-zinc-400 text-sm">Leaderboards, Elo-rating i sjakk og aktivitetsstatistikk for hver bruker.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section id="priser" className="py-24 px-6">
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <h2 className="text-4xl font-bold text-white mb-4">Enkelt og gratis å starte</h2>
-          <p className="text-zinc-400 text-lg">
-            Kom i gang uten kredittkort. Oppgrader når du er klar.
+            Funksjoner
           </p>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ color: C.cream }}>
+            Bygget for hvordan creators
+            <br />
+            <span style={{ color: C.muted }}>faktisk jobber.</span>
+          </h2>
         </div>
 
-        <div className="max-w-2xl mx-auto grid grid-cols-1 gap-6 sm:grid-cols-2">
-          {/* Free */}
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8">
-            <p className="text-xs font-semibold uppercase tracking-wider text-violet-400 mb-4">Kom i gang</p>
-            <h3 className="text-xl font-bold text-white mb-3">Gratis å prøve</h3>
-            <p className="text-zinc-400 text-sm mb-6">
-              Opprett din konto og utforsk plattformen.
-              Ingen kredittkort nødvendig.
-            </p>
-            <ul className="space-y-3 text-sm text-zinc-400">
-              <li className="flex items-center gap-2"><span className="text-violet-400">✓</span> Personlig profil</li>
-              <li className="flex items-center gap-2"><span className="text-violet-400">✓</span> Bli med i communities</li>
-              <li className="flex items-center gap-2"><span className="text-violet-400">✓</span> Feed og chat</li>
-              <li className="flex items-center gap-2"><span className="text-violet-400">✓</span> Coin-system og spill</li>
-              <li className="flex items-center gap-2"><span className="text-violet-400">✓</span> Venner og meldinger</li>
-            </ul>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 auto-rows-[minmax(220px,auto)]">
+
+          {/* Big featured: Live */}
+          <FeatureCard
+            className="sm:col-span-2 lg:col-span-4 lg:row-span-2"
+            featured
+            icon={<Radio className="h-5 w-5" />}
+            iconColor={C.orange}
+            title="Live på Twitch eller YouTube"
+            description="Vi oppdager automatisk når du går live. Fansen får varsel, kan chatte i appen, og opprette klipp underveis."
+          >
+            <LiveMock />
+          </FeatureCard>
+
+          {/* Tall: Fanpass */}
+          <FeatureCard
+            className="sm:col-span-2 lg:col-span-2 lg:row-span-2"
+            icon={<Crown className="h-5 w-5" />}
+            iconColor={C.amber}
+            title="Fanpass-medlemskap"
+            description="Selg eksklusiv tilgang. Medlemmer får ♛-badge, eksklusive bretttema i sjakk, og lukkede kanaler."
+          >
+            <FanpassMock />
+          </FeatureCard>
+
+          {/* Small row */}
+          <FeatureCard
+            className="lg:col-span-2"
+            icon={<MessageSquare className="h-5 w-5" />}
+            iconColor={C.mint}
+            title="Sanntids-chat og feed"
+            description="Tråder, reaksjoner, fildeling — som Discord, men koblet til alt annet du har."
+          />
+
+          <FeatureCard
+            className="lg:col-span-2"
+            icon={<Gamepad2 className="h-5 w-5" />}
+            iconColor={C.rose}
+            title="Spill og minigames"
+            description="Sjakk med Elo, idle clicker, Wordle, 2048 — alt belønner med coins."
+          />
+
+          <FeatureCard
+            className="lg:col-span-2"
+            icon={<Coins className="h-5 w-5" />}
+            iconColor={C.amber}
+            title="Coin-økonomi"
+            description="Fansen tjener coins ved å delta. Du designer butikken og belønningene."
+          />
+
+          <FeatureCard
+            className="lg:col-span-3"
+            icon={<Trophy className="h-5 w-5" />}
+            iconColor={C.orange}
+            title="Leaderboards og statistikk"
+            description="Konkurranser og rangering motiverer fansen til å være aktive — daglig, ukentlig, all-time."
+          />
+          <FeatureCard
+            className="lg:col-span-3"
+            icon={<Sparkles className="h-5 w-5" />}
+            iconColor={C.mint}
+            title="Bygget for vekst"
+            description="Du starter med 0 og kan vokse til 100 000+ medlemmer uten å bytte plattform."
+          />
+        </div>
+      </section>
+
+      {/* ── Social proof — replaces fake stats ───────────────────────────── */}
+      <section className="relative py-20 px-6 sm:px-10" style={{ borderTop: `1px solid ${C.line}`, borderBottom: `1px solid ${C.line}`, background: C.surface }}>
+        <div className="mx-auto max-w-5xl text-center">
+          <p
+            className="text-xs font-semibold uppercase tracking-[0.2em] mb-6"
+            style={{ color: C.mint }}
+          >
+            For deg som tar fansen seriøst
+          </p>
+          <blockquote
+            className="text-2xl sm:text-3xl font-medium leading-snug tracking-tight max-w-3xl mx-auto"
+            style={{ color: C.cream }}
+          >
+            «Plattformene tjener på at fansen din ikke føler at de eier deg.
+            Intraa snur det rundt — du eier relasjonen, vi gir verktøyene.»
+          </blockquote>
+          <div className="mt-8 flex items-center justify-center gap-3">
+            <div
+              className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold"
+              style={{
+                background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
+                color:      "#0d0809",
+              }}
+            >
+              B
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold" style={{ color: C.cream }}>Brede</p>
+              <p className="text-xs" style={{ color: C.muted }}>Founder, intraa</p>
+            </div>
           </div>
 
-          {/* Creator plan */}
-          <div className="rounded-2xl border border-violet-600/50 bg-violet-950/30 p-8 relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
-              For creators
+          {/* Tiny live numbers — only shown if there's something to show */}
+          {userCount > 5 && (
+            <div
+              className="mt-12 inline-flex flex-wrap items-center justify-center gap-x-8 gap-y-2 rounded-full px-6 py-3 text-xs"
+              style={{ border: `1px solid ${C.line}`, color: C.muted }}
+            >
+              <span><strong style={{ color: C.cream }}>{userCount}</strong> medlemmer</span>
+              <span style={{ color: C.line }}>·</span>
+              <span><strong style={{ color: C.cream }}>{orgCount}</strong> communities</span>
+              <span style={{ color: C.line }}>·</span>
+              <span><strong style={{ color: C.cream }}>{messageCount + postCount}</strong> meldinger sendt</span>
             </div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-violet-400 mb-4">Community-plattform</p>
-            <h3 className="text-xl font-bold text-white mb-3">Eget community</h3>
-            <p className="text-zinc-400 text-sm mb-6">
-              Alt du trenger for å bygge et engasjert
-              community rundt din kanal.
+          )}
+        </div>
+      </section>
+
+      {/* ── Pricing ──────────────────────────────────────────────────────── */}
+      <section id="priser" className="relative mx-auto max-w-5xl px-6 sm:px-10 py-24">
+        <div className="mb-14 max-w-2xl">
+          <p
+            className="text-xs font-semibold uppercase tracking-[0.2em] mb-3"
+            style={{ color: C.amber }}
+          >
+            Priser
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ color: C.cream }}>
+            Start gratis. Skaler når du er klar.
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          {/* Free */}
+          <div
+            className="rounded-3xl p-8"
+            style={{
+              background: C.surface,
+              border:     `1px solid ${C.line}`,
+            }}
+          >
+            <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: C.muted }}>
+              Fan
             </p>
-            <ul className="space-y-3 text-sm text-zinc-400">
-              <li className="flex items-center gap-2"><span className="text-violet-400">✓</span> Twitch/YouTube live-integrasjon</li>
-              <li className="flex items-center gap-2"><span className="text-violet-400">✓</span> Fanpass og coin shop</li>
-              <li className="flex items-center gap-2"><span className="text-violet-400">✓</span> Spill og minigames</li>
-              <li className="flex items-center gap-2"><span className="text-violet-400">✓</span> Konkurranser og rangering</li>
-              <li className="flex items-center gap-2"><span className="text-violet-400">✓</span> Lojalitetssystem</li>
-              <li className="flex items-center gap-2"><span className="text-violet-400">✓</span> Admin-panel og statistikk</li>
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className="text-4xl font-bold" style={{ color: C.cream }}>Gratis</span>
+            </div>
+            <p className="text-sm mb-8" style={{ color: C.muted }}>
+              For deg som vil utforske og delta i communities.
+            </p>
+            <ul className="space-y-3 text-sm mb-8" style={{ color: C.mutedHi }}>
+              <BulletPlain>Personlig profil</BulletPlain>
+              <BulletPlain>Bli med i communities</BulletPlain>
+              <BulletPlain>Chat, feed og spill</BulletPlain>
+              <BulletPlain>Coin-system</BulletPlain>
+              <BulletPlain>Venner og DM</BulletPlain>
             </ul>
             <Link
               href="/registrer"
-              className="mt-8 block w-full text-center bg-violet-600 hover:bg-violet-500 text-white font-semibold py-3 rounded-xl transition-colors"
+              className="block w-full text-center rounded-full px-5 py-3 text-sm font-semibold transition-colors"
+              style={{
+                border: `1px solid ${C.lineHi}`,
+                color:  C.cream,
+              }}
             >
-              Kom i gang gratis →
+              Opprett konto
+            </Link>
+          </div>
+
+          {/* Creator — featured */}
+          <div
+            className="relative rounded-3xl p-8 overflow-hidden"
+            style={{
+              background: `linear-gradient(140deg, ${C.surface2} 0%, ${C.surface} 100%)`,
+              border:     `1px solid ${C.orange}50`,
+              boxShadow:  `0 0 60px ${C.orange}25, inset 0 0 0 1px ${C.orange}20`,
+            }}
+          >
+            {/* gradient accent corner */}
+            <div
+              className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full opacity-30 blur-[60px]"
+              style={{ background: `radial-gradient(circle, ${C.orange}, transparent 70%)` }}
+            />
+
+            <div className="relative">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: C.amber }}>
+                  Creator
+                </p>
+                <span
+                  className="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                  style={{
+                    background: `${C.orange}20`,
+                    color:      C.orange,
+                  }}
+                >
+                  Mest valgt
+                </span>
+              </div>
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-4xl font-bold" style={{ color: C.cream }}>Gratis</span>
+                <span className="text-sm" style={{ color: C.muted }}>i åpen beta</span>
+              </div>
+              <p className="text-sm mb-8" style={{ color: C.muted }}>
+                Alt for å bygge og monetisere fansen din.
+              </p>
+              <ul className="space-y-3 text-sm mb-8" style={{ color: C.mutedHi }}>
+                <BulletAccent color={C.orange}>Eget community med egen URL</BulletAccent>
+                <BulletAccent color={C.orange}>Twitch / YouTube live-integrasjon</BulletAccent>
+                <BulletAccent color={C.orange}>Fanpass — selg betalt medlemskap</BulletAccent>
+                <BulletAccent color={C.orange}>Coin-shop og lojalitetssystem</BulletAccent>
+                <BulletAccent color={C.orange}>Spill, leaderboards og konkurranser</BulletAccent>
+                <BulletAccent color={C.orange}>Admin-panel og statistikk</BulletAccent>
+              </ul>
+              <Link
+                href="/registrer"
+                className="block w-full text-center rounded-full px-5 py-3 text-sm font-semibold transition-transform hover:scale-[1.02]"
+                style={{
+                  background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
+                  color:      "#0d0809",
+                  boxShadow:  `0 8px 28px ${C.orange}40`,
+                }}
+              >
+                Start ditt community →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Final CTA ────────────────────────────────────────────────────── */}
+      <section className="relative px-6 sm:px-10 pb-24">
+        <div
+          className="mx-auto max-w-5xl rounded-3xl px-8 py-16 sm:px-16 sm:py-20 text-center relative overflow-hidden"
+          style={{
+            background: `radial-gradient(ellipse at top, ${C.orange}25, transparent 60%), ${C.surface}`,
+            border:     `1px solid ${C.lineHi}`,
+          }}
+        >
+          <h3
+            className="text-3xl sm:text-5xl font-bold tracking-tight max-w-2xl mx-auto"
+            style={{ color: C.cream }}
+          >
+            Klar til å eie fansen din?
+          </h3>
+          <p className="mt-5 text-base" style={{ color: C.mutedHi }}>
+            Bygg et community som vokser med deg.
+          </p>
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/registrer"
+              className="group flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold transition-transform hover:scale-[1.03]"
+              style={{
+                background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
+                color:      "#0d0809",
+                boxShadow:  `0 8px 32px ${C.orange}40`,
+              }}
+            >
+              Start gratis
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-800/60 px-8 py-12">
-        <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 text-center sm:flex-row sm:justify-between sm:text-left">
-          <div>
-            <span className="text-lg font-bold text-white">Intraa</span>
-            <p className="mt-1 text-xs text-zinc-600">Din community-plattform.</p>
+      {/* ── Footer ───────────────────────────────────────────────────────── */}
+      <footer className="relative px-6 sm:px-10 pb-12 pt-6" style={{ borderTop: `1px solid ${C.line}` }}>
+        <div className="mx-auto max-w-6xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 pt-10">
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-flex h-6 w-6 items-center justify-center rounded-md text-xs font-black"
+              style={{
+                background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
+                color:      "#0d0809",
+              }}
+            >
+              i
+            </span>
+            <span className="text-sm font-bold" style={{ color: C.cream }}>intraa</span>
+            <span className="text-xs ml-2" style={{ color: C.muted }}>· din community-plattform</span>
           </div>
-          <div className="flex flex-wrap justify-center gap-6 text-sm text-zinc-500">
-            <Link href="#features"  className="transition-colors hover:text-white">Funksjoner</Link>
-            <Link href="#priser"    className="transition-colors hover:text-white">Priser</Link>
-            <Link href="/login"     className="transition-colors hover:text-white">Logg inn</Link>
-            <Link href="/registrer" className="transition-colors hover:text-white">Registrer</Link>
-            <Link href="/terms"     className="transition-colors hover:text-white">Vilkår</Link>
-            <Link href="/privacy"   className="transition-colors hover:text-white">Personvern</Link>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm" style={{ color: C.muted }}>
+            <Link href="#funksjoner">Funksjoner</Link>
+            <Link href="#priser">Priser</Link>
+            <Link href="/login">Logg inn</Link>
+            <Link href="/registrer">Registrer</Link>
+            <Link href="/terms">Vilkår</Link>
+            <Link href="/privacy">Personvern</Link>
           </div>
         </div>
-        <p className="mt-8 text-center text-xs text-zinc-700">© {new Date().getFullYear()} Intraa. Alle rettigheter forbeholdt.</p>
+        <p className="mt-10 text-center text-xs" style={{ color: C.muted, opacity: 0.6 }}>
+          © {new Date().getFullYear()} Intraa · Laget i Norge
+        </p>
       </footer>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Feature card                                                              */
+/* ────────────────────────────────────────────────────────────────────────── */
+
+function FeatureCard({
+  className = "",
+  icon,
+  iconColor,
+  title,
+  description,
+  featured,
+  children,
+}: {
+  className?:   string;
+  icon:         React.ReactNode;
+  iconColor:    string;
+  title:        string;
+  description:  string;
+  featured?:    boolean;
+  children?:    React.ReactNode;
+}) {
+  return (
+    <div
+      className={`group relative overflow-hidden rounded-2xl p-6 transition-colors ${className}`}
+      style={{
+        background: featured
+          ? `linear-gradient(140deg, ${C.surface2} 0%, ${C.surface} 100%)`
+          : C.surface,
+        border:     `1px solid ${C.line}`,
+      }}
+    >
+      <div
+        className="inline-flex h-9 w-9 items-center justify-center rounded-xl mb-4"
+        style={{
+          background: `${iconColor}15`,
+          color:      iconColor,
+          border:     `1px solid ${iconColor}25`,
+        }}
+      >
+        {icon}
+      </div>
+      <h3 className="text-base font-semibold tracking-tight mb-1.5" style={{ color: C.cream }}>
+        {title}
+      </h3>
+      <p className="text-sm leading-relaxed" style={{ color: C.muted }}>
+        {description}
+      </p>
+      {children && <div className="mt-5">{children}</div>}
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Bullet helpers                                                            */
+/* ────────────────────────────────────────────────────────────────────────── */
+
+function BulletPlain({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-center gap-2.5">
+      <span className="h-1 w-1 rounded-full shrink-0" style={{ background: C.muted }} />
+      {children}
+    </li>
+  );
+}
+
+function BulletAccent({ children, color }: { children: React.ReactNode; color: string }) {
+  return (
+    <li className="flex items-start gap-2.5">
+      <span
+        className="mt-1 h-1.5 w-1.5 rounded-full shrink-0"
+        style={{ background: color, boxShadow: `0 0 6px ${color}` }}
+      />
+      <span>{children}</span>
+    </li>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Hero mock — floating composition showing chat + coins + live              */
+/* ────────────────────────────────────────────────────────────────────────── */
+
+function HeroMock() {
+  return (
+    <div className="relative">
+
+      {/* Live badge — floats top */}
+      <div
+        className="absolute -top-3 left-6 z-20 flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold"
+        style={{
+          background:  C.surface,
+          border:      `1px solid ${C.rose}40`,
+          color:       C.cream,
+          boxShadow:   `0 8px 24px ${C.rose}30`,
+        }}
+      >
+        <span className="relative flex h-2 w-2">
+          <span
+            className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60"
+            style={{ background: C.rose }}
+          />
+          <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: C.rose }} />
+        </span>
+        LIVE · 1 240 ser på
+      </div>
+
+      {/* Main mock card */}
+      <div
+        className="relative rounded-2xl p-5 shadow-2xl"
+        style={{
+          background: `linear-gradient(150deg, ${C.surface2}, ${C.surface})`,
+          border:     `1px solid ${C.lineHi}`,
+        }}
+      >
+        {/* Window chrome */}
+        <div className="flex items-center gap-1.5 mb-4">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#3a2a2c" }} />
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#3a2a2c" }} />
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#3a2a2c" }} />
+          <span className="ml-3 text-[11px]" style={{ color: C.muted }}>community/chat</span>
+        </div>
+
+        {/* Chat messages */}
+        <div className="space-y-3">
+          <MockMsg name="Ola"      color={C.mint}   text="GG, det der var sykt." />
+          <MockMsg name="Kari"     color={C.orange} text="når går du live igjen??" fanpass />
+          <MockMsg name="Lars_TV"  color={C.amber}  text="brett-temaet er sjukt fint 🔥" fanpass />
+          <MockMsg name="Sara"     color={C.rose}   text="kjørte sjakk mot maskin på umulig, tapte 😭" />
+        </div>
+
+        {/* Input row */}
+        <div
+          className="mt-4 flex items-center gap-2 rounded-xl px-3 py-2.5"
+          style={{ background: C.bg, border: `1px solid ${C.line}` }}
+        >
+          <span className="text-xs flex-1" style={{ color: C.muted }}>Skriv en melding…</span>
+          <Send className="h-3.5 w-3.5" style={{ color: C.muted }} />
+        </div>
+      </div>
+
+      {/* Coin widget — floats bottom-right */}
+      <div
+        className="absolute -bottom-5 -right-3 z-10 rounded-2xl px-4 py-3 shadow-2xl"
+        style={{
+          background: C.surface,
+          border:     `1px solid ${C.amber}40`,
+          boxShadow:  `0 12px 32px ${C.amber}20`,
+        }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-xl"
+            style={{
+              background: `linear-gradient(135deg, ${C.amber}, ${C.orange})`,
+              color:      "#0d0809",
+            }}
+          >
+            <Coins className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wider" style={{ color: C.muted }}>Coins</p>
+            <p className="text-base font-bold leading-tight" style={{ color: C.cream }}>12 480</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MockMsg({ name, color, text, fanpass }: { name: string; color: string; text: string; fanpass?: boolean }) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <div
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+        style={{ background: `${color}20`, color }}
+      >
+        {name.charAt(0)}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-xs font-semibold" style={{ color: C.cream }}>{name}</span>
+          {fanpass && (
+            <span
+              className="text-[11px]"
+              style={{ color: C.amber, filter: `drop-shadow(0 0 3px ${C.amber}50)` }}
+              title="Fanpass-medlem"
+            >
+              ♛
+            </span>
+          )}
+        </div>
+        <p className="text-xs leading-relaxed mt-0.5" style={{ color: C.mutedHi }}>{text}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Live feature mock                                                         */
+/* ────────────────────────────────────────────────────────────────────────── */
+
+function LiveMock() {
+  return (
+    <div
+      className="rounded-xl overflow-hidden"
+      style={{ background: C.bg, border: `1px solid ${C.line}` }}
+    >
+      {/* "Video" area */}
+      <div
+        className="relative h-32 sm:h-36"
+        style={{
+          background: `radial-gradient(circle at 30% 40%, ${C.rose}30, transparent 60%),
+                       radial-gradient(circle at 70% 60%, ${C.orange}30, transparent 60%),
+                       ${C.surface2}`,
+        }}
+      >
+        <div className="absolute top-3 left-3 flex items-center gap-2">
+          <span
+            className="flex items-center gap-1.5 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+            style={{ background: C.rose, color: C.cream }}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+            Live
+          </span>
+          <span className="text-[10px]" style={{ color: C.cream }}>1 240 ser på</span>
+        </div>
+        <div className="absolute bottom-3 left-3 right-3 text-xs font-semibold truncate" style={{ color: C.cream }}>
+          Late night sjakk-strøm 🌙
+        </div>
+      </div>
+      {/* Chat preview strip */}
+      <div className="px-3 py-2 flex items-center gap-2 text-[11px]" style={{ borderTop: `1px solid ${C.line}` }}>
+        <span style={{ color: C.amber }}>♛ Kari:</span>
+        <span style={{ color: C.muted }}>GG, det var sjukt 🔥</span>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Fanpass feature mock                                                      */
+/* ────────────────────────────────────────────────────────────────────────── */
+
+function FanpassMock() {
+  return (
+    <div
+      className="rounded-xl p-4 relative overflow-hidden"
+      style={{
+        background: `linear-gradient(135deg, ${C.amber}15, ${C.orange}10)`,
+        border:     `1px solid ${C.amber}30`,
+      }}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <span
+          className="text-xl"
+          style={{ color: C.amber, filter: `drop-shadow(0 0 8px ${C.amber}80)` }}
+        >
+          ♛
+        </span>
+        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: C.amber }}>
+          Fanpass
+        </span>
+      </div>
+      <p className="text-2xl font-bold" style={{ color: C.cream }}>
+        49<span className="text-sm font-normal" style={{ color: C.muted }}> kr/mnd</span>
+      </p>
+      <ul className="mt-3 space-y-1.5 text-xs" style={{ color: C.mutedHi }}>
+        <li className="flex items-center gap-1.5">
+          <span className="h-1 w-1 rounded-full" style={{ background: C.amber }} />
+          ♛ Synlig badge
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span className="h-1 w-1 rounded-full" style={{ background: C.amber }} />
+          Eksklusive bretttema
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span className="h-1 w-1 rounded-full" style={{ background: C.amber }} />
+          Lukkede kanaler
+        </li>
+      </ul>
     </div>
   );
 }
