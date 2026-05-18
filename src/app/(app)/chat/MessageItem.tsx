@@ -5,6 +5,7 @@ import { Reply, Trash2, Pencil, Pin, PinOff, Paperclip, ChevronDown, ChevronRigh
 import type { MessageWithAuthor } from "@/lib/types";
 import SafeHtml from "@/components/SafeHtml";
 import { FanpassBadge } from "@/components/FanpassBadge";
+import VoiceMessage from "@/components/VoiceMessage";
 
 export interface Attachment {
   name: string;
@@ -145,6 +146,13 @@ export default function MessageItem({
                 className="max-h-48 max-w-xs rounded-lg object-cover ring-1 ring-zinc-700 transition-opacity hover:opacity-90"
               />
             </button>
+          )}
+
+          {/* Voice note */}
+          {message.audioUrl && (
+            <div className="mt-2">
+              <VoiceMessage url={message.audioUrl} durationSec={message.audioDuration} />
+            </div>
           )}
 
           {/* File attachment */}

@@ -64,6 +64,8 @@ export type Message = {
   id:              string;
   content:         string;
   imageUrl:        string | null;
+  audioUrl:        string | null;
+  audioDuration:   number | null;
   createdAt:       Date;
   editedAt:        Date | null;
   isPinned:        boolean;

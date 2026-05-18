@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect, useTransition, useCallback } from "react";
-import { SendHorizontal, Loader2, X, Paperclip } from "lucide-react";
+import { SendHorizontal, Loader2, X, Paperclip, Mic } from "lucide-react";
 import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
+import VoiceRecorder from "@/components/VoiceRecorder";
 import {
   sendMessage, getMessages, editMessage, deleteMessage, pinMessage,
 } from "@/server/actions/messages";
@@ -36,6 +37,7 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
   const [pasteToast,     setPasteToast]     = useState<string | null>(null);
   const [isUploading,    setIsUploading]    = useState(false);
   const [uploadedUrl,    setUploadedUrl]    = useState<string | null>(null);
+  const [recordingVoice, setRecordingVoice] = useState(false);
 
   const bottomRef      = useRef<HTMLDivElement>(null);
   const scrollRef      = useRef<HTMLDivElement>(null);
@@ -319,6 +321,27 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
 
       {/* Input */}
       <div className="shrink-0 border-t border-zinc-800 bg-zinc-900 px-5 py-3">
+        {recordingVoice ? (
+          <VoiceRecorder
+            onCancel={() => setRecordingVoice(false)}
+            onSend={async (audioUrl, duration) => {
+              setRecordingVoice(false);
+              startTransition(async () => {
+                try {
+                  const msg = await sendMessage(channelId, " ", undefined, undefined, audioUrl, duration);
+                  setMessages((prev) => {
+                    const ids = new Set(prev.map((m) => m.id));
+                    if (ids.has(msg.id)) return prev;
+                    return [...prev, msg as LocalMessage];
+                  });
+                  lastMsgIdRef.current = msg.id;
+                  isAtBottomRef.current = true;
+                  void broadcast(msg as LocalMessage);
+                } catch { /* ignore */ }
+              });
+            }}
+          />
+        ) : (
         <div className="flex items-end gap-2">
           <label className="shrink-0 cursor-pointer p-2 text-white/50 transition-colors hover:text-white" title="Last opp bilde (eller lim inn med Ctrl+V)">
             <Paperclip className="h-4 w-4" />
@@ -339,6 +362,14 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
               }
             }} />
           </label>
+          <button
+            type="button"
+            onClick={() => setRecordingVoice(true)}
+            className="shrink-0 p-2 text-white/50 transition-colors hover:text-white"
+            title="Ta opp voice-note"
+          >
+            <Mic className="h-4 w-4" />
+          </button>
           <div className="flex-1">
             <RichTextEditor
               ref={editorRef}
@@ -372,6 +403,7 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
             }
           </button>
         </div>
+        )}
         {userName && (
           <p className="mt-1 text-[10px] text-zinc-600">Enter for å sende · Shift+Enter for ny linje · @ for å nevne · **fet** _kursiv_</p>
         )}

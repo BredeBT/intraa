@@ -12,6 +12,8 @@ type PrismaMsg = {
   id:              string;
   content:         string;
   imageUrl:        string | null;
+  audioUrl:        string | null;
+  audioDuration:   number | null;
   createdAt:       Date;
   editedAt:        Date | null;
   isPinned:        boolean;
@@ -41,6 +43,8 @@ function mapMessage(m: PrismaMsg, userId: string, fanpassSet?: Set<string>): Mes
     id:              m.id,
     content:         m.content,
     imageUrl:        m.imageUrl,
+    audioUrl:        m.audioUrl,
+    audioDuration:   m.audioDuration,
     createdAt:       m.createdAt,
     editedAt:        m.editedAt,
     isPinned:        m.isPinned,
@@ -180,6 +184,8 @@ export async function sendMessage(
   content:         string,
   parentMessageId?: string,
   imageUrl?:        string,
+  audioUrl?:        string,
+  audioDuration?:   number,
 ): Promise<MessageWithAuthor> {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Ikke innlogget");
@@ -225,7 +231,15 @@ export async function sendMessage(
   }
 
   const message = await db.message.create({
-    data:    { channelId, authorId: session.user.id, content, parentMessageId: parentMessageId ?? null, imageUrl: imageUrl ?? null },
+    data: {
+      channelId,
+      authorId:        session.user.id,
+      content,
+      parentMessageId: parentMessageId ?? null,
+      imageUrl:        imageUrl ?? null,
+      audioUrl:        audioUrl ?? null,
+      audioDuration:   audioDuration ?? null,
+    },
     include: { ...MSG_INCLUDE },
   });
 
