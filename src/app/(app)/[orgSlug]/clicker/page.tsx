@@ -686,7 +686,7 @@ export default function ClickerPage() {
           style={{
             width: 196,
             height: 196,
-            background: "#1e1b4b",
+            background: "#3a2410",
             border: "2px solid rgba(255,107,53,0.25)",
           }}
         >
@@ -983,7 +983,7 @@ export default function ClickerPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div
             className="w-full max-w-sm rounded-2xl p-6"
-            style={{ background: "#12121e", border: "1px solid rgba(255,255,255,0.1)" }}
+            style={{ background: "#1a1213", border: "1px solid rgba(255,255,255,0.1)" }}
           >
             <h3 className="mb-2 text-lg font-bold text-white">Gå i Prestige?</h3>
             <p className="mb-4 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
@@ -1024,7 +1024,7 @@ export default function ClickerPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div
             className="flex w-full max-w-md flex-col rounded-2xl"
-            style={{ background: "#12121e", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "85vh" }}
+            style={{ background: "#1a1213", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "85vh" }}
           >
             {/* Header */}
             <div className="flex shrink-0 items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
@@ -1188,7 +1188,7 @@ export default function ClickerPage() {
       {/* Mobile tab-bar */}
       <div
         className="flex shrink-0 md:hidden"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#12121e" }}
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#1a1213" }}
       >
         {(["verdener", "klikker", "oppgraderinger"] as const).map((tab) => {
           const labels = { klikker: "Klikk", verdener: "Verdener", oppgraderinger: "Oppgrader" };
@@ -1211,7 +1211,7 @@ export default function ClickerPage() {
       {/* Left — Worlds */}
       <div
         className={`${mobileTab === "verdener" ? "flex" : "hidden"} md:flex w-full md:w-[180px] shrink-0 flex-col overflow-y-auto py-4 px-3 scrollbar-hide`}
-        style={{ background: "#12121e", borderRight: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ background: "#1a1213", borderRight: "1px solid rgba(255,255,255,0.07)" }}
       >
         {WorldsPanel}
       </div>
@@ -1224,7 +1224,7 @@ export default function ClickerPage() {
       {/* Right — Upgrades */}
       <div
         className={`${mobileTab === "oppgraderinger" ? "flex" : "hidden"} md:flex w-full md:w-[260px] shrink-0 flex-col overflow-hidden`}
-        style={{ background: "#12121e", borderLeft: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ background: "#1a1213", borderLeft: "1px solid rgba(255,255,255,0.07)" }}
       >
         {UpgradesPanel}
       </div>

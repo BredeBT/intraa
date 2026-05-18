@@ -44,6 +44,32 @@
   --color-indigo-900: #78350f;
   --color-indigo-950: #451a03;
 
+  /* Purple → Orange (same as violet, single brand color for primary actions) */
+  --color-purple-50:  #fff7ed;
+  --color-purple-100: #ffedd5;
+  --color-purple-200: #fed7aa;
+  --color-purple-300: #fdba74;
+  --color-purple-400: #fb923c;
+  --color-purple-500: #f97316;
+  --color-purple-600: #ea580c;
+  --color-purple-700: #c2410c;
+  --color-purple-800: #9a3412;
+  --color-purple-900: #7c2d12;
+  --color-purple-950: #431407;
+
+  /* Fuchsia → Rose (deeper warm accent for special highlights) */
+  --color-fuchsia-50:  #fff1f2;
+  --color-fuchsia-100: #ffe4e6;
+  --color-fuchsia-200: #fecdd3;
+  --color-fuchsia-300: #fda4af;
+  --color-fuchsia-400: #fb7185;
+  --color-fuchsia-500: #f43f5e;
+  --color-fuchsia-600: #e11d48;
+  --color-fuchsia-700: #be123c;
+  --color-fuchsia-800: #9f1239;
+  --color-fuchsia-900: #881337;
+  --color-fuchsia-950: #4c0519;
+
   /* Warm the deep neutrals to match the landing page */
   --color-zinc-950: #0d0809;
   --color-zinc-900: #1a1213;

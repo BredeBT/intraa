@@ -12,7 +12,7 @@ export function IncomingCallBanner() {
 
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm px-4 pointer-events-none">
-      <div className="pointer-events-auto bg-[#1a1a2e] border border-purple-500/40 rounded-2xl p-4 shadow-2xl">
+      <div className="pointer-events-auto bg-[#221718] border border-purple-500/40 rounded-2xl p-4 shadow-2xl">
         <div className="flex items-center gap-3">
           {/* Avatar med pulse */}
           <div className="relative shrink-0">

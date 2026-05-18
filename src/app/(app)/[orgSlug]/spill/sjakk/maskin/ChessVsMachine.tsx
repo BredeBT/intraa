@@ -156,7 +156,7 @@ function ChessBoard({
 
       {promoting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="rounded-2xl border border-white/10 bg-[#1a1a2e] p-6 shadow-2xl">
+          <div className="rounded-2xl border border-white/10 bg-[#221718] p-6 shadow-2xl">
             <p className="mb-4 text-center text-sm font-semibold text-white">Velg brikke</p>
             <div className="flex gap-3">
               {(["q","r","b","n"] as const).map((p) => (

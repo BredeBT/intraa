@@ -104,7 +104,7 @@ function strip(html: string, max = 45) {
 function Avatar({ avatarUrl, name, size = 10, isOnline }: { avatarUrl: string | null; name: string | null; size?: number; isOnline?: boolean }) {
   const cls = `h-${size} w-${size} shrink-0 rounded-full object-cover`;
   const dot = isOnline ? (
-    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#12121e]" />
+    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#1a1213]" />
   ) : null;
   const inner = avatarUrl
     // eslint-disable-next-line @next/next/no-img-element
@@ -722,7 +722,7 @@ export default function MeldingerClient({
     <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] overflow-hidden" style={{ background: "#0d0809" }}>
 
       {/* ─── Sidebar ────────────────────────────────────────────────────────── */}
-      <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-72 shrink-0 flex-col border-r border-white/[0.06]`} style={{ background: "#12121e" }}>
+      <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-72 shrink-0 flex-col border-r border-white/[0.06]`} style={{ background: "#1a1213" }}>
 
         {/* Search */}
         <div className="shrink-0 p-3 border-b border-white/[0.06]">
@@ -923,7 +923,7 @@ export default function MeldingerClient({
             <div className="relative">
               {chatHeader.avatar}
               {active?.type === "dm" && onlineUsers.includes(active.userId) && (
-                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#12121e]" />
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#1a1213]" />
               )}
             </div>
             <div>
@@ -1008,7 +1008,7 @@ export default function MeldingerClient({
 
             {/* ── Incoming call banner ──────────────────────────────────────── */}
             {webrtc.incomingCall && (
-              <div className="mx-4 mt-3 shrink-0 flex items-center gap-4 rounded-2xl border border-purple-500/30 p-4" style={{ background: "#1a1a2e" }}>
+              <div className="mx-4 mt-3 shrink-0 flex items-center gap-4 rounded-2xl border border-purple-500/30 p-4" style={{ background: "#221718" }}>
                 <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-lg animate-pulse">
                   {webrtc.incomingCall.type === "video" ? "📹" : "📞"}
                 </div>
@@ -1049,7 +1049,7 @@ export default function MeldingerClient({
 
             {/* ── Call overlay ──────────────────────────────────────────────── */}
             {(webrtc.callState === "connected" || webrtc.callState === "calling") && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center z-50 backdrop-blur-sm" style={{ background: "#0a0a1499" }}>
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-50 backdrop-blur-sm" style={{ background: "#0d080999" }}>
 
                 {webrtc.callType === "video" ? (
                   <div className="relative w-full h-full md:h-auto md:max-w-lg md:mx-4">

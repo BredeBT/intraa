@@ -91,7 +91,7 @@ export default async function RangeringPage() {
 
           {/* ── Rest of the list ── */}
           {rest.length > 0 && (
-            <div className="mb-6 overflow-hidden rounded-2xl border border-white/[0.06] bg-[#12121e]">
+            <div className="mb-6 overflow-hidden rounded-2xl border border-white/[0.06] bg-[#1a1213]">
               {rest.map((member, i) => (
                 <div
                   key={member.userId}

@@ -25,7 +25,7 @@ export default async function TenantLayout({
       {/* Sidebar */}
       <aside
         className="flex flex-col px-3 py-5"
-        style={{ background: "#12121e", borderRight: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ background: "#1a1213", borderRight: "1px solid rgba(255,255,255,0.07)" }}
       >
         <TenantSideNav
           orgId={org.id}

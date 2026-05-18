@@ -360,7 +360,7 @@ export default function FeedClient({
       )}
 
       {/* ── Compose box ── */}
-      <div className="rounded-2xl border border-white/[0.06] p-4 mb-4" style={{ background: "#12121e" }}>
+      <div className="rounded-2xl border border-white/[0.06] p-4 mb-4" style={{ background: "#1a1213" }}>
         {pasteToast && (
           <div className="mb-3 flex items-center justify-between rounded-lg border border-white/[0.06] px-3 py-2 text-xs text-white/50" style={{ background: "rgba(255,255,255,0.05)" }}>
             <span>📋 {pasteToast}</span>
@@ -405,7 +405,7 @@ export default function FeedClient({
                 <div className="relative w-fit">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={imagePreview} alt="Forhåndsvisning" className="max-h-48 rounded-xl object-cover" />
-                  <button onClick={clearImage} className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-white" style={{ background: "#12121e" }}>
+                  <button onClick={clearImage} className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-white" style={{ background: "#1a1213" }}>
                     <X className="h-3 w-3" />
                   </button>
                 </div>
@@ -475,7 +475,7 @@ export default function FeedClient({
               <article
                 key={post.id}
                 className="rounded-2xl border border-white/[0.06] overflow-hidden transition-colors hover:border-white/[0.10]"
-                style={{ background: "#12121e" }}
+                style={{ background: "#1a1213" }}
               >
                 {/* Header */}
                 <div className="flex items-center gap-3 px-4 pt-4 pb-3">
@@ -601,7 +601,7 @@ export default function FeedClient({
       {/* Delete confirmation modal */}
       {confirmDeleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-white/[0.08] p-6 shadow-2xl" style={{ background: "#12121e" }}>
+          <div className="w-full max-w-sm rounded-2xl border border-white/[0.08] p-6 shadow-2xl" style={{ background: "#1a1213" }}>
             <h3 className="mb-2 text-base font-semibold text-white">Slett innlegg</h3>
             <p className="mb-5 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
               Er du sikker? Handlingen kan ikke angres.

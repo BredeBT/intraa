@@ -43,7 +43,7 @@ export default function OpenInvitePage({ params }: { params: Promise<{ token: st
           <div className="text-2xl font-bold tracking-tight text-white">Intraa</div>
         </div>
 
-        <div className="rounded-2xl p-8 shadow-xl" style={{ background: "#12121e", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="rounded-2xl p-8 shadow-xl" style={{ background: "#1a1213", border: "1px solid rgba(255,255,255,0.08)" }}>
           {state === "joining" && (
             <div className="flex flex-col items-center gap-4 py-4">
               <div className="h-10 w-10 animate-spin rounded-full" style={{ border: "3px solid rgba(255,255,255,0.1)", borderTopColor: "#ff6b35" }} />

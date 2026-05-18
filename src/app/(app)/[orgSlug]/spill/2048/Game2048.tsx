@@ -98,7 +98,7 @@ function maxTile(board: Board): number {
 
 function tileStyle(value: number): { bg: string; color: string; fontSize: string } {
   const map: Record<number, { bg: string; color: string }> = {
-    2:    { bg: "#1a1a2e", color: "#e8e8f0" },
+    2:    { bg: "#221718", color: "#e8e8f0" },
     4:    { bg: "#16213e", color: "#e8e8f0" },
     8:    { bg: "#0f3460", color: "#ffffff" },
     16:   { bg: "#533483", color: "#ffffff" },
@@ -108,9 +108,9 @@ function tileStyle(value: number): { bg: string; color: string; fontSize: string
     256:  { bg: "#8e44ad", color: "#ffffff" },
     512:  { bg: "#6c3483", color: "#ffd700" },
     1024: { bg: "#4a235a", color: "#ffd700" },
-    2048: { bg: "#f9c74f", color: "#1a1a2e" },
+    2048: { bg: "#f9c74f", color: "#221718" },
   };
-  const c = map[value] ?? { bg: "#f9c74f", color: "#1a1a2e" };
+  const c = map[value] ?? { bg: "#f9c74f", color: "#221718" };
   const len = String(value).length;
   const fontSize = len <= 2 ? "1.6rem" : len === 3 ? "1.25rem" : len === 4 ? "1rem" : "0.8rem";
   return { ...c, fontSize };

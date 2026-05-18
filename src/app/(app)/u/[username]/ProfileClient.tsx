@@ -77,7 +77,7 @@ function DropdownMenu({ items, onClose }: { items: MenuItem[]; onClose: () => vo
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-10 z-50 min-w-[180px] rounded-xl border border-white/[0.08] bg-[#1a1a2e] shadow-xl shadow-black/40"
+      className="absolute right-0 top-10 z-50 min-w-[180px] rounded-xl border border-white/[0.08] bg-[#221718] shadow-xl shadow-black/40"
     >
       {items.map((item, i) => (
         <div key={i}>
@@ -125,7 +125,7 @@ function BottomSheet({
         onClick={close}
       />
       <div
-        className={`relative z-10 rounded-t-2xl border-t border-white/[0.08] bg-[#1a1a2e] pb-safe transition-transform duration-250 ${
+        className={`relative z-10 rounded-t-2xl border-t border-white/[0.08] bg-[#221718] pb-safe transition-transform duration-250 ${
           visible ? "translate-y-0" : "translate-y-full"
         }`}
       >
@@ -244,7 +244,7 @@ function EditProfileModal({ name, bio, avatarUrl, bannerUrl, onClose, onSave }: 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/[0.08] bg-[#1a1a2e] overflow-hidden">
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/[0.08] bg-[#221718] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
           <h2 className="text-base font-semibold text-white">Rediger profil</h2>
@@ -276,7 +276,7 @@ function EditProfileModal({ name, bio, avatarUrl, bannerUrl, onClose, onSave }: 
           {/* Avatar */}
           <div className="flex items-end gap-4 -mt-8 mb-4">
             <div
-              className="relative w-16 h-16 rounded-full border-4 border-[#1a1a2e] overflow-hidden bg-purple-600 flex items-center justify-center text-xl font-bold cursor-pointer group flex-shrink-0"
+              className="relative w-16 h-16 rounded-full border-4 border-[#221718] overflow-hidden bg-purple-600 flex items-center justify-center text-xl font-bold cursor-pointer group flex-shrink-0"
               onClick={() => avatarInputRef.current?.click()}
             >
               {editAvatarUrl ? (
@@ -629,7 +629,7 @@ export default function ProfileClient({
 
       {/* Communities */}
       {communities.length > 0 && (
-        <div className="bg-[#12121e] border border-white/[0.06] rounded-2xl p-4">
+        <div className="bg-[#1a1213] border border-white/[0.06] rounded-2xl p-4">
           <p className="text-[11px] font-semibold text-white/30 uppercase tracking-wider mb-3">Communities</p>
           <div className="space-y-1">
             {communities.map((c) => (

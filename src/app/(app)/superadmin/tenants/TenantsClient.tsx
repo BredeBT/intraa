@@ -130,7 +130,7 @@ function TenantCard({
   return (
     <div
       className="overflow-hidden rounded-xl transition-all"
-      style={{ background: "#12121e", border: "1px solid rgba(255,255,255,0.08)" }}
+      style={{ background: "#1a1213", border: "1px solid rgba(255,255,255,0.08)" }}
     >
       {/* Banner */}
       <div className="relative h-20 w-full" style={bannerStyle}>
@@ -246,7 +246,7 @@ function DeleteDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" onClick={onClose}>
       <div
         className="w-full max-w-md rounded-2xl p-6"
-        style={{ background: "#12121e", border: "1px solid rgba(255,255,255,0.1)" }}
+        style={{ background: "#1a1213", border: "1px solid rgba(255,255,255,0.1)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="mb-1 text-lg font-bold text-white">Slett {tenant.name}?</h3>
@@ -359,7 +359,7 @@ function NewTenantModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" onClick={onClose}>
       <div
         className="w-full max-w-lg rounded-2xl"
-        style={{ background: "#12121e", border: "1px solid rgba(255,255,255,0.1)" }}
+        style={{ background: "#1a1213", border: "1px solid rgba(255,255,255,0.1)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
