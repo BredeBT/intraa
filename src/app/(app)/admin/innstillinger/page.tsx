@@ -11,11 +11,19 @@ export default async function InnstillingerPage({
   const { organizationId, role } = await requireAdmin();
   const { tab } = await searchParams;
 
-  const [org, theme, featureRows, streamSettings] = await Promise.all([
+  const [org, theme, featureRows, streamSettings, memberCount, fanpassCount, broadcastChannel] = await Promise.all([
     db.organization.findUnique({ where: { id: organizationId } }),
     db.tenantTheme.findUnique({ where: { organizationId } }),
     db.organizationFeature.findMany({ where: { organizationId } }),
     db.streamSettings.findUnique({ where: { organizationId } }),
+    db.membership.count({ where: { organizationId } }),
+    db.fanPass.count({
+      where: { organizationId, status: "ACTIVE", endDate: { gt: new Date() } },
+    }),
+    db.channel.findFirst({
+      where:  { orgId: organizationId, type: "BROADCAST" },
+      select: { name: true },
+    }),
   ]);
 
   if (!org) return null;
@@ -42,7 +50,7 @@ export default async function InnstillingerPage({
   return (
     <InnstillingerClient
       initialTab={tab ?? "generelt"}
-      org={{ id: org.id, name: org.name, slug: org.slug, type: org.type, plan: org.plan }}
+      org={{ id: org.id, name: org.name, slug: org.slug, type: org.type, plan: org.plan, accessMode: org.accessMode }}
       theme={themeInitial}
       features={featureMap}
       userRole={role}
@@ -50,6 +58,11 @@ export default async function InnstillingerPage({
         twitchChannel:     streamSettings?.twitchChannel     ?? "",
         youtubeChannel:    streamSettings?.youtubeChannel    ?? "",
         preferredPlatform: streamSettings?.preferredPlatform ?? "twitch",
+      }}
+      accessStats={{
+        memberCount,
+        fanpassCount,
+        broadcastChannelName: broadcastChannel?.name ?? null,
       }}
     />
   );

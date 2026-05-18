@@ -10,12 +10,13 @@ import {
 } from "@/lib/features";
 import type { Feature } from "@/lib/features";
 import { BANNER_PRESETS, AVATAR_PRESETS } from "@/lib/themePresets";
+import AccessModePicker from "@/app/(app)/community/[slug]/admin/tilgang/AccessModePicker";
 
 const DISABLED_BY_DEFAULT = new Set<Feature>(["live"]);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = "generelt" | "utseende" | "funksjoner" | "varsler" | "shop";
+type Tab = "generelt" | "tilgang" | "utseende" | "funksjoner" | "varsler" | "shop";
 type OrgType = "COMPANY" | "COMMUNITY";
 type MemberRole = "OWNER" | "ADMIN" | "MODERATOR" | "VIP" | "MEMBER";
 
@@ -30,17 +31,24 @@ interface Theme {
 }
 
 interface OrgInfo {
-  id:   string;
-  name: string;
-  slug: string;
-  type: OrgType;
-  plan: string;
+  id:         string;
+  name:       string;
+  slug:       string;
+  type:       OrgType;
+  plan:       string;
+  accessMode: "OPEN" | "FREEMIUM" | "EXCLUSIVE";
 }
 
 interface StreamSettingsForm {
   twitchChannel:     string;
   youtubeChannel:    string;
   preferredPlatform: string;
+}
+
+interface AccessStats {
+  memberCount:           number;
+  fanpassCount:          number;
+  broadcastChannelName:  string | null;
 }
 
 interface Props {
@@ -50,6 +58,7 @@ interface Props {
   features:       Record<string, boolean>;
   userRole:       MemberRole;
   streamSettings: StreamSettingsForm;
+  accessStats:    AccessStats;
 }
 
 // ─── Theme constants ──────────────────────────────────────────────────────────
@@ -71,6 +80,7 @@ const FONT_OPTIONS = [
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "generelt",   label: "Generelt" },
+  { id: "tilgang",    label: "Tilgang" },
   { id: "utseende",   label: "Utseende" },
   { id: "funksjoner", label: "Funksjoner" },
   { id: "varsler",    label: "Varsler" },
@@ -325,10 +335,10 @@ function ShopAdminTab({ orgId }: { orgId: string }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export default function InnstillingerClient({ initialTab, org: initialOrg, theme: initialTheme, features: initialFeatures, userRole, streamSettings: initialStream }: Props) {
+export default function InnstillingerClient({ initialTab, org: initialOrg, theme: initialTheme, features: initialFeatures, userRole, streamSettings: initialStream, accessStats }: Props) {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const validTabs: Tab[] = ["generelt", "utseende", "funksjoner", "varsler", "shop"];
+  const validTabs: Tab[] = ["generelt", "tilgang", "utseende", "funksjoner", "varsler", "shop"];
   const activeTab = validTabs.includes(searchParams.get("tab") as Tab) ? (searchParams.get("tab") as Tab) : "generelt";
 
   function setTab(tab: Tab) {
@@ -590,6 +600,25 @@ export default function InnstillingerClient({ initialTab, org: initialOrg, theme
             </button>
             {streamSaved && <span className="flex items-center gap-1.5 text-sm text-emerald-400"><Check className="h-4 w-4" /> Lagret</span>}
           </div>
+        </div>
+      )}
+
+      {/* ══ TAB: TILGANG ══ */}
+      {activeTab === "tilgang" && (
+        <div className="max-w-2xl">
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-white">Tilgangsmodus</h3>
+            <p className="mt-0.5 text-xs text-zinc-500">
+              Bestem hvordan folk får tilgang til {org.name}. Valget styrer om Fanpass-funksjoner og betalingsvegg er aktive.
+            </p>
+          </div>
+          <AccessModePicker
+            orgSlug={org.slug}
+            currentMode={org.accessMode}
+            memberCount={accessStats.memberCount}
+            fanpassCount={accessStats.fanpassCount}
+            broadcastChannelName={accessStats.broadcastChannelName}
+          />
         </div>
       )}
 
