@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, Users, ChevronLeft, X, Shield, Ticket, RotateCcw, Trash2 } from "lucide-react";
+import { Search, Users, ChevronLeft, X, Shield, Ticket, RotateCcw, Trash2, Check, Loader2 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,6 +42,15 @@ function fmtDate(iso: string) {
 
 // ─── User edit modal ──────────────────────────────────────────────────────────
 
+interface UserCommunity {
+  orgId:       string;
+  orgSlug:     string;
+  orgName:     string;
+  hasFanpass:  boolean;
+  fanpassEnd:  string | null;
+  granted:     boolean;
+}
+
 function ManageModal({ user, onClose, onSaved }: { user: User; onClose: () => void; onSaved: (u: User) => void }) {
   const [name,       setName]       = useState(user.name ?? "");
   const [username,   setUsername]   = useState(user.username);
@@ -51,6 +60,53 @@ function ManageModal({ user, onClose, onSaved }: { user: User; onClose: () => vo
   const [error,      setError]      = useState<string | null>(null);
   const [confirm,    setConfirm]    = useState<"remove" | null>(null);
   const [, start]                   = useTransition();
+
+  // ── Fanpass management ───────────────────────────────────────────────────
+  const [communities, setCommunities] = useState<UserCommunity[] | null>(null);
+  const [fpLoading,   setFpLoading]   = useState(true);
+  const [fpToggling,  setFpToggling]  = useState<string | null>(null);
+  const [showAllOrgs, setShowAllOrgs] = useState(false);
+  const [allOrgs,     setAllOrgs]     = useState<{ id: string; slug: string; name: string }[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch(`/api/superadmin/users/${user.id}/fanpass`)
+      .then((r) => r.json() as Promise<{ communities: UserCommunity[] }>)
+      .then((d) => { if (!cancelled) { setCommunities(d.communities); setFpLoading(false); } })
+      .catch(() => { if (!cancelled) setFpLoading(false); });
+    return () => { cancelled = true; };
+  }, [user.id]);
+
+  async function toggleFanpass(orgId: string, isCurrentlyActive: boolean) {
+    setFpToggling(orgId);
+    try {
+      const res = isCurrentlyActive
+        ? await fetch(`/api/superadmin/users/${user.id}/fanpass?orgId=${orgId}`, { method: "DELETE" })
+        : await fetch(`/api/superadmin/users/${user.id}/fanpass`,
+            { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orgId, durationDays: 365 }) });
+      if (res.ok) {
+        const refreshed = await fetch(`/api/superadmin/users/${user.id}/fanpass`)
+          .then((r) => r.json() as Promise<{ communities: UserCommunity[] }>);
+        setCommunities(refreshed.communities);
+        // bubble new fanpass status to the list
+        const anyActive = refreshed.communities.some((c) => c.hasFanpass);
+        onSaved({ ...user, hasFanpass: anyActive });
+      }
+    } finally {
+      setFpToggling(null);
+    }
+  }
+
+  async function openAllOrgs() {
+    setShowAllOrgs(true);
+    if (allOrgs.length === 0) {
+      const res = await fetch("/api/superadmin/orgs?limit=100");
+      if (res.ok) {
+        const d = await res.json() as { orgs: { id: string; slug: string; name: string }[] };
+        setAllOrgs(d.orgs);
+      }
+    }
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -184,6 +240,105 @@ function ManageModal({ user, onClose, onSaved }: { user: User; onClose: () => vo
             <div className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
               <p className="text-xs text-emerald-300 mb-1">Midlertidig passord — gi dette til brukeren:</p>
               <code className="font-mono text-sm text-emerald-200 select-all">{tempPw}</code>
+            </div>
+          )}
+        </div>
+
+        {/* Fanpass per community */}
+        <div className="mt-6 border-t border-zinc-800 pt-5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 flex items-center gap-1.5">
+              <Ticket className="h-3.5 w-3.5" /> Fanpass
+            </p>
+            <button
+              onClick={() => void openAllOrgs()}
+              className="text-[11px] text-zinc-500 hover:text-white transition-colors"
+            >
+              + Annet community
+            </button>
+          </div>
+
+          {fpLoading ? (
+            <div className="flex items-center gap-2 text-xs text-zinc-500">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Henter status…
+            </div>
+          ) : !communities || communities.length === 0 ? (
+            <p className="text-xs text-zinc-500">Brukeren er ikke medlem av noen communities ennå.</p>
+          ) : (
+            <div className="space-y-1.5">
+              {communities.map((c) => {
+                const isToggling = fpToggling === c.orgId;
+                return (
+                  <div
+                    key={c.orgId}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-white">{c.orgName}</p>
+                      <p className="truncate text-[11px] text-zinc-500">
+                        {c.hasFanpass
+                          ? c.granted
+                            ? <>Aktiv · gitt av admin · utløper {c.fanpassEnd ? new Date(c.fanpassEnd).toLocaleDateString("nb-NO") : "—"}</>
+                            : <>Aktiv · betalt · utløper {c.fanpassEnd ? new Date(c.fanpassEnd).toLocaleDateString("nb-NO") : "—"}</>
+                          : "Ingen Fanpass"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => void toggleFanpass(c.orgId, c.hasFanpass)}
+                      disabled={isToggling}
+                      className={`relative h-5 w-9 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
+                        c.hasFanpass ? "bg-violet-600" : "bg-zinc-700"
+                      }`}
+                      title={c.hasFanpass ? "Trekk tilbake" : "Gi Fanpass (1 år)"}
+                    >
+                      <span
+                        className={`absolute top-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-white shadow transition-transform ${
+                          c.hasFanpass ? "translate-x-[18px]" : "translate-x-0.5"
+                        }`}
+                      >
+                        {isToggling && <Loader2 className="h-2.5 w-2.5 animate-spin text-zinc-600" />}
+                        {!isToggling && c.hasFanpass && <Check className="h-2.5 w-2.5 text-violet-600" />}
+                      </span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* "Add other community" picker */}
+          {showAllOrgs && (
+            <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-medium text-zinc-300">Velg community å gi Fanpass i</p>
+                <button onClick={() => setShowAllOrgs(false)} className="text-zinc-500 hover:text-white">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="max-h-48 overflow-y-auto space-y-1">
+                {allOrgs.length === 0 ? (
+                  <p className="text-xs text-zinc-500 py-2">Henter…</p>
+                ) : (
+                  allOrgs
+                    .filter((o) => !communities?.some((c) => c.orgId === o.id))
+                    .map((o) => (
+                      <button
+                        key={o.id}
+                        onClick={() => {
+                          void toggleFanpass(o.id, false);
+                          setShowAllOrgs(false);
+                        }}
+                        className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
+                      >
+                        <span className="truncate">{o.name}</span>
+                        <span className="text-[10px] text-violet-400 shrink-0">+ Gi Fanpass</span>
+                      </button>
+                    ))
+                )}
+              </div>
+              <p className="mt-2 text-[10px] text-zinc-600">
+                Brukeren legges til som medlem automatisk hvis ikke allerede med.
+              </p>
             </div>
           )}
         </div>
