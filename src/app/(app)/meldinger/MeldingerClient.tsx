@@ -1033,7 +1033,11 @@ export default function MeldingerClient({
             </div>
           </div>
         ) : active.type === "channel" ? (
-          active.locked ? (
+          /* Derive `locked` fresh from communities each render so that when
+             Fanpass is granted (and router.refresh fires), the UI updates
+             automatically without requiring re-clicking the channel. */
+          (communities.find((c) => c.orgId === active.orgId)?.channels.find((ch) => ch.id === active.channelId)?.locked
+            ?? active.locked) ? (
             <LockedChannelTeaser
               channelName={active.channelName}
               orgName={active.orgName}

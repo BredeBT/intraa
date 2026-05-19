@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Radio, Sparkles } from "lucide-react";
 
@@ -12,6 +14,18 @@ export default function LockedChannelTeaser({
   orgName:     string;
   orgSlug:     string;
 }) {
+  const router = useRouter();
+  const refreshed = useRef(false);
+
+  // Auto-refresh once on mount — if user actually has Fanpass now (e.g. just
+  // got it granted), the server re-render will unlock the channel and the
+  // parent will swap to BroadcastView instead of this teaser.
+  useEffect(() => {
+    if (refreshed.current) return;
+    refreshed.current = true;
+    router.refresh();
+  }, [router]);
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 min-h-0 overflow-y-auto">
       <div
