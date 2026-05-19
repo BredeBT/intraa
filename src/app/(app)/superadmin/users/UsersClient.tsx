@@ -68,6 +68,14 @@ function ManageModal({ user, onClose, onSaved }: { user: User; onClose: () => vo
   const [showAllOrgs, setShowAllOrgs] = useState(false);
   const [allOrgs,     setAllOrgs]     = useState<{ id: string; slug: string; name: string }[]>([]);
 
+  const DURATIONS: { label: string; days: number }[] = [
+    { label: "1 mnd",  days:  30 },
+    { label: "3 mnd",  days:  90 },
+    { label: "6 mnd",  days: 180 },
+    { label: "1 år",   days: 365 },
+  ];
+  const [durationDays, setDurationDays] = useState<number>(365);
+
   useEffect(() => {
     let cancelled = false;
     void fetch(`/api/superadmin/users/${user.id}/fanpass`)
@@ -83,7 +91,7 @@ function ManageModal({ user, onClose, onSaved }: { user: User; onClose: () => vo
       const res = isCurrentlyActive
         ? await fetch(`/api/superadmin/users/${user.id}/fanpass?orgId=${orgId}`, { method: "DELETE" })
         : await fetch(`/api/superadmin/users/${user.id}/fanpass`,
-            { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orgId, durationDays: 365 }) });
+            { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orgId, durationDays }) });
       if (res.ok) {
         const refreshed = await fetch(`/api/superadmin/users/${user.id}/fanpass`)
           .then((r) => r.json() as Promise<{ communities: UserCommunity[] }>);
@@ -258,6 +266,26 @@ function ManageModal({ user, onClose, onSaved }: { user: User; onClose: () => vo
             </button>
           </div>
 
+          {/* Duration picker */}
+          <div className="mb-3 flex items-center gap-2">
+            <span className="text-[11px] text-zinc-500 shrink-0">Varighet:</span>
+            <div className="flex gap-1 flex-1">
+              {DURATIONS.map((d) => (
+                <button
+                  key={d.days}
+                  onClick={() => setDurationDays(d.days)}
+                  className={`flex-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                    durationDays === d.days
+                      ? "bg-violet-500/20 text-violet-300 border border-violet-500/40"
+                      : "border border-zinc-800 bg-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700"
+                  }`}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {fpLoading ? (
             <div className="flex items-center gap-2 text-xs text-zinc-500">
               <Loader2 className="h-3.5 w-3.5 animate-spin" /> Henter status…
@@ -286,15 +314,32 @@ function ManageModal({ user, onClose, onSaved }: { user: User; onClose: () => vo
                     <button
                       onClick={() => void toggleFanpass(c.orgId, c.hasFanpass)}
                       disabled={isToggling}
-                      className={`relative h-5 w-9 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
-                        c.hasFanpass ? "bg-violet-600" : "bg-zinc-700"
-                      }`}
-                      title={c.hasFanpass ? "Trekk tilbake" : "Gi Fanpass (1 år)"}
+                      style={{
+                        position:   "relative",
+                        width:      36,
+                        height:     20,
+                        borderRadius: 9999,
+                        background: c.hasFanpass ? "#7c3aed" : "#3f3f46",
+                        transition: "background-color 150ms",
+                        flexShrink: 0,
+                      }}
+                      title={c.hasFanpass ? "Trekk tilbake Fanpass" : `Gi Fanpass (${DURATIONS.find((d) => d.days === durationDays)?.label})`}
                     >
                       <span
-                        className={`absolute top-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-white shadow transition-transform ${
-                          c.hasFanpass ? "translate-x-[18px]" : "translate-x-0.5"
-                        }`}
+                        style={{
+                          position:   "absolute",
+                          top:        2,
+                          left:       c.hasFanpass ? 18 : 2,
+                          width:      16,
+                          height:     16,
+                          borderRadius: 9999,
+                          background: "#ffffff",
+                          boxShadow:  "0 1px 3px rgba(0,0,0,0.3)",
+                          transition: "left 150ms",
+                          display:    "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
                       >
                         {isToggling && <Loader2 className="h-2.5 w-2.5 animate-spin text-zinc-600" />}
                         {!isToggling && c.hasFanpass && <Check className="h-2.5 w-2.5 text-violet-600" />}
