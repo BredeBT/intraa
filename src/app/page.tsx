@@ -8,25 +8,29 @@ import { db } from "@/server/db";
 export const dynamic = "force-dynamic";
 
 /**
- * Sunset Warmth color tokens — applied via inline style for exact hex match.
+ * Aurora palette tokens — applied via inline style for exact hex match.
+ * Mirrors the CSS variables in globals.css.
  */
 const C = {
-  bg:       "#050816",
-  surface:  "#0B1027",
-  surface2: "#131A35",
-  line:     "rgba(255,249,240,0.08)",
-  lineHi:   "rgba(255,249,240,0.16)",
-  cream:    "#F0F4FF",
-  muted:    "rgba(255,255,255,0.55)",
-  mutedHi:  "#cbb9a4",
-  orange:   "#A855F7",
-  amber:    "#A855F7",
-  mint:     "#5EEAD4",
-  rose:     "#F472B6",
+  bg:        "#050816",
+  surface:   "#0B1027",
+  surface2:  "#131A35",
+  line:      "rgba(255,255,255,0.08)",
+  lineHi:    "rgba(255,255,255,0.16)",
+  text:      "#F0F4FF",
+  muted:     "rgba(255,255,255,0.6)",
+  mutedHi:   "rgba(255,255,255,0.75)",
+  teal:      "#5EEAD4",
+  purple:    "#A855F7",
+  blue:      "#60A5FA",
+  pink:      "#F472B6",
+  // legacy aliases kept so existing JSX continues to compile while we transition
+  cream:     "#F0F4FF",
+  orange:    "#A855F7",
+  amber:     "#A855F7",
+  mint:      "#5EEAD4",
+  rose:      "#F472B6",
 } as const;
-
-// Subtle film-grain noise — keeps the dark surface from looking flat.
-const NOISE = `url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 0.95  0 0 0 0 0.85  0 0 0 0.12 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")`;
 
 export default async function Home() {
   let orgCount = 0, userCount = 0, messageCount = 0, postCount = 0;
@@ -42,57 +46,75 @@ export default async function Home() {
   return (
     <div
       className="min-h-screen relative overflow-x-hidden"
-      style={{
-        background:        C.bg,
-        color:             C.cream,
-        backgroundImage:   NOISE,
-        backgroundBlendMode: "overlay",
-      }}
+      style={{ background: C.bg, color: C.text }}
     >
-      {/* Atmospheric blobs */}
+      {/* Aurora blobs — northern-lights backdrop, subtle (0.18–0.25 opacity) */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-40 -right-40 h-[600px] w-[600px] rounded-full opacity-30 blur-[120px]"
-        style={{ background: `radial-gradient(circle, ${C.orange}, transparent 70%)` }}
+        className="pointer-events-none absolute h-[600px] w-[600px] rounded-full blur-[120px]"
+        style={{
+          top:        "-10%",
+          left:       "20%",
+          background: `radial-gradient(circle, ${C.teal} 0%, transparent 70%)`,
+          opacity:    0.25,
+        }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute top-[400px] -left-60 h-[500px] w-[500px] rounded-full opacity-20 blur-[120px]"
-        style={{ background: `radial-gradient(circle, ${C.rose}, transparent 70%)` }}
+        className="pointer-events-none absolute h-[500px] w-[500px] rounded-full blur-[120px]"
+        style={{
+          top:        "20%",
+          right:      "10%",
+          background: `radial-gradient(circle, ${C.purple} 0%, transparent 70%)`,
+          opacity:    0.22,
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute h-[480px] w-[480px] rounded-full blur-[120px]"
+        style={{
+          bottom:     "10%",
+          left:       "40%",
+          background: `radial-gradient(circle, ${C.blue} 0%, transparent 70%)`,
+          opacity:    0.18,
+        }}
       />
 
       {/* Nav */}
       <nav
         className="sticky top-0 z-40 flex items-center justify-between px-6 sm:px-10 py-5 backdrop-blur-md"
         style={{
-          background:  "rgba(13,8,9,0.7)",
+          background:  "rgba(5,8,22,0.7)",
           borderBottom: `1px solid ${C.line}`,
         }}
       >
         <Link href="/" className="flex items-center gap-2">
+          {/* Glass logo per spec */}
           <span
             className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-sm font-black"
             style={{
-              background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
-              color:      "#050816",
-              boxShadow:  `0 4px 20px ${C.orange}40`,
+              background:           "rgba(255,255,255,0.10)",
+              border:               "0.5px solid rgba(255,255,255,0.20)",
+              backdropFilter:       "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)",
+              color:                "#fff",
             }}
           >
             i
           </span>
-          <span className="text-lg font-bold tracking-tight" style={{ color: C.cream }}>intraa</span>
+          <span className="text-lg font-bold tracking-tight" style={{ color: C.text }}>intraa</span>
         </Link>
         <div className="flex items-center gap-7 text-sm">
-          <Link href="#funksjoner" className="hidden sm:block transition-colors" style={{ color: C.muted }}>Funksjoner</Link>
-          <Link href="#priser"     className="hidden sm:block transition-colors" style={{ color: C.muted }}>Priser</Link>
-          <Link href="/login"      className="transition-colors" style={{ color: C.muted }}>Logg inn</Link>
+          <Link href="#funksjoner" className="hidden sm:block transition-colors hover:text-white" style={{ color: C.muted }}>Funksjoner</Link>
+          <Link href="#priser"     className="hidden sm:block transition-colors hover:text-white" style={{ color: C.muted }}>Priser</Link>
+          <Link href="/login"      className="transition-colors hover:text-white" style={{ color: C.muted }}>Logg inn</Link>
+          {/* Primary CTA per spec — white on dark, max contrast */}
           <Link
             href="/registrer"
-            className="rounded-full px-4 py-2 text-sm font-semibold transition-transform hover:scale-[1.03]"
+            className="rounded-full px-4 py-2 text-sm font-semibold transition-colors hover:bg-white/90"
             style={{
-              background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
-              color:      "#050816",
-              boxShadow:  `0 4px 16px ${C.orange}50`,
+              background: "#FFFFFF",
+              color:      C.bg,
             }}
           >
             Kom i gang
@@ -126,12 +148,12 @@ export default async function Home() {
 
             <h1
               className="text-[clamp(2.5rem,6vw,4.75rem)] font-black leading-[0.95] tracking-tight text-balance"
-              style={{ color: C.cream }}
+              style={{ color: C.text }}
             >
               Communityet ditt.{" "}
               <span
                 style={{
-                  background:           `linear-gradient(135deg, ${C.orange} 0%, ${C.amber} 50%, ${C.rose} 100%)`,
+                  background:           `linear-gradient(90deg, ${C.teal} 0%, ${C.purple} 50%, ${C.blue} 100%)`,
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor:  "transparent",
                   backgroundClip:       "text",
@@ -151,24 +173,28 @@ export default async function Home() {
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-3">
+              {/* Primary CTA: white on dark per Aurora spec */}
               <Link
                 href="/registrer"
-                className="group flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition-transform hover:scale-[1.03]"
+                className="group flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-white/90"
                 style={{
-                  background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
-                  color:      "#050816",
-                  boxShadow:  `0 8px 32px ${C.orange}40`,
+                  background: "#FFFFFF",
+                  color:      C.bg,
                 }}
               >
                 Start ditt community
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
+              {/* Secondary glass CTA per Aurora spec */}
               <Link
                 href="#funksjoner"
-                className="flex items-center gap-1.5 rounded-full px-5 py-3.5 text-sm font-medium transition-colors"
+                className="flex items-center gap-1.5 rounded-full px-5 py-3.5 text-sm font-medium transition-colors hover:bg-white/[0.08]"
                 style={{
-                  border: `1px solid ${C.line}`,
-                  color:  C.mutedHi,
+                  background:           "rgba(255,255,255,0.05)",
+                  border:               "0.5px solid rgba(255,255,255,0.12)",
+                  backdropFilter:       "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  color:                C.text,
                 }}
               >
                 Se hva som er inni
@@ -211,7 +237,7 @@ export default async function Home() {
             className="sm:col-span-2 lg:col-span-4 lg:row-span-2"
             featured
             icon={<Radio className="h-5 w-5" />}
-            iconColor={C.orange}
+            iconColor={C.purple}
             title="Live på Twitch eller YouTube"
             description="Vi oppdager automatisk når du går live. Fansen får varsel, kan chatte i appen, og opprette klipp underveis."
           >
@@ -222,7 +248,7 @@ export default async function Home() {
           <FeatureCard
             className="sm:col-span-2 lg:col-span-2 lg:row-span-2"
             icon={<Crown className="h-5 w-5" />}
-            iconColor={C.amber}
+            iconColor={C.pink}
             title="Fanpass-medlemskap"
             description="Selg eksklusiv tilgang. Medlemmer får ♛-badge, eksklusive bretttema i sjakk, og lukkede kanaler."
           >
@@ -233,7 +259,7 @@ export default async function Home() {
           <FeatureCard
             className="lg:col-span-2"
             icon={<MessageSquare className="h-5 w-5" />}
-            iconColor={C.mint}
+            iconColor={C.teal}
             title="Sanntids-chat og feed"
             description="Tråder, reaksjoner, fildeling — som Discord, men koblet til alt annet du har."
           />
@@ -241,7 +267,7 @@ export default async function Home() {
           <FeatureCard
             className="lg:col-span-2"
             icon={<Gamepad2 className="h-5 w-5" />}
-            iconColor={C.rose}
+            iconColor={C.pink}
             title="Spill og minigames"
             description="Sjakk med Elo, idle clicker, Wordle, 2048 — alt belønner med coins."
           />
@@ -249,7 +275,7 @@ export default async function Home() {
           <FeatureCard
             className="lg:col-span-2"
             icon={<Coins className="h-5 w-5" />}
-            iconColor={C.amber}
+            iconColor={C.blue}
             title="Coin-økonomi"
             description="Fansen tjener coins ved å delta. Du designer butikken og belønningene."
           />
@@ -257,14 +283,14 @@ export default async function Home() {
           <FeatureCard
             className="lg:col-span-3"
             icon={<Trophy className="h-5 w-5" />}
-            iconColor={C.orange}
+            iconColor={C.purple}
             title="Leaderboards og statistikk"
             description="Konkurranser og rangering motiverer fansen til å være aktive — daglig, ukentlig, all-time."
           />
           <FeatureCard
             className="lg:col-span-3"
             icon={<Sparkles className="h-5 w-5" />}
-            iconColor={C.mint}
+            iconColor={C.teal}
             title="Bygget for vekst"
             description="Du starter med 0 og kan vokse til 100 000+ medlemmer uten å bytte plattform."
           />
@@ -291,8 +317,8 @@ export default async function Home() {
             <div
               className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold"
               style={{
-                background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
-                color:      "#050816",
+                background: `linear-gradient(135deg, ${C.teal}, ${C.purple})`,
+                color:      "#FFFFFF",
               }}
             >
               B
@@ -376,53 +402,57 @@ export default async function Home() {
             className="relative rounded-3xl p-8 overflow-hidden"
             style={{
               background: `linear-gradient(140deg, ${C.surface2} 0%, ${C.surface} 100%)`,
-              border:     `1px solid ${C.orange}50`,
-              boxShadow:  `0 0 60px ${C.orange}25, inset 0 0 0 1px ${C.orange}20`,
+              border:     `1px solid ${C.purple}50`,
+              boxShadow:  `0 0 60px ${C.purple}25, inset 0 0 0 1px ${C.purple}20`,
             }}
           >
-            {/* gradient accent corner */}
+            {/* Aurora accent corner — teal + purple aurora glow */}
             <div
-              className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full opacity-30 blur-[60px]"
-              style={{ background: `radial-gradient(circle, ${C.orange}, transparent 70%)` }}
+              className="pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full opacity-35 blur-[60px]"
+              style={{ background: `radial-gradient(circle, ${C.purple}, transparent 70%)` }}
+            />
+            <div
+              className="pointer-events-none absolute -top-16 -right-10 h-40 w-40 rounded-full opacity-25 blur-[60px]"
+              style={{ background: `radial-gradient(circle, ${C.teal}, transparent 70%)` }}
             />
 
             <div className="relative">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: C.amber }}>
+                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: C.teal }}>
                   Creator
                 </p>
                 <span
                   className="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
                   style={{
-                    background: `${C.orange}20`,
-                    color:      C.orange,
+                    background: `${C.purple}20`,
+                    color:      C.purple,
                   }}
                 >
                   Mest valgt
                 </span>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-4xl font-bold" style={{ color: C.cream }}>Gratis</span>
+                <span className="text-4xl font-bold" style={{ color: C.text }}>Gratis</span>
                 <span className="text-sm" style={{ color: C.muted }}>i åpen beta</span>
               </div>
               <p className="text-sm mb-8" style={{ color: C.muted }}>
                 Alt for å bygge og monetisere fansen din.
               </p>
               <ul className="space-y-3 text-sm mb-8" style={{ color: C.mutedHi }}>
-                <BulletAccent color={C.orange}>Eget community med egen URL</BulletAccent>
-                <BulletAccent color={C.orange}>Twitch / YouTube live-integrasjon</BulletAccent>
-                <BulletAccent color={C.orange}>Fanpass — selg betalt medlemskap</BulletAccent>
-                <BulletAccent color={C.orange}>Coin-shop og lojalitetssystem</BulletAccent>
-                <BulletAccent color={C.orange}>Spill, leaderboards og konkurranser</BulletAccent>
-                <BulletAccent color={C.orange}>Admin-panel og statistikk</BulletAccent>
+                <BulletAccent color={C.teal}>Eget community med egen URL</BulletAccent>
+                <BulletAccent color={C.teal}>Twitch / YouTube live-integrasjon</BulletAccent>
+                <BulletAccent color={C.teal}>Fanpass — selg betalt medlemskap</BulletAccent>
+                <BulletAccent color={C.teal}>Coin-shop og lojalitetssystem</BulletAccent>
+                <BulletAccent color={C.teal}>Spill, leaderboards og konkurranser</BulletAccent>
+                <BulletAccent color={C.teal}>Admin-panel og statistikk</BulletAccent>
               </ul>
+              {/* White CTA per Aurora spec */}
               <Link
                 href="/registrer"
-                className="block w-full text-center rounded-full px-5 py-3 text-sm font-semibold transition-transform hover:scale-[1.02]"
+                className="block w-full text-center rounded-full px-5 py-3 text-sm font-semibold transition-colors hover:bg-white/90"
                 style={{
-                  background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
-                  color:      "#050816",
-                  boxShadow:  `0 8px 28px ${C.orange}40`,
+                  background: "#FFFFFF",
+                  color:      C.bg,
                 }}
               >
                 Start ditt community →
@@ -437,13 +467,13 @@ export default async function Home() {
         <div
           className="mx-auto max-w-5xl rounded-3xl px-8 py-16 sm:px-16 sm:py-20 text-center relative overflow-hidden"
           style={{
-            background: `radial-gradient(ellipse at top, ${C.orange}25, transparent 60%), ${C.surface}`,
+            background: `radial-gradient(ellipse at 30% top, ${C.teal}20, transparent 60%), radial-gradient(ellipse at 70% top, ${C.purple}25, transparent 60%), ${C.surface}`,
             border:     `1px solid ${C.lineHi}`,
           }}
         >
           <h3
             className="text-3xl sm:text-5xl font-bold tracking-tight max-w-2xl mx-auto"
-            style={{ color: C.cream }}
+            style={{ color: C.text }}
           >
             Klar til å eie fansen din?
           </h3>
@@ -453,11 +483,10 @@ export default async function Home() {
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/registrer"
-              className="group flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold transition-transform hover:scale-[1.03]"
+              className="group flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold transition-colors hover:bg-white/90"
               style={{
-                background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
-                color:      "#050816",
-                boxShadow:  `0 8px 32px ${C.orange}40`,
+                background: "#FFFFFF",
+                color:      C.bg,
               }}
             >
               Start gratis
@@ -471,16 +500,20 @@ export default async function Home() {
       <footer className="relative px-6 sm:px-10 pb-12 pt-6" style={{ borderTop: `1px solid ${C.line}` }}>
         <div className="mx-auto max-w-6xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 pt-10">
           <div className="flex items-center gap-2">
+            {/* Glass logo per Aurora spec */}
             <span
               className="inline-flex h-6 w-6 items-center justify-center rounded-md text-xs font-black"
               style={{
-                background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
-                color:      "#050816",
+                background:           "rgba(255,255,255,0.10)",
+                border:               "0.5px solid rgba(255,255,255,0.20)",
+                backdropFilter:       "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                color:                "#fff",
               }}
             >
               i
             </span>
-            <span className="text-sm font-bold" style={{ color: C.cream }}>intraa</span>
+            <span className="text-sm font-bold" style={{ color: C.text }}>intraa</span>
             <span className="text-xs ml-2" style={{ color: C.muted }}>· din community-plattform</span>
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm" style={{ color: C.muted }}>
@@ -585,48 +618,48 @@ function HeroMock() {
   return (
     <div className="relative">
 
-      {/* Live badge — floats top */}
+      {/* LIVE badge — pink per Aurora spec */}
       <div
         className="absolute -top-3 left-6 z-20 flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold"
         style={{
           background:  C.surface,
-          border:      `1px solid ${C.rose}40`,
-          color:       C.cream,
-          boxShadow:   `0 8px 24px ${C.rose}30`,
+          border:      `1px solid ${C.pink}40`,
+          color:       C.text,
+          boxShadow:   `0 8px 24px ${C.pink}30`,
         }}
       >
         <span className="relative flex h-2 w-2">
           <span
             className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60"
-            style={{ background: C.rose }}
+            style={{ background: C.pink }}
           />
-          <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: C.rose }} />
+          <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: C.pink }} />
         </span>
         LIVE · 1 240 ser på
       </div>
 
-      {/* Main mock card */}
+      {/* Main mock card — glass panel per Aurora spec */}
       <div
-        className="relative rounded-2xl p-5 shadow-2xl"
+        className="relative rounded-2xl p-5 shadow-2xl glass-panel"
         style={{
-          background: `linear-gradient(150deg, ${C.surface2}, ${C.surface})`,
-          border:     `1px solid ${C.lineHi}`,
+          background: "rgba(255, 255, 255, 0.04)",
+          border:     "0.5px solid rgba(255,255,255,0.10)",
         }}
       >
         {/* Window chrome */}
         <div className="flex items-center gap-1.5 mb-4">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#3a2a2c" }} />
-          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#3a2a2c" }} />
-          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#3a2a2c" }} />
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "rgba(255,255,255,0.15)" }} />
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "rgba(255,255,255,0.15)" }} />
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "rgba(255,255,255,0.15)" }} />
           <span className="ml-3 text-[11px]" style={{ color: C.muted }}>community/chat</span>
         </div>
 
-        {/* Chat messages */}
+        {/* Chat messages — distributed across Aurora palette per spec */}
         <div className="space-y-3">
-          <MockMsg name="Ola"      color={C.mint}   text="GG, det der var sykt." />
-          <MockMsg name="Kari"     color={C.orange} text="når går du live igjen??" fanpass />
-          <MockMsg name="Lars_TV"  color={C.amber}  text="brett-temaet er sjukt fint 🔥" fanpass />
-          <MockMsg name="Sara"     color={C.rose}   text="kjørte sjakk mot maskin på umulig, tapte 😭" />
+          <MockMsg name="Ola"      color={C.teal}   text="GG, det der var sykt." />
+          <MockMsg name="Kari"     color={C.pink}   text="når går du live igjen??" fanpass />
+          <MockMsg name="Lars_TV"  color={C.purple} text="brett-temaet er sjukt fint 🔥" fanpass />
+          <MockMsg name="Sara"     color={C.blue}   text="kjørte sjakk mot maskin på umulig, tapte 😭" />
         </div>
 
         {/* Input row */}
@@ -639,28 +672,28 @@ function HeroMock() {
         </div>
       </div>
 
-      {/* Coin widget — floats bottom-right */}
+      {/* Coin widget — teal→purple aurora gradient */}
       <div
         className="absolute -bottom-5 -right-3 z-10 rounded-2xl px-4 py-3 shadow-2xl"
         style={{
           background: C.surface,
-          border:     `1px solid ${C.amber}40`,
-          boxShadow:  `0 12px 32px ${C.amber}20`,
+          border:     `1px solid ${C.teal}40`,
+          boxShadow:  `0 12px 32px ${C.purple}25`,
         }}
       >
         <div className="flex items-center gap-2.5">
           <div
             className="flex h-9 w-9 items-center justify-center rounded-xl"
             style={{
-              background: `linear-gradient(135deg, ${C.amber}, ${C.orange})`,
-              color:      "#050816",
+              background: `linear-gradient(135deg, ${C.teal}, ${C.purple})`,
+              color:      "#FFFFFF",
             }}
           >
             <Coins className="h-4 w-4" />
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wider" style={{ color: C.muted }}>Coins</p>
-            <p className="text-base font-bold leading-tight" style={{ color: C.cream }}>12 480</p>
+            <p className="text-base font-bold leading-tight" style={{ color: C.text }}>12 480</p>
           </div>
         </div>
       </div>
@@ -706,32 +739,32 @@ function LiveMock() {
       className="rounded-xl overflow-hidden"
       style={{ background: C.bg, border: `1px solid ${C.line}` }}
     >
-      {/* "Video" area */}
+      {/* "Video" area — aurora gradient backdrop */}
       <div
         className="relative h-32 sm:h-36"
         style={{
-          background: `radial-gradient(circle at 30% 40%, ${C.rose}30, transparent 60%),
-                       radial-gradient(circle at 70% 60%, ${C.orange}30, transparent 60%),
+          background: `radial-gradient(circle at 30% 40%, ${C.purple}35, transparent 60%),
+                       radial-gradient(circle at 70% 60%, ${C.teal}30, transparent 60%),
                        ${C.surface2}`,
         }}
       >
         <div className="absolute top-3 left-3 flex items-center gap-2">
           <span
             className="flex items-center gap-1.5 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-            style={{ background: C.rose, color: C.cream }}
+            style={{ background: C.pink, color: "#FFFFFF" }}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
             Live
           </span>
-          <span className="text-[10px]" style={{ color: C.cream }}>1 240 ser på</span>
+          <span className="text-[10px]" style={{ color: C.text }}>1 240 ser på</span>
         </div>
-        <div className="absolute bottom-3 left-3 right-3 text-xs font-semibold truncate" style={{ color: C.cream }}>
+        <div className="absolute bottom-3 left-3 right-3 text-xs font-semibold truncate" style={{ color: C.text }}>
           Late night sjakk-strøm 🌙
         </div>
       </div>
       {/* Chat preview strip */}
       <div className="px-3 py-2 flex items-center gap-2 text-[11px]" style={{ borderTop: `1px solid ${C.line}` }}>
-        <span style={{ color: C.amber }}>♛ Kari:</span>
+        <span style={{ color: C.purple }}>♛ Kari:</span>
         <span style={{ color: C.muted }}>GG, det var sjukt 🔥</span>
       </div>
     </div>
@@ -747,35 +780,35 @@ function FanpassMock() {
     <div
       className="rounded-xl p-4 relative overflow-hidden"
       style={{
-        background: `linear-gradient(135deg, ${C.amber}15, ${C.orange}10)`,
-        border:     `1px solid ${C.amber}30`,
+        background: `linear-gradient(135deg, ${C.purple}15, ${C.pink}10)`,
+        border:     `1px solid ${C.purple}30`,
       }}
     >
       <div className="flex items-center gap-2 mb-3">
         <span
           className="text-xl"
-          style={{ color: C.amber, filter: `drop-shadow(0 0 8px ${C.amber}80)` }}
+          style={{ color: C.purple, filter: `drop-shadow(0 0 8px ${C.purple}80)` }}
         >
           ♛
         </span>
-        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: C.amber }}>
+        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: C.purple }}>
           Fanpass
         </span>
       </div>
-      <p className="text-2xl font-bold" style={{ color: C.cream }}>
+      <p className="text-2xl font-bold" style={{ color: C.text }}>
         49<span className="text-sm font-normal" style={{ color: C.muted }}> kr/mnd</span>
       </p>
       <ul className="mt-3 space-y-1.5 text-xs" style={{ color: C.mutedHi }}>
         <li className="flex items-center gap-1.5">
-          <span className="h-1 w-1 rounded-full" style={{ background: C.amber }} />
+          <span className="h-1 w-1 rounded-full" style={{ background: C.purple }} />
           ♛ Synlig badge
         </li>
         <li className="flex items-center gap-1.5">
-          <span className="h-1 w-1 rounded-full" style={{ background: C.amber }} />
+          <span className="h-1 w-1 rounded-full" style={{ background: C.teal }} />
           Eksklusive bretttema
         </li>
         <li className="flex items-center gap-1.5">
-          <span className="h-1 w-1 rounded-full" style={{ background: C.amber }} />
+          <span className="h-1 w-1 rounded-full" style={{ background: C.blue }} />
           Lukkede kanaler
         </li>
       </ul>
