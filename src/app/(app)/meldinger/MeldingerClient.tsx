@@ -1097,37 +1097,48 @@ export default function MeldingerClient({
               </div>
             )}
 
-            <DMView
-              key={active.userId}
-              friendId={active.userId}
-              friend={activeConvFriend ?? { id: active.userId, name: null, avatarUrl: null }}
-              currentUserId={currentUserId}
-            />
-
-            {/* ── Call overlay ──────────────────────────────────────────────── */}
+            {/* ── Call panel (above chat — keeps chat visible) ───────────────── */}
             {(webrtc.callState === "connected" || webrtc.callState === "calling") && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center z-50 backdrop-blur-sm" style={{ background: "#05081699" }}>
-
+              <div
+                className="shrink-0 flex flex-col items-center justify-center gap-3 border-b border-white/10"
+                style={{
+                  background: "#050816",
+                  // ~55% of available viewport height — leaves room for chat below
+                  height:     "min(55vh, 540px)",
+                  minHeight:  "240px",
+                }}
+              >
                 {webrtc.callType === "video" ? (
-                  <div className="relative w-full h-full md:h-auto md:max-w-lg md:mx-4">
+                  <div className="relative w-full h-full">
+                    {/* Remote video — object-contain so portrait/landscape both render correctly */}
                     <video
                       ref={webrtc.remoteVideoRef}
                       autoPlay
                       playsInline
-                      className="w-full h-full md:h-auto md:aspect-video bg-black rounded-none md:rounded-2xl object-cover object-top"
+                      className="w-full h-full bg-black object-contain"
                     />
+                    {/* Self PIP — small, mirrored */}
                     <video
                       ref={webrtc.localVideoRef}
                       autoPlay
                       playsInline
                       muted
                       style={{ transform: "scaleX(-1)" }}
-                      className="absolute bottom-32 right-4 md:bottom-3 md:right-3 w-24 md:w-28 aspect-[3/4] md:aspect-video bg-black rounded-xl object-cover border-2 border-white/20"
+                      className="absolute bottom-3 right-3 w-28 md:w-36 aspect-video bg-black rounded-xl object-cover border-2 border-white/20 shadow-2xl"
                     />
+                    {/* Connecting state overlay */}
+                    {webrtc.callState === "calling" && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60 backdrop-blur-sm">
+                        <div className="w-16 h-16 rounded-full bg-violet-500/20 border-2 border-violet-500/30 flex items-center justify-center text-2xl font-bold text-white animate-pulse">
+                          {(activeConvFriend?.name ?? "?").charAt(0).toUpperCase()}
+                        </div>
+                        <p className="text-sm text-white/80">Ringer {activeConvFriend?.name ?? "Ukjent"}…</p>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-24 h-24 rounded-full bg-purple-500/20 border-2 border-purple-500/30 flex items-center justify-center text-4xl font-bold text-white animate-pulse">
+                  <div className="flex flex-1 flex-col items-center justify-center gap-3">
+                    <div className="w-24 h-24 rounded-full bg-violet-500/20 border-2 border-violet-500/30 flex items-center justify-center text-4xl font-bold text-white animate-pulse">
                       {(activeConvFriend?.name ?? "?").charAt(0).toUpperCase()}
                     </div>
                     <p className="text-lg font-medium text-white">{activeConvFriend?.name ?? "Ukjent"}</p>
@@ -1144,19 +1155,18 @@ export default function MeldingerClient({
                       void webrtc.remoteVideoRef.current?.play();
                       webrtc.setNeedsUserInteraction(false);
                     }}
-                    className="absolute top-4 left-1/2 -translate-x-1/2 bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-lg transition-colors"
+                    className="absolute top-4 left-1/2 -translate-x-1/2 bg-violet-600 hover:bg-violet-700 text-white text-sm px-4 py-2 rounded-lg transition-colors z-10"
                   >
                     Trykk for å aktivere lyd
                   </button>
                 )}
 
-                {/* Controls */}
-                <div className="absolute bottom-8 md:bottom-auto md:relative left-1/2 -translate-x-1/2 flex gap-4"
-                     style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+                {/* Controls bar */}
+                <div className="shrink-0 flex gap-3 pb-3 pt-1" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
                   <button
                     onClick={webrtc.toggleMute}
                     title={webrtc.isMuted ? "Slå på mikrofon" : "Demp mikrofon"}
-                    className={`w-14 h-14 rounded-full flex items-center justify-center transition-all border ${
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all border ${
                       webrtc.isMuted
                         ? "bg-red-500/30 border-red-500/50 text-red-400"
                         : "bg-white/10 border-white/20 text-white hover:bg-white/20"
@@ -1169,7 +1179,7 @@ export default function MeldingerClient({
                     <button
                       onClick={webrtc.toggleCamera}
                       title={webrtc.isCameraOff ? "Slå på kamera" : "Slå av kamera"}
-                      className={`w-14 h-14 rounded-full flex items-center justify-center transition-all border ${
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all border ${
                         webrtc.isCameraOff
                           ? "bg-red-500/30 border-red-500/50 text-red-400"
                           : "bg-white/10 border-white/20 text-white hover:bg-white/20"
@@ -1182,13 +1192,20 @@ export default function MeldingerClient({
                   <button
                     onClick={webrtc.endCall}
                     title="Avslutt samtale"
-                    className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-all"
+                    className="w-12 h-12 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-all"
                   >
                     <PhoneOff className="w-5 h-5" />
                   </button>
                 </div>
               </div>
             )}
+
+            <DMView
+              key={active.userId}
+              friendId={active.userId}
+              friend={activeConvFriend ?? { id: active.userId, name: null, avatarUrl: null }}
+              currentUserId={currentUserId}
+            />
           </div>
         )}
       </div>
