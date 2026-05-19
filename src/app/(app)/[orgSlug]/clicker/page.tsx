@@ -748,7 +748,7 @@ export default function ClickerPage() {
           <div className="overflow-hidden rounded-full" style={{ height: 6, background: "rgba(255,255,255,0.06)" }}>
             <div
               className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${prestigePct.toFixed(2)}%`, background: "linear-gradient(to right, #A855F7, #A855F7)" }}
+              style={{ width: `${prestigePct.toFixed(2)}%`, background: "linear-gradient(to right, #5EEAD4, #A855F7)" }}
             />
           </div>
         </div>

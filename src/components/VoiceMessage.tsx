@@ -82,7 +82,7 @@ export default function VoiceMessage({
         onClick={toggle}
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-transform hover:scale-105"
         style={{
-          background: "linear-gradient(135deg, #A855F7, #A855F7)",
+          background: "linear-gradient(135deg, #5EEAD4, #A855F7)",
           color:      "#050816",
         }}
         aria-label={playing ? "Pause" : "Spill av"}
@@ -101,7 +101,7 @@ export default function VoiceMessage({
             className="absolute inset-y-0 left-0 rounded-full transition-all"
             style={{
               width:      `${progress * 100}%`,
-              background: "linear-gradient(to right, #A855F7, #A855F7)",
+              background: "linear-gradient(to right, #5EEAD4, #A855F7)",
             }}
           />
         </div>

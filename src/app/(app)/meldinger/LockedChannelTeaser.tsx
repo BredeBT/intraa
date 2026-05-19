@@ -34,7 +34,7 @@ export default function LockedChannelTeaser({
           <div
             className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl"
             style={{
-              background: "linear-gradient(135deg, #A855F7, #A855F7)",
+              background: "linear-gradient(135deg, #5EEAD4, #A855F7)",
               color:      "#050816",
               boxShadow:  "0 8px 32px rgba(168,85,247,0.4)",
             }}
@@ -74,7 +74,7 @@ export default function LockedChannelTeaser({
             href={orgSlug ? `/${orgSlug}/fanpass` : `/community/lojalitet`}
             className="block w-full text-center rounded-full px-6 py-3.5 text-sm font-semibold transition-transform hover:scale-[1.02]"
             style={{
-              background: "linear-gradient(135deg, #A855F7, #A855F7)",
+              background: "linear-gradient(135deg, #5EEAD4, #A855F7)",
               color:      "#050816",
               boxShadow:  "0 8px 28px rgba(168,85,247,0.4)",
             }}

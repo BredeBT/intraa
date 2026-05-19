@@ -195,7 +195,7 @@ function SidebarContent({
           >
             <div
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
-              style={{ background: "linear-gradient(135deg, #A855F7 0%, #A855F7 100%)" }}
+              style={{ background: "linear-gradient(135deg, #5EEAD4 0%, #A855F7 100%)" }}
             >
               {initials}
             </div>
@@ -209,7 +209,7 @@ function SidebarContent({
         ) : (
           <div
             className="mx-auto flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold text-white"
-            style={{ background: "linear-gradient(135deg, #A855F7 0%, #A855F7 100%)" }}
+            style={{ background: "linear-gradient(135deg, #5EEAD4 0%, #A855F7 100%)" }}
             title={userName}
           >
             {initials}

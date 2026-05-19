@@ -196,7 +196,7 @@ export default function VoiceRecorder({ onSend, onCancel, maxSeconds = 300 }: Pr
     return (
       <div
         className="flex items-center gap-3 rounded-xl px-4 py-3"
-        style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.3)" }}
+        style={{ background: "rgba(168,85,247,0.10)", border: "1px solid rgba(168,85,247,0.3)" }}
       >
         <span className="relative flex h-2.5 w-2.5 shrink-0">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-60" />
@@ -217,7 +217,7 @@ export default function VoiceRecorder({ onSend, onCancel, maxSeconds = 300 }: Pr
                 className="flex-1 rounded-full"
                 style={{
                   height: `${Math.max(15, intensity * 100)}%`,
-                  background: `linear-gradient(to top, #A855F7, #A855F7)`,
+                  background: `linear-gradient(to top, #5EEAD4, #A855F7)`,
                   opacity: 0.4 + intensity * 0.6,
                   transition: "height 80ms ease, opacity 80ms ease",
                 }}
@@ -237,7 +237,7 @@ export default function VoiceRecorder({ onSend, onCancel, maxSeconds = 300 }: Pr
           onClick={stopRecording}
           title="Stopp og forhåndsvis"
           className="h-9 w-9 shrink-0 flex items-center justify-center rounded-full text-white transition-transform hover:scale-105"
-          style={{ background: "linear-gradient(135deg, #A855F7, #A855F7)" }}
+          style={{ background: "linear-gradient(135deg, #5EEAD4, #A855F7)" }}
         >
           <span className="block h-3 w-3 rounded-sm bg-white/90" />
         </button>
@@ -266,7 +266,7 @@ export default function VoiceRecorder({ onSend, onCancel, maxSeconds = 300 }: Pr
         disabled={state === "uploading"}
         title="Send"
         className="h-9 w-9 shrink-0 flex items-center justify-center rounded-full text-white transition-transform hover:scale-105 disabled:opacity-50"
-        style={{ background: "linear-gradient(135deg, #A855F7, #A855F7)" }}
+        style={{ background: "linear-gradient(135deg, #5EEAD4, #A855F7)" }}
       >
         {state === "uploading" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
       </button>
