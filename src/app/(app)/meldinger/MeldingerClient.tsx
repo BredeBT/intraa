@@ -18,6 +18,7 @@ import { Phone, Video, MicOff, VideoOff, PhoneOff } from "lucide-react";
 const ChannelView         = dynamic(() => import("./ChannelView"),         { ssr: false });
 const GroupView           = dynamic(() => import("./GroupView"),           { ssr: false });
 const LockedChannelTeaser = dynamic(() => import("./LockedChannelTeaser"), { ssr: false });
+const BroadcastView       = dynamic(() => import("./BroadcastView"),       { ssr: false });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1037,6 +1038,17 @@ export default function MeldingerClient({
               channelName={active.channelName}
               orgName={active.orgName}
               orgSlug={active.orgSlug ?? ""}
+            />
+          ) : active.channelType === "BROADCAST" ? (
+            <BroadcastView
+              key={active.channelId}
+              channelId={active.channelId}
+              channelName={active.channelName}
+              orgId={active.orgId}
+              orgName={active.orgName}
+              userId={currentUserId}
+              userName={currentUserName}
+              userRole={active.role}
             />
           ) : (
             <ChannelView

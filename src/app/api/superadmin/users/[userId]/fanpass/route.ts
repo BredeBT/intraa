@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 
@@ -109,6 +110,9 @@ export async function POST(
     },
   });
 
+  revalidatePath("/meldinger");
+  revalidatePath("/feed");
+  revalidatePath("/home");
   return NextResponse.json({ ok: true, fanpass });
 }
 
@@ -138,5 +142,8 @@ export async function DELETE(
     },
   });
 
+  revalidatePath("/meldinger");
+  revalidatePath("/feed");
+  revalidatePath("/home");
   return NextResponse.json({ ok: true });
 }
