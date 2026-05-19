@@ -130,7 +130,7 @@ function TenantCard({
   return (
     <div
       className="overflow-hidden rounded-xl transition-all"
-      style={{ background: "#1a1213", border: "1px solid rgba(255,255,255,0.08)" }}
+      style={{ background: "#0B1027", border: "1px solid rgba(255,255,255,0.08)" }}
     >
       {/* Banner */}
       <div className="relative h-20 w-full" style={bannerStyle}>
@@ -151,7 +151,7 @@ function TenantCard({
             ) : (
               <div
                 className="flex h-10 w-10 items-center justify-center rounded-lg text-base font-bold text-white"
-                style={{ background: tenant.type === "COMMUNITY" ? "#ff6b35" : "#1d4ed8" }}
+                style={{ background: tenant.type === "COMMUNITY" ? "#A855F7" : "#1d4ed8" }}
               >
                 {tenant.name[0].toUpperCase()}
               </div>
@@ -166,7 +166,7 @@ function TenantCard({
               <span
                 className="rounded-full px-2 py-0.5 text-[10px] font-medium"
                 style={tenant.type === "COMMUNITY"
-                  ? { background: "rgba(249,115,22,0.15)", color: "#f7b733" }
+                  ? { background: "rgba(249,115,22,0.15)", color: "#A855F7" }
                   : { background: "rgba(59,130,246,0.15)", color: "#60a5fa" }}
               >
                 {TYPE_LABELS[tenant.type]}
@@ -246,7 +246,7 @@ function DeleteDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" onClick={onClose}>
       <div
         className="w-full max-w-md rounded-2xl p-6"
-        style={{ background: "#1a1213", border: "1px solid rgba(255,255,255,0.1)" }}
+        style={{ background: "#0B1027", border: "1px solid rgba(255,255,255,0.1)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="mb-1 text-lg font-bold text-white">Slett {tenant.name}?</h3>
@@ -359,7 +359,7 @@ function NewTenantModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" onClick={onClose}>
       <div
         className="w-full max-w-lg rounded-2xl"
-        style={{ background: "#1a1213", border: "1px solid rgba(255,255,255,0.1)" }}
+        style={{ background: "#0B1027", border: "1px solid rgba(255,255,255,0.1)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -379,7 +379,7 @@ function NewTenantModal({
             <div
               key={s}
               className="h-1 flex-1 rounded-full transition-all"
-              style={{ background: s <= step ? "#ff6b35" : "rgba(255,255,255,0.1)" }}
+              style={{ background: s <= step ? "#A855F7" : "rgba(255,255,255,0.1)" }}
             />
           ))}
         </div>
@@ -423,7 +423,7 @@ function NewTenantModal({
                     onClick={() => setForm((f) => ({ ...f, type: t }))}
                     className="rounded-xl py-3 text-sm font-medium transition-all"
                     style={form.type === t
-                      ? { background: "rgba(255,107,53,0.2)", border: "1px solid #ff6b35", color: "#f7b733" }
+                      ? { background: "rgba(168,85,247,0.2)", border: "1px solid #A855F7", color: "#A855F7" }
                       : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}
                   >
                     {TYPE_LABELS[t]}
@@ -480,7 +480,7 @@ function NewTenantModal({
                     onClick={() => setForm((f) => ({ ...f, plan: p }))}
                     className="rounded-xl py-3 text-sm font-medium transition-all"
                     style={form.plan === p
-                      ? { background: "rgba(255,107,53,0.2)", border: "1px solid #ff6b35", color: "#f7b733" }
+                      ? { background: "rgba(168,85,247,0.2)", border: "1px solid #A855F7", color: "#A855F7" }
                       : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}
                   >
                     {p}
@@ -538,7 +538,7 @@ function NewTenantModal({
               onClick={() => setStep((s) => (s + 1) as 2 | 3)}
               disabled={!form.name.trim() || !form.slug || !slugValid}
               className="flex items-center gap-1.5 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition-all disabled:opacity-40 hover:brightness-110"
-              style={{ background: "#ff6b35" }}
+              style={{ background: "#A855F7" }}
             >
               Neste <ChevronRight className="h-4 w-4" />
             </button>
@@ -547,7 +547,7 @@ function NewTenantModal({
               onClick={() => void handleCreate()}
               disabled={saving || !form.name.trim() || !slugValid}
               className="flex items-center gap-1.5 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition-all disabled:opacity-40 hover:brightness-110"
-              style={{ background: "#ff6b35" }}
+              style={{ background: "#A855F7" }}
             >
               {saving ? "Oppretter…" : "Opprett tenant"}
             </button>
@@ -606,7 +606,7 @@ export default function TenantsClient({ initialTenants }: { initialTenants: Tena
         <button
           onClick={() => setShowNew(true)}
           className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all hover:brightness-110"
-          style={{ background: "#ff6b35", boxShadow: "0 4px 16px rgba(255,107,53,0.35)" }}
+          style={{ background: "#A855F7", boxShadow: "0 4px 16px rgba(168,85,247,0.35)" }}
         >
           <Plus className="h-4 w-4" /> Ny tenant
         </button>

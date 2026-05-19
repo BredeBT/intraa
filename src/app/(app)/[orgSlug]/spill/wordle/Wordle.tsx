@@ -312,7 +312,7 @@ export default function Wordle({ orgSlug }: { orgSlug: string }) {
         .tile-flip { animation: flip 0.5s ease; }
       `}</style>
 
-      <div className="flex min-h-screen flex-col items-center px-4 py-6" style={{ background: "#0d0809" }}>
+      <div className="flex min-h-screen flex-col items-center px-4 py-6" style={{ background: "#050816" }}>
         {/* Back link */}
         <div className="mb-4 w-full max-w-[420px]">
           <Link href={`/${orgSlug}/spill`} className="text-sm transition-colors hover:text-white" style={{ color: "rgba(255,255,255,0.4)" }}>

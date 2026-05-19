@@ -26,8 +26,8 @@ const NOTIF_ROWS: {
   {
     emailKey: "emailOnMessage", pushKey: "pushOnMessage",
     label: "Nye meldinger", desc: "Direkte meldinger fra andre",
-    iconBg: "rgba(255,107,53,0.2)",
-    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f7b733" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+    iconBg: "rgba(168,85,247,0.2)",
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A855F7" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
   },
   {
     emailKey: "emailOnTicket", pushKey: "pushOnTicket",
@@ -228,7 +228,7 @@ function PushToggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
     <button
       type="button"
       onClick={onToggle}
-      className={`relative flex h-6 w-10 shrink-0 items-center rounded-full px-0.5 transition-colors ${on ? "bg-[#ff6b35]" : "bg-white/10"}`}
+      className={`relative flex h-6 w-10 shrink-0 items-center rounded-full px-0.5 transition-colors ${on ? "bg-[#A855F7]" : "bg-white/10"}`}
     >
       <span className={`h-5 w-5 rounded-full bg-white shadow transition-transform ${on ? "translate-x-4" : "translate-x-0"}`} />
     </button>
@@ -269,8 +269,8 @@ function VarslerTab() {
     <div className="max-w-2xl">
       {/* Push card */}
       <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-white/30">Enhetsvarsler</p>
-      <div className="mb-6 flex items-center gap-4 rounded-2xl border border-[#ff6b35]/35 bg-[#ff6b35]/15 px-5 py-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#ff6b35]">
+      <div className="mb-6 flex items-center gap-4 rounded-2xl border border-[#A855F7]/35 bg-[#A855F7]/15 px-5 py-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#A855F7]">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -293,8 +293,8 @@ function VarslerTab() {
             onClick={subscribed ? unsubscribe : subscribe}
             className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
               subscribed
-                ? "border border-[#ff6b35]/40 bg-[#ff6b35]/30 text-white/70 hover:bg-[#ff6b35]/40"
-                : "bg-[#ff6b35] text-white hover:bg-[#5a3de0]"
+                ? "border border-[#A855F7]/40 bg-[#A855F7]/30 text-white/70 hover:bg-[#A855F7]/40"
+                : "bg-[#A855F7] text-white hover:bg-[#5a3de0]"
             }`}
           >
             {subscribed ? "Deaktiver" : "Aktiver"}
@@ -337,7 +337,7 @@ function VarslerTab() {
       <button
         onClick={save}
         disabled={saving}
-        className="w-full rounded-2xl bg-[#ff6b35] py-4 text-base font-medium text-white transition-colors hover:bg-[#5a3de0] disabled:opacity-50"
+        className="w-full rounded-2xl bg-[#A855F7] py-4 text-base font-medium text-white transition-colors hover:bg-[#5a3de0] disabled:opacity-50"
       >
         {saving ? "Lagrer..." : "Lagre innstillinger"}
       </button>

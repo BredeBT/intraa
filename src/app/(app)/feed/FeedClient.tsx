@@ -286,7 +286,7 @@ export default function FeedClient({
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="mx-auto max-w-[680px] px-4 pb-10" style={{ background: "#0d0809" }}>
+    <div className="mx-auto max-w-[680px] px-4 pb-10" style={{ background: "#050816" }}>
 
       {/* ── Banner ── */}
       <div
@@ -354,13 +354,13 @@ export default function FeedClient({
 
       {/* Velkomstmelding */}
       {welcomeMessage && (
-        <div className="mb-4 rounded-xl border border-purple-500/20 px-4 py-3" style={{ background: "rgba(255,107,53,0.08)" }}>
+        <div className="mb-4 rounded-xl border border-purple-500/20 px-4 py-3" style={{ background: "rgba(168,85,247,0.08)" }}>
           <p className="text-sm text-white/70">{welcomeMessage}</p>
         </div>
       )}
 
       {/* ── Compose box ── */}
-      <div className="rounded-2xl border border-white/[0.06] p-4 mb-4" style={{ background: "#1a1213" }}>
+      <div className="rounded-2xl border border-white/[0.06] p-4 mb-4" style={{ background: "#0B1027" }}>
         {pasteToast && (
           <div className="mb-3 flex items-center justify-between rounded-lg border border-white/[0.06] px-3 py-2 text-xs text-white/50" style={{ background: "rgba(255,255,255,0.05)" }}>
             <span>📋 {pasteToast}</span>
@@ -405,7 +405,7 @@ export default function FeedClient({
                 <div className="relative w-fit">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={imagePreview} alt="Forhåndsvisning" className="max-h-48 rounded-xl object-cover" />
-                  <button onClick={clearImage} className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-white" style={{ background: "#1a1213" }}>
+                  <button onClick={clearImage} className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-white" style={{ background: "#0B1027" }}>
                     <X className="h-3 w-3" />
                   </button>
                 </div>
@@ -475,7 +475,7 @@ export default function FeedClient({
               <article
                 key={post.id}
                 className="rounded-2xl border border-white/[0.06] overflow-hidden transition-colors hover:border-white/[0.10]"
-                style={{ background: "#1a1213" }}
+                style={{ background: "#0B1027" }}
               >
                 {/* Header */}
                 <div className="flex items-center gap-3 px-4 pt-4 pb-3">
@@ -601,7 +601,7 @@ export default function FeedClient({
       {/* Delete confirmation modal */}
       {confirmDeleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-white/[0.08] p-6 shadow-2xl" style={{ background: "#1a1213" }}>
+          <div className="w-full max-w-sm rounded-2xl border border-white/[0.08] p-6 shadow-2xl" style={{ background: "#0B1027" }}>
             <h3 className="mb-2 text-base font-semibold text-white">Slett innlegg</h3>
             <p className="mb-5 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
               Er du sikker? Handlingen kan ikke angres.

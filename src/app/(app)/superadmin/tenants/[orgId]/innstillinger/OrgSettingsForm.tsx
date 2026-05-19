@@ -169,7 +169,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
           onClick={() => void handleSave()}
           disabled={!hasChanges || saving}
           className="w-full rounded-lg px-4 py-2 text-sm font-medium text-white transition-all disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
-          style={{ background: "#ff6b35" }}
+          style={{ background: "#A855F7" }}
         >
           {saving ? "Lagrer…" : "Lagre endringer"}
         </button>
@@ -252,7 +252,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                     onClick={() => mark(setPlan)(p)}
                     className="truncate rounded-lg px-2 py-2 text-xs font-medium transition-all"
                     style={plan === p
-                      ? { background: "rgba(255,107,53,0.2)", border: "1px solid rgba(255,107,53,0.5)", color: "#fcd34d" }
+                      ? { background: "rgba(168,85,247,0.2)", border: "1px solid rgba(168,85,247,0.5)", color: "#fcd34d" }
                       : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.45)" }
                     }
                   >
@@ -301,7 +301,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                     onClick={() => mark(setVisibility)(opt.value)}
                     className="w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-left transition-all"
                     style={active
-                      ? { background: "rgba(255,107,53,0.15)", border: "1px solid rgba(255,107,53,0.4)" }
+                      ? { background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.4)" }
                       : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }
                     }
                   >
@@ -324,7 +324,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                       {active && (
                         <span
                           className="ml-2 shrink-0 rounded-full px-2 py-0.5 text-xs"
-                          style={{ background: "rgba(255,107,53,0.25)", color: "#fcd34d" }}
+                          style={{ background: "rgba(168,85,247,0.25)", color: "#fcd34d" }}
                         >
                           Aktiv
                         </span>
@@ -355,7 +355,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                     onClick={inviteToken ? copyInviteLink : generateInviteLink}
                     disabled={genLoading}
                     className="rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-opacity disabled:opacity-50"
-                    style={{ background: "#ff6b35" }}
+                    style={{ background: "#A855F7" }}
                   >
                     {genLoading ? "Genererer…" : inviteToken ? "Kopier invitasjonslenke" : "Generer invitasjonslenke"}
                   </button>

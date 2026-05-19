@@ -18,7 +18,7 @@ function fmt(n: number): string {
 
 function ratingColor(r: number): string {
   if (r >= 1600) return "#fbbf24";
-  if (r >= 1400) return "#f7b733";
+  if (r >= 1400) return "#A855F7";
   if (r >= 1200) return "#34d399";
   return "rgba(255,255,255,0.5)";
 }
@@ -160,7 +160,7 @@ export default function StatsPanel({ chess, clicker, worldEmoji, worldName }: Pr
             <span className="text-sm font-semibold text-white">2048</span>
           </div>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl font-black" style={{ color: "#f7b733" }}>
+            <span className="text-2xl font-black" style={{ color: "#A855F7" }}>
               {hs2048.toLocaleString("no-NO")}
             </span>
             <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>rekord</span>

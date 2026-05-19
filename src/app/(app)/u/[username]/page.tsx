@@ -119,7 +119,7 @@ export default async function UserProfilePage({
     }));
 
   return (
-    <div className="min-h-screen bg-[#0d0809]">
+    <div className="min-h-screen bg-[#050816]">
       <ProfileClient
         profile={{
           id:          profileUser.id,

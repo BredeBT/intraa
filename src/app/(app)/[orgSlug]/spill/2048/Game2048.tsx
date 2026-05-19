@@ -98,19 +98,19 @@ function maxTile(board: Board): number {
 
 function tileStyle(value: number): { bg: string; color: string; fontSize: string } {
   const map: Record<number, { bg: string; color: string }> = {
-    2:    { bg: "#221718", color: "#e8e8f0" },
+    2:    { bg: "#131A35", color: "#e8e8f0" },
     4:    { bg: "#16213e", color: "#e8e8f0" },
     8:    { bg: "#0f3460", color: "#ffffff" },
     16:   { bg: "#533483", color: "#ffffff" },
-    32:   { bg: "#ff6b35", color: "#ffffff" },
+    32:   { bg: "#A855F7", color: "#ffffff" },
     64:   { bg: "#7c5cbf", color: "#ffffff" },
     128:  { bg: "#9b59b6", color: "#ffffff" },
     256:  { bg: "#8e44ad", color: "#ffffff" },
     512:  { bg: "#6c3483", color: "#ffd700" },
     1024: { bg: "#4a235a", color: "#ffd700" },
-    2048: { bg: "#f9c74f", color: "#221718" },
+    2048: { bg: "#f9c74f", color: "#131A35" },
   };
-  const c = map[value] ?? { bg: "#f9c74f", color: "#221718" };
+  const c = map[value] ?? { bg: "#f9c74f", color: "#131A35" };
   const len = String(value).length;
   const fontSize = len <= 2 ? "1.6rem" : len === 3 ? "1.25rem" : len === 4 ? "1rem" : "0.8rem";
   return { ...c, fontSize };
@@ -270,7 +270,7 @@ export default function Game2048({ orgSlug }: { orgSlug: string }) {
 
       <div
         className="flex min-h-screen flex-col items-center px-4 py-6"
-        style={{ background: "#0d0809" }}
+        style={{ background: "#050816" }}
       >
         {/* Back link */}
         <div className="mb-4 w-full max-w-[420px]">
@@ -290,7 +290,7 @@ export default function Game2048({ orgSlug }: { orgSlug: string }) {
               <div
                 key={label}
                 className="rounded-xl px-3 py-2 text-center"
-                style={{ background: "rgba(255,107,53,0.15)", border: "1px solid rgba(255,107,53,0.2)", minWidth: 72 }}
+                style={{ background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.2)", minWidth: 72 }}
               >
                 <p className="text-[9px] font-bold tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>{label}</p>
                 <p className="text-sm font-bold text-white">{value.toLocaleString("no-NO")}</p>
@@ -299,7 +299,7 @@ export default function Game2048({ orgSlug }: { orgSlug: string }) {
             <button
               onClick={restart}
               className="rounded-xl px-3 py-2 text-sm font-semibold transition-all hover:brightness-110"
-              style={{ background: "rgba(255,107,53,0.2)", color: "#f7b733", border: "1px solid rgba(255,107,53,0.25)" }}
+              style={{ background: "rgba(168,85,247,0.2)", color: "#A855F7", border: "1px solid rgba(168,85,247,0.25)" }}
             >
               Ny
             </button>
@@ -369,7 +369,7 @@ export default function Game2048({ orgSlug }: { orgSlug: string }) {
               <button
                 onClick={restart}
                 className="rounded-xl px-6 py-2.5 text-sm font-bold text-white transition-all hover:brightness-110"
-                style={{ background: "#ff6b35" }}
+                style={{ background: "#A855F7" }}
               >
                 Spill igjen
               </button>
@@ -405,7 +405,7 @@ export default function Game2048({ orgSlug }: { orgSlug: string }) {
             <div
               key={t.id}
               className="rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-lg"
-              style={{ background: "rgba(255,107,53,0.9)", backdropFilter: "blur(8px)" }}
+              style={{ background: "rgba(168,85,247,0.9)", backdropFilter: "blur(8px)" }}
             >
               {t.text}
             </div>

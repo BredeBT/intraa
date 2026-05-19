@@ -26,17 +26,17 @@ function formatContent(text: string): string {
 function buildHtml(content: string) {
   return `<!DOCTYPE html>
 <html>
-<body style="margin:0;padding:0;background:#0d0809;font-family:sans-serif;">
-  <div style="max-width:560px;margin:40px auto;background:#1a1213;border-radius:12px;padding:32px;">
+<body style="margin:0;padding:0;background:#050816;font-family:sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#0B1027;border-radius:12px;padding:32px;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-      <div style="width:36px;height:36px;border-radius:8px;background:#ff6b35;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;">I</div>
+      <div style="width:36px;height:36px;border-radius:8px;background:#A855F7;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;">I</div>
       <span style="color:white;font-size:18px;font-weight:600;">Intraa</span>
     </div>
     ${formatContent(content)}
     <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:24px 0;" />
     <p style="color:rgba(255,255,255,0.25);font-size:12px;margin:0;">
       Du mottar denne eposten fordi du er registrert på intraa.net.<br/>
-      <a href="https://intraa.net/avmeldt" style="color:#ff6b35;">Meld deg av epostlisten</a>
+      <a href="https://intraa.net/avmeldt" style="color:#A855F7;">Meld deg av epostlisten</a>
     </p>
   </div>
 </body>

@@ -24,7 +24,7 @@ const MODES: ModeOption[] = [
     tagline:     "Gratis å bli med, ingen Fanpass",
     description: "Hele communityet er gratis. Fanpass-relaterte funksjoner skjules.",
     icon:        Users,
-    color:       "#4ecdc4",
+    color:       "#5EEAD4",
     bullets: [
       "Alle kan bli medlem uten kostnad",
       "Ingen Fanpass-kanaler eller -fordeler",
@@ -38,7 +38,7 @@ const MODES: ModeOption[] = [
     tagline:     "Gratis å bli med, Fanpass låser opp ekstra",
     description: "Standard for de fleste. Alle får tilgang til chat, feed og spill. Fanpass selger broadcast-kanal, eksklusive temaer og badges.",
     icon:        Sparkles,
-    color:       "#f7b733",
+    color:       "#A855F7",
     bullets: [
       "Gratis å bli med — lav terskel",
       "Fanpass låser opp broadcast-kanal, ♛-badge og mer",
@@ -52,7 +52,7 @@ const MODES: ModeOption[] = [
     tagline:     "Fanpass kreves for å bli medlem",
     description: "Hele communityet er bak betalingsvegg. Som Skool, Whop eller en betalt Patreon-tier.",
     icon:        Lock,
-    color:       "#ff6b35",
+    color:       "#A855F7",
     bullets: [
       "Bare betalende Fanpass-medlemmer kommer inn",
       "Eksisterende medlemmer beholder tilgangen",
@@ -123,7 +123,7 @@ export default function AccessModePicker({
         </div>
         <span className="text-zinc-700">·</span>
         <div className="flex items-center gap-2">
-          <span style={{ color: "#f7b733" }}>♛</span>
+          <span style={{ color: "#A855F7" }}>♛</span>
           <span className="text-zinc-400">Aktive Fanpass:</span>
           <span className="font-semibold text-white">{fanpassCount}</span>
         </div>
@@ -131,7 +131,7 @@ export default function AccessModePicker({
           <>
             <span className="text-zinc-700">·</span>
             <div className="flex items-center gap-2">
-              <Radio className="h-4 w-4" style={{ color: "#ff6b35" }} />
+              <Radio className="h-4 w-4" style={{ color: "#A855F7" }} />
               <span className="text-zinc-400">Broadcast-kanal:</span>
               <span className="font-semibold text-white">#{broadcastChannelName}</span>
             </div>
@@ -231,12 +231,12 @@ export default function AccessModePicker({
           <div
             onClick={(e) => e.stopPropagation()}
             className="max-w-md w-full rounded-2xl p-6"
-            style={{ background: "#1a1213", border: "1px solid rgba(255,255,255,0.1)" }}
+            style={{ background: "#0B1027", border: "1px solid rgba(255,255,255,0.1)" }}
           >
             <div className="flex items-center gap-3 mb-3">
               <div
                 className="flex h-10 w-10 items-center justify-center rounded-xl"
-                style={{ background: "rgba(255,107,53,0.15)", color: "#ff6b35" }}
+                style={{ background: "rgba(168,85,247,0.15)", color: "#A855F7" }}
               >
                 <AlertTriangle className="h-5 w-5" />
               </div>
@@ -258,7 +258,7 @@ export default function AccessModePicker({
                 onClick={() => save(showConfirm)}
                 disabled={pending}
                 className="rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
-                style={{ background: "#ff6b35", color: "#0d0809" }}
+                style={{ background: "#A855F7", color: "#050816" }}
               >
                 {pending ? "Lagrer…" : "Ja, bytt til Eksklusiv"}
               </button>

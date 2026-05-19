@@ -194,7 +194,7 @@ function ChessBoard({
       {/* Promotion modal */}
       {promoting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="rounded-2xl border border-white/10 bg-[#221718] p-6 shadow-2xl">
+          <div className="rounded-2xl border border-white/10 bg-[#131A35] p-6 shadow-2xl">
             <p className="mb-4 text-center text-sm font-semibold text-white">Velg brikke</p>
             <div className="flex gap-3">
               {(["q","r","b","n"] as const).map((p) => (
@@ -242,7 +242,7 @@ function PlayerCard({
           ? <img src={player.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
           : <div className="h-9 w-9 rounded-full bg-zinc-700 flex items-center justify-center text-sm font-bold text-white">{(player.name ?? "?").charAt(0).toUpperCase()}</div>
         }
-        <span className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#221718] ${color === "white" ? "bg-white" : "bg-zinc-800"}`} />
+        <span className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#131A35] ${color === "white" ? "bg-white" : "bg-zinc-800"}`} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -513,7 +513,7 @@ export default function ChessGame({
   const boardMaxW = "min(100vw - 2rem, 660px)";
 
   return (
-    <div className="min-h-screen bg-[#0d0809] text-white">
+    <div className="min-h-screen bg-[#050816] text-white">
       <div className="mx-auto flex max-w-[1300px] flex-col gap-4 px-4 py-4 md:flex-row md:items-start md:gap-6 md:py-8">
 
         {/* ── Board column ── */}
@@ -558,7 +558,7 @@ export default function ChessGame({
                       style={{
                         width: 28,
                         height: 20,
-                        outline: boardTheme === key ? "2px solid #f7b733" : "1px solid rgba(255,255,255,0.1)",
+                        outline: boardTheme === key ? "2px solid #A855F7" : "1px solid rgba(255,255,255,0.1)",
                         outlineOffset: 1,
                       }}
                     >

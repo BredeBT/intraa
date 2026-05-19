@@ -70,7 +70,7 @@ function CommunityCard({ c, index }: { c: Community; index: number }) {
   return (
     <div
       className="rounded-2xl overflow-hidden border border-white/[0.06] hover:border-purple-500/30 transition-colors cursor-pointer"
-      style={{ background: "#1a1213", ...fadeStyle(index * 50) }}
+      style={{ background: "#0B1027", ...fadeStyle(index * 50) }}
       onClick={() => router.push(`/${c.slug}/feed`)}
     >
       {/* Banner */}
@@ -141,7 +141,7 @@ function FriendsPanel({ friends }: { friends: FriendItem[] }) {
   const onlineCount = friends.filter((f) => f.isOnline).length;
 
   return (
-    <div className="rounded-2xl border border-white/[0.06] p-4" style={{ background: "#1a1213" }}>
+    <div className="rounded-2xl border border-white/[0.06] p-4" style={{ background: "#0B1027" }}>
       <div className="flex justify-between items-center mb-3">
         <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>
           Venner
@@ -166,7 +166,7 @@ function FriendsPanel({ friends }: { friends: FriendItem[] }) {
               <div className="relative shrink-0">
                 <Avatar avatarUrl={friend.avatarUrl} name={friend.name} size={8} />
                 {friend.isOnline && (
-                  <div className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-green-400 border-2 border-[#1a1213]" />
+                  <div className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-green-400 border-2 border-[#0B1027]" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
@@ -198,7 +198,7 @@ function PendingRequests({
 }) {
   if (requests.length === 0) return null;
   return (
-    <div className="rounded-2xl border border-white/[0.06] p-4" style={{ background: "#1a1213" }}>
+    <div className="rounded-2xl border border-white/[0.06] p-4" style={{ background: "#0B1027" }}>
       <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>
         Venneforespørsler ({requests.length})
       </h2>
@@ -245,7 +245,7 @@ function DiscoveryCommunityCard({
   joining: boolean;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border transition-colors" style={{ background: "#1a1213", borderColor: "rgba(255,255,255,0.08)" }}>
+    <div className="overflow-hidden rounded-xl border transition-colors" style={{ background: "#0B1027", borderColor: "rgba(255,255,255,0.08)" }}>
       <div
         className="h-28 w-full"
         style={c.bannerUrl
@@ -259,7 +259,7 @@ function DiscoveryCommunityCard({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={c.logoUrl} alt="" className="h-10 w-10 rounded-xl object-cover shrink-0" style={{ border: "1px solid rgba(255,255,255,0.12)" }} />
           ) : (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-base font-bold text-white" style={{ background: "#ff6b35" }}>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-base font-bold text-white" style={{ background: "#A855F7" }}>
               {c.name[0]}
             </div>
           )}
@@ -273,7 +273,7 @@ function DiscoveryCommunityCard({
             onClick={() => onJoin(c.id, c.slug)}
             disabled={joining}
             className="shrink-0 rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity disabled:opacity-60"
-            style={{ background: "#ff6b35" }}
+            style={{ background: "#A855F7" }}
           >
             {joining ? "…" : "Bli med"}
           </button>
@@ -346,7 +346,7 @@ function NewUserHome({ communities }: { communities: Community[] }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:outline-none"
-            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", caretColor: "#f7b733" }}
+            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", caretColor: "#A855F7" }}
           />
           {searching && (
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
@@ -416,14 +416,14 @@ export default function HomeClient({
 
   if (myCommunities.length === 0) {
     return (
-      <div className="min-h-screen" style={{ background: "#0d0809" }}>
+      <div className="min-h-screen" style={{ background: "#050816" }}>
         <NewUserHome communities={recommendedCommunities} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen px-4 py-6" style={{ background: "#0d0809" }}>
+    <div className="min-h-screen px-4 py-6" style={{ background: "#050816" }}>
       <div className="mx-auto max-w-5xl">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_260px]">
 

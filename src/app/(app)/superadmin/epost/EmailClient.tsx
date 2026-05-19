@@ -83,7 +83,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
         <button
           onClick={() => { setResult(null); setSubject(""); setBody(""); setConfirm(false); }}
           className="mt-2 rounded-lg px-5 py-2 text-sm font-semibold text-white"
-          style={{ background: "#ff6b35" }}
+          style={{ background: "#A855F7" }}
         >
           Send ny epost
         </button>
@@ -107,7 +107,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
                 onClick={() => { setAudience(a); setOrgId(""); }}
                 className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
                 style={audience === a
-                  ? { background: "rgba(255,107,53,0.2)", color: "#f7b733", border: "1px solid rgba(255,107,53,0.4)" }
+                  ? { background: "rgba(168,85,247,0.2)", color: "#A855F7", border: "1px solid rgba(168,85,247,0.4)" }
                   : { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.08)" }}
               >
                 {a === "all" ? "Alle brukere" : a === "pro" ? "PRO/Enterprise" : "Spesifikk tenant"}
@@ -191,7 +191,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
             onClick={() => setConfirm(true)}
             disabled={!subject.trim() || !body.trim() || (audience === "tenant" && !orgId)}
             className="flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition-opacity disabled:opacity-30 hover:opacity-90"
-            style={{ background: "#ff6b35" }}
+            style={{ background: "#A855F7" }}
           >
             <Send className="h-4 w-4" />
             Send epost
@@ -199,7 +199,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
         ) : (
           <div
             className="rounded-xl p-4 space-y-3"
-            style={{ background: "rgba(255,107,53,0.08)", border: "1px solid rgba(255,107,53,0.2)" }}
+            style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.2)" }}
           >
             <p className="text-sm font-medium text-white">
               Send til <strong>{stats?.consented ?? "…"}</strong> mottakere med epostsamtykke?
@@ -209,7 +209,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
                 onClick={handleSend}
                 disabled={sending}
                 className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-                style={{ background: "#ff6b35" }}
+                style={{ background: "#A855F7" }}
               >
                 <Send className="h-3.5 w-3.5" />
                 {sending ? "Sender…" : "Ja, send nå"}

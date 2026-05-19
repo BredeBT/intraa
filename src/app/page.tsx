@@ -11,18 +11,18 @@ export const dynamic = "force-dynamic";
  * Sunset Warmth color tokens — applied via inline style for exact hex match.
  */
 const C = {
-  bg:       "#0d0809",
-  surface:  "#1a1213",
-  surface2: "#221718",
+  bg:       "#050816",
+  surface:  "#0B1027",
+  surface2: "#131A35",
   line:     "rgba(255,249,240,0.08)",
   lineHi:   "rgba(255,249,240,0.16)",
-  cream:    "#fef9f0",
-  muted:    "#a89a8b",
+  cream:    "#F0F4FF",
+  muted:    "rgba(255,255,255,0.55)",
   mutedHi:  "#cbb9a4",
-  orange:   "#ff6b35",
-  amber:    "#f7b733",
-  mint:     "#4ecdc4",
-  rose:     "#c44569",
+  orange:   "#A855F7",
+  amber:    "#A855F7",
+  mint:     "#5EEAD4",
+  rose:     "#F472B6",
 } as const;
 
 // Subtle film-grain noise — keeps the dark surface from looking flat.
@@ -74,7 +74,7 @@ export default async function Home() {
             className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-sm font-black"
             style={{
               background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
-              color:      "#0d0809",
+              color:      "#050816",
               boxShadow:  `0 4px 20px ${C.orange}40`,
             }}
           >
@@ -91,7 +91,7 @@ export default async function Home() {
             className="rounded-full px-4 py-2 text-sm font-semibold transition-transform hover:scale-[1.03]"
             style={{
               background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
-              color:      "#0d0809",
+              color:      "#050816",
               boxShadow:  `0 4px 16px ${C.orange}50`,
             }}
           >
@@ -156,7 +156,7 @@ export default async function Home() {
                 className="group flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition-transform hover:scale-[1.03]"
                 style={{
                   background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
-                  color:      "#0d0809",
+                  color:      "#050816",
                   boxShadow:  `0 8px 32px ${C.orange}40`,
                 }}
               >
@@ -292,7 +292,7 @@ export default async function Home() {
               className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold"
               style={{
                 background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
-                color:      "#0d0809",
+                color:      "#050816",
               }}
             >
               B
@@ -421,7 +421,7 @@ export default async function Home() {
                 className="block w-full text-center rounded-full px-5 py-3 text-sm font-semibold transition-transform hover:scale-[1.02]"
                 style={{
                   background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
-                  color:      "#0d0809",
+                  color:      "#050816",
                   boxShadow:  `0 8px 28px ${C.orange}40`,
                 }}
               >
@@ -456,7 +456,7 @@ export default async function Home() {
               className="group flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold transition-transform hover:scale-[1.03]"
               style={{
                 background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
-                color:      "#0d0809",
+                color:      "#050816",
                 boxShadow:  `0 8px 32px ${C.orange}40`,
               }}
             >
@@ -475,7 +475,7 @@ export default async function Home() {
               className="inline-flex h-6 w-6 items-center justify-center rounded-md text-xs font-black"
               style={{
                 background: `linear-gradient(135deg, ${C.orange}, ${C.amber})`,
-                color:      "#0d0809",
+                color:      "#050816",
               }}
             >
               i
@@ -653,7 +653,7 @@ function HeroMock() {
             className="flex h-9 w-9 items-center justify-center rounded-xl"
             style={{
               background: `linear-gradient(135deg, ${C.amber}, ${C.orange})`,
-              color:      "#0d0809",
+              color:      "#050816",
             }}
           >
             <Coins className="h-4 w-4" />

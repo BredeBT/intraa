@@ -1,6 +1,6 @@
 export default function Loading() {
   return (
-    <div className="mx-auto max-w-[680px] px-4 py-6" style={{ background: "#0d0809" }}>
+    <div className="mx-auto max-w-[680px] px-4 py-6" style={{ background: "#050816" }}>
       {/* Banner skeleton */}
       <div className="h-40 rounded-2xl -mx-4 mb-4 animate-pulse" style={{ background: "rgba(255,255,255,0.06)" }} />
       {/* Stats skeleton */}

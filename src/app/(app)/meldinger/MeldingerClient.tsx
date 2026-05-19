@@ -117,7 +117,7 @@ function strip(html: string, max = 45) {
 function Avatar({ avatarUrl, name, size = 10, isOnline }: { avatarUrl: string | null; name: string | null; size?: number; isOnline?: boolean }) {
   const cls = `h-${size} w-${size} shrink-0 rounded-full object-cover`;
   const dot = isOnline ? (
-    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#1a1213]" />
+    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#0B1027]" />
   ) : null;
   const inner = avatarUrl
     // eslint-disable-next-line @next/next/no-img-element
@@ -540,7 +540,7 @@ function InboxItem({
   return (
     <button
       onClick={onClick}
-      style={isActive ? { background: "#ff6b3518", borderLeft: "2px solid #ff6b35" } : { borderLeft: "2px solid transparent" }}
+      style={isActive ? { background: "#A855F718", borderLeft: "2px solid #A855F7" } : { borderLeft: "2px solid transparent" }}
       className="relative flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.04]"
     >
       {avatar}
@@ -746,10 +746,10 @@ export default function MeldingerClient({
   })();
 
   return (
-    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] overflow-hidden" style={{ background: "#0d0809" }}>
+    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] overflow-hidden" style={{ background: "#050816" }}>
 
       {/* ─── Sidebar ────────────────────────────────────────────────────────── */}
-      <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-72 shrink-0 flex-col border-r border-white/[0.06]`} style={{ background: "#1a1213" }}>
+      <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-72 shrink-0 flex-col border-r border-white/[0.06]`} style={{ background: "#0B1027" }}>
 
         {/* Search */}
         <div className="shrink-0 p-3 border-b border-white/[0.06]">
@@ -913,7 +913,7 @@ export default function MeldingerClient({
                       >
                         <IconComp
                           className="h-3.5 w-3.5 shrink-0"
-                          style={isBroadcast ? { color: "#ff6b35" } : { color: "rgb(82,82,91)" }}
+                          style={isBroadcast ? { color: "#A855F7" } : { color: "rgb(82,82,91)" }}
                         />
                         <span className={`flex-1 truncate text-sm ${chUnread > 0 ? "font-semibold text-white" : "text-zinc-500"}`}>
                           {ch.name}
@@ -922,8 +922,8 @@ export default function MeldingerClient({
                           <span
                             className="text-[10px] shrink-0"
                             style={{
-                              color:  "#f7b733",
-                              filter: "drop-shadow(0 0 3px rgba(247,183,51,0.6))",
+                              color:  "#A855F7",
+                              filter: "drop-shadow(0 0 3px rgba(168,85,247,0.6))",
                             }}
                             title="Fanpass-kanal"
                           >
@@ -958,7 +958,7 @@ export default function MeldingerClient({
       </div>
 
       {/* ─── Chat area ──────────────────────────────────────────────────────── */}
-      <div className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0`} style={{ background: "#0d0809" }}>
+      <div className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0`} style={{ background: "#050816" }}>
 
         {/* Header */}
         {chatHeader && (
@@ -972,7 +972,7 @@ export default function MeldingerClient({
             <div className="relative">
               {chatHeader.avatar}
               {active?.type === "dm" && onlineUsers.includes(active.userId) && (
-                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#1a1213]" />
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#0B1027]" />
               )}
             </div>
             <div>
@@ -1065,7 +1065,7 @@ export default function MeldingerClient({
 
             {/* ── Incoming call banner ──────────────────────────────────────── */}
             {webrtc.incomingCall && (
-              <div className="mx-4 mt-3 shrink-0 flex items-center gap-4 rounded-2xl border border-purple-500/30 p-4" style={{ background: "#221718" }}>
+              <div className="mx-4 mt-3 shrink-0 flex items-center gap-4 rounded-2xl border border-purple-500/30 p-4" style={{ background: "#131A35" }}>
                 <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-lg animate-pulse">
                   {webrtc.incomingCall.type === "video" ? "📹" : "📞"}
                 </div>
@@ -1106,7 +1106,7 @@ export default function MeldingerClient({
 
             {/* ── Call overlay ──────────────────────────────────────────────── */}
             {(webrtc.callState === "connected" || webrtc.callState === "calling") && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center z-50 backdrop-blur-sm" style={{ background: "#0d080999" }}>
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-50 backdrop-blur-sm" style={{ background: "#05081699" }}>
 
                 {webrtc.callType === "video" ? (
                   <div className="relative w-full h-full md:h-auto md:max-w-lg md:mx-4">

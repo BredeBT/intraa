@@ -21,9 +21,9 @@ export default function AvmeldtPage({
         <div className="flex flex-col items-center gap-4 py-2">
           <div
             className="flex h-14 w-14 items-center justify-center rounded-2xl"
-            style={{ background: hasError ? "rgba(239,68,68,0.1)" : "rgba(255,107,53,0.1)" }}
+            style={{ background: hasError ? "rgba(239,68,68,0.1)" : "rgba(168,85,247,0.1)" }}
           >
-            <MailX className="h-7 w-7" style={{ color: hasError ? "#f87171" : "#f7b733" }} />
+            <MailX className="h-7 w-7" style={{ color: hasError ? "#f87171" : "#A855F7" }} />
           </div>
           {hasError ? (
             <>

@@ -47,13 +47,13 @@ export default async function SpillPage({
     {
       href:        `/${orgSlug}/clicker`,
       icon:        "🖱️",
-      iconBg:      "rgba(255,107,53,0.25)",
+      iconBg:      "rgba(168,85,247,0.25)",
       title:       "Klikker",
       badge:       "Solo",
-      badgeStyle:  { background: "rgba(255,107,53,0.2)", color: "#f7b733" },
+      badgeStyle:  { background: "rgba(168,85,247,0.2)", color: "#A855F7" },
       description: "Klikk deg til rikdom, kjøp oppgraderinger og prestige gjennom 9 unike verdener.",
-      accentColor: "#ff6b35",
-      borderColor: "rgba(255,107,53,0.2)",
+      accentColor: "#A855F7",
+      borderColor: "rgba(168,85,247,0.2)",
     },
     {
       href:        `/${orgSlug}/spill/sjakk`,
@@ -93,7 +93,7 @@ export default async function SpillPage({
   const TOTAL_GAMES = GAMES.length + 1; // +1 for chess vs machine
 
   return (
-    <div className="min-h-screen px-4 py-8 md:py-12" style={{ background: "#0d0809" }}>
+    <div className="min-h-screen px-4 py-8 md:py-12" style={{ background: "#050816" }}>
       <div className="mx-auto max-w-5xl">
 
         {/* Page header */}
@@ -123,7 +123,7 @@ export default async function SpillPage({
               {/* Left accent bar */}
               <div
                 className="w-1 shrink-0"
-                style={{ background: "linear-gradient(to bottom, #f7b733, #34d399)" }}
+                style={{ background: "linear-gradient(to bottom, #A855F7, #34d399)" }}
               />
 
               <div className="flex flex-1 items-center gap-5 p-5">
@@ -160,7 +160,7 @@ export default async function SpillPage({
                 {/* CTA */}
                 <div
                   className="hidden sm:flex shrink-0 items-center gap-1.5 text-sm font-semibold transition-colors"
-                  style={{ color: "#f7b733" }}
+                  style={{ color: "#A855F7" }}
                 >
                   Spill nå
                   <span className="transition-transform group-hover:translate-x-1">→</span>

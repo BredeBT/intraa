@@ -60,7 +60,7 @@ export default async function RangeringPage() {
   const myRow = board.find((m) => m.isMe);
 
   return (
-    <div className="min-h-screen bg-[#0d0809] px-4 py-8 md:px-8">
+    <div className="min-h-screen bg-[#050816] px-4 py-8 md:px-8">
       <h1 className="mb-1 text-xl font-semibold text-white">Rangering</h1>
       <p className="mb-8 text-sm text-zinc-500">Topp bidragsytere i communityet</p>
 
@@ -91,7 +91,7 @@ export default async function RangeringPage() {
 
           {/* ── Rest of the list ── */}
           {rest.length > 0 && (
-            <div className="mb-6 overflow-hidden rounded-2xl border border-white/[0.06] bg-[#1a1213]">
+            <div className="mb-6 overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0B1027]">
               {rest.map((member, i) => (
                 <div
                   key={member.userId}

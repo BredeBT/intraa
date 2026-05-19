@@ -72,7 +72,7 @@ export function GifPicker({ onSelect, onClose }: Props) {
   return (
     <div
       ref={containerRef}
-      className="absolute bottom-full mb-2 right-0 z-50 w-80 max-w-[calc(100vw-2rem)] bg-[#221718] border border-white/10 rounded-2xl shadow-xl overflow-hidden"
+      className="absolute bottom-full mb-2 right-0 z-50 w-80 max-w-[calc(100vw-2rem)] bg-[#131A35] border border-white/10 rounded-2xl shadow-xl overflow-hidden"
     >
       <div className="p-3 border-b border-white/10">
         <input
@@ -81,13 +81,13 @@ export function GifPicker({ onSelect, onClose }: Props) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Søk etter GIFs..."
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-[#ff6b35]/50"
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-[#A855F7]/50"
         />
       </div>
       <div className="h-64 overflow-y-auto p-2">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="w-6 h-6 border-2 border-white/20 border-t-[#ff6b35] rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-white/20 border-t-[#A855F7] rounded-full animate-spin" />
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-1.5">

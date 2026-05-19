@@ -111,7 +111,7 @@ function StatCard({
 
 const PLAN_COLORS: Record<string, string> = {
   FREE:       "rgba(255,255,255,0.4)",
-  PRO:        "#f7b733",
+  PRO:        "#A855F7",
   ENTERPRISE: "#fbbf24",
 };
 
@@ -232,7 +232,7 @@ export default function OversiktClient({ org: initial, stats }: Props) {
               onClick={() => void save()}
               disabled={saving || !slugValid}
               className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all hover:brightness-110 disabled:opacity-50"
-              style={{ background: "#ff6b35" }}
+              style={{ background: "#A855F7" }}
             >
               <Check className="h-4 w-4" />
               {saving ? "Lagrer…" : "Lagre endringer"}
@@ -266,7 +266,7 @@ export default function OversiktClient({ org: initial, stats }: Props) {
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") confirmEdit(); if (e.key === "Escape") cancelEdit(); }}
             className="flex-1 rounded-lg px-2.5 py-1.5 text-sm text-white outline-none"
-            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,107,53,0.5)" }}
+            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(168,85,247,0.5)" }}
           />
           <button onClick={confirmEdit}  className="text-emerald-400 hover:text-emerald-300"><Check className="h-4 w-4" /></button>
           <button onClick={cancelEdit}   className="text-zinc-500 hover:text-zinc-300"><X className="h-4 w-4" /></button>
@@ -284,7 +284,7 @@ export default function OversiktClient({ org: initial, stats }: Props) {
               className="flex-1 rounded-lg px-2.5 py-1.5 text-sm text-white outline-none"
               style={{
                 background: "rgba(255,255,255,0.08)",
-                border: `1px solid ${slugValid ? "rgba(255,107,53,0.5)" : "#ef4444"}`,
+                border: `1px solid ${slugValid ? "rgba(168,85,247,0.5)" : "#ef4444"}`,
               }}
             />
           </div>
@@ -305,7 +305,7 @@ export default function OversiktClient({ org: initial, stats }: Props) {
             onChange={(e) => { setPlan(e.target.value as "FREE" | "PRO" | "ENTERPRISE"); confirmEdit(); }}
             onKeyDown={(e) => { if (e.key === "Escape") cancelEdit(); }}
             className="flex-1 rounded-lg px-2.5 py-1.5 text-sm text-white outline-none"
-            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,107,53,0.5)" }}
+            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(168,85,247,0.5)" }}
           >
             <option value="FREE">FREE</option>
             <option value="PRO">PRO</option>
@@ -346,7 +346,7 @@ export default function OversiktClient({ org: initial, stats }: Props) {
           <button
             onClick={() => void copyInviteLink()}
             className="flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:brightness-110 text-left"
-            style={{ background: "rgba(255,107,53,0.1)", border: "1px solid rgba(255,107,53,0.2)", color: "#f7b733" }}
+            style={{ background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.2)", color: "#A855F7" }}
           >
             <Copy className="h-4 w-4 shrink-0" />
             {copied ? "Kopiert!" : "Kopier invite-lenke"}

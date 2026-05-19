@@ -73,7 +73,7 @@ export default function VoiceMessage({
       className="inline-flex items-center gap-3 rounded-2xl px-3 py-2 max-w-[280px]"
       style={{
         background: "rgba(255,255,255,0.06)",
-        border:     "1px solid rgba(247,183,51,0.2)",
+        border:     "1px solid rgba(168,85,247,0.2)",
       }}
     >
       <audio ref={audioRef} src={url} preload="metadata" />
@@ -82,8 +82,8 @@ export default function VoiceMessage({
         onClick={toggle}
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-transform hover:scale-105"
         style={{
-          background: "linear-gradient(135deg, #ff6b35, #f7b733)",
-          color:      "#0d0809",
+          background: "linear-gradient(135deg, #A855F7, #A855F7)",
+          color:      "#050816",
         }}
         aria-label={playing ? "Pause" : "Spill av"}
       >
@@ -101,7 +101,7 @@ export default function VoiceMessage({
             className="absolute inset-y-0 left-0 rounded-full transition-all"
             style={{
               width:      `${progress * 100}%`,
-              background: "linear-gradient(to right, #ff6b35, #f7b733)",
+              background: "linear-gradient(to right, #A855F7, #A855F7)",
             }}
           />
         </div>
