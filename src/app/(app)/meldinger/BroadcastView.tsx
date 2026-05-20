@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useTransition } from "react";
+import { useState, useEffect, useRef, useTransition, useCallback } from "react";
 import { Send, Mic, Image as ImageIcon, Loader2, Heart, MessageCircle, Pin, Sparkles, ChevronUp, MoreHorizontal, Pencil, Trash2, X, Check } from "lucide-react";
 import { getMessages, sendMessage, toggleReaction, editMessage, deleteMessage } from "@/server/actions/messages";
 import type { MessageWithAuthor } from "@/lib/types";
@@ -9,6 +9,23 @@ import VoiceRecorder from "@/components/VoiceRecorder";
 import { FanpassBadge } from "@/components/FanpassBadge";
 import SafeHtml from "@/components/SafeHtml";
 import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
+import StoryStrip from "./StoryStrip";
+import StoryCapture from "./StoryCapture";
+import StoryViewer from "./StoryViewer";
+
+interface StoryItem {
+  id:        string;
+  imageUrl:  string;
+  caption:   string | null;
+  width:     number | null;
+  height:    number | null;
+  createdAt: string;
+  expiresAt: string;
+}
+interface StoryGroup {
+  author:  { id: string; name: string | null; avatarUrl: string | null };
+  stories: StoryItem[];
+}
 
 interface Props {
   channelId:    string;
@@ -49,7 +66,24 @@ export default function BroadcastView({
   const [isPending,   startTransition] = useTransition();
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Stories state
+  const [storyGroups,    setStoryGroups]    = useState<StoryGroup[]>([]);
+  const [storyCaptureOn, setStoryCaptureOn] = useState(false);
+  const [storyViewerIdx, setStoryViewerIdx] = useState<number | null>(null);
+
   const isCreator = userRole === "OWNER" || userRole === "ADMIN";
+
+  // Fetch stories
+  const refetchStories = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/channels/${channelId}/stories`);
+      if (!res.ok) return;
+      const data = await res.json() as { groups: StoryGroup[] };
+      setStoryGroups(data.groups);
+    } catch { /* silent */ }
+  }, [channelId]);
+
+  useEffect(() => { void refetchStories(); }, [refetchStories]);
 
   // Fetch
   useEffect(() => {
@@ -135,6 +169,18 @@ export default function BroadcastView({
   const pinned = messages.filter((m) => m.isPinned && !m.parentMessageId);
   const regular = messages.filter((m) => !m.isPinned && !m.parentMessageId);
 
+  function canDeleteStory(authorId: string) {
+    return authorId === userId || isCreator;
+  }
+
+  function handleStoryDeleted(storyId: string) {
+    setStoryGroups((prev) =>
+      prev
+        .map((g) => ({ ...g, stories: g.stories.filter((s) => s.id !== storyId) }))
+        .filter((g) => g.stories.length > 0),
+    );
+  }
+
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden" style={{ background: "#050816" }}>
 
@@ -202,6 +248,35 @@ export default function BroadcastView({
           </button>
         )}
       </div>
+
+      {/* ── Stories strip ──────────────────────────────────────────────────── */}
+      <StoryStrip
+        groups={storyGroups}
+        canPost={isCreator}
+        onAdd={() => setStoryCaptureOn(true)}
+        onOpen={(idx) => setStoryViewerIdx(idx)}
+      />
+
+      {/* Story capture modal */}
+      {storyCaptureOn && (
+        <StoryCapture
+          channelId={channelId}
+          onClose={() => setStoryCaptureOn(false)}
+          onPosted={() => void refetchStories()}
+        />
+      )}
+
+      {/* Story viewer */}
+      {storyViewerIdx !== null && storyGroups.length > 0 && (
+        <StoryViewer
+          groups={storyGroups}
+          startGroupIdx={storyViewerIdx}
+          currentUserId={userId}
+          canDelete={canDeleteStory}
+          onClose={() => setStoryViewerIdx(null)}
+          onDeleted={handleStoryDeleted}
+        />
+      )}
 
       {/* ── Compose box ────────────────────────────────────────────────────── */}
       {isCreator && composeOpen && !recording && (

@@ -248,6 +248,7 @@ model User {
   chessMessages           ChessMessage[]
   chessInvitesSent        ChessInvite[]    @relation("ChessInviteSender")
   chessInvitesReceived    ChessInvite[]    @relation("ChessInviteReceiver")
+  stories                 Story[]
 
   @@index([username])
 }
@@ -375,8 +376,27 @@ model Channel {
   organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
   messages     Message[]
   channelReads ChannelRead[]
+  stories      Story[]
 
   @@unique([orgId, name])
+}
+
+model Story {
+  id        String   @id @default(cuid())
+  channelId String
+  authorId  String
+  imageUrl  String
+  caption   String?
+  width     Int?     // for layout-hint i viewer (4:5, 16:9, etc)
+  height    Int?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([channelId, expiresAt])
+  @@index([authorId, createdAt(sort: Desc)])
 }
 
 model ChannelRead {
