@@ -155,13 +155,25 @@ export default function LockedChannelTeaser({
                     ✓ Fanpass aktiv — laster på nytt…
                   </p>
                 ) : (
-                  <p className="text-xs text-amber-300">
-                    Fanpass-rad finnes, men passerer ikke serverquery:
-                    <br />
-                    <span className="font-mono text-[10px] text-white/60">
-                      status={debug.thisOrg.status} · endDate={debug.thisOrg.endDate}
-                    </span>
-                  </p>
+                  (() => {
+                    const ended = new Date(debug.thisOrg.endDate);
+                    const expired = ended < new Date();
+                    return (
+                      <div>
+                        <p className="text-xs text-amber-300 mb-1">
+                          {expired
+                            ? `⏱ Fanpass utløpt ${ended.toLocaleDateString("nb-NO")}`
+                            : `Status=${debug.thisOrg.status} blokkerer tilgang`}
+                        </p>
+                        <p className="font-mono text-[10px] text-white/60 mb-2">
+                          status={debug.thisOrg.status} · endDate={ended.toLocaleString("nb-NO")}
+                        </p>
+                        <p className="text-[10px] text-white/50 leading-relaxed">
+                          Re-grant via /superadmin/users → Administrer → Fanpass-toggle.
+                        </p>
+                      </div>
+                    );
+                  })()
                 )
               ) : (
                 <p className="text-xs text-rose-300">
