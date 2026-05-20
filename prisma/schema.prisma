@@ -249,6 +249,7 @@ model User {
   chessInvitesSent        ChessInvite[]    @relation("ChessInviteSender")
   chessInvitesReceived    ChessInvite[]    @relation("ChessInviteReceiver")
   stories                 Story[]
+  storyViews              StoryView[]
 
   @@index([username])
 }
@@ -392,11 +393,24 @@ model Story {
   createdAt DateTime @default(now())
   expiresAt DateTime
 
-  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  channel Channel     @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author  User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  views   StoryView[]
 
   @@index([channelId, expiresAt])
   @@index([authorId, createdAt(sort: Desc)])
+}
+
+model StoryView {
+  storyId  String
+  userId   String
+  viewedAt DateTime @default(now())
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId],  references: [id], onDelete: Cascade)
+
+  @@id([storyId, userId])
+  @@index([userId])
 }
 
 model ChannelRead {

@@ -14,13 +14,14 @@ import StoryCapture from "./StoryCapture";
 import StoryViewer from "./StoryViewer";
 
 interface StoryItem {
-  id:        string;
-  imageUrl:  string;
-  caption:   string | null;
-  width:     number | null;
-  height:    number | null;
-  createdAt: string;
-  expiresAt: string;
+  id:         string;
+  imageUrl:   string;
+  caption:    string | null;
+  width:      number | null;
+  height:     number | null;
+  createdAt:  string;
+  expiresAt:  string;
+  viewedByMe: boolean;
 }
 interface StoryGroup {
   author:  { id: string; name: string | null; avatarUrl: string | null };
@@ -181,6 +182,15 @@ export default function BroadcastView({
     );
   }
 
+  function handleStoryViewed(storyId: string) {
+    setStoryGroups((prev) =>
+      prev.map((g) => ({
+        ...g,
+        stories: g.stories.map((s) => (s.id === storyId ? { ...s, viewedByMe: true } : s)),
+      })),
+    );
+  }
+
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden" style={{ background: "#050816" }}>
 
@@ -275,6 +285,7 @@ export default function BroadcastView({
           canDelete={canDeleteStory}
           onClose={() => setStoryViewerIdx(null)}
           onDeleted={handleStoryDeleted}
+          onViewed={handleStoryViewed}
         />
       )}
 

@@ -3,13 +3,14 @@
 import { Plus } from "lucide-react";
 
 interface StoryItem {
-  id:        string;
-  imageUrl:  string;
-  caption:   string | null;
-  width:     number | null;
-  height:    number | null;
-  createdAt: string;
-  expiresAt: string;
+  id:         string;
+  imageUrl:   string;
+  caption:    string | null;
+  width:      number | null;
+  height:     number | null;
+  createdAt:  string;
+  expiresAt:  string;
+  viewedByMe: boolean;
 }
 
 interface StoryGroup {
@@ -56,18 +57,26 @@ export default function StoryStrip({ groups, canPost, onAdd, onOpen }: Props) {
 
         {groups.map((g, idx) => {
           const previewUrl = g.stories[g.stories.length - 1]?.imageUrl;
+          const unseen = g.stories.filter((s) => !s.viewedByMe).length;
+          const allSeen = unseen === 0;
           return (
             <button
               key={g.author.id}
               onClick={() => onOpen(idx)}
               className="flex flex-col items-center gap-1.5 group"
-              title={`${g.stories.length} ${g.stories.length === 1 ? "story" : "stories"}`}
+              title={
+                allSeen
+                  ? `${g.stories.length} ${g.stories.length === 1 ? "story" : "stories"} (alle sett)`
+                  : `${unseen} ny${unseen === 1 ? "" : "e"} story${unseen === 1 ? "" : "s"}`
+              }
             >
-              {/* Aurora gradient ring → avatar circle */}
+              {/* Ring → aurora-gradient hvis usett, dempet grå hvis alle sett */}
               <div
                 className="rounded-full transition-transform group-hover:scale-105"
                 style={{
-                  background: "linear-gradient(135deg, #5EEAD4 0%, #A855F7 50%, #60A5FA 100%)",
+                  background: allSeen
+                    ? "rgba(255,255,255,0.15)"
+                    : "linear-gradient(135deg, #5EEAD4 0%, #A855F7 50%, #60A5FA 100%)",
                   padding:    2,
                 }}
               >
@@ -76,13 +85,16 @@ export default function StoryStrip({ groups, canPost, onAdd, onOpen }: Props) {
                   style={{
                     background:  previewUrl ? `url(${previewUrl}) center/cover` : "linear-gradient(135deg, #5EEAD4, #A855F7)",
                     border:      "2px solid #050816",
+                    opacity:     allSeen ? 0.7 : 1,
                   }}
                 >
-                  {/* If no preview image fallback to initials. We layer on top via flex centering. */}
                   {!previewUrl && initials(g.author.name)}
                 </div>
               </div>
-              <span className="text-[10px] font-medium text-white/80 max-w-[64px] truncate">
+              <span
+                className="text-[10px] font-medium max-w-[64px] truncate"
+                style={{ color: allSeen ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.8)" }}
+              >
                 {g.author.name ?? "Ukjent"}
               </span>
             </button>

@@ -55,6 +55,15 @@ export async function GET(
     },
   });
 
+  // Batch-fetch which of these stories the user has viewed
+  const myViews = stories.length > 0
+    ? await db.storyView.findMany({
+        where:  { userId: session.user.id, storyId: { in: stories.map((s) => s.id) } },
+        select: { storyId: true },
+      })
+    : [];
+  const viewedSet = new Set(myViews.map((v) => v.storyId));
+
   // Group by author
   const groupMap = new Map<string, { author: { id: string; name: string | null; avatarUrl: string | null }; stories: typeof stories }>();
   for (const s of stories) {
@@ -65,13 +74,15 @@ export async function GET(
   const groups = Array.from(groupMap.values()).map((g) => ({
     author: g.author,
     stories: g.stories.map((s) => ({
-      id:        s.id,
-      imageUrl:  s.imageUrl,
-      caption:   s.caption,
-      width:     s.width,
-      height:    s.height,
-      createdAt: s.createdAt.toISOString(),
-      expiresAt: s.expiresAt.toISOString(),
+      id:           s.id,
+      imageUrl:     s.imageUrl,
+      caption:      s.caption,
+      width:        s.width,
+      height:       s.height,
+      createdAt:    s.createdAt.toISOString(),
+      expiresAt:    s.expiresAt.toISOString(),
+      // Creator's own stories: always treated as "viewed" so they get gray ring
+      viewedByMe:   s.authorId === session.user.id || viewedSet.has(s.id),
     })),
   }));
 

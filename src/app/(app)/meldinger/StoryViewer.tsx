@@ -5,13 +5,14 @@ import { X, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { FanpassBadge } from "@/components/FanpassBadge";
 
 interface StoryItem {
-  id:        string;
-  imageUrl:  string;
-  caption:   string | null;
-  width:     number | null;
-  height:    number | null;
-  createdAt: string;
-  expiresAt: string;
+  id:         string;
+  imageUrl:   string;
+  caption:    string | null;
+  width:      number | null;
+  height:     number | null;
+  createdAt:  string;
+  expiresAt:  string;
+  viewedByMe: boolean;
 }
 
 interface StoryGroup {
@@ -26,6 +27,7 @@ interface Props {
   canDelete:     (authorId: string) => boolean; // returns true if user can delete a story by this author
   onClose:       () => void;
   onDeleted:     (storyId: string) => void;
+  onViewed?:     (storyId: string) => void;
 }
 
 const DURATION_MS = 5000;
@@ -41,9 +43,16 @@ function timeAgo(iso: string) {
   return `${h} ${h === 1 ? "time" : "timer"} siden`;
 }
 
-export default function StoryViewer({ groups, startGroupIdx, currentUserId, canDelete, onClose, onDeleted }: Props) {
+// Find the index of the first unseen story in a group, or 0 if all seen.
+function firstUnseenIdx(group: StoryGroup | undefined): number {
+  if (!group) return 0;
+  const idx = group.stories.findIndex((s) => !s.viewedByMe);
+  return idx >= 0 ? idx : 0;
+}
+
+export default function StoryViewer({ groups, startGroupIdx, currentUserId, canDelete, onClose, onDeleted, onViewed }: Props) {
   const [groupIdx, setGroupIdx] = useState(startGroupIdx);
-  const [storyIdx, setStoryIdx] = useState(0);
+  const [storyIdx, setStoryIdx] = useState(() => firstUnseenIdx(groups[startGroupIdx]));
   const [paused,   setPaused]   = useState(false);
   const [progress, setProgress] = useState(0);
   const [deleting, setDeleting] = useState(false);
@@ -54,20 +63,32 @@ export default function StoryViewer({ groups, startGroupIdx, currentUserId, canD
   const startTimeRef = useRef<number>(Date.now());
   const elapsedRef   = useRef<number>(0);
   const rafRef       = useRef<number>(0);
+  const viewedRef    = useRef<Set<string>>(new Set());
 
   void currentUserId;
+
+  // Mark current story as viewed (debounced via ref so we don't double-post)
+  useEffect(() => {
+    if (!story) return;
+    if (viewedRef.current.has(story.id)) return;
+    viewedRef.current.add(story.id);
+    // Fire-and-forget view event
+    void fetch(`/api/stories/${story.id}/view`, { method: "POST" }).catch(() => null);
+    if (!story.viewedByMe) onViewed?.(story.id);
+  }, [story, onViewed]);
 
   const goNext = useCallback(() => {
     if (!group) return;
     if (storyIdx < group.stories.length - 1) {
       setStoryIdx((i) => i + 1);
     } else if (groupIdx < groups.length - 1) {
+      const next = groups[groupIdx + 1];
       setGroupIdx((i) => i + 1);
-      setStoryIdx(0);
+      setStoryIdx(firstUnseenIdx(next));
     } else {
       onClose();
     }
-  }, [group, groupIdx, groups.length, storyIdx, onClose]);
+  }, [group, groupIdx, groups, storyIdx, onClose]);
 
   const goPrev = useCallback(() => {
     if (storyIdx > 0) {
