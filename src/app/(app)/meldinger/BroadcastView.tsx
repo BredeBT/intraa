@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useTransition } from "react";
-import { Send, Mic, Image as ImageIcon, Loader2, Heart, MessageCircle, Pin, Sparkles, ChevronUp } from "lucide-react";
-import { getMessages, sendMessage, toggleReaction } from "@/server/actions/messages";
+import { Send, Mic, Image as ImageIcon, Loader2, Heart, MessageCircle, Pin, Sparkles, ChevronUp, MoreHorizontal, Pencil, Trash2, X, Check } from "lucide-react";
+import { getMessages, sendMessage, toggleReaction, editMessage, deleteMessage } from "@/server/actions/messages";
 import type { MessageWithAuthor } from "@/lib/types";
 import VoiceMessage from "@/components/VoiceMessage";
 import VoiceRecorder from "@/components/VoiceRecorder";
@@ -90,6 +90,27 @@ export default function BroadcastView({
         console.warn("[broadcast] post failed:", err);
       }
     });
+  }
+
+  async function handleEdit(messageId: string, newContent: string) {
+    try {
+      const updated = await editMessage(messageId, newContent);
+      setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, content: updated.content, editedAt: updated.editedAt } : m)));
+    } catch (err) {
+      console.warn("[broadcast] edit failed:", err);
+    }
+  }
+
+  async function handleDelete(messageId: string) {
+    // Optimistic remove
+    const prev = messages;
+    setMessages((p) => p.filter((m) => m.id !== messageId));
+    try {
+      await deleteMessage(messageId);
+    } catch (err) {
+      console.warn("[broadcast] delete failed:", err);
+      setMessages(prev); // revert
+    }
   }
 
   async function react(messageId: string, emoji: string) {
@@ -294,7 +315,16 @@ export default function BroadcastView({
             {pinned.length > 0 && (
               <div className="space-y-3 mb-6">
                 {pinned.map((m) => (
-                  <BroadcastPost key={m.id} message={m} userId={userId} onReact={react} pinned />
+                  <BroadcastPost
+                    key={m.id}
+                    message={m}
+                    userId={userId}
+                    isCreator={isCreator}
+                    onReact={react}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    pinned
+                  />
                 ))}
               </div>
             )}
@@ -309,7 +339,15 @@ export default function BroadcastView({
             )}
 
             {regular.map((m) => (
-              <BroadcastPost key={m.id} message={m} userId={userId} onReact={react} />
+              <BroadcastPost
+                key={m.id}
+                message={m}
+                userId={userId}
+                isCreator={isCreator}
+                onReact={react}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
             ))}
           </>
         )}
@@ -395,16 +433,40 @@ function EmptyState({ isCreator, onCompose }: { isCreator: boolean; onCompose: (
 /* ────────────────────────────────────────────────────────────────────────── */
 
 function BroadcastPost({
-  message, userId, onReact, pinned,
+  message, userId, isCreator, onReact, onEdit, onDelete, pinned,
 }: {
   message:   MessageWithAuthor;
   userId:    string;
+  isCreator: boolean;
   onReact:   (id: string, emoji: string) => void | Promise<void>;
+  onEdit:    (id: string, content: string) => void | Promise<void>;
+  onDelete:  (id: string) => void | Promise<void>;
   pinned?:   boolean;
 }) {
   const [showQuickReact, setShowQuickReact] = useState(false);
-  const isOwn = message.authorId === userId;
-  void isOwn;
+  const [menuOpen,       setMenuOpen]       = useState(false);
+  const [editing,        setEditing]        = useState(false);
+  const [editText,       setEditText]       = useState(message.content);
+  const [confirmDel,     setConfirmDel]     = useState(false);
+
+  const isOwn   = message.authorId === userId;
+  const canEdit = isOwn;
+  const canDel  = isOwn || isCreator;
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = () => setMenuOpen(false);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, [menuOpen]);
+
+  function saveEdit() {
+    const trimmed = editText.trim();
+    if (!trimmed || trimmed === message.content) { setEditing(false); return; }
+    void onEdit(message.id, trimmed);
+    setEditing(false);
+  }
 
   return (
     <article
@@ -425,7 +487,7 @@ function BroadcastPost({
         </div>
       )}
 
-      {/* Author + time */}
+      {/* Author + time + kebab */}
       <header className="flex items-center gap-2.5 mb-3">
         <div
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold"
@@ -441,15 +503,107 @@ function BroadcastPost({
             <span className="text-sm font-semibold text-white">{message.author.name ?? "Ukjent"}</span>
             <FanpassBadge size={11} />
           </div>
-          <p className="text-[11px] text-white/40">{fmt(message.createdAt)}</p>
+          <p className="text-[11px] text-white/40">
+            {fmt(message.createdAt)}
+            {message.editedAt && <span className="ml-1 opacity-70">(redigert)</span>}
+          </p>
         </div>
+
+        {/* Kebab menu — only for owner/admin/author */}
+        {(canEdit || canDel) && !editing && !confirmDel && (
+          <div className="relative">
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-white/40 transition-colors hover:bg-white/10 hover:text-white"
+              title="Mer"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+            {menuOpen && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="absolute right-0 top-full mt-1 z-30 w-40 overflow-hidden rounded-xl shadow-2xl"
+                style={{ background: "#131A35", border: "1px solid rgba(255,255,255,0.10)" }}
+              >
+                {canEdit && (
+                  <button
+                    onClick={() => { setEditing(true); setEditText(message.content); setMenuOpen(false); }}
+                    className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs text-white/80 hover:bg-white/10 transition-colors"
+                  >
+                    <Pencil className="h-3.5 w-3.5" /> Rediger
+                  </button>
+                )}
+                {canDel && (
+                  <button
+                    onClick={() => { setConfirmDel(true); setMenuOpen(false); }}
+                    className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs text-rose-300 hover:bg-rose-500/10 transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Slett
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
-      {/* Content */}
-      {message.content && message.content.trim() !== "" && (
-        <div className="text-[15px] leading-relaxed text-white/90 mb-3">
-          <SafeHtml content={message.content} />
+      {/* Delete confirm */}
+      {confirmDel && (
+        <div className="mb-3 flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2">
+          <span className="flex-1 text-xs text-rose-200">Slette denne broadcast-en?</span>
+          <button
+            onClick={() => setConfirmDel(false)}
+            className="rounded-md px-2 py-1 text-[11px] text-white/60 hover:text-white"
+          >
+            Avbryt
+          </button>
+          <button
+            onClick={() => { void onDelete(message.id); setConfirmDel(false); }}
+            className="rounded-md bg-rose-500 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-rose-400"
+          >
+            Slett
+          </button>
         </div>
+      )}
+
+      {/* Content — editable mode */}
+      {editing ? (
+        <div className="mb-3">
+          <textarea
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") { setEditing(false); setEditText(message.content); }
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); saveEdit(); }
+            }}
+            rows={3}
+            autoFocus
+            className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-[15px] text-white outline-none focus:border-violet-500/40 resize-none"
+            style={{ minHeight: 70 }}
+          />
+          <div className="mt-2 flex justify-end gap-2">
+            <button
+              onClick={() => { setEditing(false); setEditText(message.content); }}
+              className="rounded-full px-3 py-1 text-[11px] text-white/60 hover:text-white"
+            >
+              <X className="inline h-3 w-3" /> Avbryt
+            </button>
+            <button
+              onClick={saveEdit}
+              disabled={!editText.trim()}
+              className="flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold disabled:opacity-40"
+              style={{ background: "linear-gradient(135deg, #5EEAD4, #A855F7)", color: "#fff" }}
+            >
+              <Check className="h-3 w-3" /> Lagre
+            </button>
+          </div>
+        </div>
+      ) : (
+        message.content && message.content.trim() !== "" && (
+          <div className="text-[15px] leading-relaxed text-white/90 mb-3">
+            <SafeHtml content={message.content} />
+          </div>
+        )
       )}
 
       {message.imageUrl && (
