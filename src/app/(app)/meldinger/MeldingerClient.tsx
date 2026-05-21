@@ -13,7 +13,7 @@ import type { UserSearchResult } from "@/app/api/users/search/route";
 import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase-client";
 import { useWebRTC } from "@/hooks/useWebRTC";
-import { Phone, Video, MicOff, VideoOff, PhoneOff } from "lucide-react";
+import { Phone, Video, MicOff, VideoOff, PhoneOff, BellOff, Pin } from "lucide-react";
 
 const ChannelView         = dynamic(() => import("./ChannelView"),         { ssr: false });
 const GroupView           = dynamic(() => import("./GroupView"),           { ssr: false });
@@ -44,7 +44,7 @@ interface Community {
   channels:   OrgChannel[];
 }
 
-interface Friend { id: string; name: string | null; avatarUrl: string | null }
+interface Friend { id: string; name: string | null; avatarUrl: string | null; lastActive?: string | null }
 
 interface Conversation {
   friend:      Friend;
@@ -111,6 +111,18 @@ function dayLabel(iso: string) {
 
 function strip(html: string, max = 45) {
   return html.replace(/<[^>]*>/g, "").slice(0, max);
+}
+
+function relativeLastSeen(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m    = Math.floor(diff / 60_000);
+  if (m < 1)    return "nettopp";
+  if (m < 60)   return `${m} min siden`;
+  const h = Math.floor(m / 60);
+  if (h < 24)   return `${h} ${h === 1 ? "time" : "timer"} siden`;
+  const d = Math.floor(h / 24);
+  if (d < 7)    return `${d} ${d === 1 ? "dag" : "dager"} siden`;
+  return new Date(iso).toLocaleDateString("nb-NO", { day: "numeric", month: "short" });
 }
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
@@ -288,14 +300,18 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
   const [pastePreview, setPastePreview] = useState<string | null>(null);
   const [uploadedUrl,  setUploadedUrl]  = useState<string | null>(null);
   const [isUploading,  setIsUploading]  = useState(false);
+  const [lastReadByThem, setLastReadByThem] = useState<{ id: string; readAt: string | null } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<RichTextEditorRef>(null);
   const [, start] = useTransition();
 
   useEffect(() => {
     fetch(`/api/dm/${friendId}`)
-      .then((r) => r.json() as Promise<{ messages: DMMessage[] }>)
-      .then(({ messages: msgs }) => setMessages(msgs));
+      .then((r) => r.json() as Promise<{ messages: DMMessage[]; lastReadByThem: { id: string; readAt: string | null } | null }>)
+      .then(({ messages: msgs, lastReadByThem: lr }) => {
+        setMessages(msgs);
+        setLastReadByThem(lr);
+      });
     fetch(`/api/dm/${friendId}/read`, { method: "PATCH" }).catch(() => null);
   }, [friendId]);
 
@@ -376,70 +392,111 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
           </div>
         )}
 
-        {messages.map((msg, index) => {
-          const isMe = msg.senderId === currentUserId;
-          const prev = messages[index - 1];
-          const next = messages[index + 1];
-          const GAP  = 5 * 60_000;
-          const isFirstInGroup = !prev || prev.senderId !== msg.senderId || new Date(msg.createdAt).getTime() - new Date(prev.createdAt).getTime() > GAP;
-          const isLastInGroup  = !next || next.senderId !== msg.senderId || new Date(next.createdAt).getTime() - new Date(msg.createdAt).getTime() > GAP;
+        {(() => {
+          // Compute "last own message" index for read-receipt placement
+          let lastOwnIdx = -1;
+          for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i]?.senderId === currentUserId) { lastOwnIdx = i; break; }
+          }
 
-          // Day separator — show when date changes or > 15 min from prev
-          const showDaySep = !prev || new Date(msg.createdAt).getTime() - new Date(prev.createdAt).getTime() > 15 * 60_000;
+          return messages.map((msg, index) => {
+            const isMe = msg.senderId === currentUserId;
+            const prev = messages[index - 1];
+            const next = messages[index + 1];
+            const GAP_GROUP  = 5 * 60_000;            // 5 min — split message groups
+            const GAP_SOFT   = 15 * 60_000;           // 15 min — show timestamp
+            const GAP_BIG    = 2 * 60 * 60_000;       // 2 hours — show rich divider
+            const gapFromPrev = prev ? new Date(msg.createdAt).getTime() - new Date(prev.createdAt).getTime() : Infinity;
 
-          return (
-            <div key={msg.id}>
-              {showDaySep && (
-                <div className="flex items-center gap-3 my-5">
-                  <div className="flex-1 h-px bg-white/[0.06]" />
-                  <span className="text-[11px] text-white/30 font-medium">{dayLabel(msg.createdAt)}</span>
-                  <div className="flex-1 h-px bg-white/[0.06]" />
-                </div>
-              )}
+            const isFirstInGroup = !prev || prev.senderId !== msg.senderId || gapFromPrev > GAP_GROUP;
+            const isLastInGroup  = !next || next.senderId !== msg.senderId || new Date(next.createdAt).getTime() - new Date(msg.createdAt).getTime() > GAP_GROUP;
 
-              {isMe ? (
-                /* Own messages — right aligned */
-                <div className={`flex flex-col items-end gap-0.5 ${isLastInGroup ? "mb-4" : "mb-0.5"}`}>
-                  {isFirstInGroup && <span className="text-[11px] text-white/30 mr-1 mb-0.5">Du</span>}
-                  {msg.imageUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={msg.imageUrl} alt="Bilde" className="max-w-[60%] rounded-2xl rounded-tr-sm object-cover" />
-                  )}
-                  {msg.content.trim() && msg.content.trim() !== "&nbsp;" && (
-                    <div className="w-fit max-w-[75%] md:max-w-[65%] bg-purple-600 text-white rounded-2xl rounded-tr-sm px-4 py-2.5">
-                      <SafeHtml content={msg.content} className="text-[14px] leading-relaxed" />
-                    </div>
-                  )}
-                  {isLastInGroup && <span className="text-[11px] text-white/20 px-1">{msgTime(msg.createdAt)}</span>}
-                </div>
-              ) : (
-                /* Other's messages — left aligned */
-                <div className={`flex gap-2.5 ${isLastInGroup ? "mb-4" : "mb-0.5"}`}>
-                  {isFirstInGroup ? (
-                    <div className="w-8 h-8 shrink-0 self-end">
-                      <Avatar avatarUrl={msg.sender.avatarUrl} name={msg.sender.name} size={8} />
-                    </div>
-                  ) : (
-                    <div className="w-8 shrink-0" />
-                  )}
-                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                    {isFirstInGroup && <span className="text-xs text-white/40 ml-1">{msg.sender.name ?? "Ukjent"}</span>}
+            // Day-change detection
+            const dayChange = prev ? new Date(msg.createdAt).toDateString() !== new Date(prev.createdAt).toDateString() : true;
+
+            // Rich divider: when day changes OR gap > 2h
+            const showRichDivider = dayChange || gapFromPrev > GAP_BIG;
+            // Soft timestamp marker: gap > 15 min but < 2h, same day, not first message
+            const showSoftMarker  = !showRichDivider && gapFromPrev > GAP_SOFT;
+
+            // Read-receipt: only on the very last own message, if friend has read it
+            const showReadReceipt = isMe && index === lastOwnIdx && lastReadByThem?.id === msg.id && lastReadByThem.readAt;
+
+            return (
+              <div key={msg.id}>
+                {showRichDivider && (
+                  <div className="flex items-center gap-3 my-6">
+                    <div className="flex-1 h-px bg-white/[0.06]" />
+                    <span className="text-[10px] uppercase tracking-wider text-white/30 font-semibold">{dayLabel(msg.createdAt)}</span>
+                    <div className="flex-1 h-px bg-white/[0.06]" />
+                  </div>
+                )}
+                {showSoftMarker && (
+                  <div className="my-3 text-center">
+                    <span className="text-[10px] text-white/25 font-medium">{msgTime(msg.createdAt)}</span>
+                  </div>
+                )}
+
+                {isMe ? (
+                  /* Own messages — right aligned, Aurora gradient bubble */
+                  <div className={`flex flex-col items-end gap-0.5 ${isLastInGroup ? "mb-4" : "mb-0.5"}`}>
+                    {isFirstInGroup && <span className="text-[11px] text-white/30 mr-1 mb-0.5">Du</span>}
                     {msg.imageUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={msg.imageUrl} alt="Bilde" className="max-w-[60%] rounded-2xl rounded-tl-sm object-cover" />
+                      <img src={msg.imageUrl} alt="Bilde" className="max-w-[60%] rounded-2xl rounded-tr-sm object-cover" />
                     )}
                     {msg.content.trim() && msg.content.trim() !== "&nbsp;" && (
-                      <div className="w-fit max-w-[75%] md:max-w-[65%] bg-white/[0.08] text-white rounded-2xl rounded-tl-sm px-4 py-2.5">
+                      <div
+                        className="w-fit max-w-[75%] md:max-w-[65%] text-white rounded-2xl rounded-tr-sm px-4 py-2.5"
+                        style={{
+                          background: "linear-gradient(135deg, #A855F7 0%, #60A5FA 100%)",
+                          boxShadow:  "0 4px 16px rgba(168,85,247,0.25)",
+                        }}
+                      >
                         <SafeHtml content={msg.content} className="text-[14px] leading-relaxed" />
                       </div>
                     )}
-                    {isLastInGroup && <span className="text-[11px] text-white/20 ml-1">{msgTime(msg.createdAt)}</span>}
+                    {isLastInGroup && (
+                      <span className="text-[11px] text-white/20 px-1">
+                        {msgTime(msg.createdAt)}
+                      </span>
+                    )}
+                    {showReadReceipt && (
+                      <span className="text-[10px] mr-1 mt-0.5 flex items-center gap-1" style={{ color: "#5EEAD4" }}>
+                        <Check className="h-2.5 w-2.5" />
+                        Sett {msgTime(lastReadByThem!.readAt!)}
+                      </span>
+                    )}
                   </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+                ) : (
+                  /* Other's messages — left aligned */
+                  <div className={`flex gap-2.5 ${isLastInGroup ? "mb-4" : "mb-0.5"}`}>
+                    {isFirstInGroup ? (
+                      <div className="w-8 h-8 shrink-0 self-end">
+                        <Avatar avatarUrl={msg.sender.avatarUrl} name={msg.sender.name} size={8} />
+                      </div>
+                    ) : (
+                      <div className="w-8 shrink-0" />
+                    )}
+                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                      {isFirstInGroup && <span className="text-xs text-white/40 ml-1">{msg.sender.name ?? "Ukjent"}</span>}
+                      {msg.imageUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={msg.imageUrl} alt="Bilde" className="max-w-[60%] rounded-2xl rounded-tl-sm object-cover" />
+                      )}
+                      {msg.content.trim() && msg.content.trim() !== "&nbsp;" && (
+                        <div className="w-fit max-w-[75%] md:max-w-[65%] bg-white/[0.08] text-white rounded-2xl rounded-tl-sm px-4 py-2.5">
+                          <SafeHtml content={msg.content} className="text-[14px] leading-relaxed" />
+                        </div>
+                      )}
+                      {isLastInGroup && <span className="text-[11px] text-white/20 ml-1">{msgTime(msg.createdAt)}</span>}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          });
+        })()}
         <div ref={bottomRef} />
       </div>
 
@@ -980,18 +1037,31 @@ export default function MeldingerClient({
               <p className="text-[15px] font-medium text-white">{chatHeader.title}</p>
               {active?.type === "dm" ? (
                 onlineUsers.includes(active.userId)
-                  ? <p className="text-xs text-green-400">Online nå</p>
-                  : chatHeader.subtitle
-                    ? <p className="text-xs text-white/30">{chatHeader.subtitle}</p>
-                    : null
+                  ? <p className="text-xs text-emerald-400">Online nå</p>
+                  : activeConvFriend?.lastActive
+                    ? <p className="text-xs text-white/40">Sist sett {relativeLastSeen(activeConvFriend.lastActive)}</p>
+                    : <p className="text-xs text-white/30">Offline</p>
               ) : chatHeader.subtitle ? (
                 <p className="text-xs text-white/30">{chatHeader.subtitle}</p>
               ) : null}
             </div>
 
-            {/* Call buttons — only for DM, not during active call */}
+            {/* Action buttons — only for DM, not during active call */}
             {active?.type === "dm" && webrtc.callState === "idle" && (
-              <div className="ml-auto flex gap-2">
+              <div className="ml-auto flex gap-1.5">
+                <button
+                  title="Fest samtale"
+                  className="hidden sm:flex w-8 h-8 rounded-lg bg-white/[0.04] items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.10] transition-all"
+                >
+                  <Pin className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  title="Demp varsler"
+                  className="hidden sm:flex w-8 h-8 rounded-lg bg-white/[0.04] items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.10] transition-all"
+                >
+                  <BellOff className="w-3.5 h-3.5" />
+                </button>
+                <div className="hidden sm:block w-px self-stretch bg-white/[0.08] mx-1" />
                 <button
                   onClick={() => void webrtc.startCall("audio")}
                   title="Lydsamtale"

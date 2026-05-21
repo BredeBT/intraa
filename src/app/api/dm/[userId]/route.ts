@@ -32,20 +32,36 @@ export async function GET(
 
   const cursor = req.nextUrl.searchParams.get("cursor");
 
-  const messages = await db.directMessage.findMany({
-    where: {
-      OR: [
-        { senderId: session.user.id, receiverId: userId },
-        { senderId: userId, receiverId: session.user.id },
-      ],
-    },
-    orderBy: { createdAt: "asc" },
-    take:    50,
-    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-    include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
-  });
+  const [messages, friend, lastReadFromThem] = await Promise.all([
+    db.directMessage.findMany({
+      where: {
+        OR: [
+          { senderId: session.user.id, receiverId: userId },
+          { senderId: userId, receiverId: session.user.id },
+        ],
+      },
+      orderBy: { createdAt: "asc" },
+      take:    50,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
+    }),
+    db.user.findUnique({
+      where:  { id: userId },
+      select: { lastActive: true, status: true },
+    }),
+    // Friend's most recent read of OUR messages — tells us "Sett N min siden"
+    db.directMessage.findFirst({
+      where:   { senderId: session.user.id, receiverId: userId, readAt: { not: null } },
+      orderBy: { readAt: "desc" },
+      select:  { readAt: true, id: true, createdAt: true },
+    }),
+  ]);
 
-  return NextResponse.json({ messages });
+  return NextResponse.json({
+    messages,
+    friend: friend ?? {},
+    lastReadByThem: lastReadFromThem ?? null,
+  });
 }
 
 // POST /api/dm/[userId] — send a message

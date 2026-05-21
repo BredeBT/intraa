@@ -42,8 +42,8 @@ export default async function MeldingerPage({
     db.friendship.findMany({
       where: { status: "ACCEPTED", OR: [{ senderId: userId }, { receiverId: userId }] },
       include: {
-        sender:   { select: { id: true, name: true, avatarUrl: true } },
-        receiver: { select: { id: true, name: true, avatarUrl: true } },
+        sender:   { select: { id: true, name: true, avatarUrl: true, lastActive: true } },
+        receiver: { select: { id: true, name: true, avatarUrl: true, lastActive: true } },
       },
       take: 20,
     }),
@@ -154,7 +154,12 @@ export default async function MeldingerPage({
   // ── DM conversations — lastMessage + unread in parallel ──────────────────────
   const friends = friendships.map((f) => {
     const friend = f.senderId === userId ? f.receiver : f.sender;
-    return { id: friend.id, name: friend.name, avatarUrl: friend.avatarUrl };
+    return {
+      id:         friend.id,
+      name:       friend.name,
+      avatarUrl:  friend.avatarUrl,
+      lastActive: friend.lastActive?.toISOString() ?? null,
+    };
   });
 
   // ── DM bulk queries — 2 queries total instead of 2×N ─────────────────────────
