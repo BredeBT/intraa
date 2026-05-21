@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Camera, Image as ImageIcon, X, RotateCw, Loader2, Send, Type, AlertTriangle } from "lucide-react";
+import { Camera, Image as ImageIcon, X, RotateCw, Loader2, Send, Type, AlertTriangle, Briefcase, Check } from "lucide-react";
 
 type Step = "choose" | "camera" | "preview" | "uploading";
 
@@ -38,6 +38,13 @@ async function compress(blob: Blob, maxPx = 1080): Promise<File> {
   });
 }
 
+interface SponsorOption {
+  id:        string;
+  slug:      string;
+  brandName: string;
+  logoUrl:   string | null;
+}
+
 export default function StoryCapture({ channelId, onClose, onPosted }: Props) {
   const [step,       setStep]       = useState<Step>("choose");
   const [error,      setError]      = useState<string | null>(null);
@@ -46,6 +53,26 @@ export default function StoryCapture({ channelId, onClose, onPosted }: Props) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [caption,    setCaption]    = useState("");
   const [dims,       setDims]       = useState<{ w: number; h: number } | null>(null);
+
+  // Sponsor tagging
+  const [sponsorPickerOpen, setSponsorPickerOpen] = useState(false);
+  const [sponsors,          setSponsors]          = useState<SponsorOption[]>([]);
+  const [selectedSponsor,   setSelectedSponsor]   = useState<SponsorOption | null>(null);
+  const [sponsorSearch,     setSponsorSearch]     = useState("");
+
+  // Lazy-fetch sponsors on first open
+  async function openSponsorPicker() {
+    setSponsorPickerOpen(true);
+    if (sponsors.length === 0) {
+      try {
+        const res = await fetch("/api/sponsors");
+        if (res.ok) {
+          const data = await res.json() as { sponsors: SponsorOption[] };
+          setSponsors(data.sponsors);
+        }
+      } catch { /* silent */ }
+    }
+  }
 
   const videoRef  = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -175,10 +202,11 @@ export default function StoryCapture({ channelId, onClose, onPosted }: Props) {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
-          imageUrl: url,
-          caption:  caption.trim() || null,
-          width:    dims?.w ?? null,
-          height:   dims?.h ?? null,
+          imageUrl:  url,
+          caption:   caption.trim() || null,
+          width:     dims?.w ?? null,
+          height:    dims?.h ?? null,
+          sponsorId: selectedSponsor?.id ?? null,
         }),
       });
       if (!stRes.ok) {
@@ -350,6 +378,45 @@ export default function StoryCapture({ channelId, onClose, onPosted }: Props) {
               background: "linear-gradient(to top, rgba(0,0,0,0.85), transparent)",
             }}
           >
+            {/* Sponsor tag chip — kompakt over caption */}
+            <button
+              type="button"
+              onClick={() => void openSponsorPicker()}
+              disabled={step === "uploading"}
+              className="mb-2 flex items-center gap-2 rounded-full px-3 py-1.5 text-xs transition-colors"
+              style={{
+                background: selectedSponsor ? "rgba(96,165,250,0.20)" : "rgba(0,0,0,0.4)",
+                border:     selectedSponsor ? "1px solid rgba(96,165,250,0.45)" : "1px solid rgba(255,255,255,0.15)",
+                color:      selectedSponsor ? "#fff" : "rgba(255,255,255,0.6)",
+                backdropFilter: "blur(10px)",
+              }}
+            >
+              {selectedSponsor ? (
+                <>
+                  <div
+                    className="h-4 w-4 rounded shrink-0"
+                    style={{
+                      background: selectedSponsor.logoUrl
+                        ? `url(${selectedSponsor.logoUrl}) center/cover`
+                        : "linear-gradient(135deg, #60A5FA, #A855F7)",
+                    }}
+                  />
+                  <span className="font-semibold">Sponsoret av {selectedSponsor.brandName}</span>
+                  <span
+                    onClick={(e) => { e.stopPropagation(); setSelectedSponsor(null); }}
+                    className="text-white/60 hover:text-white"
+                  >
+                    <X className="h-3 w-3" />
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Briefcase className="h-3.5 w-3.5" />
+                  <span>Legg til sponsor</span>
+                </>
+              )}
+            </button>
+
             <div className="mb-3 flex items-start gap-2 rounded-2xl px-3 py-2.5"
                  style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(10px)" }}>
               <Type className="mt-1 h-4 w-4 shrink-0 text-white/50" />
@@ -393,6 +460,73 @@ export default function StoryCapture({ channelId, onClose, onPosted }: Props) {
             <div className="absolute top-4 left-4 right-16 flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/20 px-3 py-2 text-xs text-rose-100 backdrop-blur">
               <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
               {error}
+            </div>
+          )}
+
+          {/* Sponsor picker modal — nested */}
+          {sponsorPickerOpen && (
+            <div
+              onClick={() => setSponsorPickerOpen(false)}
+              className="absolute inset-0 z-30 flex items-end sm:items-center justify-center"
+              style={{ background: "rgba(5,8,22,0.85)", backdropFilter: "blur(8px)" }}
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="w-full sm:max-w-sm sm:rounded-2xl overflow-hidden"
+                style={{ background: "#0B1027", border: "1px solid rgba(255,255,255,0.10)" }}
+              >
+                <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                  <p className="text-sm font-semibold text-white">Velg sponsor</p>
+                  <button
+                    onClick={() => setSponsorPickerOpen(false)}
+                    className="text-white/40 hover:text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="p-3 border-b border-white/10">
+                  <input
+                    value={sponsorSearch}
+                    onChange={(e) => setSponsorSearch(e.target.value)}
+                    placeholder="Søk etter brand…"
+                    className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:border-white/20"
+                  />
+                </div>
+                <div className="max-h-[50vh] overflow-y-auto">
+                  {sponsors.length === 0 ? (
+                    <p className="p-6 text-center text-xs text-white/50">
+                      Ingen sponsors registrert ennå.
+                    </p>
+                  ) : (
+                    sponsors
+                      .filter((s) => !sponsorSearch || s.brandName.toLowerCase().includes(sponsorSearch.toLowerCase()))
+                      .map((s) => {
+                        const isSel = selectedSponsor?.id === s.id;
+                        return (
+                          <button
+                            key={s.id}
+                            onClick={() => { setSelectedSponsor(s); setSponsorPickerOpen(false); }}
+                            className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
+                          >
+                            <div
+                              className="h-9 w-9 shrink-0 rounded-lg"
+                              style={{
+                                background: s.logoUrl
+                                  ? `url(${s.logoUrl}) center/cover`
+                                  : "linear-gradient(135deg, #60A5FA, #A855F7)",
+                              }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-white truncate">{s.brandName}</p>
+                              <p className="text-[11px] text-white/40 truncate">@{s.slug}</p>
+                            </div>
+                            {isSel && <Check className="h-4 w-4 shrink-0" style={{ color: "#60A5FA" }} />}
+                          </button>
+                        );
+                      })
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>

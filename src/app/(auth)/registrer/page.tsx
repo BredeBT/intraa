@@ -3,8 +3,12 @@
 import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle, Check, ChevronRight, Loader2, X } from "lucide-react";
+import { AlertCircle, Check, ChevronRight, Loader2, X, Users, Sparkles, Briefcase, ChevronLeft } from "lucide-react";
 import { validateUsername } from "@/lib/bannedUsernames";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type UserType = "FAN" | "CREATOR" | "SPONSOR";
 
 // ─── Username availability hook ───────────────────────────────────────────────
 
@@ -70,18 +74,83 @@ function useEmailCheck(email: string): EmailState {
   return state;
 }
 
-// ─── Password checks ──────────────────────────────────────────────────────────
-
 const PASSWORD_CHECKS = [
-  { label: "Minst 8 tegn",         test: (p: string) => p.length >= 8 },
-  { label: "Minst ett tall",        test: (p: string) => /\d/.test(p) },
-  { label: "Minst ett spesialtegn", test: (p: string) => /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(p) },
-  { label: "Minst én stor bokstav", test: (p: string) => /[A-Z]/.test(p) },
+  { label: "Minst 8 tegn",          test: (p: string) => p.length >= 8 },
+  { label: "Minst ett tall",         test: (p: string) => /\d/.test(p) },
+  { label: "Minst ett spesialtegn",  test: (p: string) => /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(p) },
+  { label: "Minst én stor bokstav",  test: (p: string) => /[A-Z]/.test(p) },
 ];
+
+// ─── Type chooser screen ──────────────────────────────────────────────────────
+
+const TYPES: { id: UserType; label: string; tagline: string; icon: React.ElementType; color: string; bg: string }[] = [
+  {
+    id:      "FAN",
+    label:   "Fan",
+    tagline: "Bli med i communities og følg creators",
+    icon:    Users,
+    color:   "#5EEAD4",
+    bg:      "rgba(94,234,212,0.10)",
+  },
+  {
+    id:      "CREATOR",
+    label:   "Creator",
+    tagline: "Bygg ditt eget community og monetiser fansen",
+    icon:    Sparkles,
+    color:   "#A855F7",
+    bg:      "rgba(168,85,247,0.10)",
+  },
+  {
+    id:      "SPONSOR",
+    label:   "Sponsor",
+    tagline: "Finn creators å samarbeide med",
+    icon:    Briefcase,
+    color:   "#60A5FA",
+    bg:      "rgba(96,165,250,0.10)",
+  },
+];
+
+function StepTypeChooser({ onChoose }: { onChoose: (t: UserType) => void }) {
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="mb-2 text-sm text-zinc-400">Hva slags konto vil du opprette?</p>
+      {TYPES.map((t) => {
+        const Icon = t.icon;
+        return (
+          <button
+            key={t.id}
+            onClick={() => onChoose(t.id)}
+            className="group flex items-center gap-4 rounded-2xl border p-4 text-left transition-all hover:scale-[1.01]"
+            style={{
+              background:  t.bg,
+              borderColor: `${t.color}40`,
+            }}
+          >
+            <div
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+              style={{
+                background: `${t.color}25`,
+                color:      t.color,
+                border:     `1px solid ${t.color}40`,
+              }}
+            >
+              <Icon className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-bold text-white">{t.label}</p>
+              <p className="text-xs text-zinc-400 mt-0.5">{t.tagline}</p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-zinc-500 transition-transform group-hover:translate-x-1 group-hover:text-white" />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 // ─── Account form ─────────────────────────────────────────────────────────────
 
-function StepAccount({ onCreated }: { onCreated: () => void }) {
+function StepAccount({ userType, onCreated, onBack }: { userType: UserType; onCreated: () => void; onBack: () => void }) {
   const [name,            setName]    = useState("");
   const [username,        setUsername] = useState("");
   const [email,           setEmail]   = useState("");
@@ -90,6 +159,11 @@ function StepAccount({ onCreated }: { onCreated: () => void }) {
   const [acceptedTerms,   setAcceptedTerms] = useState(false);
   const [serverError,     setServerError] = useState("");
   const [pending,         start]      = useTransition();
+
+  // Sponsor-specific fields
+  const [brandName,         setBrandName]        = useState("");
+  const [brandWebsite,      setBrandWebsite]     = useState("");
+  const [brandDescription,  setBrandDescription] = useState("");
 
   const { state: unState, error: unError } = useUsernameCheck(username);
   const emailState = useEmailCheck(email);
@@ -103,7 +177,8 @@ function StepAccount({ onCreated }: { onCreated: () => void }) {
     emailState === "available" &&
     allChecksPass &&
     passwordsMatch &&
-    acceptedTerms;
+    acceptedTerms &&
+    (userType !== "SPONSOR" || brandName.trim().length > 0);
 
   function submit(ev: React.FormEvent) {
     ev.preventDefault();
@@ -113,7 +188,11 @@ function StepAccount({ onCreated }: { onCreated: () => void }) {
       const res = await fetch("/api/auth/register", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ name, username, email, password }),
+        body:    JSON.stringify({
+          name, username, email, password,
+          userType,
+          ...(userType === "SPONSOR" ? { brandName, brandWebsite, brandDescription } : {}),
+        }),
       });
       const data = await res.json() as { error?: string; email?: string };
       if (!res.ok) { setServerError(data.error ?? "Noe gikk galt."); return; }
@@ -140,14 +219,56 @@ function StepAccount({ onCreated }: { onCreated: () => void }) {
     return null;
   }
 
+  const typeMeta = TYPES.find((t) => t.id === userType)!;
+
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+      {/* Selected type pill + back */}
+      <button
+        type="button"
+        onClick={onBack}
+        className="flex items-center justify-between gap-2 rounded-xl border px-3 py-2 transition-colors hover:bg-white/5"
+        style={{ borderColor: `${typeMeta.color}40`, background: typeMeta.bg }}
+      >
+        <div className="flex items-center gap-2">
+          <ChevronLeft className="h-3.5 w-3.5 text-zinc-500" />
+          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: typeMeta.color }}>
+            {typeMeta.label}-konto
+          </span>
+        </div>
+        <span className="text-[10px] text-zinc-500">Bytt</span>
+      </button>
+
       {/* Visningsnavn */}
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-zinc-400">Visningsnavn</label>
+        <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+          {userType === "SPONSOR" ? "Ditt navn (kontaktperson)" : "Visningsnavn"}
+        </label>
         <input type="text" autoComplete="name" placeholder="Fullt navn…"
           value={name} onChange={(e) => setName(e.target.value)} className={inp()} />
       </div>
+
+      {/* Sponsor-only: brand details */}
+      {userType === "SPONSOR" && (
+        <>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-zinc-400">Brand-navn</label>
+            <input type="text" placeholder="F.eks. Acme Energy"
+              value={brandName} onChange={(e) => setBrandName(e.target.value)} className={inp()} />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-zinc-400">Nettside (valgfri)</label>
+            <input type="url" placeholder="https://acme.no"
+              value={brandWebsite} onChange={(e) => setBrandWebsite(e.target.value)} className={inp()} />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-zinc-400">Kort beskrivelse (valgfri)</label>
+            <textarea rows={2} placeholder="Hva selger eller representerer brandet?"
+              value={brandDescription} onChange={(e) => setBrandDescription(e.target.value)}
+              className={inp() + " resize-none"} />
+          </div>
+        </>
+      )}
 
       {/* Brukernavn */}
       <div>
@@ -236,7 +357,6 @@ function StepAccount({ onCreated }: { onCreated: () => void }) {
         </p>
       )}
 
-      {/* Terms checkbox */}
       <div className="flex items-start gap-3">
         <input
           type="checkbox"
@@ -247,22 +367,19 @@ function StepAccount({ onCreated }: { onCreated: () => void }) {
         />
         <label htmlFor="terms" className="cursor-pointer text-xs leading-relaxed text-zinc-400">
           Jeg godtar{" "}
-          <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">
-            vilkårene for bruk
-          </a>
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">vilkårene for bruk</a>
           {" "}og{" "}
-          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">
-            personvernerklæringen
-          </a>
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">personvernerklæringen</a>
         </label>
       </div>
 
       <button
         type="submit"
         disabled={!isValid || pending}
-        className={`mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 ${
-          !isValid || pending ? "cursor-not-allowed opacity-50" : ""
+        className={`mt-1 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white transition-colors ${
+          !isValid || pending ? "cursor-not-allowed opacity-50" : "hover:opacity-90"
         }`}
+        style={{ background: `linear-gradient(135deg, ${typeMeta.color}, #A855F7)` }}
       >
         {pending ? "Oppretter konto…" : <><span>Opprett konto</span><ChevronRight className="h-4 w-4" /></>}
       </button>
@@ -274,20 +391,31 @@ function StepAccount({ onCreated }: { onCreated: () => void }) {
 
 export default function RegistrerPage() {
   const router = useRouter();
+  const [userType, setUserType] = useState<UserType | null>(null);
+
+  function onCreated() {
+    if (userType === "SPONSOR") router.push("/brand/dashboard");
+    else router.push("/home");
+  }
 
   return (
     <div className="w-full max-w-sm">
       <div className="mb-8 text-center">
-        <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-lg font-bold text-white shadow-lg">
+        <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-violet-600 text-lg font-bold text-white shadow-lg">
           I
         </div>
         <div className="text-2xl font-bold tracking-tight text-white">Intraa</div>
-        <p className="mt-1 text-sm text-zinc-500">Din arbeidsplass. Ditt community.</p>
+        <p className="mt-1 text-sm text-zinc-500">Communityet ditt. Hjemmet ditt.</p>
       </div>
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl">
-        <h2 className="mb-6 text-base font-semibold text-white">Opprett konto</h2>
-        <StepAccount onCreated={() => router.push("/home")} />
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-7 shadow-xl">
+        <h2 className="mb-5 text-base font-semibold text-white">
+          {userType === null ? "Opprett konto" : "Fullfør registrering"}
+        </h2>
+        {userType === null
+          ? <StepTypeChooser onChoose={setUserType} />
+          : <StepAccount userType={userType} onCreated={onCreated} onBack={() => setUserType(null)} />
+        }
       </div>
 
       <p className="mt-6 text-center text-sm text-zinc-500">
@@ -303,13 +431,5 @@ export default function RegistrerPage() {
         <Link href="/privacy" className="transition-colors hover:text-zinc-500">Personvern</Link>
       </p>
     </div>
-  );
-}
-
-function Err({ msg }: { msg: string }) {
-  return (
-    <p className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-400">
-      <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {msg}
-    </p>
   );
 }

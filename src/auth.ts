@@ -9,12 +9,14 @@ declare module "next-auth" {
   interface User {
     isSuperAdmin?: boolean;
     username?:     string | null;
+    userType?:     "FAN" | "CREATOR" | "SPONSOR";
   }
   interface Session {
     user: DefaultSession["user"] & {
       id:          string;
       isSuperAdmin: boolean;
       username:    string | null;
+      userType:    "FAN" | "CREATOR" | "SPONSOR";
     };
   }
 }
@@ -23,6 +25,7 @@ declare module "@auth/core/jwt" {
   interface JWT {
     isSuperAdmin?: boolean;
     username?:     string | null;
+    userType?:     "FAN" | "CREATOR" | "SPONSOR";
   }
 }
 
@@ -54,6 +57,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           image:        user.image ?? user.avatarUrl ?? null,
           isSuperAdmin: user.isSuperAdmin,
           username:     user.username ?? null,
+          userType:     user.userType,
         };
       },
     }),
@@ -66,6 +70,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.isSuperAdmin = user.isSuperAdmin ?? false;
         token.username     = user.username ?? null;
+        token.userType     = user.userType  ?? "FAN";
       }
       // Handle client-side update() calls — persist name/image into token
       if (trigger === "update" && session) {
@@ -79,6 +84,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.id           = token.sub ?? "";
       session.user.isSuperAdmin = (token.isSuperAdmin as boolean | undefined) ?? false;
       session.user.username     = (token.username as string | null | undefined) ?? null;
+      session.user.userType     = (token.userType as "FAN" | "CREATOR" | "SPONSOR" | undefined) ?? "FAN";
       // Propagate name/image from token (kept up-to-date via update())
       if (token.name)    session.user.name  = token.name;
       if (token.picture) session.user.image = token.picture as string;

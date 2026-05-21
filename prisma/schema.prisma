@@ -112,6 +112,12 @@ enum ReportStatus {
   DISMISSED
 }
 
+enum UserType {
+  FAN
+  CREATOR
+  SPONSOR
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model Organization {
@@ -194,6 +200,7 @@ model User {
   password      String?
   isSuperAdmin  Boolean   @default(false)
   isPublic      Boolean   @default(true)
+  userType      UserType  @default(FAN)
   createdAt     DateTime  @default(now())
   bio           String?
   interests     String[]
@@ -250,6 +257,7 @@ model User {
   chessInvitesReceived    ChessInvite[]    @relation("ChessInviteReceiver")
   stories                 Story[]
   storyViews              StoryView[]
+  sponsorProfile          SponsorProfile?
 
   @@index([username])
 }
@@ -390,15 +398,33 @@ model Story {
   caption   String?
   width     Int?     // for layout-hint i viewer (4:5, 16:9, etc)
   height    Int?
+  sponsorId String?  // Optional: tag som sponsoret innhold
   createdAt DateTime @default(now())
   expiresAt DateTime
 
-  channel Channel     @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  author  User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  channel Channel        @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author  User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  sponsor SponsorProfile? @relation(fields: [sponsorId], references: [id], onDelete: SetNull)
   views   StoryView[]
 
   @@index([channelId, expiresAt])
   @@index([authorId, createdAt(sort: Desc)])
+  @@index([sponsorId, createdAt(sort: Desc)])
+}
+
+model SponsorProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  brandName   String
+  slug        String   @unique // for /brand/[slug]
+  logoUrl     String?
+  website     String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stories Story[]
 }
 
 model StoryView {

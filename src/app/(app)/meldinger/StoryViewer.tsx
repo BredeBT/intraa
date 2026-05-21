@@ -13,6 +13,7 @@ interface StoryItem {
   createdAt:  string;
   expiresAt:  string;
   viewedByMe: boolean;
+  sponsor:    { slug: string; brandName: string; logoUrl: string | null } | null;
 }
 
 interface StoryGroup {
@@ -286,13 +287,38 @@ export default function StoryViewer({ groups, startGroupIdx, currentUserId, canD
           <ChevronRight className="h-5 w-5" />
         </button>
 
-        {/* Caption */}
-        {story.caption && (
+        {/* Caption + sponsor badge */}
+        {(story.caption || story.sponsor) && (
           <div
-            className="absolute bottom-0 left-0 right-0 px-5 pt-12 pb-6 z-10 pointer-events-none"
+            className="absolute bottom-0 left-0 right-0 px-5 pt-12 pb-6 z-10"
             style={{ background: "linear-gradient(to top, rgba(0,0,0,0.85), transparent)" }}
           >
-            <p className="text-sm text-white leading-relaxed">{story.caption}</p>
+            {story.sponsor && (
+              <a
+                href={`/brand/${story.sponsor.slug}`}
+                onClick={(e) => e.stopPropagation()}
+                className="mb-2 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition-transform hover:scale-105"
+                style={{
+                  background: "rgba(96,165,250,0.20)",
+                  border:     "1px solid rgba(96,165,250,0.45)",
+                  color:      "#fff",
+                  backdropFilter: "blur(10px)",
+                }}
+              >
+                <div
+                  className="h-4 w-4 rounded shrink-0"
+                  style={{
+                    background: story.sponsor.logoUrl
+                      ? `url(${story.sponsor.logoUrl}) center/cover`
+                      : "linear-gradient(135deg, #60A5FA, #A855F7)",
+                  }}
+                />
+                Sponsoret av {story.sponsor.brandName}
+              </a>
+            )}
+            {story.caption && (
+              <p className="text-sm text-white leading-relaxed">{story.caption}</p>
+            )}
           </div>
         )}
       </div>

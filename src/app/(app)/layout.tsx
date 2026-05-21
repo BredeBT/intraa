@@ -403,7 +403,7 @@ function SidebarContent({
 // Paths accessible without any org membership
 const NO_ORG_PATHS = [
   "/home", "/support", "/innstillinger", "/notifikasjoner",
-  "/meldinger", "/bytt-org", "/profil", "/soek",
+  "/meldinger", "/bytt-org", "/profil", "/soek", "/brand",
 ];
 
 // ─── Superadmin impersonate banner ────────────────────────────────────────────
@@ -431,6 +431,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname     = usePathname();
   const router       = useRouter();
   const inAdmin      = pathname.startsWith("/admin");
+  const inBrand      = pathname.startsWith("/brand");
   const [searchOpen,        setSearchOpen]        = useState(false);
   const [sidebarOpen,       setSidebarOpen]        = useState(false);
   const [drawerOpen,        setDrawerOpen]         = useState(false);
@@ -442,18 +443,27 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [unreadCount,       setUnreadCount]         = useState(0);
   const [allCommunities,    setAllCommunities]       = useState<OrgSummary[]>([]);
   const { org, orgLoaded, setOrg } = useOrg();
-  const { user }           = useUser();
+  const { user, isSponsor } = useUser();
+
+  // Sponsors always live on /brand/* — redirect them away from creator/fan pages
+  useEffect(() => {
+    if (!mounted || !isSponsor) return;
+    if (!pathname.startsWith("/brand") && !pathname.startsWith("/innstillinger") && pathname !== "/logout") {
+      router.replace("/brand/dashboard");
+    }
+  }, [mounted, isSponsor, pathname, router]);
 
   // Redirect to /home when user has no org and tries to access an org-specific page
   useEffect(() => {
     if (!mounted || !orgLoaded || org !== null) return;
+    if (isSponsor) return; // sponsors handled above
     const isNoOrgPath =
       NO_ORG_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/")) ||
       pathname.startsWith("/u/");
     if (!isNoOrgPath) {
       router.replace("/home");
     }
-  }, [mounted, orgLoaded, org, pathname, router]);
+  }, [mounted, orgLoaded, org, pathname, router, isSponsor]);
 
   useEffect(() => {
     setEnabledFeatures(null); // clear stale features immediately on org change
@@ -557,8 +567,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Use mounted to avoid SSR/client mismatch on collapsed state (localStorage unavailable on server)
   const effectiveCollapsed = mounted && desktopCollapsed;
-  const sidebarW = inAdmin ? "w-0 overflow-hidden" : effectiveCollapsed ? "w-14" : "w-48";
-  const mainPl   = inAdmin ? ""                    : effectiveCollapsed ? "md:pl-14" : "md:pl-48";
+  const sidebarW = (inAdmin || inBrand) ? "w-0 overflow-hidden" : effectiveCollapsed ? "w-14" : "w-48";
+  const mainPl   = (inAdmin || inBrand) ? "" : effectiveCollapsed ? "md:pl-14" : "md:pl-48";
 
   const sidebarProps = {
     pathname, org, orgLoaded,
@@ -581,11 +591,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-zinc-950 text-white">
       {/* Desktop sidebar — hidden when in admin (admin has its own) */}
       <aside className={`fixed left-0 top-0 z-30 hidden h-screen flex-col border-r border-zinc-800 bg-zinc-900 transition-all duration-200 ease-in-out md:flex ${sidebarW}`}>
-        {!inAdmin && <SidebarContent {...sidebarProps} />}
+        {!inAdmin && !inBrand && <SidebarContent {...sidebarProps} />}
       </aside>
 
       {/* Mobile sidebar drawer — hidden when in admin */}
-      {sidebarOpen && !inAdmin && (
+      {sidebarOpen && !inAdmin && !inBrand && (
         <>
           <div className="sidebar-backdrop md:hidden" onClick={() => setSidebarOpen(false)} />
           <aside className="fixed left-0 top-0 z-50 flex h-full w-72 flex-col border-r border-zinc-800 bg-zinc-900 md:hidden">
@@ -640,8 +650,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
 
-      {/* Mobile bottom bar — hidden in admin */}
-      {!inAdmin && (
+      {/* Mobile bottom bar — hidden in admin og brand */}
+      {!inAdmin && !inBrand && (
         <>
           <BottomBar
             pathname={pathname}

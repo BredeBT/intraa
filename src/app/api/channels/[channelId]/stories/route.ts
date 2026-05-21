@@ -51,7 +51,8 @@ export async function GET(
     where:   { channelId, expiresAt: { gt: new Date() } },
     orderBy: { createdAt: "asc" },
     include: {
-      author: { select: { id: true, name: true, avatarUrl: true } },
+      author:  { select: { id: true, name: true, avatarUrl: true } },
+      sponsor: { select: { id: true, slug: true, brandName: true, logoUrl: true } },
     },
   });
 
@@ -83,6 +84,7 @@ export async function GET(
       expiresAt:    s.expiresAt.toISOString(),
       // Creator's own stories: always treated as "viewed" so they get gray ring
       viewedByMe:   s.authorId === session.user.id || viewedSet.has(s.id),
+      sponsor:      s.sponsor ? { slug: s.sponsor.slug, brandName: s.sponsor.brandName, logoUrl: s.sponsor.logoUrl } : null,
     })),
   }));
 
@@ -102,7 +104,7 @@ export async function POST(
   if (!session?.user?.id) return NextResponse.json({ error: "Ikke innlogget" }, { status: 401 });
 
   const { channelId } = await params;
-  const body = await req.json() as { imageUrl?: string; caption?: string; width?: number; height?: number };
+  const body = await req.json() as { imageUrl?: string; caption?: string; width?: number; height?: number; sponsorId?: string };
   if (!body.imageUrl) return NextResponse.json({ error: "imageUrl mangler" }, { status: 400 });
 
   const channel = await db.channel.findUnique({
@@ -122,14 +124,22 @@ export async function POST(
 
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
 
+  // Validate sponsorId hvis oppgitt
+  let sponsorId: string | null = null;
+  if (body.sponsorId) {
+    const sponsor = await db.sponsorProfile.findUnique({ where: { id: body.sponsorId }, select: { id: true } });
+    if (sponsor) sponsorId = sponsor.id;
+  }
+
   const story = await db.story.create({
     data: {
       channelId,
-      authorId: session.user.id,
-      imageUrl: body.imageUrl,
-      caption:  body.caption ?? null,
-      width:    body.width  ?? null,
-      height:   body.height ?? null,
+      authorId:  session.user.id,
+      imageUrl:  body.imageUrl,
+      caption:   body.caption ?? null,
+      width:     body.width  ?? null,
+      height:    body.height ?? null,
+      sponsorId,
       expiresAt,
     },
     include: { author: { select: { id: true, name: true, avatarUrl: true } } },

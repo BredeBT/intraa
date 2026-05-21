@@ -9,12 +9,14 @@ export interface SessionUser {
   image?: string | null;
   initials: string;
   isSuperAdmin: boolean;
+  userType: "FAN" | "CREATOR" | "SPONSOR";
 }
 
 interface UseUserResult {
   user: SessionUser | null;
   isLoading: boolean;
   isAdmin: boolean;
+  isSponsor: boolean;
 }
 
 function getInitials(name: string): string {
@@ -38,6 +40,7 @@ export function useUser(): UseUserResult {
         image:       raw.image,
         initials:    getInitials(raw.name ?? "?"),
         isSuperAdmin: raw.isSuperAdmin,
+        userType:    raw.userType ?? "FAN",
       }
     : null;
 
@@ -45,5 +48,6 @@ export function useUser(): UseUserResult {
     user,
     isLoading: status === "loading",
     isAdmin:   user?.isSuperAdmin ?? false,
+    isSponsor: user?.userType === "SPONSOR",
   };
 }

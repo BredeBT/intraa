@@ -22,6 +22,7 @@ interface StoryItem {
   createdAt:  string;
   expiresAt:  string;
   viewedByMe: boolean;
+  sponsor:    { slug: string; brandName: string; logoUrl: string | null } | null;
 }
 interface StoryGroup {
   author:  { id: string; name: string | null; avatarUrl: string | null };
