@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X } from "lucide-react";
+import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X, Radio, Sparkles, Crown, Users as UsersIcon, Image as ImgIcon } from "lucide-react";
 import { FanpassBadge } from "@/components/FanpassBadge";
 import { createPost, deletePost } from "@/server/actions/posts";
 import type { PostWithAuthor, CommentWithAuthor } from "@/lib/types";
@@ -41,23 +41,33 @@ function formatSince(iso: string) {
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
+interface OnlineUser {
+  id:        string;
+  name:      string | null;
+  username:  string;
+  avatarUrl: string | null;
+}
+
 interface Props {
-  initialPosts:    PostWithAuthor[];
-  orgId:           string;
-  userName:        string;
-  userId:          string;
-  isSuperAdmin:    boolean;
-  logoUrl:         string | null;
-  orgName:         string;
-  orgType:         string;
-  orgSlug:         string | null;
-  orgCreatedAt:    string;
-  memberCount:     number;
-  onlineCount:     number;
-  weekPostCount:   number;
-  welcomeMessage?: string | null;
-  bannerBg:        string | null;
-  initialIsLive?:  boolean;
+  initialPosts:       PostWithAuthor[];
+  orgId:              string;
+  userName:           string;
+  userId:             string;
+  isSuperAdmin:       boolean;
+  logoUrl:            string | null;
+  orgName:            string;
+  orgType:            string;
+  orgSlug:            string | null;
+  orgCreatedAt:       string;
+  memberCount:        number;
+  onlineCount:        number;
+  onlineUsers:        OnlineUser[];
+  weekPostCount:      number;
+  weekFanpassCount:   number;
+  activeStoriesCount: number;
+  welcomeMessage?:    string | null;
+  bannerBg:           string | null;
+  initialIsLive?:     boolean;
 }
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
@@ -72,14 +82,33 @@ function UserAvatar({ name, size = 9 }: { name: string; size?: number }) {
   );
 }
 
+// ─── Sidebar stat row ─────────────────────────────────────────────────────────
+
+function SidebarStat({ icon, value, label, color }: { icon: React.ReactNode; value: number; label: string; color: string }) {
+  return (
+    <li className="flex items-center gap-2.5">
+      <span
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
+        style={{ background: `${color}15`, color }}
+      >
+        {icon}
+      </span>
+      <span className="text-sm font-bold text-white tabular-nums">{value}</span>
+      <span className="text-xs text-white/50">{label}</span>
+    </li>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function FeedClient({
   initialPosts, orgId, userName, userId, isSuperAdmin,
   logoUrl, orgName, orgType, orgSlug, orgCreatedAt,
-  memberCount, onlineCount, weekPostCount, welcomeMessage,
+  memberCount, onlineCount, onlineUsers, weekPostCount,
+  weekFanpassCount, activeStoriesCount, welcomeMessage,
   bannerBg, initialIsLive,
 }: Props) {
+  void orgType; void weekPostCount; // legacy props (still passed; can clean up later)
   const [posts,            setPosts]            = useState<PostWithAuthor[]>(initialPosts);
   const [open,             setOpen]             = useState(false);
   const [content,          setContent]          = useState("");
@@ -285,178 +314,196 @@ export default function FeedClient({
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
+  // Pulse-bar items (only show when truthy/non-zero)
+  const pulseItems = [
+    initialIsLive && orgSlug && {
+      key:   "live",
+      href:  `/${orgSlug}/live`,
+      icon:  <Radio className="h-3.5 w-3.5" />,
+      label: "Live nå",
+      color: "#F472B6",
+      pulse: true,
+    },
+    onlineCount > 0 && {
+      key:   "online",
+      icon:  <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" /><span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" /></span>,
+      label: onlineCount === 1 ? "1 online nå" : `${onlineCount} online nå`,
+      color: "#5EEAD4",
+    },
+    activeStoriesCount > 0 && {
+      key:   "stories",
+      icon:  <Sparkles className="h-3.5 w-3.5" />,
+      label: `${activeStoriesCount} ${activeStoriesCount === 1 ? "ny story" : "nye stories"}`,
+      color: "#A855F7",
+    },
+    weekFanpassCount > 0 && {
+      key:   "fanpass",
+      icon:  <Crown className="h-3.5 w-3.5" />,
+      label: `${weekFanpassCount} ${weekFanpassCount === 1 ? "ny Fanpass" : "nye Fanpass"} denne uka`,
+      color: "#FBBF24",
+    },
+  ].filter(Boolean) as { key: string; href?: string; icon: React.ReactNode; label: string; color: string; pulse?: boolean }[];
+
   return (
-    <div className="mx-auto max-w-[680px] px-4 pb-10" style={{ background: "#050816" }}>
+    <div className="mx-auto max-w-6xl px-4 pb-10" style={{ background: "#050816" }}>
 
-      {/* ── Banner ── */}
-      <div
-        className="h-36 md:h-40 -mx-4 relative overflow-hidden mb-0"
-        style={{ background: bannerBg ?? "linear-gradient(135deg, #2d1b69, #4f35b8, #ea580c)" }}
-      />
-
-      {/* ── Logo + info ── */}
-      <div className="flex items-center gap-4 pt-4 pb-4">
-        <div className="w-14 h-14 rounded-2xl bg-purple-600 flex items-center justify-center font-bold text-xl shrink-0 overflow-hidden border-2 border-white/10">
-          {logoUrl
-            ? <img src={logoUrl} alt="" className="w-full h-full object-cover" />
-            : <span className="text-white">{orgName[0]}</span>
-          }
+      {/* ── Compressed banner with avatar overlap ── */}
+      <div className="relative -mx-4 mb-14">
+        <div
+          className="h-32 md:h-36 relative overflow-hidden"
+          style={{
+            background: bannerBg ?? "linear-gradient(135deg, #5EEAD4 0%, #A855F7 50%, #60A5FA 100%)",
+          }}
+        >
+          {/* Subtle gradient overlay to ensure text legibility regardless of banner */}
+          <div className="absolute inset-0 pointer-events-none"
+               style={{ background: "linear-gradient(to bottom, transparent 40%, rgba(5,8,22,0.6) 100%)" }} />
         </div>
-        <div className="min-w-0">
-          <h1 className="text-lg font-semibold text-white truncate">{orgName}</h1>
-          <div className="flex flex-wrap items-center gap-2 mt-1 text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
-            <span>{orgType === "COMMUNITY" ? "Community" : "Bedrift"}</span>
-            <span>·</span>
-            <span>{memberCount.toLocaleString("no-NO")} medlemmer</span>
-            {onlineCount > 0 && (
-              <>
-                <span>·</span>
-                <span className="flex items-center gap-1 text-green-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
-                  {onlineCount} online
-                </span>
-              </>
-            )}
-          </div>
-        </div>
-        {orgSlug && initialIsLive && (
-          <a
-            href={`/${orgSlug}/live`}
-            className="ml-auto flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white shrink-0"
-            style={{ background: "rgba(220,38,38,0.85)" }}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-            LIVE
-          </a>
-        )}
-      </div>
 
-      {/* ── Stats grid ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-5">
-        {[
-          { value: weekPostCount,          label: "Innlegg",    color: "text-white" },
-          { value: memberCount,            label: "Medlemmer",  color: "text-white" },
-          { value: onlineCount,            label: "Online nå",  color: "text-green-400" },
-          { value: formatSince(orgCreatedAt), label: "Aktiv siden", color: "text-white/60", small: true },
-        ].map((stat) => (
+        {/* Avatar — overlaps banner */}
+        <div className="absolute left-4 md:left-6 -bottom-10 flex items-end gap-3">
           <div
-            key={stat.label}
-            className="rounded-xl py-3 text-center border border-white/[0.06]"
-            style={{ background: "rgba(255,255,255,0.05)" }}
+            className="w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-black shrink-0 overflow-hidden shadow-2xl"
+            style={{
+              background: logoUrl ? "transparent" : "linear-gradient(135deg, #A855F7, #60A5FA)",
+              border:     "3px solid #050816",
+            }}
           >
-            <p className={`font-semibold ${stat.small ? "text-xs text-white/60" : "text-lg"} ${stat.color}`}>
-              {typeof stat.value === "number" ? stat.value.toLocaleString("no-NO") : stat.value}
-            </p>
-            <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{stat.label}</p>
+            {logoUrl
+              ? /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={logoUrl} alt="" className="w-full h-full object-cover" />
+              : <span className="text-white">{orgName[0]?.toUpperCase()}</span>
+            }
           </div>
-        ))}
+        </div>
+
+        {/* Right side: org meta */}
+        <div className="absolute right-4 md:right-6 bottom-3 text-right">
+          <h1 className="text-xl md:text-2xl font-bold text-white drop-shadow-md">{orgName}</h1>
+          <p className="text-[11px] md:text-xs text-white/80 mt-0.5">
+            {memberCount.toLocaleString("no-NO")} medlemmer · Siden {formatSince(orgCreatedAt)}
+          </p>
+        </div>
       </div>
 
-      {/* Velkomstmelding */}
-      {welcomeMessage && (
-        <div className="mb-4 rounded-xl border border-purple-500/20 px-4 py-3" style={{ background: "rgba(168,85,247,0.08)" }}>
-          <p className="text-sm text-white/70">{welcomeMessage}</p>
-        </div>
-      )}
+      {/* ── Two-column layout: feed + sidebar on lg+ ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start mt-2">
 
-      {/* ── Compose box ── */}
-      <div className="rounded-2xl border border-white/[0.06] p-4 mb-4" style={{ background: "#0B1027" }}>
-        {pasteToast && (
-          <div className="mb-3 flex items-center justify-between rounded-lg border border-white/[0.06] px-3 py-2 text-xs text-white/50" style={{ background: "rgba(255,255,255,0.05)" }}>
-            <span>📋 {pasteToast}</span>
-            <button onClick={() => setPasteToast(null)} className="ml-2 opacity-60 hover:opacity-100"><X className="h-3 w-3" /></button>
-          </div>
-        )}
+        {/* ── MAIN COLUMN ──────────────────────────────────────────────── */}
+        <div className="min-w-0">
 
-        <div className="flex gap-3 items-center">
-          <UserAvatar name={userName} />
-
-          {!open ? (
-            <div className="flex flex-1 items-center gap-2">
-              <button
-                onClick={() => setOpen(true)}
-                className="flex-1 rounded-xl px-4 py-2.5 text-left text-sm transition-colors text-left"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.35)" }}
-              >
-                Del noe med {orgName}...
-              </button>
-              <button
-                onClick={() => { setOpen(true); imageInputRef.current?.click(); }}
-                className="p-2.5 rounded-xl transition-colors"
-                style={{ color: "rgba(255,255,255,0.4)" }}
-                title="Legg til bilde"
-              >
-                <ImageIcon className="h-5 w-5" />
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-1 flex-col gap-3">
-              <textarea
-                ref={textareaRef}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                onKeyDown={handleKey}
-                rows={3}
-                placeholder={`Del noe med ${orgName}...`}
-                className="w-full resize-none rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none transition-colors"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
-              />
-              {imagePreview && (
-                <div className="relative w-fit">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={imagePreview} alt="Forhåndsvisning" className="max-h-48 rounded-xl object-cover" />
-                  <button onClick={clearImage} className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-white" style={{ background: "#0B1027" }}>
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              )}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  <button type="button" onClick={() => imageInputRef.current?.click()}
-                    className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs transition-colors"
-                    style={{ color: "rgba(255,255,255,0.4)" }} title="Legg til bilde">
-                    <ImageIcon className="h-4 w-4" />
-                  </button>
-                  <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
-                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>⌘↵ for å sende</span>
-                </div>
-                <div className="flex gap-2">
-                  <button type="button" onClick={handleClose}
-                    className="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
-                    style={{ color: "rgba(255,255,255,0.4)" }}>
-                    Avbryt
-                  </button>
-                  <button type="button" onClick={() => void handleSubmit()}
-                    disabled={(!content.trim() && !imageFile) || isPosting}
-                    className="flex items-center gap-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 px-4 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-50">
-                    <Send className="h-3.5 w-3.5" />
-                    {isUploading ? "Laster opp…" : isPosting ? "Sender…" : "Del"}
-                  </button>
-                </div>
-              </div>
+          {/* Pulse bar — only if something is happening */}
+          {pulseItems.length > 0 && (
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              {pulseItems.map((item) => {
+                const inner = (
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
+                    style={{
+                      background: `${item.color}15`,
+                      color:      item.color,
+                      border:     `1px solid ${item.color}30`,
+                    }}
+                  >
+                    <span style={{ color: item.color }}>{item.icon}</span>
+                    {item.label}
+                  </span>
+                );
+                return item.href
+                  ? <a key={item.key} href={item.href} className="hover:scale-[1.03] transition-transform">{inner}</a>
+                  : <span key={item.key}>{inner}</span>;
+              })}
             </div>
           )}
-        </div>
 
-        {/* Bottom toolbar (collapsed state) */}
-        {!open && (
-          <div className="flex gap-2 mt-3 pt-3 border-t border-white/[0.06]">
-            <button
-              onClick={() => { setOpen(true); imageInputRef.current?.click(); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.4)" }}
-            >
-              📷 Bilde
-            </button>
-            <button
-              onClick={() => setOpen(true)}
-              className="ml-auto bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium px-4 py-1.5 rounded-lg transition-colors"
-            >
-              Publiser
-            </button>
+          {/* Velkomstmelding */}
+          {welcomeMessage && (
+            <div className="mb-4 rounded-2xl border px-4 py-3"
+                 style={{ background: "rgba(168,85,247,0.08)", borderColor: "rgba(168,85,247,0.25)" }}>
+              <p className="text-sm text-white/80">{welcomeMessage}</p>
+            </div>
+          )}
+
+          {/* ── Compose box — compact by default, expanded on focus ── */}
+          <div className="rounded-2xl border border-white/[0.08] mb-5 transition-all"
+               style={{ background: "#0B1027" }}>
+            {pasteToast && (
+              <div className="m-3 mb-0 flex items-center justify-between rounded-lg border border-white/[0.06] px-3 py-2 text-xs text-white/60"
+                   style={{ background: "rgba(255,255,255,0.04)" }}>
+                <span>📋 {pasteToast}</span>
+                <button onClick={() => setPasteToast(null)} className="ml-2 opacity-60 hover:opacity-100"><X className="h-3 w-3" /></button>
+              </div>
+            )}
+
+            {!open ? (
+              /* Collapsed: single-line tap target */
+              <button
+                onClick={() => setOpen(true)}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left"
+              >
+                <UserAvatar name={userName} />
+                <span className="flex-1 text-sm text-white/40">Del noe med {orgName}…</span>
+                <span
+                  onClick={(e) => { e.stopPropagation(); setOpen(true); imageInputRef.current?.click(); }}
+                  className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/5"
+                  title="Legg til bilde"
+                >
+                  <ImageIcon className="h-4 w-4" />
+                </span>
+              </button>
+            ) : (
+              /* Expanded: full composer */
+              <div className="flex gap-3 items-start p-4">
+                <UserAvatar name={userName} />
+                <div className="flex flex-1 flex-col gap-3">
+                  <textarea
+                    ref={textareaRef}
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    onKeyDown={handleKey}
+                    rows={3}
+                    placeholder={`Del noe med ${orgName}…`}
+                    className="w-full resize-none rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none transition-colors"
+                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
+                  />
+                  {imagePreview && (
+                    <div className="relative w-fit">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={imagePreview} alt="Forhåndsvisning" className="max-h-48 rounded-xl object-cover" />
+                      <button onClick={clearImage} className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-white" style={{ background: "#0B1027" }}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => imageInputRef.current?.click()}
+                        className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs transition-colors hover:bg-white/5"
+                        style={{ color: "rgba(255,255,255,0.5)" }} title="Legg til bilde">
+                        <ImageIcon className="h-4 w-4" />
+                      </button>
+                      <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+                      <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>⌘↵ for å sende</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={handleClose}
+                        className="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/5"
+                        style={{ color: "rgba(255,255,255,0.5)" }}>
+                        Avbryt
+                      </button>
+                      <button type="button" onClick={() => void handleSubmit()}
+                        disabled={(!content.trim() && !imageFile) || isPosting}
+                        className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-transform hover:scale-105 disabled:opacity-50 disabled:scale-100"
+                        style={{ background: "linear-gradient(135deg, #5EEAD4, #A855F7)", color: "#fff" }}>
+                        <Send className="h-3.5 w-3.5" />
+                        {isUploading ? "Laster opp…" : isPosting ? "Sender…" : "Publiser"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
       {/* ── Post list ── */}
       {posts.length === 0 ? (
@@ -597,6 +644,91 @@ export default function FeedClient({
           })}
         </div>
       )}
+        </div>
+        {/* ── /MAIN COLUMN ─────────────────────────────────────────────── */}
+
+        {/* ── SIDEBAR (desktop lg+ only) ───────────────────────────────── */}
+        <aside className="hidden lg:flex flex-col gap-4 sticky top-4">
+
+          {/* Online now */}
+          <div className="rounded-2xl border border-white/[0.08] p-4" style={{ background: "#0B1027" }}>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50">
+                Online nå
+              </p>
+              <span className="text-[10px] text-emerald-400">{onlineCount}</span>
+            </div>
+            {onlineUsers.length === 0 ? (
+              <p className="text-xs text-white/30">Ingen på plattformen nå.</p>
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                {onlineUsers.slice(0, 6).map((u) => (
+                  <a
+                    key={u.id}
+                    href={`/u/${u.username}`}
+                    className="flex items-center gap-2.5 group"
+                  >
+                    <div className="relative shrink-0">
+                      <div
+                        className="h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white overflow-hidden"
+                        style={{
+                          background: u.avatarUrl ? `url(${u.avatarUrl}) center/cover` : "linear-gradient(135deg, #5EEAD4, #A855F7)",
+                        }}
+                      >
+                        {!u.avatarUrl && initials(u.name ?? u.username)}
+                      </div>
+                      <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2" style={{ borderColor: "#0B1027" }} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium text-white truncate group-hover:text-emerald-300 transition-colors">{u.name ?? u.username}</p>
+                      <p className="text-[10px] text-white/40 truncate">@{u.username}</p>
+                    </div>
+                  </a>
+                ))}
+                {onlineUsers.length > 6 && (
+                  <p className="text-[10px] text-white/40 mt-1">+ {onlineUsers.length - 6} til</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Hva skjer denne uka */}
+          <div className="rounded-2xl border border-white/[0.08] p-4" style={{ background: "#0B1027" }}>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50 mb-3">
+              Denne uka
+            </p>
+            <ul className="space-y-2.5 text-xs">
+              <SidebarStat icon={<ImgIcon className="h-3.5 w-3.5" />} value={weekPostCount} label="nye innlegg" color="#A855F7" />
+              <SidebarStat icon={<Sparkles className="h-3.5 w-3.5" />} value={activeStoriesCount} label="aktive stories" color="#60A5FA" />
+              <SidebarStat icon={<Crown    className="h-3.5 w-3.5" />} value={weekFanpassCount} label="nye Fanpass" color="#FBBF24" />
+            </ul>
+          </div>
+
+          {/* Members shortcut */}
+          {orgSlug && (
+            <a
+              href={`/community/medlemmer`}
+              className="rounded-2xl border border-white/[0.08] p-4 transition-colors hover:border-white/20 group"
+              style={{ background: "#0B1027" }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex h-9 w-9 items-center justify-center rounded-xl"
+                  style={{ background: "rgba(94,234,212,0.15)", color: "#5EEAD4" }}
+                >
+                  <UsersIcon className="h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-white">Alle medlemmer</p>
+                  <p className="text-[10px] text-white/40">{memberCount.toLocaleString("no-NO")} totalt</p>
+                </div>
+                <span className="text-white/30 group-hover:translate-x-0.5 group-hover:text-white transition-all">→</span>
+              </div>
+            </a>
+          )}
+        </aside>
+      </div>
+      {/* ── /TWO-COLUMN LAYOUT ───────────────────────────────────────── */}
 
       {/* Delete confirmation modal */}
       {confirmDeleteId && (
