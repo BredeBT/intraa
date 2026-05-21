@@ -386,35 +386,35 @@ export default function FeedClient({
         </div>
       </div>
 
+      {/* ── Pulse bar — full bredde over grid-en så puls føles som "platform-status" ── */}
+      {pulseItems.length > 0 && (
+        <div className="mt-2 mb-4 flex flex-wrap items-center gap-2">
+          {pulseItems.map((item) => {
+            const inner = (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
+                style={{
+                  background: `${item.color}15`,
+                  color:      item.color,
+                  border:     `1px solid ${item.color}30`,
+                }}
+              >
+                <span style={{ color: item.color }}>{item.icon}</span>
+                {item.label}
+              </span>
+            );
+            return item.href
+              ? <a key={item.key} href={item.href} className="hover:scale-[1.03] transition-transform">{inner}</a>
+              : <span key={item.key}>{inner}</span>;
+          })}
+        </div>
+      )}
+
       {/* ── Two-column layout: feed + sidebar on lg+ ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start mt-2">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start">
 
         {/* ── MAIN COLUMN ──────────────────────────────────────────────── */}
         <div className="min-w-0">
-
-          {/* Pulse bar — only if something is happening */}
-          {pulseItems.length > 0 && (
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              {pulseItems.map((item) => {
-                const inner = (
-                  <span
-                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
-                    style={{
-                      background: `${item.color}15`,
-                      color:      item.color,
-                      border:     `1px solid ${item.color}30`,
-                    }}
-                  >
-                    <span style={{ color: item.color }}>{item.icon}</span>
-                    {item.label}
-                  </span>
-                );
-                return item.href
-                  ? <a key={item.key} href={item.href} className="hover:scale-[1.03] transition-transform">{inner}</a>
-                  : <span key={item.key}>{inner}</span>;
-              })}
-            </div>
-          )}
 
           {/* Velkomstmelding */}
           {welcomeMessage && (
