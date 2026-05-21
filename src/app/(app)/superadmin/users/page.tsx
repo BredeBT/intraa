@@ -9,7 +9,7 @@ export const revalidate = 0;
 export default async function UsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; search?: string; orgId?: string; sort?: string }>;
+  searchParams: Promise<{ page?: string; search?: string; orgId?: string; sort?: string; type?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id || !session.user.isSuperAdmin) redirect("/home");
@@ -19,6 +19,7 @@ export default async function UsersPage({
   const search = params.search?.trim() ?? "";
   const orgId  = params.orgId?.trim()  ?? "";
   const sort   = params.sort           ?? "newest";
+  const type   = (params.type ?? "ALL") as "ALL" | "FAN" | "CREATOR" | "SPONSOR";
   const limit  = 20;
 
   const orderBy = sort === "oldest"
@@ -30,6 +31,7 @@ export default async function UsersPage({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: any = {};
   if (orgId)  where.memberships = { some: { organizationId: orgId } };
+  if (type !== "ALL") where.userType = type;
   if (search) where.OR = [
     { name:     { contains: search, mode: "insensitive" } },
     { username: { contains: search, mode: "insensitive" } },
@@ -49,9 +51,11 @@ export default async function UsersPage({
         email:       true,
         avatarUrl:   true,
         isSuperAdmin: true,
+        userType:    true,
         createdAt:   true,
         _count:      { select: { memberships: true } },
         fanPasses:   { where: { status: "ACTIVE", cancelledAt: null }, select: { id: true, endDate: true }, take: 1 },
+        sponsorProfile: { select: { slug: true, brandName: true } },
       },
     }),
     db.user.count({ where }),
@@ -61,16 +65,19 @@ export default async function UsersPage({
   ]);
 
   const mappedUsers = users.map((u) => ({
-    id:          u.id,
-    name:        u.name,
-    username:    u.username,
-    email:       u.email,
-    avatarUrl:   u.avatarUrl,
+    id:           u.id,
+    name:         u.name,
+    username:     u.username,
+    email:        u.email,
+    avatarUrl:    u.avatarUrl,
     isSuperAdmin: u.isSuperAdmin,
-    createdAt:   u.createdAt.toISOString(),
-    memberCount: u._count.memberships,
-    hasFanpass:  u.fanPasses.length > 0,
-    fanpassEnd:  u.fanPasses[0]?.endDate.toISOString() ?? null,
+    userType:     u.userType,
+    createdAt:    u.createdAt.toISOString(),
+    memberCount:  u._count.memberships,
+    hasFanpass:   u.fanPasses.length > 0,
+    fanpassEnd:   u.fanPasses[0]?.endDate.toISOString() ?? null,
+    brandName:    u.sponsorProfile?.brandName ?? null,
+    brandSlug:    u.sponsorProfile?.slug ?? null,
   }));
 
   return (
@@ -81,6 +88,7 @@ export default async function UsersPage({
       limit={limit}
       initialSearch={search}
       initialSort={sort}
+      initialType={type}
       orgId={orgId}
       orgName={orgName}
     />

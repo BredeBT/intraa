@@ -6,17 +6,22 @@ import { Search, Users, ChevronLeft, X, Shield, Ticket, RotateCcw, Trash2, Check
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+type UserTypeKey = "FAN" | "CREATOR" | "SPONSOR";
+
 interface User {
-  id:          string;
-  name:        string | null;
-  username:    string;
-  email:       string;
-  avatarUrl:   string | null;
+  id:           string;
+  name:         string | null;
+  username:     string;
+  email:        string;
+  avatarUrl:    string | null;
   isSuperAdmin: boolean;
-  createdAt:   string;
-  memberCount: number;
-  hasFanpass:  boolean;
-  fanpassEnd:  string | null;
+  userType:     UserTypeKey;
+  createdAt:    string;
+  memberCount:  number;
+  hasFanpass:   boolean;
+  fanpassEnd:   string | null;
+  brandName:    string | null;
+  brandSlug:    string | null;
 }
 
 interface Props {
@@ -26,6 +31,7 @@ interface Props {
   limit:         number;
   initialSearch: string;
   initialSort:   string;
+  initialType:   "ALL" | UserTypeKey;
   orgId:         string;
   orgName:       string | null;
 }
@@ -38,6 +44,26 @@ function initials(name: string | null) {
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" });
+}
+
+const TYPE_META: Record<UserTypeKey, { label: string; bg: string; color: string; border: string }> = {
+  FAN:     { label: "Fan",     bg: "rgba(94,234,212,0.15)",  color: "#5EEAD4", border: "rgba(94,234,212,0.30)"  },
+  CREATOR: { label: "Creator", bg: "rgba(168,85,247,0.15)",  color: "#A855F7", border: "rgba(168,85,247,0.30)"  },
+  SPONSOR: { label: "Sponsor", bg: "rgba(96,165,250,0.15)",  color: "#60A5FA", border: "rgba(96,165,250,0.30)"  },
+};
+
+function UserTypePill({ type, brandName }: { type: UserTypeKey; brandName: string | null }) {
+  const meta = TYPE_META[type];
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium"
+      style={{ background: meta.bg, color: meta.color, border: `1px solid ${meta.border}` }}
+      title={type === "SPONSOR" && brandName ? brandName : meta.label}
+    >
+      {meta.label}
+      {type === "SPONSOR" && brandName && <span className="opacity-70">· {brandName}</span>}
+    </span>
+  );
 }
 
 // ─── User edit modal ──────────────────────────────────────────────────────────
@@ -431,6 +457,7 @@ export default function UsersClient({
   limit,
   initialSearch,
   initialSort,
+  initialType,
   orgId,
   orgName,
 }: Props) {
@@ -439,9 +466,11 @@ export default function UsersClient({
   const [users,     setUsers]    = useState(initialUsers);
   const [search,    setSearch]   = useState(initialSearch);
   const [sort,      setSort]     = useState(initialSort);
+  const [type,      setType]     = useState<"ALL" | UserTypeKey>(initialType);
   const [managed,   setManaged]  = useState<User | null>(null);
   const searchRef   = useRef(search);
   searchRef.current = search;
+  void orgId;
 
   // Debounced search — pushes new URL, server re-renders
   useEffect(() => {
@@ -462,6 +491,15 @@ export default function UsersClient({
     setSort(newSort);
     const current = new URLSearchParams(urlParams.toString());
     current.set("sort", newSort);
+    current.set("page", "1");
+    router.push(`/superadmin/users?${current.toString()}`);
+  }
+
+  function handleTypeChange(newType: "ALL" | UserTypeKey) {
+    setType(newType);
+    const current = new URLSearchParams(urlParams.toString());
+    if (newType === "ALL") current.delete("type");
+    else                   current.set("type", newType);
     current.set("page", "1");
     router.push(`/superadmin/users?${current.toString()}`);
   }
@@ -520,6 +558,32 @@ export default function UsersClient({
         </select>
       </div>
 
+      {/* Type filter chips */}
+      <div className="mb-5 flex flex-wrap gap-2">
+        {([
+          { id: "ALL",     label: "Alle",     color: "rgba(255,255,255,0.08)" },
+          { id: "FAN",     label: "Fans",     color: "rgba(94,234,212,0.20)"  },
+          { id: "CREATOR", label: "Creators", color: "rgba(168,85,247,0.20)"  },
+          { id: "SPONSOR", label: "Sponsors", color: "rgba(96,165,250,0.20)"  },
+        ] as const).map((opt) => {
+          const active = type === opt.id;
+          return (
+            <button
+              key={opt.id}
+              onClick={() => handleTypeChange(opt.id)}
+              className="rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
+              style={{
+                background: active ? opt.color : "transparent",
+                color:      active ? "#fff" : "rgba(255,255,255,0.5)",
+                border:     active ? `1px solid ${opt.color.replace("0.20", "0.45")}` : "1px solid rgba(255,255,255,0.10)",
+              }}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Table */}
       {users.length === 0 ? (
         <div className="rounded-xl border border-zinc-800 bg-zinc-900 py-16 text-center">
@@ -566,6 +630,7 @@ export default function UsersClient({
                     <td className="hidden px-5 py-4 text-xs text-zinc-500 lg:table-cell">{fmtDate(u.createdAt)}</td>
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-1">
+                        <UserTypePill type={u.userType} brandName={u.brandName} />
                         {u.hasFanpass && (
                           <span className="flex items-center gap-0.5 rounded-full bg-violet-500/20 px-2 py-0.5 text-[10px] font-medium text-violet-300">
                             <Ticket className="h-3 w-3" /> Fanpass
