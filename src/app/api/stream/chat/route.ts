@@ -5,6 +5,45 @@ import { updateLastActive } from "@/lib/updateLastActive";
 
 export const dynamic = "force-dynamic";
 
+const STALE_CUTOFF_MS = 60 * 60 * 1000; // 60 min
+
+/**
+ * Self-healing cleanup: deletes stream-chat messages older than the most recent
+ * stream-session's endedAt + 60min. Called inline on every GET/POST so chat
+ * cleans itself up without relying on a cron job.
+ */
+async function cleanupStaleChat(orgId: string): Promise<void> {
+  const channel = await db.channel.findUnique({
+    where:  { orgId_name: { orgId, name: "stream-chat" } },
+    select: { id: true },
+  });
+  if (!channel) return;
+
+  // Active session (no endedAt OR endedAt within last 60 min) → don't clean
+  const activeSession = await db.streamSession.findFirst({
+    where: {
+      organizationId: orgId,
+      OR: [
+        { endedAt: null },
+        { endedAt: { gt: new Date(Date.now() - STALE_CUTOFF_MS) } },
+      ],
+    },
+    select: { id: true },
+  });
+  if (activeSession) return;
+
+  // Otherwise: delete all messages in stream-chat (they're from an old session)
+  await db.message.deleteMany({ where: { channelId: channel.id } });
+
+  // Also clean up the closed StreamSession rows
+  await db.streamSession.deleteMany({
+    where: {
+      organizationId: orgId,
+      endedAt:        { not: null, lte: new Date(Date.now() - STALE_CUTOFF_MS) },
+    },
+  });
+}
+
 /** GET /api/stream/chat?orgId=X — returns messages for stream-chat channel */
 export async function GET(request: Request) {
   const session = await auth();
@@ -19,6 +58,9 @@ export async function GET(request: Request) {
     where: { userId: session.user.id, organizationId: orgId },
   });
   if (!membership) return NextResponse.json({ error: "Ikke autorisert" }, { status: 403 });
+
+  // Self-healing cleanup before returning messages
+  await cleanupStaleChat(orgId);
 
   const channel = await db.channel.findUnique({
     where: { orgId_name: { orgId, name: "stream-chat" } },
