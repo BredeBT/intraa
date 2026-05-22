@@ -14,7 +14,8 @@ import StreamChat from "./StreamChat";
 import CountdownTimer from "./CountdownTimer";
 import LivePollOverlay     from "./LivePollOverlay";
 import LiveGiveawayOverlay from "./LiveGiveawayOverlay";
-import LiveAdminFAB        from "./LiveAdminFAB";
+import LiveAdminFAB, { PollModal, GiveawayModal } from "./LiveAdminFAB";
+import StreamStudio        from "./StreamStudio";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -456,13 +457,16 @@ export default function LiveClient({
   const [status,      setStatus]      = useState<StreamStatus | null>(null);
   const [loading,     setLoading]     = useState(true);
   const [wasLive,     setWasLive]     = useState(false);
+  const [liveSince,   setLiveSince]   = useState<Date | null>(null);
   const [offlineAt,   setOfflineAt]   = useState<Date | null>(null);
   const [chatExpired, setChatExpired] = useState(false);
   const [chatMode,    setChatMode]    = useState<"twitch" | "intraa">(
     preferredPlatform === "twitch" && twitchChannel ? "twitch" : "intraa",
   );
-  const [panelTab,   setPanelTab]   = useState<PanelTab>("feed");
-  const [mobileTab,  setMobileTab]  = useState<MobileTab>("stream");
+  const [panelTab,    setPanelTab]    = useState<PanelTab>("feed");
+  const [mobileTab,   setMobileTab]   = useState<MobileTab>("stream");
+  const [studioOpen,  setStudioOpen]  = useState(false);
+  const [adminModal,  setAdminModal]  = useState<null | "poll" | "giveaway">(null);
   const [adminOpen,  setAdminOpen]  = useState(false);
   const [intraaOpen, setIntraaOpen] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -487,9 +491,11 @@ export default function LiveClient({
 
         if (data.isLive) {
           setWasLive(true);
+          setLiveSince((prev) => prev ?? new Date());
           setOfflineAt(null);
           setChatExpired(false);
         } else if (wasLive && !data.isLive && !offlineAt) {
+          setLiveSince(null);
           // Just went offline
           const now = new Date();
           setOfflineAt(now);
@@ -629,6 +635,16 @@ export default function LiveClient({
           </span>
         )}
         <div className="ml-auto flex items-center gap-2">
+          {isAdmin && !studioOpen && (
+            <button
+              onClick={() => setStudioOpen(true)}
+              className="hidden md:flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-transform hover:scale-105"
+              style={{ background: "linear-gradient(135deg, #A855F7, #F472B6)", color: "#fff" }}
+              title="Studio-modus for creators"
+            >
+              <Sparkles className="h-3.5 w-3.5" /> Åpne Studio
+            </button>
+          )}
           {twitchChannel && (
             <a href={`https://twitch.tv/${twitchChannel}`} target="_blank" rel="noopener noreferrer"
               className="flex shrink-0 items-center gap-1 rounded-md border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400 transition-colors hover:border-zinc-500 hover:text-white">
@@ -659,7 +675,14 @@ export default function LiveClient({
             : <div className="flex flex-1 items-center justify-center text-zinc-600"><Wifi className="h-8 w-8" /></div>
           }
           {/* Admin FAB — kun for OWNER/ADMIN */}
-          {isAdmin && <LiveAdminFAB orgId={orgId} />}
+          {isAdmin && (
+            <LiveAdminFAB
+              orgId={orgId}
+              onOpenPoll={() => setAdminModal("poll")}
+              onOpenGiveaway={() => setAdminModal("giveaway")}
+              onOpenStudio={() => setStudioOpen(true)}
+            />
+          )}
         </div>
 
         {/* Unified chat — Twitch + Intraa som tabs, polls/giveaways docket nederst */}
@@ -707,7 +730,14 @@ export default function LiveClient({
                 ? <iframe src={embedSrc} className="h-full w-full" allowFullScreen allow="autoplay; fullscreen" title="Stream" />
                 : <div className="flex h-full items-center justify-center text-zinc-600"><Wifi className="h-8 w-8" /></div>
               }
-              {isAdmin && <LiveAdminFAB orgId={orgId} />}
+              {isAdmin && (
+            <LiveAdminFAB
+              orgId={orgId}
+              onOpenPoll={() => setAdminModal("poll")}
+              onOpenGiveaway={() => setAdminModal("giveaway")}
+              onOpenStudio={() => setStudioOpen(true)}
+            />
+          )}
             </div>
             {/* Polls/giveaways under streamen på mobil */}
             <div className="flex-1 overflow-y-auto p-3 space-y-2 empty:hidden">
@@ -755,6 +785,26 @@ export default function LiveClient({
           </div>
         )}
       </div>
+
+      {/* ── STUDIO (overlay) — kun for OWNER/ADMIN ── */}
+      {isAdmin && studioOpen && (
+        <StreamStudio
+          orgId={orgId}
+          userId={userId}
+          embedSrc={embedSrc}
+          twitchChat={twitchChatSrc}
+          viewerCount={status?.viewerCount ?? 0}
+          streamTitle={status?.title ?? orgName}
+          liveSince={liveSince}
+          onClose={() => setStudioOpen(false)}
+          onOpenPoll={() => setAdminModal("poll")}
+          onOpenGiveaway={() => setAdminModal("giveaway")}
+        />
+      )}
+
+      {/* ── Shared admin modals (FAB + Studio bruker samme) ── */}
+      {adminModal === "poll"     && <PollModal     orgId={orgId} onClose={() => setAdminModal(null)} />}
+      {adminModal === "giveaway" && <GiveawayModal orgId={orgId} onClose={() => setAdminModal(null)} />}
     </div>
   );
 }

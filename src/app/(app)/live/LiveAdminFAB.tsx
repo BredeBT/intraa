@@ -4,14 +4,28 @@ import { useState } from "react";
 import { Plus, BarChart3, Gift, X, Crown, Loader2 } from "lucide-react";
 
 interface Props {
-  orgId: string;
+  orgId:          string;
+  onOpenPoll?:    () => void;
+  onOpenGiveaway?: () => void;
+  onOpenStudio?:  () => void;
 }
 
 type Modal = null | "poll" | "giveaway";
 
-export default function LiveAdminFAB({ orgId }: Props) {
+export default function LiveAdminFAB({ orgId, onOpenPoll, onOpenGiveaway, onOpenStudio }: Props) {
   const [open,  setOpen]  = useState(false);
   const [modal, setModal] = useState<Modal>(null);
+
+  function handlePoll() {
+    setOpen(false);
+    if (onOpenPoll) onOpenPoll();
+    else            setModal("poll");
+  }
+  function handleGiveaway() {
+    setOpen(false);
+    if (onOpenGiveaway) onOpenGiveaway();
+    else                setModal("giveaway");
+  }
 
   return (
     <>
@@ -19,16 +33,24 @@ export default function LiveAdminFAB({ orgId }: Props) {
       <div className="absolute bottom-4 right-4 z-40 flex flex-col items-end gap-2">
         {open && (
           <>
+            {onOpenStudio && (
+              <FabButton
+                icon={<BarChart3 className="h-4 w-4" />}
+                label="Åpne Studio"
+                onClick={() => { onOpenStudio(); setOpen(false); }}
+                color="#5EEAD4"
+              />
+            )}
             <FabButton
               icon={<BarChart3 className="h-4 w-4" />}
               label="Start avstemning"
-              onClick={() => { setModal("poll"); setOpen(false); }}
+              onClick={handlePoll}
               color="#A855F7"
             />
             <FabButton
               icon={<Gift className="h-4 w-4" />}
               label="Start giveaway"
-              onClick={() => { setModal("giveaway"); setOpen(false); }}
+              onClick={handleGiveaway}
               color="#FBBF24"
             />
           </>
@@ -54,6 +76,9 @@ export default function LiveAdminFAB({ orgId }: Props) {
     </>
   );
 }
+
+// Export modals so other components (e.g., Studio) can use them
+export { PollModal, GiveawayModal };
 
 function FabButton({ icon, label, onClick, color }: { icon: React.ReactNode; label: string; onClick: () => void; color: string }) {
   return (
