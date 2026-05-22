@@ -96,13 +96,10 @@ export default function LivePollOverlay({ orgId, isAdmin, onClose }: Props) {
 
   return (
     <div
-      className="absolute bottom-4 left-4 right-4 z-30 max-w-md mx-auto rounded-2xl p-4 shadow-2xl"
+      className="rounded-2xl p-4"
       style={{
-        background:           "linear-gradient(135deg, rgba(11,16,39,0.92), rgba(19,26,53,0.92))",
-        border:               "1px solid rgba(168,85,247,0.40)",
-        backdropFilter:       "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        boxShadow:            "0 8px 40px rgba(168,85,247,0.30)",
+        background:           "linear-gradient(135deg, rgba(168,85,247,0.10), rgba(19,26,53,0.60))",
+        border:               "1px solid rgba(168,85,247,0.30)",
       }}
     >
       {/* Header */}

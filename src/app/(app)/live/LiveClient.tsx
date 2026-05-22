@@ -652,21 +652,18 @@ export default function LiveClient({
 
       {/* Desktop 2-column — stream 70% / chat 30% (sluppet 3. kolonne for plass) */}
       <div className="hidden min-h-0 flex-1 md:flex relative">
-        {/* Stream + overlays */}
+        {/* Stream (kun video + admin FAB) */}
         <div className="relative flex flex-col bg-black" style={{ flex: "0 0 70%" }}>
           {embedSrc
             ? <iframe src={embedSrc} className="h-full w-full" allowFullScreen allow="autoplay; fullscreen" title="Stream" />
             : <div className="flex flex-1 items-center justify-center text-zinc-600"><Wifi className="h-8 w-8" /></div>
           }
-          {/* Live engagement overlays — Polls + Giveaways */}
-          <LivePollOverlay     orgId={orgId} isAdmin={isAdmin} />
-          <LiveGiveawayOverlay orgId={orgId} isAdmin={isAdmin} />
           {/* Admin FAB — kun for OWNER/ADMIN */}
           {isAdmin && <LiveAdminFAB orgId={orgId} />}
         </div>
 
-        {/* Unified chat — Twitch + Intraa som tabs */}
-        <div className="flex flex-col border-l border-zinc-800 bg-zinc-900" style={{ flex: "0 0 30%" }}>
+        {/* Unified chat — Twitch + Intraa som tabs, polls/giveaways docket nederst */}
+        <div className="flex flex-col border-l border-zinc-800 bg-zinc-900 min-h-0" style={{ flex: "0 0 30%" }}>
           <div className="flex shrink-0 border-b border-zinc-800">
             {twitchChatSrc && (
               <button onClick={() => setChatMode("twitch")}
@@ -685,11 +682,18 @@ export default function LiveClient({
               ✨ Intraa
             </button>
           </div>
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden min-h-0">
             {chatMode === "twitch" && twitchChatSrc
               ? <iframe src={twitchChatSrc} className="h-full w-full" title="Twitch Chat" />
               : <StreamChat orgId={orgId} userId={userId} disabled={false} />
             }
+          </div>
+          {/* Live engagement panels — auto-collapse when no active poll/giveaway.
+              Tailwind `empty:hidden` skjuler wrapperen helt når begge children returnerer null,
+              så chat tar 100% av høyden uten en tom border-linje. */}
+          <div className="shrink-0 space-y-2 empty:hidden [&:not(:empty)]:px-3 [&:not(:empty)]:py-3 [&:not(:empty)]:border-t [&:not(:empty)]:border-white/[0.06]">
+            <LivePollOverlay     orgId={orgId} isAdmin={isAdmin} />
+            <LiveGiveawayOverlay orgId={orgId} isAdmin={isAdmin} />
           </div>
         </div>
       </div>
@@ -697,14 +701,19 @@ export default function LiveClient({
       {/* Mobile content */}
       <div className="flex min-h-0 flex-1 flex-col md:hidden">
         {mobileTab === "stream" && (
-          <div className="relative flex-1 bg-black">
-            {embedSrc
-              ? <iframe src={embedSrc} className="h-full w-full" allowFullScreen allow="autoplay; fullscreen" title="Stream" />
-              : <div className="flex h-full items-center justify-center text-zinc-600"><Wifi className="h-8 w-8" /></div>
-            }
-            <LivePollOverlay     orgId={orgId} isAdmin={isAdmin} />
-            <LiveGiveawayOverlay orgId={orgId} isAdmin={isAdmin} />
-            {isAdmin && <LiveAdminFAB orgId={orgId} />}
+          <div className="flex flex-1 flex-col min-h-0">
+            <div className="relative bg-black aspect-video shrink-0">
+              {embedSrc
+                ? <iframe src={embedSrc} className="h-full w-full" allowFullScreen allow="autoplay; fullscreen" title="Stream" />
+                : <div className="flex h-full items-center justify-center text-zinc-600"><Wifi className="h-8 w-8" /></div>
+              }
+              {isAdmin && <LiveAdminFAB orgId={orgId} />}
+            </div>
+            {/* Polls/giveaways under streamen på mobil */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 empty:hidden">
+              <LivePollOverlay     orgId={orgId} isAdmin={isAdmin} />
+              <LiveGiveawayOverlay orgId={orgId} isAdmin={isAdmin} />
+            </div>
           </div>
         )}
         {mobileTab === "twitch-chat" && (

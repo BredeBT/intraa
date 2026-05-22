@@ -107,13 +107,11 @@ export default function LiveGiveawayOverlay({ orgId, isAdmin, onClose }: Props) 
   if (winner) {
     return (
       <div
-        className="absolute inset-x-4 bottom-4 z-30 max-w-md mx-auto rounded-2xl p-5 shadow-2xl text-center"
+        className="rounded-2xl p-4 text-center"
         style={{
-          background:           "linear-gradient(135deg, rgba(11,16,39,0.95), rgba(40,18,60,0.95))",
-          border:               "1px solid rgba(251,191,36,0.50)",
-          backdropFilter:       "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          boxShadow:            "0 8px 60px rgba(251,191,36,0.40)",
+          background:  "linear-gradient(135deg, rgba(251,191,36,0.12), rgba(168,85,247,0.10))",
+          border:      "1px solid rgba(251,191,36,0.40)",
+          boxShadow:   "0 4px 24px rgba(251,191,36,0.20)",
         }}
       >
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl"
@@ -141,13 +139,10 @@ export default function LiveGiveawayOverlay({ orgId, isAdmin, onClose }: Props) 
 
   return (
     <div
-      className="absolute inset-x-4 bottom-4 z-30 max-w-md mx-auto rounded-2xl p-4 shadow-2xl"
+      className="rounded-2xl p-4"
       style={{
-        background:           "linear-gradient(135deg, rgba(11,16,39,0.92), rgba(19,26,53,0.92))",
-        border:               "1px solid rgba(251,191,36,0.40)",
-        backdropFilter:       "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        boxShadow:            "0 8px 40px rgba(251,191,36,0.20)",
+        background:  "linear-gradient(135deg, rgba(251,191,36,0.10), rgba(19,26,53,0.60))",
+        border:      "1px solid rgba(251,191,36,0.30)",
       }}
     >
       <div className="flex items-center gap-2 mb-3">
