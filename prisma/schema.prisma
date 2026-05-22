@@ -133,6 +133,17 @@ enum UserType {
   SPONSOR
 }
 
+enum LivePollStatus {
+  OPEN
+  CLOSED
+}
+
+enum LiveGiveawayStatus {
+  OPEN
+  COMPLETED
+  CANCELLED
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model Organization {
@@ -166,6 +177,8 @@ model Organization {
   clickerUpgrades        ClickerUpgrade[]
   clickerEvents          ClickerEvent[]
   fanPasses              FanPass[]
+  livePolls              LivePoll[]
+  liveGiveaways          LiveGiveaway[]
   chessGames             ChessGame[]
   chessInvites           ChessInvite[]
   chessProfiles          ChessProfile[]
@@ -273,6 +286,11 @@ model User {
   stories                 Story[]
   storyViews              StoryView[]
   sponsorProfile          SponsorProfile?
+  livePollsCreated        LivePoll[]            @relation("LivePollCreator")
+  livePollVotes           LivePollVote[]
+  liveGiveawaysCreated    LiveGiveaway[]        @relation("LiveGiveawayCreator")
+  liveGiveawaysWon        LiveGiveaway[]        @relation("LiveGiveawayWinner")
+  liveGiveawayEntries     LiveGiveawayEntry[]
 
   @@index([username])
 }
@@ -425,6 +443,73 @@ model Story {
   @@index([channelId, expiresAt])
   @@index([authorId, createdAt(sort: Desc)])
   @@index([sponsorId, createdAt(sort: Desc)])
+}
+
+// ─── Live engagement (polls + giveaways under stream) ─────────────────────────
+
+model LivePoll {
+  id          String         @id @default(cuid())
+  orgId       String
+  createdBy   String         // userId of creator/admin
+  question    String
+  // options is JSON: [{ id: "a", label: "Ja" }, { id: "b", label: "Nei" }]
+  options     Json
+  status      LivePollStatus @default(OPEN)
+  durationSec Int            @default(60)
+  createdAt   DateTime       @default(now())
+  closedAt    DateTime?
+
+  organization Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  creator      User           @relation("LivePollCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  votes        LivePollVote[]
+
+  @@index([orgId, status, createdAt(sort: Desc)])
+}
+
+model LivePollVote {
+  pollId   String
+  userId   String
+  optionId String
+  votedAt  DateTime @default(now())
+
+  poll LivePoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([pollId, userId])
+  @@index([pollId])
+}
+
+model LiveGiveaway {
+  id             String             @id @default(cuid())
+  orgId          String
+  createdBy      String
+  title          String
+  prize          String
+  requireFanpass Boolean            @default(false)
+  status         LiveGiveawayStatus @default(OPEN)
+  endsAt         DateTime
+  winnerUserId   String?            // populated when winner picked
+  seed           String?            // random seed for audit trail
+  createdAt      DateTime           @default(now())
+  completedAt    DateTime?
+
+  organization Organization         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  creator      User                 @relation("LiveGiveawayCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  winner       User?                @relation("LiveGiveawayWinner",  fields: [winnerUserId], references: [id], onDelete: SetNull)
+  entries      LiveGiveawayEntry[]
+
+  @@index([orgId, status, endsAt])
+}
+
+model LiveGiveawayEntry {
+  giveawayId String
+  userId     String
+  enteredAt  DateTime @default(now())
+
+  giveaway LiveGiveaway @relation(fields: [giveawayId], references: [id], onDelete: Cascade)
+  user     User         @relation(fields: [userId],     references: [id], onDelete: Cascade)
+
+  @@id([giveawayId, userId])
 }
 
 model SponsorProfile {

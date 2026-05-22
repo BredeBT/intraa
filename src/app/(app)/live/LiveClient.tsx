@@ -12,6 +12,9 @@ import type { PostWithAuthor } from "@/lib/types";
 import { UPGRADES, getUpgradeCost } from "@/lib/clickerUpgrades";
 import StreamChat from "./StreamChat";
 import CountdownTimer from "./CountdownTimer";
+import LivePollOverlay     from "./LivePollOverlay";
+import LiveGiveawayOverlay from "./LiveGiveawayOverlay";
+import LiveAdminFAB        from "./LiveAdminFAB";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -626,13 +629,6 @@ export default function LiveClient({
           </span>
         )}
         <div className="ml-auto flex items-center gap-2">
-          <button onClick={toggleIntraa}
-            className={`hidden items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors md:flex ${
-              intraaOpen ? "bg-zinc-700 text-white hover:bg-zinc-600" : "bg-violet-600 text-white hover:bg-violet-500"
-            }`}>
-            {intraaOpen ? <X className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-            {intraaOpen ? "Lukk Intraa" : "Åpne Intraa"}
-          </button>
           {twitchChannel && (
             <a href={`https://twitch.tv/${twitchChannel}`} target="_blank" rel="noopener noreferrer"
               className="flex shrink-0 items-center gap-1 rounded-md border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400 transition-colors hover:border-zinc-500 hover:text-white">
@@ -654,59 +650,61 @@ export default function LiveClient({
         ))}
       </div>
 
-      {/* Desktop 3-column */}
-      <div className="hidden min-h-0 flex-1 md:flex">
-        {/* Stream */}
-        <div className="flex flex-col bg-black" style={{ flex: intraaOpen ? "0 0 55%" : "0 0 70%" }}>
+      {/* Desktop 2-column — stream 70% / chat 30% (sluppet 3. kolonne for plass) */}
+      <div className="hidden min-h-0 flex-1 md:flex relative">
+        {/* Stream + overlays */}
+        <div className="relative flex flex-col bg-black" style={{ flex: "0 0 70%" }}>
           {embedSrc
             ? <iframe src={embedSrc} className="h-full w-full" allowFullScreen allow="autoplay; fullscreen" title="Stream" />
             : <div className="flex flex-1 items-center justify-center text-zinc-600"><Wifi className="h-8 w-8" /></div>
           }
+          {/* Live engagement overlays — Polls + Giveaways */}
+          <LivePollOverlay     orgId={orgId} isAdmin={isAdmin} />
+          <LiveGiveawayOverlay orgId={orgId} isAdmin={isAdmin} />
+          {/* Admin FAB — kun for OWNER/ADMIN */}
+          {isAdmin && <LiveAdminFAB orgId={orgId} />}
         </div>
 
-        {/* Twitch chat */}
-        <div className="flex flex-col border-l border-zinc-800 bg-zinc-900" style={{ flex: intraaOpen ? "0 0 22%" : "0 0 30%" }}>
-          {twitchChatSrc && (
-            <div className="flex shrink-0 border-b border-zinc-800">
-              {(["twitch", "intraa"] as const).map((mode) => (
-                <button key={mode} onClick={() => setChatMode(mode)}
-                  className={`flex-1 py-1.5 text-[11px] font-medium transition-colors ${
-                    chatMode === mode ? "border-b-2 border-indigo-500 text-white" : "text-zinc-500 hover:text-white"
-                  }`}>
-                  {mode === "twitch" ? "Twitch-chat" : "Intraa-chat"}
-                </button>
-              ))}
-            </div>
-          )}
+        {/* Unified chat — Twitch + Intraa som tabs */}
+        <div className="flex flex-col border-l border-zinc-800 bg-zinc-900" style={{ flex: "0 0 30%" }}>
+          <div className="flex shrink-0 border-b border-zinc-800">
+            {twitchChatSrc && (
+              <button onClick={() => setChatMode("twitch")}
+                className={`flex-1 py-2 text-xs font-medium transition-colors ${
+                  chatMode === "twitch" ? "border-b-2 text-white" : "text-zinc-500 hover:text-white"
+                }`}
+                style={chatMode === "twitch" ? { borderColor: "#A855F7" } : {}}>
+                Twitch
+              </button>
+            )}
+            <button onClick={() => setChatMode("intraa")}
+              className={`flex-1 py-2 text-xs font-medium transition-colors ${
+                chatMode === "intraa" ? "border-b-2 text-white" : "text-zinc-500 hover:text-white"
+              }`}
+              style={chatMode === "intraa" ? { borderColor: "#5EEAD4" } : {}}>
+              ✨ Intraa
+            </button>
+          </div>
           <div className="flex-1 overflow-hidden">
             {chatMode === "twitch" && twitchChatSrc
               ? <iframe src={twitchChatSrc} className="h-full w-full" title="Twitch Chat" />
-              : <div className="flex h-full items-center justify-center p-4 text-center"><p className="text-xs text-zinc-600">Intraa-chat-integrasjon kommer snart.</p></div>
+              : <StreamChat orgId={orgId} userId={userId} disabled={false} />
             }
           </div>
         </div>
-
-        {/* Intraa panel */}
-        {intraaOpen && (
-          <div className="flex flex-col border-l border-violet-900/60 bg-zinc-900" style={{ flex: "0 0 23%" }}>
-            <IntraaPanel
-              orgId={orgId} orgSlug={orgSlug} logoUrl={logoUrl} userId={userId} isAdmin={isAdmin}
-              panelTab={panelTab} setPanelTab={setPanelTab}
-              adminOpen={adminOpen} setAdminOpen={setAdminOpen}
-              chatDisabled={false}
-            />
-          </div>
-        )}
       </div>
 
       {/* Mobile content */}
       <div className="flex min-h-0 flex-1 flex-col md:hidden">
         {mobileTab === "stream" && (
-          <div className="flex-1 bg-black">
+          <div className="relative flex-1 bg-black">
             {embedSrc
               ? <iframe src={embedSrc} className="h-full w-full" allowFullScreen allow="autoplay; fullscreen" title="Stream" />
               : <div className="flex h-full items-center justify-center text-zinc-600"><Wifi className="h-8 w-8" /></div>
             }
+            <LivePollOverlay     orgId={orgId} isAdmin={isAdmin} />
+            <LiveGiveawayOverlay orgId={orgId} isAdmin={isAdmin} />
+            {isAdmin && <LiveAdminFAB orgId={orgId} />}
           </div>
         )}
         {mobileTab === "twitch-chat" && (
