@@ -675,7 +675,7 @@ export default function LiveClient({
             : <div className="flex flex-1 items-center justify-center text-zinc-600"><Wifi className="h-8 w-8" /></div>
           }
           {/* Admin FAB — kun for OWNER/ADMIN */}
-          {isAdmin && (
+          {isAdmin && !studioOpen && (
             <LiveAdminFAB
               orgId={orgId}
               onOpenPoll={() => setAdminModal("poll")}
@@ -730,7 +730,7 @@ export default function LiveClient({
                 ? <iframe src={embedSrc} className="h-full w-full" allowFullScreen allow="autoplay; fullscreen" title="Stream" />
                 : <div className="flex h-full items-center justify-center text-zinc-600"><Wifi className="h-8 w-8" /></div>
               }
-              {isAdmin && (
+              {isAdmin && !studioOpen && (
             <LiveAdminFAB
               orgId={orgId}
               onOpenPoll={() => setAdminModal("poll")}
