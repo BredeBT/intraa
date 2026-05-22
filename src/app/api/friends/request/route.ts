@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { notifyFriendRequest } from "@/server/notifications/dispatch";
 
 // POST /api/friends/request
 export async function POST(req: NextRequest) {
@@ -33,24 +34,18 @@ export async function POST(req: NextRequest) {
     data: { senderId: session.user.id, receiverId },
   });
 
-  // Notify receiver — find any shared org or use a global notification
-  const sharedMembership = await db.membership.findFirst({
-    where: { userId: receiverId },
-    select: { organizationId: true },
+  // Sender info for notification
+  const sender = await db.user.findUnique({
+    where:  { id: session.user.id },
+    select: { name: true, avatarUrl: true },
   });
 
-  if (sharedMembership) {
-    await db.notification.create({
-      data: {
-        type:           "USER",
-        title:          "Ny venneforespørsel",
-        body:           `${session.user.name ?? "Noen"} vil bli venn med deg`,
-        href:           `/home`,
-        userId:         receiverId,
-        organizationId: sharedMembership.organizationId,
-      },
-    }).catch(() => null);
-  }
+  void notifyFriendRequest({
+    receiverId,
+    senderId:     session.user.id,
+    senderName:   sender?.name ?? session.user.name ?? "Noen",
+    senderAvatar: sender?.avatarUrl,
+  }).catch(() => null);
 
   return NextResponse.json({ friendship }, { status: 201 });
 }

@@ -32,6 +32,15 @@ export async function PATCH(
   if (action === "decline") {
     await db.chessInvite.update({ where: { id: inviteId }, data: { status: "declined" } });
 
+    // Auto-dismiss the CHESS_INVITE notification on receiver's bell
+    void db.notification.deleteMany({
+      where: {
+        userId: userId,
+        type:   "CHESS_INVITE",
+        metadata: { path: ["inviteId"], equals: inviteId },
+      },
+    }).catch(() => null);
+
     // Notify sender
     const receiver = await db.user.findUnique({ where: { id: userId }, select: { name: true } });
     const org = await db.organization.findUnique({ where: { id: invite.orgId }, select: { slug: true } });
@@ -64,6 +73,15 @@ export async function PATCH(
       where: { id: inviteId },
       data:  { status: "accepted", gameId: game.id },
     });
+
+    // Auto-dismiss the CHESS_INVITE notification on receiver's bell
+    void db.notification.deleteMany({
+      where: {
+        userId: userId,
+        type:   "CHESS_INVITE",
+        metadata: { path: ["inviteId"], equals: inviteId },
+      },
+    }).catch(() => null);
 
     // Notify sender
     const receiver = await db.user.findUnique({ where: { id: userId }, select: { name: true } });

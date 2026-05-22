@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { notifyChessInvite } from "@/server/notifications/dispatch";
 
 const PLAYER_SELECT = { select: { id: true, name: true, avatarUrl: true } };
 
@@ -51,17 +52,18 @@ export async function POST(req: NextRequest) {
   });
 
   // Notify receiver
-  const sender = await db.user.findUnique({ where: { id: session.user.id }, select: { name: true } });
-  await db.notification.create({
-    data: {
-      type:           "USER",
-      title:          "Sjakkutfordring",
-      body:           `${sender?.name ?? "Noen"} vil spille sjakk mot deg`,
-      href:           `/${(await db.organization.findUnique({ where: { id: orgId }, select: { slug: true } }))?.slug}/spill/sjakk`,
-      userId:         opponentId,
-      organizationId: orgId,
-    },
-  });
+  const [sender, org] = await Promise.all([
+    db.user.findUnique({ where: { id: session.user.id }, select: { name: true, avatarUrl: true } }),
+    db.organization.findUnique({ where: { id: orgId }, select: { slug: true } }),
+  ]);
+
+  void notifyChessInvite({
+    receiverId:   opponentId,
+    senderName:   sender?.name ?? "Noen",
+    senderAvatar: sender?.avatarUrl,
+    inviteId:     invite.id,
+    orgSlug:      org?.slug ?? "",
+  }).catch(() => null);
 
   return NextResponse.json({ invite }, { status: 201 });
 }

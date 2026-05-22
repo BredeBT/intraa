@@ -18,5 +18,14 @@ export async function PATCH(
     update: { readAt: new Date() },
   });
 
+  // Auto-dismiss: clear MENTION + BROADCAST + STORY notifications for this channel
+  await db.notification.deleteMany({
+    where: {
+      userId: session.user.id,
+      type:   { in: ["MENTION", "BROADCAST", "STORY"] },
+      metadata: { path: ["channelId"], equals: channelId },
+    },
+  }).catch(() => null);
+
   return NextResponse.json({ ok: true });
 }

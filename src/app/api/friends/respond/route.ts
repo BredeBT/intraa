@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { notifyFriendAccepted } from "@/server/notifications/dispatch";
 
 // POST /api/friends/respond
 export async function POST(req: NextRequest) {
@@ -19,24 +20,26 @@ export async function POST(req: NextRequest) {
   const updated   = await db.friendship.update({ where: { id: friendshipId }, data: { status: newStatus } });
 
   if (action === "accept") {
-    // Notify sender
-    const sharedMembership = await db.membership.findFirst({
-      where: { userId: friendship.senderId },
-      select: { organizationId: true },
+    const accepter = await db.user.findUnique({
+      where:  { id: session.user.id },
+      select: { name: true, avatarUrl: true },
     });
-    if (sharedMembership) {
-      await db.notification.create({
-        data: {
-          type:           "USER",
-          title:          "Venneforespørsel godtatt!",
-          body:           `${session.user.name ?? "Noen"} godtok venneforespørselen din`,
-          href:           `/home`,
-          userId:         friendship.senderId,
-          organizationId: sharedMembership.organizationId,
-        },
-      }).catch(() => null);
-    }
+    void notifyFriendAccepted({
+      receiverId:    friendship.senderId,
+      accepterId:    session.user.id,
+      accepterName:  accepter?.name ?? session.user.name ?? "Noen",
+      accepterAvatar: accepter?.avatarUrl,
+    }).catch(() => null);
   }
+
+  // Auto-dismiss: remove the FRIEND_REQUEST notification on the responder's bell
+  void db.notification.deleteMany({
+    where: {
+      userId: session.user.id,
+      type:   "FRIEND_REQUEST",
+      metadata: { path: ["fromUserId"], equals: friendship.senderId },
+    },
+  }).catch(() => null);
 
   return NextResponse.json({ friendship: updated });
 }

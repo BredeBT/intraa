@@ -246,6 +246,40 @@ export async function sendMessage(
   // Notify @mentioned users
   void notifyMentions(content, channel.orgId, session.user.id, channelId);
 
+  // BROADCAST channels: notify all Fanpass-holders i orgen
+  if (channel.type === "BROADCAST") {
+    void (async () => {
+      try {
+        const { notifyBroadcast } = await import("@/server/notifications/dispatch");
+        const [creator, fanpassUsers, channelInfo] = await Promise.all([
+          db.user.findUnique({ where: { id: session.user!.id }, select: { name: true, avatarUrl: true } }),
+          db.fanPass.findMany({
+            where: {
+              organizationId: channel.orgId,
+              status:         "ACTIVE",
+              endDate:        { gt: new Date() },
+              userId:         { not: session.user!.id },
+            },
+            select: { userId: true },
+          }),
+          db.channel.findUnique({ where: { id: channelId }, select: { name: true } }),
+        ]);
+        const preview = (content || "Ny broadcast").replace(/<[^>]*>/g, "").slice(0, 100);
+        for (const fp of fanpassUsers) {
+          void notifyBroadcast({
+            receiverId:    fp.userId,
+            creatorName:   creator?.name ?? "Creator",
+            creatorAvatar: creator?.avatarUrl,
+            channelId,
+            channelName:   channelInfo?.name ?? "broadcast",
+            preview,
+            orgId:         channel.orgId,
+          }).catch(() => null);
+        }
+      } catch { /* silent */ }
+    })();
+  }
+
   void awardCoins({ userId: session.user.id, organizationId: channel.orgId, amount: 2, reason: "chat", description: "Sendte en melding i chat" });
   const fanpassSet = await getFanpassSet([session.user.id], channel.orgId);
   return mapMessage(message as unknown as PrismaMsg, session.user.id, fanpassSet);

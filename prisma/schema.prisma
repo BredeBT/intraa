@@ -81,10 +81,25 @@ enum InvitationRole {
 }
 
 enum NotifType {
-  MESSAGE
-  TICKET
-  COMMENT
-  USER
+  MESSAGE           // DM eller channel-melding
+  MENTION           // @mention i channel
+  REPLY             // svar på tråd
+  COMMENT           // kommentar på post
+  LIKE              // like på post
+  TICKET            // support-ticket
+  USER              // generisk bruker-event
+  FRIEND_REQUEST    // ny venneforespørsel
+  FRIEND_ACCEPTED   // forespørsel godtatt
+  CALL_INCOMING     // innkommende anrop (live)
+  CALL_MISSED       // ubesvart anrop
+  CHESS_INVITE      // sjakk-invitasjon
+  CHESS_MOVE        // motstander har gjort trekk
+  CHESS_RESULT      // sjakk-spill avsluttet
+  BROADCAST         // ny broadcast-post fra creator
+  STORY             // ny story fra creator
+  FANPASS_GRANTED   // admin ga deg gratis Fanpass
+  FANPASS_EXPIRING  // Fanpass utløper snart
+  SPONSOR_TAG       // creator tagget brandet ditt
 }
 
 enum FriendshipStatus {
@@ -590,15 +605,20 @@ model Notification {
   title          String
   body           String
   href           String
+  iconUrl        String?   // avatar/logo for rich preview
+  metadata       Json?     // { fromUserId, gameId, channelId, expiresAt, etc. }
+  priority       Int       @default(0)  // 0 = normal, 10 = high (calls), -1 = low
+  expiresAt      DateTime? // for tidsbegrensede (calls), auto-skjul i UI etter dette
   createdAt      DateTime  @default(now())
   readAt         DateTime?
   userId         String
-  organizationId String
+  organizationId String?   // nullable — venn-/call-notifs har ikke org
 
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId],         references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, readAt])
 }
 
 model UserActivity {

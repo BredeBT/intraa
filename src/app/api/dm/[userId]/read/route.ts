@@ -17,5 +17,14 @@ export async function PATCH(
     data:  { readAt: new Date() },
   });
 
+  // Auto-dismiss: clear MESSAGE notifications from this sender
+  await db.notification.deleteMany({
+    where: {
+      userId: session.user.id,
+      type:   "MESSAGE",
+      metadata: { path: ["fromUserId"], equals: userId },
+    },
+  }).catch(() => null);
+
   return NextResponse.json({ ok: true });
 }

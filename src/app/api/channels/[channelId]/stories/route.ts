@@ -145,6 +145,45 @@ export async function POST(
     include: { author: { select: { id: true, name: true, avatarUrl: true } } },
   });
 
+  // Notify all Fanpass-holders + sponsor (if tagged)
+  void (async () => {
+    try {
+      const { notifyStory, notifySponsorTag } = await import("@/server/notifications/dispatch");
+      const fanpassUsers = await db.fanPass.findMany({
+        where: {
+          organizationId: channel.orgId,
+          status:         "ACTIVE",
+          endDate:        { gt: new Date() },
+          userId:         { not: session.user!.id },
+        },
+        select: { userId: true },
+      });
+      for (const fp of fanpassUsers) {
+        void notifyStory({
+          receiverId:    fp.userId,
+          creatorName:   story.author.name ?? "Creator",
+          creatorAvatar: story.author.avatarUrl,
+          channelId,
+          orgId:         channel.orgId,
+        }).catch(() => null);
+      }
+      // Sponsor tag notification
+      if (sponsorId) {
+        const sponsor = await db.sponsorProfile.findUnique({
+          where:  { id: sponsorId },
+          select: { userId: true, slug: true },
+        });
+        if (sponsor) {
+          void notifySponsorTag({
+            receiverId:  sponsor.userId,
+            creatorName: story.author.name ?? "En creator",
+            brandSlug:   sponsor.slug,
+          }).catch(() => null);
+        }
+      }
+    } catch { /* silent */ }
+  })();
+
   return NextResponse.json({
     id:        story.id,
     imageUrl:  story.imageUrl,

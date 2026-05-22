@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { notifyFanpassGranted } from "@/server/notifications/dispatch";
 
 async function requireSuperAdmin() {
   const session = await auth();
@@ -109,6 +110,24 @@ export async function POST(
       cancelledAt: null,
     },
   });
+
+  // Notify the user — but only on transitions from "no/expired Fanpass" to "active",
+  // not on every update (e.g., admin re-granting an already-active pass)
+  const wasAlreadyActive = fanpass.startDate.getTime() < Date.now() - 5_000; // > 5s old = pre-existing
+  if (!wasAlreadyActive) {
+    const orgInfo = await db.organization.findUnique({
+      where:  { id: orgId },
+      select: { name: true, slug: true },
+    });
+    if (orgInfo) {
+      void notifyFanpassGranted({
+        receiverId: userId,
+        orgName:    orgInfo.name,
+        orgSlug:    orgInfo.slug,
+        orgId,
+      }).catch(() => null);
+    }
+  }
 
   revalidatePath("/meldinger");
   revalidatePath("/feed");
