@@ -407,7 +407,20 @@ function LogRow({ event, onDmWinner, compact }: {
           {cancelled
             ? <>Kansellert · {compact ? fmtDate(g.createdAt) : relTime(g.createdAt)}</>
             : <>
-                Vinner: <span className="text-white/80">{g.winner?.name ?? g.winner?.username ?? "—"}</span>
+                Vinner:{" "}
+                {g.winner
+                  ? <a
+                      href={`/u/${g.winner.username}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium transition-colors hover:underline"
+                      style={{ color: "#5EEAD4" }}
+                      title={`Se profilen til ${g.winner.name ?? g.winner.username}`}
+                    >
+                      @{g.winner.username}
+                    </a>
+                  : <span className="text-white/80">—</span>
+                }
                 {" · "}{g.entryCount} {g.entryCount === 1 ? "deltaker" : "deltakere"}
                 {" · "}{compact ? fmtDate(g.createdAt) : relTime(g.createdAt)}
               </>
