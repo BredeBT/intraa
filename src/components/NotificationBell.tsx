@@ -59,6 +59,7 @@ export default function NotificationBell() {
   const [notifs,      setNotifs]      = useState<DbNotification[]>([]);
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
   const [open,        setOpen]        = useState(false);
+  const [userId,      setUserId]      = useState<string | null>(null);
   const [, startTransition]           = useTransition();
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
@@ -73,26 +74,32 @@ export default function NotificationBell() {
       ]);
       setNotifs(data);
       setInvitations(invites);
-      if (data.length > 0) userIdRef.current = data[0]!.userId;
+      if (data.length > 0) {
+        userIdRef.current = data[0]!.userId;
+        setUserId(data[0]!.userId);
+      }
     });
   }, []);
 
-  // Realtime subscription — listen for new notifications pushed by server
+  // Hvis vi ikke fikk userId fra første fetch (ingen notifs ennå),
+  // poll én gang i minuttet til vi har den.
   useEffect(() => {
-    if (!userIdRef.current) {
-      // We need to know which user channel to subscribe to. Try to derive from window.
-      // Easiest: re-poll after 2s. Better: fetch /api/me. For now use polling fallback.
-      const poll = setInterval(async () => {
-        const fresh = await getNotifications();
-        setNotifs(fresh);
-        if (fresh.length > 0 && !userIdRef.current) {
-          userIdRef.current = fresh[0]!.userId;
-        }
-      }, 30000);
-      return () => clearInterval(poll);
-    }
+    if (userId) return;
+    const poll = setInterval(async () => {
+      const fresh = await getNotifications();
+      setNotifs(fresh);
+      if (fresh.length > 0 && !userIdRef.current) {
+        userIdRef.current = fresh[0]!.userId;
+        setUserId(fresh[0]!.userId);
+      }
+    }, 60000);
+    return () => clearInterval(poll);
+  }, [userId]);
 
-    const channel = supabase.channel(`user:${userIdRef.current}:notifications`);
+  // Realtime subscription — settes opp én gang når userId blir kjent
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase.channel(`user:${userId}:notifications`);
     channel
       .on("broadcast", { event: "notification" }, (payload) => {
         const next = payload.payload as DbNotification;
@@ -103,7 +110,7 @@ export default function NotificationBell() {
       })
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
-  }, [notifs.length]); // re-init når userId først blir kjent
+  }, [userId]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, Suspense } from "react";
+import { useCallback, useEffect, useState, Suspense, memo, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -96,7 +96,7 @@ interface LiveStatus {
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function SidebarContent({
+const SidebarContent = memo(function SidebarContentImpl({
   pathname, org, orgLoaded, onNavClick, isSuperAdmin, userName, enabledFeatures, tenantTheme, liveStatus, mobile, collapsed, onToggleCollapse, unreadCount, mounted, allCommunities, onSwitchOrg,
 }: {
   pathname:          string;
@@ -396,7 +396,7 @@ function SidebarContent({
       {bottomSection}
     </>
   );
-}
+});
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 
@@ -570,9 +570,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const sidebarW = (inAdmin || inBrand) ? "w-0 overflow-hidden" : effectiveCollapsed ? "w-14" : "w-48";
   const mainPl   = (inAdmin || inBrand) ? "" : effectiveCollapsed ? "md:pl-14" : "md:pl-48";
 
-  const sidebarProps = {
+  const onNavClick = useCallback(() => setSidebarOpen(false), []);
+  const onSwitchOrg = useCallback((c: OrgSummary) => setOrg(c as unknown as Org), [setOrg]);
+
+  const sidebarProps = useMemo(() => ({
     pathname, org, orgLoaded,
-    onNavClick:      () => setSidebarOpen(false),
+    onNavClick,
     isSuperAdmin:    user?.isSuperAdmin ?? false,
     userName:        user?.name ?? "",
     enabledFeatures,
@@ -583,8 +586,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     collapsed:        effectiveCollapsed,
     onToggleCollapse: toggleDesktopCollapsed,
     allCommunities,
-    onSwitchOrg: (c: OrgSummary) => setOrg(c as unknown as Org),
-  };
+    onSwitchOrg,
+  }), [
+    pathname, org, orgLoaded, onNavClick, user?.isSuperAdmin, user?.name,
+    enabledFeatures, tenantTheme, liveStatus, unreadCount, mounted,
+    effectiveCollapsed, toggleDesktopCollapsed, allCommunities, onSwitchOrg,
+  ]);
 
   return (
     <WebRTCProvider userId={user?.id ?? ""} userName={user?.name ?? undefined}>
