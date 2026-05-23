@@ -238,7 +238,7 @@ body {
   max-height: 60vh;
 }
 .tiptap p { margin: 0; }
-.tiptap p + p { margin-top: 0.25rem; }
+.tiptap p + p { margin-top: 0.75rem; }  /* WYSIWYG — matcher .msg-html */
 .tiptap ul, .tiptap ol { margin: 0.25rem 0; padding-left: 1.5rem; }
 .tiptap ul { list-style: disc; }
 .tiptap ol { list-style: decimal; }
@@ -270,12 +270,15 @@ body {
 /* ── Rendered rich-text messages ── */
 .msg-html { white-space: pre-wrap; word-break: break-words; }
 .msg-html p { margin: 0; }
-.msg-html p + p { margin-top: 0.2rem; }
+.msg-html p + p { margin-top: 0.75rem; }  /* tydelig avsnitt-mellomrom */
 .msg-html strong { font-weight: 700; }
-.msg-html ul, .msg-html ol { margin: 0.25rem 0; padding-left: 1.5rem; white-space: normal; }
+.msg-html em { font-style: italic; }
+.msg-html u { text-decoration: underline; }
+.msg-html ul, .msg-html ol { margin: 0.5rem 0; padding-left: 1.5rem; white-space: normal; }
 .msg-html ul { list-style: disc; }
 .msg-html ol { list-style: decimal; }
-.msg-html li { margin: 0.1rem 0; }
+.msg-html li { margin: 0.15rem 0; }
+.msg-html li > p { display: inline; }
 .msg-html em { font-style: italic; }
 .msg-html u { text-decoration: underline; }
 .msg-html code {

@@ -85,6 +85,56 @@ function UserAvatar({ name, size = 9 }: { name: string; size?: number }) {
   );
 }
 
+// ─── Collapsible post body (Facebook-style "Vis mer") ────────────────────────
+
+const COLLAPSED_MAX_PX = 240; // ~10 linjer med vår leading
+
+function CollapsiblePostBody({ html }: { html: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [needsToggle, setNeedsToggle] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // Mål innholdshøyden uten å være capped — sammenlign mot threshold
+    const measure = () => setNeedsToggle(el.scrollHeight > COLLAPSED_MAX_PX + 8);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [html]);
+
+  return (
+    <div className="px-4 pb-3 text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.8)" }}>
+      <div
+        ref={ref}
+        className="relative overflow-hidden transition-[max-height] duration-200"
+        style={{ maxHeight: expanded || !needsToggle ? "none" : `${COLLAPSED_MAX_PX}px` }}
+      >
+        <SafeHtml content={html} />
+        {needsToggle && !expanded && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-16"
+            style={{ background: "linear-gradient(to bottom, transparent, #0B1027)" }}
+          />
+        )}
+      </div>
+      {needsToggle && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-1.5 text-xs font-semibold transition-opacity hover:opacity-80"
+          style={{ color: "#A855F7" }}
+        >
+          {expanded ? "Vis mindre" : "… Vis mer"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── Sidebar stat row ─────────────────────────────────────────────────────────
 
 function SidebarStat({ icon, value, label, color }: { icon: React.ReactNode; value: number; label: string; color: string }) {
@@ -580,9 +630,7 @@ export default function FeedClient({
 
                 {/* Content */}
                 {post.content && (
-                  <div className="px-4 pb-3 text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.8)" }}>
-                    <SafeHtml content={post.content} />
-                  </div>
+                  <CollapsiblePostBody html={post.content} />
                 )}
 
                 {/* Image */}
