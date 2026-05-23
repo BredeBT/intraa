@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X, Sparkles, Crown, Users as UsersIcon, Image as ImgIcon } from "lucide-react";
+import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X, Sparkles, Crown, Users as UsersIcon, Image as ImgIcon, Paperclip } from "lucide-react";
 import { FanpassBadge } from "@/components/FanpassBadge";
 import { createPost, deletePost } from "@/server/actions/posts";
+import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
 import type { PostWithAuthor, CommentWithAuthor } from "@/lib/types";
 import SafeHtml from "@/components/SafeHtml";
 
@@ -143,7 +144,7 @@ export default function FeedClient({
   const [pasteToast,       setPasteToast]       = useState<string | null>(null);
 
   const pasteToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const textareaRef     = useRef<HTMLTextAreaElement>(null);
+  const editorRef       = useRef<RichTextEditorRef>(null);
   const imageInputRef   = useRef<HTMLInputElement>(null);
 
   const openKey   = Array.from(openComments).sort().join(",");
@@ -158,7 +159,7 @@ export default function FeedClient({
 
   // ── Effects ─────────────────────────────────────────────────────────────────
 
-  useEffect(() => { if (open) textareaRef.current?.focus(); }, [open]);
+  useEffect(() => { if (open) editorRef.current?.focus(); }, [open]);
 
   useEffect(() => {
     function handlePaste(e: ClipboardEvent) {
@@ -242,11 +243,17 @@ export default function FeedClient({
     setImagePreview(null);
   }
 
-  function handleClose() { setOpen(false); setContent(""); clearImage(); }
+  function handleClose() {
+    setOpen(false);
+    setContent("");
+    editorRef.current?.clear();
+    clearImage();
+  }
 
   async function handleSubmit() {
-    const text = content.trim();
-    if ((!text && !imageFile) || isPosting) return;
+    const html        = editorRef.current?.getHTML() ?? "";
+    const isEmptyText = editorRef.current?.isEmpty() ?? true;
+    if ((isEmptyText && !imageFile) || isPosting) return;
     setIsPosting(true);
 
     let imageUrl: string | undefined;
@@ -267,17 +274,15 @@ export default function FeedClient({
       setIsUploading(false);
     }
 
-    setContent(""); clearImage(); setOpen(false);
+    setContent("");
+    editorRef.current?.clear();
+    clearImage();
+    setOpen(false);
     try {
-      await createPost(orgId, text, imageUrl);
+      await createPost(orgId, isEmptyText ? "" : html, imageUrl);
       const res = await fetch(`/api/posts?orgId=${orgId}`);
       if (res.ok) setPosts(await res.json() as PostWithAuthor[]);
     } catch { /* silent */ } finally { setIsPosting(false); }
-  }
-
-  function handleKey(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void handleSubmit(); }
-    if (e.key === "Escape") handleClose();
   }
 
   async function handleDelete(postId: string) {
@@ -466,46 +471,60 @@ export default function FeedClient({
               /* Expanded: full composer */
               <div className="flex gap-3 items-start p-4">
                 <UserAvatar name={userName} />
-                <div className="flex flex-1 flex-col gap-3">
-                  <textarea
-                    ref={textareaRef}
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    onKeyDown={handleKey}
-                    rows={3}
+                <div className="flex flex-1 flex-col gap-3 min-w-0">
+                  <RichTextEditor
+                    ref={editorRef}
                     placeholder={`Del noe med ${orgName}…`}
-                    className="w-full resize-none rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none transition-colors"
-                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
+                    onEnter={() => void handleSubmit()}
+                    enterMakesNewline
+                    showFormatByDefault
+                    minHeight={200}
+                    onChange={(text) => setContent(text)}
                   />
                   {imagePreview && (
                     <div className="relative w-fit">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={imagePreview} alt="Forhåndsvisning" className="max-h-48 rounded-xl object-cover" />
-                      <button onClick={clearImage} className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-white" style={{ background: "#0B1027" }}>
-                        <X className="h-3 w-3" />
+                      <img src={imagePreview} alt="Forhåndsvisning" className="max-h-64 rounded-xl object-cover" />
+                      <button
+                        onClick={clearImage}
+                        className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full text-white shadow-lg"
+                        style={{ background: "#0B1027", border: "1px solid rgba(240,244,255,0.16)" }}
+                      >
+                        <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   )}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => imageInputRef.current?.click()}
-                        className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs transition-colors hover:bg-white/5"
-                        style={{ color: "rgba(255,255,255,0.5)" }} title="Legg til bilde">
-                        <ImageIcon className="h-4 w-4" />
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-[11px]" style={{ color: "rgba(240,244,255,0.4)" }}>
+                      <button
+                        type="button"
+                        onClick={() => imageInputRef.current?.click()}
+                        className="nav-link flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition-colors"
+                        style={{ color: "rgba(240,244,255,0.55)" }}
+                        title="Legg til bilde"
+                      >
+                        <Paperclip className="h-4 w-4" />
+                        <span className="hidden sm:inline">Bilde</span>
                       </button>
                       <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
-                      <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>⌘↵ for å sende</span>
+                      <span className="hidden md:inline">⌘↵ for å sende</span>
                     </div>
                     <div className="flex gap-2">
-                      <button type="button" onClick={handleClose}
-                        className="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/5"
-                        style={{ color: "rgba(255,255,255,0.5)" }}>
+                      <button
+                        type="button"
+                        onClick={handleClose}
+                        className="nav-link rounded-lg px-3 py-2 text-sm font-medium"
+                        style={{ color: "rgba(240,244,255,0.5)" }}
+                      >
                         Avbryt
                       </button>
-                      <button type="button" onClick={() => void handleSubmit()}
+                      <button
+                        type="button"
+                        onClick={() => void handleSubmit()}
                         disabled={(!content.trim() && !imageFile) || isPosting}
-                        className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-transform hover:scale-105 disabled:opacity-50 disabled:scale-100"
-                        style={{ background: "linear-gradient(135deg, #5EEAD4, #A855F7)", color: "#fff" }}>
+                        className="flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold transition-transform hover:scale-[1.02] disabled:opacity-50 disabled:scale-100"
+                        style={{ background: "linear-gradient(135deg, #5EEAD4, #A855F7)", color: "#fff" }}
+                      >
                         <Send className="h-3.5 w-3.5" />
                         {isUploading ? "Laster opp…" : isPosting ? "Sender…" : "Publiser"}
                       </button>

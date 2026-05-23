@@ -5,7 +5,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
-import { Bold, Italic, Underline as UnderlineIcon, Code, Type } from "lucide-react";
+import { Bold, Italic, Underline as UnderlineIcon, Code, Type, List, ListOrdered } from "lucide-react";
 import { GifPicker } from "./GifPicker";
 import { EmojiPicker } from "./EmojiPicker";
 
@@ -35,12 +35,26 @@ interface Props {
   toolbarExtra?:  React.ReactNode;
   /** Called when the user selects a GIF — receives a direct image URL */
   onSendWithImage?: (imageUrl: string) => void;
+  /** Minimum height for the editor content area (in px). Default 0 (natural height). */
+  minHeight?:     number;
+  /** Hvis true: viser format-knappene (B/I/U/lister/Code) som standard. */
+  showFormatByDefault?: boolean;
+  /** Hvis true: ⌘+Enter sender, vanlig Enter lager linjeskift (passer for innlegg). */
+  enterMakesNewline?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEditor(
-  { placeholder = "Skriv en melding…", disabled = false, onChange, onEnter, className = "", toolbarExtra, onSendWithImage },
+  {
+    placeholder = "Skriv en melding…",
+    disabled = false,
+    onChange, onEnter, className = "",
+    toolbarExtra, onSendWithImage,
+    minHeight,
+    showFormatByDefault = false,
+    enterMakesNewline = false,
+  },
   ref,
 ) {
   const editor = useEditor({
@@ -68,7 +82,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
 
   const [showEmoji,   setShowEmoji]   = useState(false);
   const [showGif,     setShowGif]     = useState(false);
-  const [showFormat,  setShowFormat]  = useState(false);
+  const [showFormat,  setShowFormat]  = useState(showFormatByDefault);
 
   const handleEmojiSelect = useCallback((emoji: string) => {
     editor?.commands.insertContent(emoji);
@@ -103,6 +117,15 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
   // ── Keyboard: Enter = send, Shift+Enter = newline ─────────────────────────
 
   function handleKeyDown(e: React.KeyboardEvent) {
+    if (enterMakesNewline) {
+      // For innlegg: ⌘/Ctrl + Enter sender, vanlig Enter = newline (default TipTap)
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        onEnter?.();
+      }
+      return;
+    }
+    // For chat: Enter sender, Shift+Enter = newline
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       onEnter?.();
@@ -134,8 +157,12 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
 
   return (
     <div
-      className={`flex flex-col rounded-xl transition-colors focus-within:border-[#5EEAD4]/40 ${className}`}
-      style={{ background: "#131A35", border: "1px solid rgba(240,244,255,0.08)" }}
+      className={`flex flex-col rounded-xl transition-colors focus-within:border-[#5EEAD4]/40 ${minHeight ? "tiptap-tall" : ""} ${className}`}
+      style={{
+        background: "#131A35",
+        border:     "1px solid rgba(240,244,255,0.08)",
+        ...(minHeight ? { ["--tiptap-min-h" as string]: `${minHeight}px` } : {}),
+      }}
     >
       {/* Toolbar */}
       <div className="flex items-center gap-0.5 px-2 py-1.5">
@@ -155,6 +182,13 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
             </ToolBtn>
             <ToolBtn active={editor.isActive("underline")} onClick={() => editor.chain().focus().toggleUnderline().run()} title="Understrek (⌘U)">
               <UnderlineIcon className="h-3.5 w-3.5" />
+            </ToolBtn>
+            <span className="mx-0.5 h-4 w-px" style={{ background: "rgba(240,244,255,0.08)" }} />
+            <ToolBtn active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()} title="Punktliste">
+              <List className="h-3.5 w-3.5" />
+            </ToolBtn>
+            <ToolBtn active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="Nummerert liste">
+              <ListOrdered className="h-3.5 w-3.5" />
             </ToolBtn>
             <ToolBtn active={editor.isActive("code")} onClick={() => editor.chain().focus().toggleCode().run()} title="Kode">
               <Code className="h-3.5 w-3.5" />

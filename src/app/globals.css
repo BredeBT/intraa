@@ -232,8 +232,18 @@ body {
   overflow-y: auto;
   word-break: break-words;
 }
+/* Når brukt for innlegg (feed-compose), la editoren vokse seg større */
+.tiptap-tall .tiptap {
+  min-height: var(--tiptap-min-h, 200px);
+  max-height: 60vh;
+}
 .tiptap p { margin: 0; }
 .tiptap p + p { margin-top: 0.25rem; }
+.tiptap ul, .tiptap ol { margin: 0.25rem 0; padding-left: 1.5rem; }
+.tiptap ul { list-style: disc; }
+.tiptap ol { list-style: decimal; }
+.tiptap li { margin: 0.1rem 0; }
+.tiptap li > p { display: inline; }
 .tiptap code {
   background: rgba(255,255,255,0.08);
   border-radius: 3px;
@@ -262,6 +272,10 @@ body {
 .msg-html p { margin: 0; }
 .msg-html p + p { margin-top: 0.2rem; }
 .msg-html strong { font-weight: 700; }
+.msg-html ul, .msg-html ol { margin: 0.25rem 0; padding-left: 1.5rem; white-space: normal; }
+.msg-html ul { list-style: disc; }
+.msg-html ol { list-style: decimal; }
+.msg-html li { margin: 0.1rem 0; }
 .msg-html em { font-style: italic; }
 .msg-html u { text-decoration: underline; }
 .msg-html code {
