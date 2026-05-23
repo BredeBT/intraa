@@ -106,7 +106,7 @@ export default async function Home() {
         </Link>
         <div className="flex items-center gap-7 text-sm">
           <Link href="#funksjoner" className="hidden sm:block transition-colors hover:text-white" style={{ color: C.muted }}>Funksjoner</Link>
-          <Link href="#priser"     className="hidden sm:block transition-colors hover:text-white" style={{ color: C.muted }}>Priser</Link>
+          <Link href="#roller"     className="hidden sm:block transition-colors hover:text-white" style={{ color: C.muted }}>Roller</Link>
           <Link href="/login"      className="transition-colors hover:text-white" style={{ color: C.muted }}>Logg inn</Link>
           {/* Primary CTA per spec — white on dark, max contrast */}
           <Link
@@ -348,154 +348,66 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── Pricing ──────────────────────────────────────────────────────── */}
-      <section id="priser" className="relative mx-auto max-w-5xl px-6 sm:px-10 py-24">
+      {/* ── Roller ───────────────────────────────────────────────────────── */}
+      <section id="roller" className="relative mx-auto max-w-6xl px-6 sm:px-10 py-24">
         <div className="mb-14 max-w-2xl">
-          <p
-            className="text-xs font-semibold uppercase tracking-[0.2em] mb-3"
-            style={{ color: C.amber }}
-          >
-            Priser
-          </p>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ color: C.cream }}>
-            Start gratis. Skaler når du er klar.
+            Tre måter å bruke Intraa.
           </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          {/* Free */}
-          <div
-            className="rounded-3xl p-8"
-            style={{
-              background: C.surface,
-              border:     `1px solid ${C.line}`,
-            }}
-          >
-            <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: C.muted }}>
-              Fan
-            </p>
-            <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-4xl font-bold" style={{ color: C.cream }}>Gratis</span>
-            </div>
-            <p className="text-sm mb-8" style={{ color: C.muted }}>
-              For deg som vil utforske og delta i communities.
-            </p>
-            <ul className="space-y-3 text-sm mb-8" style={{ color: C.mutedHi }}>
-              <BulletPlain>Personlig profil</BulletPlain>
-              <BulletPlain>Bli med i communities</BulletPlain>
-              <BulletPlain>Chat, feed og spill</BulletPlain>
-              <BulletPlain>Coin-system</BulletPlain>
-              <BulletPlain>Venner og DM</BulletPlain>
-            </ul>
-            <Link
-              href="/registrer"
-              className="block w-full text-center rounded-full px-5 py-3 text-sm font-semibold transition-colors"
-              style={{
-                border: `1px solid ${C.lineHi}`,
-                color:  C.cream,
-              }}
-            >
-              Opprett konto
-            </Link>
-          </div>
-
-          {/* Creator — featured */}
-          <div
-            className="relative rounded-3xl p-8 overflow-hidden"
-            style={{
-              background: `linear-gradient(140deg, ${C.surface2} 0%, ${C.surface} 100%)`,
-              border:     `1px solid ${C.purple}50`,
-              boxShadow:  `0 0 60px ${C.purple}25, inset 0 0 0 1px ${C.purple}20`,
-            }}
-          >
-            {/* Aurora accent corner — teal + purple aurora glow */}
-            <div
-              className="pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full opacity-35 blur-[60px]"
-              style={{ background: `radial-gradient(circle, ${C.purple}, transparent 70%)` }}
-            />
-            <div
-              className="pointer-events-none absolute -top-16 -right-10 h-40 w-40 rounded-full opacity-25 blur-[60px]"
-              style={{ background: `radial-gradient(circle, ${C.teal}, transparent 70%)` }}
-            />
-
-            <div className="relative">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: C.teal }}>
-                  Creator
-                </p>
-                <span
-                  className="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-                  style={{
-                    background: `${C.purple}20`,
-                    color:      C.purple,
-                  }}
-                >
-                  Mest valgt
-                </span>
-              </div>
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-4xl font-bold" style={{ color: C.text }}>Gratis</span>
-                <span className="text-sm" style={{ color: C.muted }}>i åpen beta</span>
-              </div>
-              <p className="text-sm mb-8" style={{ color: C.muted }}>
-                Alt for å bygge og monetisere fansen din.
-              </p>
-              <ul className="space-y-3 text-sm mb-8" style={{ color: C.mutedHi }}>
-                <BulletAccent color={C.teal}>Eget community med egen URL</BulletAccent>
-                <BulletAccent color={C.teal}>Twitch / YouTube live-integrasjon</BulletAccent>
-                <BulletAccent color={C.teal}>Fanpass — selg betalt medlemskap</BulletAccent>
-                <BulletAccent color={C.teal}>Coin-shop og lojalitetssystem</BulletAccent>
-                <BulletAccent color={C.teal}>Spill, leaderboards og konkurranser</BulletAccent>
-                <BulletAccent color={C.teal}>Admin-panel og statistikk</BulletAccent>
-              </ul>
-              {/* White CTA per Aurora spec */}
-              <Link
-                href="/registrer"
-                className="block w-full text-center rounded-full px-5 py-3 text-sm font-semibold transition-colors hover:bg-white/90"
-                style={{
-                  background: "#FFFFFF",
-                  color:      C.bg,
-                }}
-              >
-                Start ditt community →
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Final CTA ────────────────────────────────────────────────────── */}
-      <section className="relative px-6 sm:px-10 pb-24">
-        <div
-          className="mx-auto max-w-5xl rounded-3xl px-8 py-16 sm:px-16 sm:py-20 text-center relative overflow-hidden"
-          style={{
-            background: `radial-gradient(ellipse at 30% top, ${C.teal}20, transparent 60%), radial-gradient(ellipse at 70% top, ${C.purple}25, transparent 60%), ${C.surface}`,
-            border:     `1px solid ${C.lineHi}`,
-          }}
-        >
-          <h3
-            className="text-3xl sm:text-5xl font-bold tracking-tight max-w-2xl mx-auto"
-            style={{ color: C.text }}
-          >
-            Klar til å eie fansen din?
-          </h3>
-          <p className="mt-5 text-base" style={{ color: C.mutedHi }}>
-            Bygg et community som vokser med deg.
+          <p className="mt-3 text-base" style={{ color: C.muted }}>
+            Hvilken rolle passer deg?
           </p>
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href="/registrer"
-              className="group flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold transition-colors hover:bg-white/90"
-              style={{
-                background: "#FFFFFF",
-                color:      C.bg,
-              }}
-            >
-              Start gratis
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+          {/* Bruker */}
+          <RoleCard
+            label="Bruker"
+            labelColor={C.blue}
+            tagline="For deg som vil utforske og delta i communities."
+            bullets={[
+              "Personlig profil",
+              "Bli med i communities",
+              "Chat, feed og spill",
+              "Coin-system",
+              "Venner og DM",
+            ]}
+            href="/registrer"
+            ctaText="Opprett konto"
+          />
+
+          {/* Creator */}
+          <RoleCard
+            label="Creator"
+            labelColor={C.teal}
+            tagline="For deg som vil bygge og drifte ditt eget community."
+            bullets={[
+              "Eget community med egen URL",
+              "Twitch / YouTube live-integrasjon",
+              "Fanpass — selg betalt medlemskap",
+              "Coin-shop og lojalitetssystem",
+              "Spill, leaderboards og konkurranser",
+              "Admin-panel og statistikk",
+            ]}
+            href="/registrer?rolle=creator"
+            ctaText="Start ditt community"
+          />
+
+          {/* Sponsor */}
+          <RoleCard
+            label="Sponsor"
+            labelColor={C.purple}
+            tagline="For merkevarer som vil nå norske communities."
+            bullets={[
+              "Egen brandside (/brand/...)",
+              "Bli tagget i creator-stories",
+              "Direkte kontakt med creators",
+              "Nå engasjerte norske fans",
+            ]}
+            href="/registrer?rolle=sponsor"
+            ctaText="Bli sponsor"
+          />
         </div>
       </section>
 
@@ -521,7 +433,7 @@ export default async function Home() {
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm" style={{ color: C.muted }}>
             <Link href="#funksjoner">Funksjoner</Link>
-            <Link href="#priser">Priser</Link>
+            <Link href="#roller">Roller</Link>
             <Link href="/login">Logg inn</Link>
             <Link href="/registrer">Registrer</Link>
             <Link href="/terms">Vilkår</Link>
@@ -589,27 +501,55 @@ function FeatureCard({
 }
 
 /* ────────────────────────────────────────────────────────────────────────── */
-/* Bullet helpers                                                            */
+/* Rollekort                                                                  */
 /* ────────────────────────────────────────────────────────────────────────── */
 
-function BulletPlain({ children }: { children: React.ReactNode }) {
+function RoleCard({
+  label, labelColor, tagline, bullets, href, ctaText,
+}: {
+  label:      string;
+  labelColor: string;
+  tagline:    string;
+  bullets:    string[];
+  href:       string;
+  ctaText:    string;
+}) {
   return (
-    <li className="flex items-center gap-2.5">
-      <span className="h-1 w-1 rounded-full shrink-0" style={{ background: C.muted }} />
-      {children}
-    </li>
-  );
-}
-
-function BulletAccent({ children, color }: { children: React.ReactNode; color: string }) {
-  return (
-    <li className="flex items-start gap-2.5">
-      <span
-        className="mt-1 h-1.5 w-1.5 rounded-full shrink-0"
-        style={{ background: color, boxShadow: `0 0 6px ${color}` }}
-      />
-      <span>{children}</span>
-    </li>
+    <div
+      className="flex flex-col rounded-3xl p-7"
+      style={{
+        background: C.surface,
+        border:     `1px solid ${C.line}`,
+      }}
+    >
+      <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: labelColor }}>
+        {label}
+      </p>
+      <p className="text-sm mb-6 leading-relaxed" style={{ color: C.mutedHi }}>
+        {tagline}
+      </p>
+      <ul className="space-y-2.5 text-sm mb-8 flex-1" style={{ color: C.mutedHi }}>
+        {bullets.map((b) => (
+          <li key={b} className="flex items-start gap-2.5">
+            <span
+              className="mt-1.5 h-1 w-1 rounded-full shrink-0"
+              style={{ background: labelColor }}
+            />
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>
+      <Link
+        href={href}
+        className="block w-full text-center rounded-full px-5 py-3 text-sm font-semibold transition-colors hover:bg-white/[0.04]"
+        style={{
+          border: `1px solid ${C.lineHi}`,
+          color:  C.cream,
+        }}
+      >
+        {ctaText}
+      </Link>
+    </div>
   );
 }
 
