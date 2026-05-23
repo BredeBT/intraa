@@ -3,7 +3,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Check, Upload, X, Loader2, Image as ImageIcon, Bell, Plus,
+  Check, Upload, X, Loader2, Image as ImageIcon, Plus, Info,
+  Users, Coins, Crown, MessageSquare,
 } from "lucide-react";
 import {
   COMPANY_FEATURES, COMMUNITY_FEATURES, FEATURE_LABELS, FEATURE_DESCRIPTIONS,
@@ -14,9 +15,28 @@ import AccessModePicker from "@/app/(app)/community/[slug]/admin/tilgang/AccessM
 
 const DISABLED_BY_DEFAULT = new Set<Feature>(["live"]);
 
+// ─── Aurora-tokens (matcher landing + resten av appen) ───────────────────────
+const S = {
+  bg:        "#050816",
+  surface:   "#0B1027",
+  surface2:  "#131A35",
+  line:      "rgba(240,244,255,0.08)",
+  lineHi:    "rgba(240,244,255,0.14)",
+  text:      "#F0F4FF",
+  muted:     "rgba(240,244,255,0.6)",
+  subtle:    "rgba(240,244,255,0.4)",
+  faint:     "rgba(240,244,255,0.25)",
+  teal:      "#5EEAD4",
+  purple:    "#A855F7",
+  blue:      "#60A5FA",
+  pink:      "#F472B6",
+  amber:     "#FBBF24",
+  rose:      "#F87171",
+} as const;
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = "generelt" | "tilgang" | "utseende" | "funksjoner" | "varsler" | "shop";
+type Tab = "generelt" | "tilgang" | "utseende" | "funksjoner" | "shop" | "statistikk";
 type OrgType = "COMPANY" | "COMMUNITY";
 type MemberRole = "OWNER" | "ADMIN" | "MODERATOR" | "VIP" | "MEMBER";
 
@@ -51,6 +71,20 @@ interface AccessStats {
   broadcastChannelName:  string | null;
 }
 
+export interface OrgStats {
+  totalMembers:        number;
+  newMembers7d:        number;
+  activeNow:           number;          // siste 5 min
+  active7d:            number;          // siste 7 dager
+  posts7d:             number;
+  messages7d:          number;
+  activeFanpass:       number;
+  coinsInCirculation:  number;
+  coinsAwarded7d:      number;
+  memberGrowth:        number[];        // 8 ukers data (count per uke)
+  coinFlow:            number[];        // 14 dagers data (sum per dag)
+}
+
 interface Props {
   initialTab:     string;
   org:            OrgInfo;
@@ -59,10 +93,10 @@ interface Props {
   userRole:       MemberRole;
   streamSettings: StreamSettingsForm;
   accessStats:    AccessStats;
+  stats:          OrgStats;
 }
 
 // ─── Theme constants ──────────────────────────────────────────────────────────
-
 
 const BORDER_RADIUS_OPTIONS = [
   { value: "rounded-none", label: "Skarpe" },
@@ -79,21 +113,34 @@ const FONT_OPTIONS = [
 ];
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "generelt",   label: "Generelt" },
-  { id: "tilgang",    label: "Tilgang" },
-  { id: "utseende",   label: "Utseende" },
+  { id: "generelt",   label: "Generelt"   },
+  { id: "tilgang",    label: "Tilgang"    },
+  { id: "utseende",   label: "Utseende"   },
   { id: "funksjoner", label: "Funksjoner" },
-  { id: "varsler",    label: "Varsler" },
-  { id: "shop",       label: "Shop" },
+  { id: "shop",       label: "Shop"       },
+  { id: "statistikk", label: "Statistikk" },
 ];
 
 const PLAN_LABELS: Record<string, string> = {
   FREE: "Gratis", PRO: "Pro", ENTERPRISE: "Enterprise",
 };
 
+// Hvor mange coins gir hver aktivitet (speilet fra src/lib/awardCoins.ts).
+// Vises som info — ikke konfigurerbart per org enda.
+const COIN_RULES: { reason: string; label: string; coins: number; per: string; icon: string }[] = [
+  { reason: "post",            label: "Skrev en post",                coins: 10, per: "2× per dag",  icon: "📝" },
+  { reason: "comment",         label: "Kommenterte en post",          coins: 3,  per: "3× per dag",  icon: "💬" },
+  { reason: "login",           label: "Innlogging",                   coins: 5,  per: "1× per dag",  icon: "🔑" },
+  { reason: "stream",          label: "Så 30 min stream",             coins: 20, per: "1× per dag",  icon: "📺" },
+  { reason: "clicker",         label: "Klikk i clicker-spillet",       coins: 1,  per: "20× per dag", icon: "👆" },
+  { reason: "game_2048",       label: "Score i 2048",                 coins: 10, per: "10× per dag", icon: "🎮" },
+  { reason: "game_2048_bonus", label: "2048-milepæl (512/1024/2048)", coins: 50, per: "3× per dag",  icon: "🏆" },
+  { reason: "wordle",          label: "Daglig Wordle",                coins: 15, per: "1× per dag",  icon: "🔤" },
+  { reason: "fanpass_bonus",   label: "Aktiverte Fanpass",            coins: 50, per: "Engangs",     icon: "♛"  },
+];
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Compress an image client-side to at most maxPx on the longest side, JPEG 0.82 quality. */
 function compressImage(file: File, maxPx = 1200): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -128,18 +175,50 @@ async function uploadImage(file: File): Promise<string> {
   return ((await res.json()) as { url: string }).url;
 }
 
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Section({ title, desc, children }: { title: string; desc?: string; children: React.ReactNode }) {
   return (
     <div className="mb-6">
       <div className="mb-3">
-        <h3 className="text-sm font-semibold text-white">{title}</h3>
-        {desc && <p className="mt-0.5 text-xs text-zinc-500">{desc}</p>}
+        <h3 className="text-sm font-semibold" style={{ color: S.text }}>{title}</h3>
+        {desc && <p className="mt-0.5 text-xs" style={{ color: S.muted }}>{desc}</p>}
       </div>
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">{children}</div>
+      <div className="rounded-xl p-5" style={{ background: S.surface, border: `1px solid ${S.line}` }}>
+        {children}
+      </div>
     </div>
+  );
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <label className="mb-1.5 block text-xs font-medium" style={{ color: S.muted }}>{children}</label>;
+}
+
+function inputStyle(): React.CSSProperties {
+  return { background: S.surface2, border: `1px solid ${S.lineHi}`, color: S.text };
+}
+
+function PrimaryButton({
+  onClick, disabled, children,
+}: { onClick: () => void; disabled?: boolean; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity disabled:opacity-50"
+      style={{ background: S.teal, color: S.bg }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SavedBadge() {
+  return (
+    <span className="flex items-center gap-1.5 text-sm" style={{ color: S.teal }}>
+      <Check className="h-4 w-4" /> Lagret
+    </span>
   );
 }
 
@@ -150,24 +229,29 @@ function ImageDropzone({ label, desc, current, onFile }: {
   const [dragging, setDragging] = useState(false);
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-medium text-zinc-400">{label}</label>
+      <FieldLabel>{label}</FieldLabel>
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={(e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f?.type.startsWith("image/")) onFile(f); }}
         onClick={() => inputRef.current?.click()}
-        className={`relative flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-4 transition-colors ${
-          dragging ? "border-indigo-500 bg-indigo-500/10" : "border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800/50"
-        }`}
+        className="relative flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-4 transition-colors"
+        style={{
+          borderColor: dragging ? S.teal : S.lineHi,
+          background:  dragging ? `${S.teal}10` : "transparent",
+        }}
       >
         {current ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={current} alt="" className="max-h-20 max-w-full rounded-lg object-contain" />
         ) : (
           <>
-            <ImageIcon className="h-7 w-7 text-zinc-600" />
-            <p className="text-center text-xs text-zinc-500">{desc}</p>
-            <div className="flex items-center gap-1.5 rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300">
+            <ImageIcon className="h-7 w-7" style={{ color: S.subtle }} />
+            <p className="text-center text-xs" style={{ color: S.muted }}>{desc}</p>
+            <div
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium"
+              style={{ background: S.surface2, color: S.text }}
+            >
               <Upload className="h-3.5 w-3.5" /> Velg bilde
             </div>
           </>
@@ -182,8 +266,10 @@ function ImageDropzone({ label, desc, current, onFile }: {
 function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: () => void; disabled?: boolean }) {
   return (
     <button type="button" role="switch" aria-checked={checked} onClick={onChange} disabled={disabled}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${checked ? "bg-indigo-600" : "bg-zinc-700"}`}>
-      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0"}`} />
+      className="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+      style={{ background: checked ? S.teal : S.surface2 }}>
+      <span className={`inline-block h-4 w-4 transform rounded-full shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0"}`}
+        style={{ background: checked ? S.bg : "rgba(240,244,255,0.6)" }} />
     </button>
   );
 }
@@ -197,7 +283,7 @@ interface ShopItemRow {
   type:          string;
   value:         string;
   coinCost:      number;
-  fanpassOnly: boolean;
+  fanpassOnly:   boolean;
   enabled:       boolean;
 }
 
@@ -254,30 +340,69 @@ function ShopAdminTab({ orgId }: { orgId: string }) {
     }
   }
 
-  if (loading) return <div className="py-12 text-center text-sm text-zinc-600">Laster shop…</div>;
+  if (loading) {
+    return <div className="py-12 text-center text-sm" style={{ color: S.muted }}>Laster shop…</div>;
+  }
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-3xl">
+      {/* Coin-økonomi-info — viser hva som gir coins i dag */}
+      <Section
+        title="Hvordan medlemmer tjener coins"
+        desc="Disse reglene er felles for alle communities. Egne regler per community kommer senere."
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {COIN_RULES.map((rule) => (
+            <div
+              key={rule.reason}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5"
+              style={{ background: S.surface2 }}
+            >
+              <span className="text-lg w-7 text-center">{rule.icon}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate" style={{ color: S.text }}>{rule.label}</p>
+                <p className="text-xs" style={{ color: S.subtle }}>{rule.per}</p>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <Coins className="h-3.5 w-3.5" style={{ color: S.teal }} />
+                <span className="text-sm font-semibold" style={{ color: S.teal }}>+{rule.coins}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 flex items-start gap-1.5 text-xs" style={{ color: S.subtle }}>
+          <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+          Fanpass-medlemmer får automatisk 1,5× på alle coin-belønninger.
+        </p>
+      </Section>
+
       <Section title="Shop-items" desc="Aktiver/deaktiver items og juster priser for organisasjonens shop.">
         {items.length === 0 ? (
-          <p className="text-sm text-zinc-500">Ingen items ennå. Legg til et badge nedenfor.</p>
+          <p className="text-sm" style={{ color: S.muted }}>Ingen items ennå. Legg til et badge nedenfor.</p>
         ) : (
           <div className="space-y-2">
             {items.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-800/50 px-4 py-3">
+              <div
+                key={item.id}
+                className="flex items-center gap-3 rounded-lg px-4 py-3"
+                style={{ background: S.surface2, border: `1px solid ${S.line}` }}
+              >
                 <span className="text-lg w-8 text-center">{item.type === "NAME_COLOR" ? "🎨" : item.value}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white">{item.name}</p>
-                  <p className="text-xs text-zinc-500">{item.type}{item.fanpassOnly ? " · Fanpass" : ""}</p>
+                  <p className="text-sm font-medium truncate" style={{ color: S.text }}>{item.name}</p>
+                  <p className="text-xs" style={{ color: S.subtle }}>
+                    {item.type}{item.fanpassOnly ? " · Fanpass" : ""}
+                  </p>
                 </div>
                 <input
                   type="number"
                   defaultValue={item.coinCost}
                   onBlur={(e) => { const v = parseInt(e.target.value); if (v > 0 && v !== item.coinCost) void updateCoinCost(item, v); }}
-                  className="w-24 rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-right text-sm text-white outline-none focus:border-indigo-500"
+                  className="w-24 rounded-lg px-2 py-1 text-right text-sm outline-none"
+                  style={inputStyle()}
                 />
-                <span className="text-xs text-zinc-600">coins</span>
-                {saving === item.id + "-cost" && <Loader2 className="h-3 w-3 animate-spin text-zinc-500" />}
+                <span className="text-xs" style={{ color: S.subtle }}>coins</span>
+                {saving === item.id + "-cost" && <Loader2 className="h-3 w-3 animate-spin" style={{ color: S.muted }} />}
                 <Toggle
                   checked={item.enabled}
                   onChange={() => void toggleEnabled(item)}
@@ -290,39 +415,43 @@ function ShopAdminTab({ orgId }: { orgId: string }) {
       </Section>
 
       <Section title="Legg til egendefinert badge" desc="Opprett et nytt badge-item med emoji og pris.">
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <input
-            placeholder="Emoji (f.eks. 🔥)"
+            placeholder="Emoji"
             value={newItem.value}
             onChange={(e) => setNewItem((p) => ({ ...p, value: e.target.value }))}
-            className="w-20 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-center text-lg outline-none focus:border-indigo-500"
+            className="w-20 rounded-lg px-3 py-2 text-center text-lg outline-none"
+            style={inputStyle()}
             maxLength={4}
           />
           <input
             placeholder="Navn (f.eks. Ild-badge)"
             value={newItem.name}
             onChange={(e) => setNewItem((p) => ({ ...p, name: e.target.value }))}
-            className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500"
+            className="flex-1 min-w-[200px] rounded-lg px-3 py-2 text-sm outline-none"
+            style={inputStyle()}
           />
           <input
             type="number"
             value={newItem.coinCost}
             onChange={(e) => setNewItem((p) => ({ ...p, coinCost: parseInt(e.target.value) || 100 }))}
-            className="w-24 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500"
+            className="w-24 rounded-lg px-3 py-2 text-sm outline-none"
+            style={inputStyle()}
           />
-          <label className="flex items-center gap-1.5 text-xs text-zinc-500 whitespace-nowrap">
+          <label className="flex items-center gap-1.5 text-xs whitespace-nowrap" style={{ color: S.muted }}>
             <input
               type="checkbox"
               checked={newItem.fanpassOnly}
               onChange={(e) => setNewItem((p) => ({ ...p, fanpassOnly: e.target.checked }))}
-              className="accent-violet-500"
+              style={{ accentColor: S.teal }}
             />
-            BP only
+            Fanpass-only
           </label>
           <button
             onClick={() => void addBadge()}
             disabled={adding || !newItem.name.trim() || !newItem.value.trim()}
-            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+            style={{ background: S.teal, color: S.bg }}
           >
             <Plus className="h-4 w-4" />
             {adding ? "…" : "Legg til"}
@@ -333,13 +462,197 @@ function ShopAdminTab({ orgId }: { orgId: string }) {
   );
 }
 
+// ─── Statistikk-tab ───────────────────────────────────────────────────────────
+
+function StatCard({
+  icon, label, value, sub, accent = S.teal,
+}: {
+  icon:    React.ReactNode;
+  label:   string;
+  value:   string;
+  sub?:    string;
+  accent?: string;
+}) {
+  return (
+    <div className="rounded-xl p-5" style={{ background: S.surface, border: `1px solid ${S.line}` }}>
+      <div className="flex items-center gap-2 mb-3">
+        <div
+          className="flex h-7 w-7 items-center justify-center rounded-lg"
+          style={{ background: `${accent}15`, color: accent, border: `1px solid ${accent}25` }}
+        >
+          {icon}
+        </div>
+        <p className="text-xs font-medium uppercase tracking-wider" style={{ color: S.muted }}>{label}</p>
+      </div>
+      <p className="text-2xl font-bold leading-none" style={{ color: S.text }}>{value}</p>
+      {sub && <p className="mt-1.5 text-xs" style={{ color: S.subtle }}>{sub}</p>}
+    </div>
+  );
+}
+
+function Sparkline({ data, color, height = 60 }: { data: number[]; color: string; height?: number }) {
+  if (data.length < 2) {
+    return <div className="text-xs" style={{ color: S.subtle, height }}>Ikke nok data ennå</div>;
+  }
+  const max = Math.max(...data, 1);
+  const min = Math.min(...data, 0);
+  const range = max - min || 1;
+  const points = data.map((v, i) => `${(i / (data.length - 1)) * 100},${100 - ((v - min) / range) * 95 - 2.5}`).join(" ");
+  const areaPoints = `0,100 ${points} 100,100`;
+  return (
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ width: "100%", height }}>
+      <defs>
+        <linearGradient id={`grad-${color.replace("#", "")}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor={color} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={color} stopOpacity="0"   />
+        </linearGradient>
+      </defs>
+      <polygon points={areaPoints} fill={`url(#grad-${color.replace("#", "")})`} />
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+function ChartCard({
+  title, sub, data, color, suffix,
+}: {
+  title:  string;
+  sub:    string;
+  data:   number[];
+  color:  string;
+  suffix?: string;
+}) {
+  const last = data[data.length - 1] ?? 0;
+  const prev = data[data.length - 2] ?? 0;
+  const delta = last - prev;
+  const deltaPct = prev > 0 ? ((delta / prev) * 100) : null;
+  const deltaPositive = delta >= 0;
+  return (
+    <div className="rounded-xl p-5" style={{ background: S.surface, border: `1px solid ${S.line}` }}>
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <h3 className="text-sm font-semibold" style={{ color: S.text }}>{title}</h3>
+          <p className="mt-0.5 text-xs" style={{ color: S.muted }}>{sub}</p>
+        </div>
+        {deltaPct !== null && (
+          <span
+            className="rounded-full px-2 py-0.5 text-xs font-semibold"
+            style={{
+              background: deltaPositive ? `${S.teal}15` : `${S.rose}15`,
+              color:      deltaPositive ? S.teal : S.rose,
+            }}
+          >
+            {deltaPositive ? "+" : ""}{deltaPct.toFixed(0)}%
+          </span>
+        )}
+      </div>
+      <p className="mb-3 text-2xl font-bold" style={{ color: S.text }}>
+        {last.toLocaleString("no-NO")}{suffix ? <span className="ml-1 text-sm font-normal" style={{ color: S.subtle }}>{suffix}</span> : null}
+      </p>
+      <Sparkline data={data} color={color} />
+    </div>
+  );
+}
+
+function StatistikkTab({ stats, accessMode }: { stats: OrgStats; accessMode: string }) {
+  const fanpassEnabled = accessMode !== "OPEN";
+  const monthlyRevenue = stats.activeFanpass * 49;
+
+  return (
+    <div className="max-w-5xl">
+      {/* Quick KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <StatCard
+          icon={<Users className="h-4 w-4" />}
+          label="Medlemmer"
+          value={stats.totalMembers.toLocaleString("no-NO")}
+          sub={stats.newMembers7d > 0 ? `+${stats.newMembers7d} siste 7d` : "Ingen nye siste 7d"}
+          accent={S.blue}
+        />
+        <StatCard
+          icon={<div className="h-1.5 w-1.5 rounded-full" style={{ background: S.teal, boxShadow: `0 0 8px ${S.teal}` }} />}
+          label="Aktive nå"
+          value={stats.activeNow.toString()}
+          sub={`${stats.active7d} aktive denne uka`}
+          accent={S.teal}
+        />
+        <StatCard
+          icon={<Coins className="h-4 w-4" />}
+          label="Coins i omløp"
+          value={stats.coinsInCirculation.toLocaleString("no-NO")}
+          sub={`+${stats.coinsAwarded7d.toLocaleString("no-NO")} delt ut siste 7d`}
+          accent={S.amber}
+        />
+        {fanpassEnabled ? (
+          <StatCard
+            icon={<Crown className="h-4 w-4" />}
+            label="Fanpass aktive"
+            value={stats.activeFanpass.toString()}
+            sub={monthlyRevenue > 0 ? `~${monthlyRevenue} kr/mnd` : "Ingen abonnenter ennå"}
+            accent={S.purple}
+          />
+        ) : (
+          <StatCard
+            icon={<MessageSquare className="h-4 w-4" />}
+            label="Innlegg + meldinger"
+            value={(stats.posts7d + stats.messages7d).toLocaleString("no-NO")}
+            sub="Siste 7 dager"
+            accent={S.pink}
+          />
+        )}
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+        <ChartCard
+          title="Medlemsvekst"
+          sub="Antall medlemmer per uke (8 uker)"
+          data={stats.memberGrowth}
+          color={S.blue}
+        />
+        <ChartCard
+          title="Coin-flyt"
+          sub="Coins delt ut per dag (14 dager)"
+          data={stats.coinFlow}
+          color={S.teal}
+          suffix="coins"
+        />
+      </div>
+
+      {/* Engagement-snippet */}
+      <Section title="Engasjement siste 7 dager" desc="Aktivitet på tvers av feed og chat.">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <MiniStat label="Innlegg"    value={stats.posts7d} />
+          <MiniStat label="Meldinger"  value={stats.messages7d} />
+          <MiniStat label="Aktive (7d)" value={stats.active7d} />
+          <MiniStat label="Aktive nå"   value={stats.activeNow} />
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg p-3" style={{ background: S.surface2 }}>
+      <p className="text-[11px] uppercase tracking-wider mb-1" style={{ color: S.subtle }}>{label}</p>
+      <p className="text-lg font-bold" style={{ color: S.text }}>{value.toLocaleString("no-NO")}</p>
+    </div>
+  );
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export default function InnstillingerClient({ initialTab, org: initialOrg, theme: initialTheme, features: initialFeatures, userRole, streamSettings: initialStream, accessStats }: Props) {
+export default function InnstillingerClient({
+  initialTab, org: initialOrg, theme: initialTheme, features: initialFeatures,
+  userRole, streamSettings: initialStream, accessStats, stats,
+}: Props) {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const validTabs: Tab[] = ["generelt", "tilgang", "utseende", "funksjoner", "varsler", "shop"];
-  const activeTab = validTabs.includes(searchParams.get("tab") as Tab) ? (searchParams.get("tab") as Tab) : "generelt";
+  const validTabs: Tab[] = ["generelt", "tilgang", "utseende", "funksjoner", "shop", "statistikk"];
+  const activeTab = validTabs.includes(searchParams.get("tab") as Tab)
+    ? (searchParams.get("tab") as Tab)
+    : (validTabs.includes(initialTab as Tab) ? (initialTab as Tab) : "generelt");
 
   function setTab(tab: Tab) {
     router.push(`?tab=${tab}`, { scroll: false });
@@ -394,7 +707,6 @@ export default function InnstillingerClient({ initialTab, org: initialOrg, theme
       body: JSON.stringify({ avatarPreset: preset.id }),
     });
   }
-
 
   function updateTheme<K extends keyof Theme>(key: K, val: Theme[K]) {
     setTheme((p) => ({ ...p, [key]: val }));
@@ -472,133 +784,154 @@ export default function InnstillingerClient({ initialTab, org: initialOrg, theme
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="px-4 py-5 md:px-6 md:py-8">
-      <h1 className="mb-6 text-xl font-semibold text-white">Innstillinger</h1>
+    <div className="px-4 py-5 md:px-6 md:py-8" style={{ color: S.text }}>
+      <h1 className="mb-6 text-xl font-semibold" style={{ color: S.text }}>Innstillinger</h1>
 
       {/* Tabs */}
-      <div className="mb-8 flex gap-1 overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900 p-1">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`flex-1 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === t.id ? "bg-indigo-600 text-white" : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div
+        className="mb-8 flex gap-1 overflow-x-auto rounded-xl p-1"
+        style={{ background: S.surface, border: `1px solid ${S.line}` }}
+      >
+        {TABS.map((t) => {
+          const active = activeTab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className="flex-1 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+              style={{
+                background: active ? S.surface2 : "transparent",
+                color:      active ? S.text     : S.muted,
+                boxShadow:  active ? `inset 0 0 0 1px ${S.teal}40` : undefined,
+              }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* ══ TAB 1: GENERELT ══ */}
+      {/* ══ TAB: GENERELT ══ */}
       {activeTab === "generelt" && (
         <div className="max-w-xl">
           <Section title="Organisasjonsinformasjon">
             <div className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-zinc-400">Organisasjonsnavn</label>
+                <FieldLabel>Organisasjonsnavn</FieldLabel>
                 <input
                   value={org.name}
                   onChange={(e) => setOrg((p) => ({ ...p, name: e.target.value }))}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-white outline-none transition-colors focus:border-indigo-500"
+                  className="w-full rounded-lg px-4 py-2.5 text-sm outline-none"
+                  style={inputStyle()}
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-zinc-400">Slug (URL)</label>
-                <div className="flex items-center rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 transition-colors focus-within:border-indigo-500">
-                  <span className="mr-1 shrink-0 text-sm text-zinc-600">intraa.net/</span>
+                <FieldLabel>Slug (URL)</FieldLabel>
+                <div className="flex items-center rounded-lg px-4 py-2.5" style={inputStyle()}>
+                  <span className="mr-1 shrink-0 text-sm" style={{ color: S.subtle }}>intraa.net/</span>
                   <input
                     value={org.slug}
                     onChange={(e) => setOrg((p) => ({ ...p, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-") }))}
-                    className="flex-1 bg-transparent text-sm text-white outline-none"
+                    className="flex-1 bg-transparent text-sm outline-none"
+                    style={{ color: S.text }}
                   />
                 </div>
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-zinc-400">Type</label>
-                <p className="text-sm text-zinc-400">
+                <FieldLabel>Type</FieldLabel>
+                <p className="text-sm" style={{ color: S.text }}>
                   {org.type === "COMPANY" ? "🏢 Bedrift" : "🌐 Community"}
                 </p>
-                <p className="mt-1 text-xs text-zinc-600">Org-type kan ikke endres etter opprettelse.</p>
+                <p className="mt-1 text-xs" style={{ color: S.subtle }}>Org-type kan ikke endres etter opprettelse.</p>
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-zinc-400">Plan</label>
-                <div className="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800/50 px-4 py-2.5">
-                  <span className="text-sm text-white">{PLAN_LABELS[org.plan] ?? org.plan}</span>
-                  <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-xs font-medium text-indigo-400">{org.plan}</span>
-                  <span className="ml-auto text-xs text-zinc-600">Endre plan via Superadmin</span>
+                <FieldLabel>Plan</FieldLabel>
+                <div className="flex items-center gap-2 rounded-lg px-4 py-2.5" style={{ background: S.surface2, border: `1px solid ${S.line}` }}>
+                  <span className="text-sm" style={{ color: S.text }}>{PLAN_LABELS[org.plan] ?? org.plan}</span>
+                  <span
+                    className="rounded-full px-2 py-0.5 text-xs font-medium"
+                    style={{ background: `${S.teal}20`, color: S.teal }}
+                  >
+                    {org.plan}
+                  </span>
+                  <span className="ml-auto text-xs" style={{ color: S.subtle }}>Endre plan via Superadmin</span>
                 </div>
               </div>
             </div>
           </Section>
-          {genError && <p className="mb-3 text-sm text-rose-400">{genError}</p>}
+          {genError && <p className="mb-3 text-sm" style={{ color: S.rose }}>{genError}</p>}
           <div className="flex items-center gap-3 mb-10">
-            <button onClick={() => void saveGenerelt()} disabled={genSaving}
-              className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:opacity-50">
+            <PrimaryButton onClick={() => void saveGenerelt()} disabled={genSaving}>
               {genSaving ? "Lagrer…" : "Lagre endringer"}
-            </button>
-            {genSaved && <span className="flex items-center gap-1.5 text-sm text-emerald-400"><Check className="h-4 w-4" /> Lagret</span>}
+            </PrimaryButton>
+            {genSaved && <SavedBadge />}
           </div>
 
           {/* Stream */}
           <Section title="Stream" desc="Koble til en Twitch- eller YouTube-kanal for live-sending direkte i organisasjonen">
             <div className="space-y-5">
-              {/* Platform toggle */}
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-zinc-400">Plattform</label>
+                <FieldLabel>Plattform</FieldLabel>
                 <div className="flex gap-3">
-                  {([["twitch", "Twitch"], ["youtube", "YouTube"]] as [string, string][]).map(([val, label]) => (
-                    <button key={val} type="button" onClick={() => setStream((p) => ({ ...p, preferredPlatform: val }))}
-                      className={`rounded-lg border px-5 py-2 text-sm font-medium transition-colors ${
-                        stream.preferredPlatform === val
-                          ? "border-indigo-500 bg-indigo-600 text-white"
-                          : "border-zinc-700 bg-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white"
-                      }`}>
-                      {label}
-                    </button>
-                  ))}
+                  {([["twitch", "Twitch"], ["youtube", "YouTube"]] as [string, string][]).map(([val, label]) => {
+                    const active = stream.preferredPlatform === val;
+                    return (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setStream((p) => ({ ...p, preferredPlatform: val }))}
+                        className="rounded-lg px-5 py-2 text-sm font-medium transition-colors"
+                        style={{
+                          background: active ? S.teal : S.surface2,
+                          color:      active ? S.bg   : S.muted,
+                          border:     `1px solid ${active ? S.teal : S.lineHi}`,
+                        }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Twitch channel */}
               {stream.preferredPlatform === "twitch" && (
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-zinc-400">Twitch-kanalnavn</label>
-                  <div className="flex items-center rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 transition-colors focus-within:border-indigo-500">
-                    <span className="mr-1 shrink-0 text-sm text-zinc-600">twitch.tv/</span>
+                  <FieldLabel>Twitch-kanalnavn</FieldLabel>
+                  <div className="flex items-center rounded-lg px-4 py-2.5" style={inputStyle()}>
+                    <span className="mr-1 shrink-0 text-sm" style={{ color: S.subtle }}>twitch.tv/</span>
                     <input
                       value={stream.twitchChannel}
                       onChange={(e) => setStream((p) => ({ ...p, twitchChannel: e.target.value.toLowerCase().replace(/\s/g, "") }))}
                       placeholder="kanalnavn"
-                      className="flex-1 bg-transparent text-sm text-white outline-none placeholder-zinc-500"
+                      className="flex-1 bg-transparent text-sm outline-none placeholder:opacity-40"
+                      style={{ color: S.text }}
                     />
                   </div>
                 </div>
               )}
 
-              {/* YouTube channel ID */}
               {stream.preferredPlatform === "youtube" && (
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-zinc-400">YouTube Channel ID</label>
+                  <FieldLabel>YouTube Channel ID</FieldLabel>
                   <input
                     value={stream.youtubeChannel}
                     onChange={(e) => setStream((p) => ({ ...p, youtubeChannel: e.target.value.trim() }))}
                     placeholder="UCxxxxxxxxxxxxxxxxxxxxxxxx"
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-white outline-none transition-colors focus:border-indigo-500 placeholder-zinc-500"
+                    className="w-full rounded-lg px-4 py-2.5 text-sm outline-none placeholder:opacity-40"
+                    style={inputStyle()}
                   />
-                  <p className="mt-1 text-xs text-zinc-600">Finn channel ID på youtube.com/account_advanced</p>
+                  <p className="mt-1 text-xs" style={{ color: S.subtle }}>Finn channel ID på youtube.com/account_advanced</p>
                 </div>
               )}
             </div>
           </Section>
 
-          {streamError && <p className="mb-3 text-sm text-rose-400">{streamError}</p>}
+          {streamError && <p className="mb-3 text-sm" style={{ color: S.rose }}>{streamError}</p>}
           <div className="flex items-center gap-3">
-            <button onClick={() => void saveStream()} disabled={streamSaving}
-              className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:opacity-50">
+            <PrimaryButton onClick={() => void saveStream()} disabled={streamSaving}>
               {streamSaving ? "Lagrer…" : "Lagre stream-innstillinger"}
-            </button>
-            {streamSaved && <span className="flex items-center gap-1.5 text-sm text-emerald-400"><Check className="h-4 w-4" /> Lagret</span>}
+            </PrimaryButton>
+            {streamSaved && <SavedBadge />}
           </div>
         </div>
       )}
@@ -607,8 +940,8 @@ export default function InnstillingerClient({ initialTab, org: initialOrg, theme
       {activeTab === "tilgang" && (
         <div className="max-w-2xl">
           <div className="mb-6">
-            <h3 className="text-sm font-semibold text-white">Tilgangsmodus</h3>
-            <p className="mt-0.5 text-xs text-zinc-500">
+            <h3 className="text-sm font-semibold" style={{ color: S.text }}>Tilgangsmodus</h3>
+            <p className="mt-0.5 text-xs" style={{ color: S.muted }}>
               Bestem hvordan folk får tilgang til {org.name}. Valget styrer om Fanpass-funksjoner og betalingsvegg er aktive.
             </p>
           </div>
@@ -622,205 +955,227 @@ export default function InnstillingerClient({ initialTab, org: initialOrg, theme
         </div>
       )}
 
-      {/* ══ TAB 2: UTSEENDE ══ */}
+      {/* ══ TAB: UTSEENDE ══ */}
       {activeTab === "utseende" && (
         <div className="max-w-xl">
-            {/* Logo og banner */}
-            <Section title="Logo og banner" desc="Logoen vises i sidebaren. Banneret vises øverst på feed-siden.">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <ImageDropzone label="Logo" desc="Klikk eller dra-og-slipp" current={logoPreview}
-                  onFile={(f) => { setLogoFile(f); setLogoPreview(URL.createObjectURL(f)); }} />
-                <ImageDropzone label="Bannerbilde" desc="Anbefalt: 1200×300px" current={bannerPreview}
-                  onFile={(f) => { setBannerFile(f); setBannerPreview(URL.createObjectURL(f)); }} />
+          <Section title="Logo og banner" desc="Logoen vises i sidebaren. Banneret vises øverst på feed-siden.">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <ImageDropzone label="Logo" desc="Klikk eller dra-og-slipp" current={logoPreview}
+                onFile={(f) => { setLogoFile(f); setLogoPreview(URL.createObjectURL(f)); }} />
+              <ImageDropzone label="Bannerbilde" desc="Anbefalt: 1200×300px" current={bannerPreview}
+                onFile={(f) => { setBannerFile(f); setBannerPreview(URL.createObjectURL(f)); }} />
+            </div>
+            {(logoPreview ?? bannerPreview) && (
+              <div className="mt-3 flex gap-3">
+                {logoPreview && (
+                  <button onClick={() => { setLogoFile(null); setLogoPreview(null); updateTheme("logoUrl", null); }}
+                    className="flex items-center gap-1 text-xs transition-colors hover:opacity-80"
+                    style={{ color: S.muted }}>
+                    <X className="h-3 w-3" /> Fjern logo
+                  </button>
+                )}
+                {bannerPreview && (
+                  <button onClick={() => { setBannerFile(null); setBannerPreview(null); updateTheme("bannerUrl", null); }}
+                    className="flex items-center gap-1 text-xs transition-colors hover:opacity-80"
+                    style={{ color: S.muted }}>
+                    <X className="h-3 w-3" /> Fjern banner
+                  </button>
+                )}
               </div>
-              {(logoPreview ?? bannerPreview) && (
-                <div className="mt-3 flex gap-3">
-                  {logoPreview && (
-                    <button onClick={() => { setLogoFile(null); setLogoPreview(null); updateTheme("logoUrl", null); }}
-                      className="flex items-center gap-1 text-xs text-zinc-500 hover:text-rose-400">
-                      <X className="h-3 w-3" /> Fjern logo
-                    </button>
-                  )}
-                  {bannerPreview && (
-                    <button onClick={() => { setBannerFile(null); setBannerPreview(null); updateTheme("bannerUrl", null); }}
-                      className="flex items-center gap-1 text-xs text-zinc-500 hover:text-rose-400">
-                      <X className="h-3 w-3" /> Fjern banner
-                    </button>
-                  )}
-                </div>
-              )}
-            </Section>
+            )}
+          </Section>
 
-            {/* Banner-presets */}
-            <Section title="Ferdiglagde bannere" desc="Velg en gradient eller last opp eget bilde over.">
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                {BANNER_PRESETS.map((preset) => (
+          <Section title="Ferdiglagde bannere" desc="Velg en gradient eller last opp eget bilde over.">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+              {BANNER_PRESETS.map((preset) => {
+                const active = selectedBanner === preset.id;
+                return (
                   <button
                     key={preset.id}
                     onClick={() => void selectBannerPreset(preset)}
                     title={preset.label}
-                    className={`relative h-16 overflow-hidden rounded-lg border-2 transition-all ${
-                      selectedBanner === preset.id
-                        ? "border-violet-500 scale-105"
-                        : "border-zinc-700 hover:border-zinc-500"
-                    }`}
-                    style={{ background: preset.css }}
+                    className="relative h-16 overflow-hidden rounded-lg transition-all"
+                    style={{
+                      border:    `2px solid ${active ? S.teal : S.lineHi}`,
+                      transform: active ? "scale(1.05)" : undefined,
+                      background: preset.css,
+                    }}
                   >
-                    {selectedBanner === preset.id && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                        <span className="text-lg text-white">✓</span>
+                    {active && (
+                      <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(5,8,22,0.3)" }}>
+                        <span className="text-lg" style={{ color: S.text }}>✓</span>
                       </div>
                     )}
                   </button>
-                ))}
-              </div>
-              <p className="mt-2 text-xs text-zinc-500">
-                {BANNER_PRESETS.find((p) => p.id === selectedBanner)?.label ?? "Ingen preset valgt"}
-              </p>
-            </Section>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs" style={{ color: S.muted }}>
+              {BANNER_PRESETS.find((p) => p.id === selectedBanner)?.label ?? "Ingen preset valgt"}
+            </p>
+          </Section>
 
-            {/* Avatar-presets */}
-            <Section title="Ferdiglagde org-avatarer" desc="Velg en avatar eller last opp eget logobilde over.">
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                {AVATAR_PRESETS.map((preset) => (
+          <Section title="Ferdiglagde org-avatarer" desc="Velg en avatar eller last opp eget logobilde over.">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+              {AVATAR_PRESETS.map((preset) => {
+                const active = selectedAvatar === preset.id;
+                return (
                   <button
                     key={preset.id}
                     onClick={() => void selectAvatarPreset(preset)}
                     title={preset.label}
-                    className={`flex h-16 w-full items-center justify-center rounded-xl border-2 text-2xl transition-all ${
-                      selectedAvatar === preset.id
-                        ? "border-violet-500 scale-105"
-                        : "border-zinc-700 hover:border-zinc-500"
-                    }`}
-                    style={{ background: preset.bg }}
+                    className="flex h-16 w-full items-center justify-center rounded-xl text-2xl transition-all"
+                    style={{
+                      border:    `2px solid ${active ? S.teal : S.lineHi}`,
+                      transform: active ? "scale(1.05)" : undefined,
+                      background: preset.bg,
+                    }}
                   >
                     {preset.emoji}
                   </button>
-                ))}
-              </div>
-              <p className="mt-2 text-xs text-zinc-500">
-                {AVATAR_PRESETS.find((p) => p.id === selectedAvatar)?.label ?? "Ingen preset valgt"}
-              </p>
-            </Section>
-
-            {/* Typografi */}
-            <Section title="Typografi og stil">
-              <div className="mb-5">
-                <p className="mb-2 text-xs font-medium text-zinc-400">Fontstil</p>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {FONT_OPTIONS.map((opt) => (
-                    <button key={opt.value} onClick={() => updateTheme("fontStyle", opt.value)}
-                      className={`flex flex-col rounded-xl border p-3 text-left transition-all ${
-                        theme.fontStyle === opt.value ? "border-indigo-500 bg-indigo-500/10" : "border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800"
-                      }`}>
-                      <span className="text-sm font-semibold text-white">{opt.label}</span>
-                      <span className="mt-0.5 text-[10px] text-zinc-500">{opt.desc}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="mb-2 text-xs font-medium text-zinc-400">Hjørnestil</p>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {BORDER_RADIUS_OPTIONS.map((opt) => {
-                    const br = opt.value === "rounded-none" ? "0" : opt.value === "rounded-sm" ? "4px" : opt.value === "rounded-lg" ? "8px" : "16px";
-                    return (
-                      <button key={opt.value} onClick={() => updateTheme("borderRadius", opt.value)}
-                        className={`flex flex-col items-center gap-2 border p-3 transition-all ${
-                          theme.borderRadius === opt.value ? "border-indigo-500 bg-indigo-500/10" : "border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800"
-                        }`} style={{ borderRadius: br }}>
-                        <div className="h-6 w-full border border-zinc-600 bg-zinc-800" style={{ borderRadius: br }} />
-                        <span className="text-xs font-medium text-zinc-300">{opt.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </Section>
-
-            {/* Velkomstmelding */}
-            <Section title="Velkomstmelding" desc="Vises på feed når nye brukere logger inn for første gang">
-              <textarea value={theme.welcomeMessage} onChange={(e) => updateTheme("welcomeMessage", e.target.value)}
-                placeholder="Velkommen! 👋 Her finner du alt du trenger…" rows={3} maxLength={500}
-                className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-indigo-500" />
-              <p className="mt-1 text-right text-xs text-zinc-600">{theme.welcomeMessage.length}/500</p>
-            </Section>
-
-            {themeError && <p className="mb-3 text-sm text-rose-400">{themeError}</p>}
-            <div className="flex items-center gap-3">
-              <button onClick={() => void saveTheme()} disabled={themeSaving}
-                className="flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:opacity-50">
-                {themeSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-                {themeSaving ? "Lagrer…" : "Lagre"}
-              </button>
-              {themeSaved && <span className="flex items-center gap-1.5 text-sm text-emerald-400"><Check className="h-4 w-4" /> Lagret</span>}
+                );
+              })}
             </div>
+            <p className="mt-2 text-xs" style={{ color: S.muted }}>
+              {AVATAR_PRESETS.find((p) => p.id === selectedAvatar)?.label ?? "Ingen preset valgt"}
+            </p>
+          </Section>
+
+          <Section title="Typografi og stil">
+            <div className="mb-5">
+              <p className="mb-2 text-xs font-medium" style={{ color: S.muted }}>Fontstil</p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {FONT_OPTIONS.map((opt) => {
+                  const active = theme.fontStyle === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => updateTheme("fontStyle", opt.value)}
+                      className="flex flex-col rounded-xl p-3 text-left transition-all"
+                      style={{
+                        background: active ? `${S.teal}10` : S.surface2,
+                        border:     `1px solid ${active ? S.teal : S.lineHi}`,
+                      }}
+                    >
+                      <span className="text-sm font-semibold" style={{ color: S.text }}>{opt.label}</span>
+                      <span className="mt-0.5 text-[10px]" style={{ color: S.subtle }}>{opt.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-medium" style={{ color: S.muted }}>Hjørnestil</p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {BORDER_RADIUS_OPTIONS.map((opt) => {
+                  const br = opt.value === "rounded-none" ? "0" : opt.value === "rounded-sm" ? "4px" : opt.value === "rounded-lg" ? "8px" : "16px";
+                  const active = theme.borderRadius === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => updateTheme("borderRadius", opt.value)}
+                      className="flex flex-col items-center gap-2 p-3 transition-all"
+                      style={{
+                        background: active ? `${S.teal}10` : S.surface2,
+                        border:     `1px solid ${active ? S.teal : S.lineHi}`,
+                        borderRadius: br,
+                      }}
+                    >
+                      <div className="h-6 w-full"
+                        style={{ background: S.surface, border: `1px solid ${S.line}`, borderRadius: br }} />
+                      <span className="text-xs font-medium" style={{ color: S.muted }}>{opt.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </Section>
+
+          <Section title="Velkomstmelding" desc="Vises på feed når nye brukere logger inn for første gang">
+            <textarea
+              value={theme.welcomeMessage}
+              onChange={(e) => updateTheme("welcomeMessage", e.target.value)}
+              placeholder="Velkommen! 👋 Her finner du alt du trenger…"
+              rows={3}
+              maxLength={500}
+              className="w-full resize-none rounded-lg px-4 py-3 text-sm outline-none placeholder:opacity-40"
+              style={inputStyle()}
+            />
+            <p className="mt-1 text-right text-xs" style={{ color: S.subtle }}>
+              {theme.welcomeMessage.length}/500
+            </p>
+          </Section>
+
+          {themeError && <p className="mb-3 text-sm" style={{ color: S.rose }}>{themeError}</p>}
+          <div className="flex items-center gap-3">
+            <PrimaryButton onClick={() => void saveTheme()} disabled={themeSaving}>
+              {themeSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+              {themeSaving ? "Lagrer…" : "Lagre"}
+            </PrimaryButton>
+            {themeSaved && <SavedBadge />}
+          </div>
         </div>
       )}
 
-      {/* ══ TAB 3: FUNKSJONER ══ */}
+      {/* ══ TAB: FUNKSJONER ══ */}
       {activeTab === "funksjoner" && (
         <div className="max-w-xl">
           {!isOwner && (
-            <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/5 px-5 py-4">
-              <p className="text-sm text-amber-400">Kun eieren av organisasjonen kan endre funksjoner.</p>
+            <div
+              className="mb-6 rounded-xl px-5 py-4"
+              style={{ background: `${S.amber}10`, border: `1px solid ${S.amber}30` }}
+            >
+              <p className="text-sm" style={{ color: S.amber }}>Kun eieren av organisasjonen kan endre funksjoner.</p>
             </div>
           )}
-          <div className="overflow-hidden rounded-xl border border-zinc-800">
+          <div className="overflow-hidden rounded-xl" style={{ border: `1px solid ${S.line}`, background: S.surface }}>
             {relevantFeatures.map((feature, i) => {
               const defaultEnabled = !DISABLED_BY_DEFAULT.has(feature);
               const isEnabled = features[feature] ?? defaultEnabled;
+              const isLast = i === relevantFeatures.length - 1;
               return (
-              <div key={feature}
-                className={`flex items-center justify-between px-5 py-4 transition-colors hover:bg-zinc-900/50 ${i < relevantFeatures.length - 1 ? "border-b border-zinc-800" : ""}`}>
-                <div>
-                  <p className="text-sm font-medium text-white">{FEATURE_LABELS[feature]}</p>
-                  <p className="text-xs text-zinc-500">{FEATURE_DESCRIPTIONS[feature]}</p>
-                  {feature === "live" && isEnabled && (
-                    <button
-                      onClick={() => setTab("generelt")}
-                      className="mt-1 text-xs font-medium text-indigo-400 hover:text-indigo-300"
-                    >
-                      Konfigurer stream →
-                    </button>
-                  )}
+                <div
+                  key={feature}
+                  className="flex items-center justify-between px-5 py-4 transition-colors"
+                  style={{ borderBottom: isLast ? undefined : `1px solid ${S.line}` }}
+                >
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: S.text }}>{FEATURE_LABELS[feature]}</p>
+                    <p className="text-xs" style={{ color: S.muted }}>{FEATURE_DESCRIPTIONS[feature]}</p>
+                    {feature === "live" && isEnabled && (
+                      <button
+                        onClick={() => setTab("generelt")}
+                        className="mt-1 text-xs font-medium transition-opacity hover:opacity-80"
+                        style={{ color: S.teal }}
+                      >
+                        Konfigurer stream →
+                      </button>
+                    )}
+                  </div>
+                  <div className="ml-4 flex items-center gap-2">
+                    {featSaving[feature] && <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: S.muted }} />}
+                    <Toggle
+                      checked={isEnabled}
+                      onChange={() => void toggleFeature(feature, !isEnabled)}
+                      disabled={!isOwner || !!featSaving[feature]}
+                    />
+                  </div>
                 </div>
-                <div className="ml-4 flex items-center gap-2">
-                  {featSaving[feature] && <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-500" />}
-                  <Toggle
-                    checked={isEnabled}
-                    onChange={() => void toggleFeature(feature, !isEnabled)}
-                    disabled={!isOwner || !!featSaving[feature]}
-                  />
-                </div>
-              </div>
               );
             })}
           </div>
-          <p className="mt-3 text-xs text-zinc-600">
+          <p className="mt-3 text-xs" style={{ color: S.subtle }}>
             Endringer trer i kraft umiddelbart for alle medlemmer.
           </p>
         </div>
       )}
 
-      {/* ══ TAB 4: VARSLER (kommer snart) ══ */}
-      {activeTab === "shop" && (
-        <ShopAdminTab orgId={org.id} />
-      )}
+      {/* ══ TAB: SHOP ══ */}
+      {activeTab === "shop" && <ShopAdminTab orgId={org.id} />}
 
-      {activeTab === "varsler" && (
-        <div className="flex max-w-xl flex-col items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 py-16 text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-800">
-            <Bell className="h-7 w-7 text-zinc-600" />
-          </div>
-          <h3 className="mb-2 text-base font-semibold text-zinc-400">Varsler — kommer snart</h3>
-          <p className="max-w-xs text-sm text-zinc-600">
-            Konfigurer e-postvarsler, push-varsler og Slack-integrasjon for organisasjonen.
-          </p>
-          <span className="mt-4 rounded-full border border-zinc-700 px-3 py-1 text-xs font-medium text-zinc-500">
-            Under utvikling
-          </span>
-        </div>
+      {/* ══ TAB: STATISTIKK ══ */}
+      {activeTab === "statistikk" && (
+        <StatistikkTab stats={stats} accessMode={org.accessMode} />
       )}
     </div>
   );
