@@ -443,7 +443,11 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
                     {isFirstInGroup && <span className="text-[11px] text-white/30 mr-1 mb-0.5">Du</span>}
                     {msg.imageUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={msg.imageUrl} alt="Bilde" className="max-w-[60%] rounded-2xl rounded-tr-sm object-cover" />
+                      <img
+                        src={msg.imageUrl}
+                        alt="Bilde"
+                        className="max-h-[280px] max-w-[320px] rounded-2xl rounded-tr-sm object-contain bg-white/[0.03]"
+                      />
                     )}
                     {msg.content.trim() && msg.content.trim() !== "&nbsp;" && (
                       <div
@@ -482,7 +486,11 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
                       {isFirstInGroup && <span className="text-xs text-white/40 ml-1">{msg.sender.name ?? "Ukjent"}</span>}
                       {msg.imageUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={msg.imageUrl} alt="Bilde" className="max-w-[60%] rounded-2xl rounded-tl-sm object-cover" />
+                        <img
+                          src={msg.imageUrl}
+                          alt="Bilde"
+                          className="max-h-[280px] max-w-[320px] rounded-2xl rounded-tl-sm object-contain bg-white/[0.03]"
+                        />
                       )}
                       {msg.content.trim() && msg.content.trim() !== "&nbsp;" && (
                         <div className="w-fit max-w-[75%] md:max-w-[65%] bg-white/[0.08] text-white rounded-2xl rounded-tl-sm px-4 py-2.5">

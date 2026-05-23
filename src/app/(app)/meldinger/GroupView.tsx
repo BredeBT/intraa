@@ -251,7 +251,11 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
                 {!isMe && <span className="mb-0.5 text-[10px] text-zinc-500">{msg.author.name}</span>}
                 {msg.imageUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={msg.imageUrl} alt="" className="max-h-48 w-auto rounded-xl border border-zinc-700 object-cover cursor-pointer" />
+                  <img
+                    src={msg.imageUrl}
+                    alt=""
+                    className="max-h-[280px] max-w-[320px] rounded-xl border border-zinc-700 object-contain bg-white/[0.03] cursor-pointer"
+                  />
                 ) : (
                   <div className={`rounded-2xl px-4 py-2.5 text-sm ${isMe ? "rounded-br-sm bg-indigo-600 text-white" : "rounded-bl-sm bg-zinc-800 text-zinc-200"}`}>
                     <SafeHtml content={msg.content} />

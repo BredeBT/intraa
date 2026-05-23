@@ -5,7 +5,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
-import { Bold, Italic, Underline as UnderlineIcon, Code } from "lucide-react";
+import { Bold, Italic, Underline as UnderlineIcon, Code, Type } from "lucide-react";
 import { GifPicker } from "./GifPicker";
 import { EmojiPicker } from "./EmojiPicker";
 
@@ -66,8 +66,9 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
     },
   });
 
-  const [showEmoji, setShowEmoji] = useState(false);
-  const [showGif,   setShowGif]   = useState(false);
+  const [showEmoji,   setShowEmoji]   = useState(false);
+  const [showGif,     setShowGif]     = useState(false);
+  const [showFormat,  setShowFormat]  = useState(false);
 
   const handleEmojiSelect = useCallback((emoji: string) => {
     editor?.commands.insertContent(emoji);
@@ -118,8 +119,11 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
         type="button"
         onMouseDown={(e) => { e.preventDefault(); onClick(); }}
         title={title}
-        className={`flex h-6 w-6 items-center justify-center rounded transition-colors
-          ${active ? "bg-zinc-600 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+        className="nav-link flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+        style={{
+          background: active ? "rgba(94,234,212,0.12)" : "transparent",
+          color:      active ? "#5EEAD4" : "rgba(240,244,255,0.55)",
+        }}
       >
         {children}
       </button>
@@ -129,28 +133,43 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
   if (!editor) return null;
 
   return (
-    <div className={`flex flex-col rounded-xl border border-zinc-700 bg-zinc-800 transition-colors focus-within:border-indigo-500 ${className}`}>
+    <div
+      className={`flex flex-col rounded-xl transition-colors focus-within:border-[#5EEAD4]/40 ${className}`}
+      style={{ background: "#131A35", border: "1px solid rgba(240,244,255,0.08)" }}
+    >
       {/* Toolbar */}
-      <div className="flex items-center gap-0.5 border-b border-zinc-700/60 px-2 py-1">
-        <ToolBtn active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()} title="Fet (⌘B)">
-          <Bold className="h-3.5 w-3.5" />
+      <div className="flex items-center gap-0.5 px-2 py-1.5">
+        {/* Format-toggle — skjuler B/I/U/Code som standard så toolbaren er ren */}
+        <ToolBtn active={showFormat} onClick={() => setShowFormat((v) => !v)} title="Formatering">
+          <Type className="h-3.5 w-3.5" />
         </ToolBtn>
-        <ToolBtn active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()} title="Kursiv (⌘I)">
-          <Italic className="h-3.5 w-3.5" />
-        </ToolBtn>
-        <ToolBtn active={editor.isActive("underline")} onClick={() => editor.chain().focus().toggleUnderline().run()} title="Understrek (⌘U)">
-          <UnderlineIcon className="h-3.5 w-3.5" />
-        </ToolBtn>
-        <ToolBtn active={editor.isActive("code")} onClick={() => editor.chain().focus().toggleCode().run()} title="Kode">
-          <Code className="h-3.5 w-3.5" />
-        </ToolBtn>
+
+        {showFormat && (
+          <>
+            <span className="mx-0.5 h-4 w-px" style={{ background: "rgba(240,244,255,0.08)" }} />
+            <ToolBtn active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()} title="Fet (⌘B)">
+              <Bold className="h-3.5 w-3.5" />
+            </ToolBtn>
+            <ToolBtn active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()} title="Kursiv (⌘I)">
+              <Italic className="h-3.5 w-3.5" />
+            </ToolBtn>
+            <ToolBtn active={editor.isActive("underline")} onClick={() => editor.chain().focus().toggleUnderline().run()} title="Understrek (⌘U)">
+              <UnderlineIcon className="h-3.5 w-3.5" />
+            </ToolBtn>
+            <ToolBtn active={editor.isActive("code")} onClick={() => editor.chain().focus().toggleCode().run()} title="Kode">
+              <Code className="h-3.5 w-3.5" />
+            </ToolBtn>
+          </>
+        )}
+
         <div className="ml-auto flex items-center gap-0.5">
           <div className="relative">
             <button
               type="button"
               onMouseDown={(e) => { e.preventDefault(); setShowEmoji((v) => !v); setShowGif(false); }}
               title="Emoji"
-              className="flex h-6 w-6 items-center justify-center rounded transition-colors text-zinc-500 hover:text-zinc-300"
+              className="nav-link flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+              style={{ color: "rgba(240,244,255,0.55)" }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/>
@@ -168,7 +187,8 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
               type="button"
               onMouseDown={(e) => { e.preventDefault(); setShowGif((v) => !v); setShowEmoji(false); }}
               title="Send GIF"
-              className="flex h-6 items-center justify-center rounded px-1 transition-colors text-zinc-500 hover:text-zinc-300"
+              className="nav-link flex h-7 items-center justify-center rounded-md px-1.5 transition-colors"
+              style={{ color: "rgba(240,244,255,0.55)" }}
             >
               <span className="text-[11px] font-bold leading-none">GIF</span>
             </button>
@@ -185,7 +205,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
         editor={editor}
         disabled={disabled}
         onKeyDown={handleKeyDown}
-        className="px-3 py-2 text-sm text-white"
+        className="px-3 pb-2.5 text-sm text-white"
       />
     </div>
   );
