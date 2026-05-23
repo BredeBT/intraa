@@ -1,9 +1,14 @@
-import NextAuth, { type DefaultSession } from "next-auth";
+import NextAuth, { CredentialsSignin, type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { db } from "@/server/db";
+import { verifyTotpCode } from "@/lib/totp";
 import { authConfig } from "./auth.config";
+
+// Spesifikke feilkoder slik at login-UI kan vise riktig melding
+class TotpRequiredError extends CredentialsSignin { code = "totp_required"; }
+class TotpInvalidError  extends CredentialsSignin { code = "totp_invalid";  }
 
 declare module "next-auth" {
   interface User {
@@ -37,6 +42,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         email:    { label: "E-post",  type: "email" },
         password: { label: "Passord", type: "password" },
+        totp:     { label: "2FA-kode", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
@@ -49,6 +55,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const valid = await bcrypt.compare(String(credentials.password), user.password);
         if (!valid) return null;
+
+        // 2FA-sjekk: hvis brukeren har TOTP aktivert, krever vi en gyldig kode
+        if (user.totpEnabled && user.totpSecret) {
+          const code = credentials.totp ? String(credentials.totp).trim() : "";
+          if (!code) throw new TotpRequiredError();
+          const validTotp = verifyTotpCode(code, user.totpSecret);
+          if (!validTotp) throw new TotpInvalidError();
+        }
 
         return {
           id:           user.id,

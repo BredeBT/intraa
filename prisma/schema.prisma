@@ -248,6 +248,12 @@ model User {
   longestStreak     Int       @default(0)
   lastStreakDay     DateTime?
 
+  // TOTP / 2FA — totpSecret er base32-encoded shared secret (kan stå plain,
+  // forsvar mot password-only-compromise er hovedpoenget).
+  totpSecret    String?
+  totpEnabled   Boolean   @default(false)
+  totpEnabledAt DateTime?
+
   memberships             Membership[]
   posts                   Post[]
   comments                Comment[]

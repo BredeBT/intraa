@@ -7,11 +7,12 @@ import { useRouter } from "next/navigation";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import ProfilTab from "./ProfilTab";
 
-type Tab = "profil" | "konto" | "fanpass" | "varsler" | "personvern";
+type Tab = "profil" | "konto" | "fanpass" | "sikkerhet" | "varsler" | "personvern";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "profil",     label: "Profil" },
   { id: "konto",      label: "Konto" },
+  { id: "sikkerhet",  label: "Sikkerhet" },
   { id: "fanpass",    label: "Fanpass" },
   { id: "varsler",    label: "Varsler" },
   { id: "personvern", label: "Personvern" },
@@ -544,6 +545,197 @@ function FanpassRow({ community: c }: { community: FanpassCommunity }) {
   );
 }
 
+// ─── Sikkerhet-tab (2FA / TOTP) ───────────────────────────────────────────────
+
+function SikkerhetTab() {
+  const [status,    setStatus]    = useState<{ totpEnabled: boolean } | null>(null);
+  const [setupData, setSetupData] = useState<{ secret: string; qrDataUrl: string } | null>(null);
+  const [code,      setCode]      = useState("");
+  const [busy,      setBusy]      = useState(false);
+  const [error,     setError]     = useState("");
+  const [success,   setSuccess]   = useState("");
+  const [disablePassword, setDisablePassword] = useState("");
+  const [showDisable, setShowDisable] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/user/security-status")
+      .then((r) => r.json() as Promise<{ totpEnabled: boolean }>)
+      .then(setStatus)
+      .catch(() => setStatus({ totpEnabled: false }));
+  }, []);
+
+  async function startSetup() {
+    setBusy(true); setError("");
+    const { setupTotp } = await import("@/server/actions/totp");
+    const res = await setupTotp();
+    setBusy(false);
+    if (!res.success) { setError(res.error); return; }
+    setSetupData({ secret: res.secret, qrDataUrl: res.qrDataUrl });
+  }
+
+  async function confirmEnable() {
+    setBusy(true); setError("");
+    const { enableTotp } = await import("@/server/actions/totp");
+    const res = await enableTotp(code);
+    setBusy(false);
+    if (!res.success) { setError(res.error); return; }
+    setSuccess("2FA er nå aktivert. Du må oppgi koden ved neste innlogging.");
+    setSetupData(null);
+    setCode("");
+    setStatus({ totpEnabled: true });
+  }
+
+  async function confirmDisable() {
+    setBusy(true); setError("");
+    const { disableTotp } = await import("@/server/actions/totp");
+    const res = await disableTotp(disablePassword);
+    setBusy(false);
+    if (!res.success) { setError(res.error); return; }
+    setSuccess("2FA er deaktivert.");
+    setShowDisable(false);
+    setDisablePassword("");
+    setStatus({ totpEnabled: false });
+  }
+
+  if (!status) return <div className="py-12 text-center text-sm" style={{ color: FS.muted }}>Laster…</div>;
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <h2 className="mb-1 text-base font-semibold" style={{ color: FS.text }}>To-faktor-autentisering (2FA)</h2>
+        <p className="text-sm" style={{ color: FS.muted }}>
+          Beskytt kontoen din med en ekstra kode fra autentiserings-appen din
+          (Google Authenticator, 1Password, Authy, osv).
+        </p>
+      </div>
+
+      {success && (
+        <div className="rounded-lg p-3 text-sm" style={{ background: `${FS.teal}10`, border: `1px solid ${FS.teal}30`, color: FS.teal }}>
+          {success}
+        </div>
+      )}
+      {error && (
+        <div className="rounded-lg p-3 text-sm" style={{ background: "#F8717110", border: "1px solid #F8717140", color: "#F87171" }}>
+          {error}
+        </div>
+      )}
+
+      {/* ── Aktiv: vis disable-knapp ── */}
+      {status.totpEnabled && !showDisable && (
+        <div
+          className="rounded-2xl p-5"
+          style={{ background: `${FS.teal}08`, border: `1px solid ${FS.teal}30` }}
+        >
+          <div className="mb-3 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: `${FS.teal}20`, color: FS.teal }}>✓</div>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: FS.text }}>2FA er aktivert</p>
+              <p className="text-xs" style={{ color: FS.muted }}>Innlogging krever nå koden fra autentiserings-appen.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => { setShowDisable(true); setError(""); setSuccess(""); }}
+            className="text-sm font-medium transition-opacity hover:opacity-80"
+            style={{ color: "#F87171" }}
+          >
+            Skru av 2FA
+          </button>
+        </div>
+      )}
+
+      {status.totpEnabled && showDisable && (
+        <div className="rounded-2xl p-5" style={{ background: FS.surface, border: `1px solid #F8717140` }}>
+          <p className="mb-3 text-sm font-semibold" style={{ color: FS.text }}>Bekreft med passord for å skru av 2FA</p>
+          <input
+            type="password"
+            value={disablePassword}
+            onChange={(e) => setDisablePassword(e.target.value)}
+            placeholder="Passordet ditt"
+            className="mb-3 w-full rounded-lg px-3 py-2 text-sm outline-none"
+            style={{ background: FS.surface2, border: `1px solid ${FS.line}`, color: FS.text }}
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => void confirmDisable()}
+              disabled={busy || !disablePassword}
+              className="rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+              style={{ background: "#F87171", color: "#fff" }}
+            >
+              {busy ? "Deaktiverer…" : "Bekreft deaktivering"}
+            </button>
+            <button
+              onClick={() => { setShowDisable(false); setDisablePassword(""); setError(""); }}
+              className="rounded-lg px-4 py-2 text-sm font-medium"
+              style={{ color: FS.muted }}
+            >
+              Avbryt
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Ikke aktiv: setup-flow ── */}
+      {!status.totpEnabled && !setupData && (
+        <button
+          onClick={() => void startSetup()}
+          disabled={busy}
+          className="self-start rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity disabled:opacity-50"
+          style={{ background: FS.teal, color: "#050816" }}
+        >
+          {busy ? "Genererer…" : "Sett opp 2FA"}
+        </button>
+      )}
+
+      {!status.totpEnabled && setupData && (
+        <div className="rounded-2xl p-5" style={{ background: FS.surface, border: `1px solid ${FS.line}` }}>
+          <ol className="space-y-5 text-sm" style={{ color: FS.text }}>
+            <li>
+              <p className="mb-2 font-semibold">1. Skann QR-koden i autentiserings-appen din</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={setupData.qrDataUrl} alt="QR-kode for 2FA" className="rounded-lg" style={{ background: "#fff", padding: 8 }} />
+              <p className="mt-2 text-xs" style={{ color: FS.subtle }}>
+                Kan ikke skanne? Skriv inn denne nøkkelen manuelt:
+                <br />
+                <code className="mt-1 inline-block break-all rounded px-2 py-1" style={{ background: FS.surface2, color: FS.teal, fontSize: 11 }}>{setupData.secret}</code>
+              </p>
+            </li>
+            <li>
+              <p className="mb-2 font-semibold">2. Skriv inn 6-sifret koden fra appen</p>
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                inputMode="numeric"
+                placeholder="000000"
+                className="w-32 rounded-lg px-3 py-2 text-center text-lg tracking-widest tabular-nums outline-none"
+                style={{ background: FS.surface2, border: `1px solid ${FS.line}`, color: FS.text }}
+                autoFocus
+              />
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => void confirmEnable()}
+                  disabled={busy || code.length !== 6}
+                  className="rounded-lg px-5 py-2 text-sm font-semibold disabled:opacity-50"
+                  style={{ background: FS.teal, color: "#050816" }}
+                >
+                  {busy ? "Verifiserer…" : "Aktiver 2FA"}
+                </button>
+                <button
+                  onClick={() => { setSetupData(null); setCode(""); setError(""); }}
+                  className="rounded-lg px-4 py-2 text-sm font-medium"
+                  style={{ color: FS.muted }}
+                >
+                  Avbryt
+                </button>
+              </div>
+            </li>
+          </ol>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function InnstillingerPage() {
@@ -567,6 +759,7 @@ export default function InnstillingerPage() {
       {tab === "profil"        && <ProfilTab />}
       {tab === "konto"         && <KontoTab />}
       {tab === "fanpass"       && <FanpassTab />}
+      {tab === "sikkerhet"     && <SikkerhetTab />}
       {tab === "varsler"       && <VarslerTab />}
       {tab === "personvern"    && <PersonvernTab />}
     </div>
