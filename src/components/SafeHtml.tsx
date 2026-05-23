@@ -4,28 +4,34 @@ const ALLOWED_TAGS = ["p", "br", "strong", "em", "u", "code", "pre", "s", "ul", 
 
 // Hex (#fff, #ffffff, #ffffffff), rgb()/rgba(), eller fargenavn (red, mediumseagreen).
 const SAFE_COLOR_RE = /^(#[0-9a-f]{3,8}|rgb\([^)]+\)|rgba\([^)]+\)|[a-z]+)$/i;
+// CSS-størrelser: 14px, 1.5em, 1.2rem, 150% — caps på 5em så ingen sprenger layouten.
+const SAFE_SIZE_RE  = /^(?:0?\.[0-9]+|[0-4](?:\.[0-9]+)?|5)(?:px|em|rem|%)$/i;
 
 const IS_HTML = /<[a-z][\s\S]*>/i;
 
 function sanitize(html: string) {
-  // Bruk en sanitizer-hook for å strippe alle style-attributter unntatt
-  // sikre `color: <verdi>` deklarasjoner. Kjører både server- og client-side.
+  // Bruk DOMPurify til tag-/attributt-stripping, deretter post-process
+  // style-attributter for å beholde kun trygge color/font-size-verdier.
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS,
     ALLOWED_ATTR: ["style"],
-    // isomorphic-dompurify har attribute-hook-støtte via "hooks" via
-    // .addHook() — men det er globalt. Tryggere: bruk uses-profile-config
-    // og post-process style-verdier.
     KEEP_CONTENT: true,
-    // Tillater bare style-egenskapen, og kun color-verdier validert under.
-    FORBID_ATTR: [],
   }).replace(/\sstyle="([^"]*)"/gi, (_match, raw: string) => {
-    // Plukk ut "color: X" og kast resten
-    const m = raw.match(/(?:^|;)\s*color\s*:\s*([^;]+)/i);
-    if (!m) return "";
-    const value = m[1]!.trim();
-    if (!SAFE_COLOR_RE.test(value)) return "";
-    return ` style="color: ${value}"`;
+    const safe: string[] = [];
+
+    const colorMatch = raw.match(/(?:^|;)\s*color\s*:\s*([^;]+)/i);
+    if (colorMatch) {
+      const val = colorMatch[1]!.trim();
+      if (SAFE_COLOR_RE.test(val)) safe.push(`color: ${val}`);
+    }
+
+    const sizeMatch = raw.match(/(?:^|;)\s*font-size\s*:\s*([^;]+)/i);
+    if (sizeMatch) {
+      const val = sizeMatch[1]!.trim();
+      if (SAFE_SIZE_RE.test(val)) safe.push(`font-size: ${val}`);
+    }
+
+    return safe.length > 0 ? ` style="${safe.join("; ")}"` : "";
   });
 }
 

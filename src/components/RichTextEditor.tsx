@@ -5,9 +5,9 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
-import { TextStyle } from "@tiptap/extension-text-style";
+import { TextStyle, FontSize } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
-import { Bold, Italic, Underline as UnderlineIcon, Code, Type, List, ListOrdered, Palette } from "lucide-react";
+import { Bold, Italic, Underline as UnderlineIcon, Code, Type, List, ListOrdered, Palette, ChevronDown } from "lucide-react";
 import { GifPicker } from "./GifPicker";
 import { EmojiPicker } from "./EmojiPicker";
 
@@ -70,6 +70,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
       Underline,
       TextStyle,
       Color,
+      FontSize,
       Placeholder.configure({ placeholder }),
     ],
     editorProps: {
@@ -88,6 +89,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
   const [showGif,     setShowGif]     = useState(false);
   const [showFormat,  setShowFormat]  = useState(showFormatByDefault);
   const [showColor,   setShowColor]   = useState(false);
+  const [showSize,    setShowSize]    = useState(false);
 
   // Aurora-palette + nøytrale farger for tekstfarge-velgeren
   const COLORS = [
@@ -99,6 +101,16 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
     { name: "Gull",     value: "#FBBF24",  hex: "#FBBF24" },
     { name: "Rose",     value: "#F87171",  hex: "#F87171" },
   ];
+
+  // Tekststørrelser — kun et fåtall, lett å velge
+  const SIZES = [
+    { name: "Liten",         value: "0.85em" },
+    { name: "Normal",        value: null     },
+    { name: "Overskrift",    value: "1.35em" },
+    { name: "Stor overskrift", value: "1.7em"  },
+  ];
+  const currentSize = editor?.getAttributes("textStyle").fontSize as string | undefined;
+  const currentSizeLabel = SIZES.find((s) => s.value === currentSize)?.name ?? (currentSize ? "Tilpasset" : "Normal");
 
   const handleEmojiSelect = useCallback((emoji: string) => {
     editor?.commands.insertContent(emoji);
@@ -209,6 +221,51 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
             <ToolBtn active={editor.isActive("code")} onClick={() => editor.chain().focus().toggleCode().run()} title="Kode">
               <Code className="h-3.5 w-3.5" />
             </ToolBtn>
+            <span className="mx-0.5 h-4 w-px" style={{ background: "rgba(240,244,255,0.08)" }} />
+            {/* Tekststørrelse-dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); setShowSize((v) => !v); setShowColor(false); }}
+                title="Tekststørrelse"
+                className="nav-link flex h-7 items-center gap-0.5 rounded-md px-2 transition-colors"
+                style={{ color: "rgba(240,244,255,0.55)" }}
+              >
+                <span className="text-[11px] font-semibold leading-none whitespace-nowrap">{currentSizeLabel}</span>
+                <ChevronDown className="h-3 w-3" />
+              </button>
+              {showSize && (
+                <div
+                  className="absolute left-0 top-full z-50 mt-1 flex w-44 flex-col rounded-lg p-1 shadow-2xl"
+                  style={{ background: "#0B1027", border: "1px solid rgba(240,244,255,0.08)" }}
+                >
+                  {SIZES.map((s) => {
+                    const active = (currentSize ?? null) === s.value;
+                    return (
+                      <button
+                        key={s.name}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          if (s.value === null) editor.chain().focus().unsetFontSize().run();
+                          else                  editor.chain().focus().setFontSize(s.value).run();
+                          setShowSize(false);
+                        }}
+                        className="flex items-center justify-between rounded px-2.5 py-1.5 text-left transition-colors hover:bg-white/[0.06]"
+                        style={{
+                          color: active ? "#5EEAD4" : "#F0F4FF",
+                          fontSize: s.value ?? "1em",
+                        }}
+                      >
+                        <span className="font-medium">{s.name}</span>
+                        {active && <span className="text-xs">✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             <span className="mx-0.5 h-4 w-px" style={{ background: "rgba(240,244,255,0.08)" }} />
             {/* Color-picker — popover med Aurora-palette */}
             <div className="relative">
