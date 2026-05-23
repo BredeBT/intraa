@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect, memo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Check, Upload, X, Loader2, Image as ImageIcon, Plus, Info,
-  Users, Coins, Crown, MessageSquare,
+  Users, Coins, Crown, MessageSquare, AlertTriangle,
 } from "lucide-react";
 import {
   COMPANY_FEATURES, COMMUNITY_FEATURES, FEATURE_LABELS, FEATURE_DESCRIPTIONS,
@@ -36,7 +36,7 @@ const S = {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = "generelt" | "tilgang" | "utseende" | "funksjoner" | "shop" | "statistikk";
+type Tab = "generelt" | "tilgang" | "utseende" | "funksjoner" | "shop" | "statistikk" | "faresone";
 type OrgType = "COMPANY" | "COMMUNITY";
 type MemberRole = "OWNER" | "ADMIN" | "MODERATOR" | "VIP" | "MEMBER";
 
@@ -112,13 +112,14 @@ const FONT_OPTIONS = [
   { value: "mono",    label: "Monospace", desc: "JetBrains Mono" },
 ];
 
-const TABS: { id: Tab; label: string }[] = [
+const TABS: { id: Tab; label: string; danger?: boolean; ownerOnly?: boolean }[] = [
   { id: "generelt",   label: "Generelt"   },
   { id: "tilgang",    label: "Tilgang"    },
   { id: "utseende",   label: "Utseende"   },
   { id: "funksjoner", label: "Funksjoner" },
   { id: "shop",       label: "Shop"       },
   { id: "statistikk", label: "Statistikk" },
+  { id: "faresone",   label: "Faresone", danger: true, ownerOnly: true },
 ];
 
 const PLAN_LABELS: Record<string, string> = {
@@ -654,7 +655,7 @@ export default function InnstillingerClient({
 }: Props) {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const validTabs: Tab[] = ["generelt", "tilgang", "utseende", "funksjoner", "shop", "statistikk"];
+  const validTabs: Tab[] = ["generelt", "tilgang", "utseende", "funksjoner", "shop", "statistikk", "faresone"];
   const activeTab = validTabs.includes(searchParams.get("tab") as Tab)
     ? (searchParams.get("tab") as Tab)
     : (validTabs.includes(initialTab as Tab) ? (initialTab as Tab) : "generelt");
@@ -792,22 +793,25 @@ export default function InnstillingerClient({
     <div className="px-4 py-5 md:px-6 md:py-8" style={{ color: S.text }}>
       <h1 className="mb-6 text-xl font-semibold" style={{ color: S.text }}>Innstillinger</h1>
 
-      {/* Tabs */}
+      {/* Tabs — wrap på mobil (ingen horisontal scroll), strekker seg på desktop */}
       <div
-        className="mb-8 flex gap-1 overflow-x-auto rounded-xl p-1"
+        className="mb-8 flex flex-wrap gap-1 rounded-xl p-1 md:flex-nowrap"
         style={{ background: S.surface, border: `1px solid ${S.line}` }}
       >
-        {TABS.map((t) => {
+        {TABS.filter((t) => !t.ownerOnly || isOwner).map((t) => {
           const active = activeTab === t.id;
+          const accent = t.danger ? S.rose : S.teal;
           return (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className="flex-1 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+              className="flex-1 min-w-[44%] whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:min-w-0 md:flex-1 md:px-4"
               style={{
                 background: active ? S.surface2 : "transparent",
-                color:      active ? S.text     : S.muted,
-                boxShadow:  active ? `inset 0 0 0 1px ${S.teal}40` : undefined,
+                color:      active
+                  ? (t.danger ? S.rose : S.text)
+                  : (t.danger ? S.rose : S.muted),
+                boxShadow:  active ? `inset 0 0 0 1px ${accent}40` : undefined,
               }}
             >
               {t.label}
@@ -1181,6 +1185,41 @@ export default function InnstillingerClient({
       {/* ══ TAB: STATISTIKK ══ */}
       {activeTab === "statistikk" && (
         <StatistikkTab stats={stats} accessMode={org.accessMode} />
+      )}
+
+      {/* ══ TAB: FARESONE (kun OWNER) ══ */}
+      {activeTab === "faresone" && isOwner && (
+        <div className="max-w-xl">
+          <div className="mb-6 flex items-start gap-2">
+            <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" style={{ color: S.rose }} />
+            <div>
+              <h3 className="text-sm font-semibold" style={{ color: S.text }}>Faresone</h3>
+              <p className="mt-0.5 text-xs" style={{ color: S.muted }}>
+                Handlinger her kan ikke angres. Vær forsiktig.
+              </p>
+            </div>
+          </div>
+
+          <div
+            className="rounded-xl p-5"
+            style={{ background: `${S.rose}08`, border: `1px solid ${S.rose}30` }}
+          >
+            <h4 className="mb-1 text-sm font-semibold" style={{ color: S.rose }}>
+              Slett organisasjon
+            </h4>
+            <p className="mb-4 text-xs" style={{ color: S.muted }}>
+              Dette vil permanent slette alle data tilknyttet organisasjonen — medlemmer,
+              kanaler, meldinger, coins, Fanpass-historikk og filer. Handlingen kan ikke angres.
+            </p>
+            <button
+              disabled
+              className="rounded-lg px-4 py-2 text-sm font-semibold cursor-not-allowed"
+              style={{ background: `${S.rose}20`, color: S.rose, opacity: 0.6 }}
+            >
+              Slett organisasjon — kontakt Intraa support
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

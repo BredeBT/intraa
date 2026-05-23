@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, UserCog, SlidersHorizontal,
-  AlertTriangle, ArrowLeft,
+  LayoutDashboard, UserCog, Settings,
+  ArrowLeft,
 } from "lucide-react";
 import { useOrg } from "@/lib/context/OrgContext";
 import { useUser } from "@/lib/hooks/useUser";
@@ -18,20 +18,18 @@ const S = {
   muted:    "rgba(240,244,255,0.6)",
   subtle:   "rgba(240,244,255,0.4)",
   teal:     "#5EEAD4",
-  rose:     "#F87171",
 } as const;
 
 const ADMIN_NAV = [
-  { href: "/admin",               label: "Oversikt",      icon: LayoutDashboard  },
-  { href: "/admin/brukere",       label: "Brukere",       icon: UserCog          },
-  { href: "/admin/innstillinger", label: "Innstillinger", icon: SlidersHorizontal },
+  { href: "/admin",               label: "Oversikt",      icon: LayoutDashboard },
+  { href: "/admin/brukere",       label: "Brukere",       icon: UserCog         },
+  { href: "/admin/innstillinger", label: "Innstillinger", icon: Settings        },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const pathname  = usePathname();
-  const { org }   = useOrg();
-  const { user }  = useUser();
-  const isOwner   = org?.userRole === "OWNER";
+  const pathname = usePathname();
+  const { org }  = useOrg();
+  const { user } = useUser();
 
   return (
     <div className="flex flex-col md:flex-row min-h-[calc(100dvh-7rem)] md:min-h-[calc(100dvh-3.5rem)]">
@@ -74,23 +72,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             );
           })}
 
-          {isOwner && (
-            <>
-              <div className="my-2" style={{ borderTop: `1px solid ${S.line}` }} />
-              <Link
-                href="/admin/faresone"
-                className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors"
-                style={{
-                  background: pathname === "/admin/faresone" ? `${S.rose}15` : "transparent",
-                  color:      S.rose,
-                  boxShadow:  pathname === "/admin/faresone" ? `inset 0 0 0 1px ${S.rose}40` : undefined,
-                }}
-              >
-                <AlertTriangle className="h-4 w-4 shrink-0" />
-                Faresone
-              </Link>
-            </>
-          )}
         </div>
 
         {/* User info at bottom */}
@@ -107,56 +88,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* Mobile tab bar — horizontal scrollable, hidden on desktop */}
+      {/* Mobile tab bar — 3 items, fits uten scroll */}
       <div className="shrink-0 md:hidden" style={{ background: S.surface, borderBottom: `1px solid ${S.line}` }}>
-        <div className="flex items-center gap-1.5 px-3 pt-2 pb-1">
+        <div className="flex items-center gap-2 px-3 py-2">
           <Link
             href="/feed"
-            className="shrink-0 flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors"
-            style={{ color: S.subtle }}
+            className="shrink-0 flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+            style={{ background: S.surface2, color: S.muted }}
+            aria-label="Tilbake til feed"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-4 w-4" />
           </Link>
-          <div className="relative flex-1 overflow-hidden">
-            <div className="flex overflow-x-auto gap-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {ADMIN_NAV.map(({ href, label, icon: Icon }) => {
-                const active = pathname === href;
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="shrink-0 flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors"
-                    style={{
-                      background: active ? S.surface2 : "transparent",
-                      color:      active ? S.text     : S.muted,
-                      boxShadow:  active ? `inset 0 0 0 1px ${S.teal}40` : undefined,
-                    }}
-                  >
-                    <Icon className="h-3.5 w-3.5 shrink-0" />
-                    <span className="hidden sm:inline">{label}</span>
-                  </Link>
-                );
-              })}
-              {isOwner && (
-                <Link
-                  href="/admin/faresone"
-                  className="shrink-0 flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors"
-                  style={{
-                    background: pathname === "/admin/faresone" ? `${S.rose}15` : "transparent",
-                    color:      S.rose,
-                  }}
-                >
-                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                  <span className="hidden sm:inline">Faresone</span>
-                </Link>
-              )}
-            </div>
-            {/* Fade hint for scroll */}
-            <div
-              className="pointer-events-none absolute right-0 top-0 h-full w-6"
-              style={{ background: `linear-gradient(to left, ${S.surface}, transparent)` }}
-            />
-          </div>
+          {ADMIN_NAV.map(({ href, label, icon: Icon }) => {
+            const active = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition-colors"
+                style={{
+                  background: active ? S.surface2 : "transparent",
+                  color:      active ? S.text     : S.muted,
+                  boxShadow:  active ? `inset 0 0 0 1px ${S.teal}40` : undefined,
+                }}
+                aria-label={label}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="truncate">{label}</span>
+              </Link>
+            );
+          })}
         </div>
       </div>
 
