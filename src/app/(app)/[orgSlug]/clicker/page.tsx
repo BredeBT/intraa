@@ -626,15 +626,15 @@ export default function ClickerPage() {
       )}
 
       {/* Coin counter */}
-      <div className="mb-1 flex items-baseline gap-2">
+      <div className="mb-0.5 flex items-baseline gap-2">
         <span
-          className="tabular-nums text-white leading-none"
-          style={{ fontSize: 52, fontWeight: 700, letterSpacing: "-2px" }}
+          className="tabular-nums text-white leading-none text-[40px] md:text-[52px]"
+          style={{ fontWeight: 700, letterSpacing: "-2px" }}
         >
           {fmt(displayCoins)}
         </span>
       </div>
-      <p className="mb-1 text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>coins</p>
+      <p className="mb-1 text-xs md:text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>coins</p>
 
       {/* Fanpass badges */}
       {(hasFanpass || profile.permanentBonus > 1) && (
@@ -667,7 +667,7 @@ export default function ClickerPage() {
       )}
 
       {/* Stats row */}
-      <div className="mb-7 flex gap-6">
+      <div className="mb-3 md:mb-7 flex gap-5 md:gap-6">
         <div className="flex items-center gap-1.5">
           <Zap className="h-4 w-4" style={{ color: "#fbbf24" }} />
           <span className="text-sm font-semibold text-white">{fmt(effectiveCpc)}</span>
@@ -681,7 +681,7 @@ export default function ClickerPage() {
       </div>
 
       {/* ─── Hovedsirkel — sentralt og dramatisk ─────────────────────────── */}
-      <div className="relative mb-5 flex h-[340px] w-[340px] items-center justify-center">
+      <div className="relative mb-4 md:mb-5 flex h-[260px] w-[260px] md:h-[340px] md:w-[340px] items-center justify-center">
         {/* World-themed radial glow bak alt */}
         <div
           aria-hidden
@@ -692,25 +692,16 @@ export default function ClickerPage() {
           }}
         />
 
-        {/* Ytre pulserende ring (svak, kontinuerlig) */}
+        {/* Ytre pulserende ringer (kun når passiv inntekt finnes) */}
         {effectiveCps > 0 && (
           <>
             <div
-              className="pulse-ring pointer-events-none absolute rounded-full"
-              style={{
-                width: 320, height: 320,
-                border: `2px solid ${wColor}50`,
-                animationDuration: "2.4s",
-              }}
+              className="pulse-ring pointer-events-none absolute rounded-full h-[240px] w-[240px] md:h-[320px] md:w-[320px]"
+              style={{ border: `2px solid ${wColor}50`, animationDuration: "2.4s" }}
             />
             <div
-              className="pulse-ring pointer-events-none absolute rounded-full"
-              style={{
-                width: 280, height: 280,
-                border: `2px solid ${wColor}30`,
-                animationDuration: "2.4s",
-                animationDelay: "0.6s",
-              }}
+              className="pulse-ring pointer-events-none absolute rounded-full h-[210px] w-[210px] md:h-[280px] md:w-[280px]"
+              style={{ border: `2px solid ${wColor}30`, animationDuration: "2.4s", animationDelay: "0.6s" }}
             />
           </>
         )}
@@ -732,7 +723,6 @@ export default function ClickerPage() {
           onClick={handleClick}
           aria-label={`Klikk for å tjene ${fmt(effectiveCpc)} coins`}
           style={{
-            width: 240, height: 240,
             background:    `radial-gradient(circle at 35% 30%, ${wColor}, ${wColor}cc 70%)`,
             borderRadius:  "50%",
             touchAction:   "manipulation",
@@ -745,13 +735,16 @@ export default function ClickerPage() {
             `,
             border: `3px solid ${wColor}`,
           }}
-          className="relative z-10 flex select-none items-center justify-center active:scale-[0.94] hover:brightness-110 hover:scale-[1.02]"
+          className="relative z-10 flex select-none items-center justify-center active:scale-[0.94] hover:brightness-110 hover:scale-[1.02] h-[190px] w-[190px] md:h-[240px] md:w-[240px]"
         >
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt="" className="h-40 w-40 rounded-full object-cover" />
+            <img src={logoUrl} alt="" className="rounded-full object-cover h-[130px] w-[130px] md:h-40 md:w-40" />
           ) : (
-            <span style={{ fontSize: 88, lineHeight: 1, filter: `drop-shadow(0 4px 12px rgba(0,0,0,0.5))` }}>
+            <span
+              className="text-[68px] md:text-[88px]"
+              style={{ lineHeight: 1, filter: `drop-shadow(0 4px 12px rgba(0,0,0,0.5))` }}
+            >
               {worldDef.emoji}
             </span>
           )}
@@ -1279,7 +1272,7 @@ export default function ClickerPage() {
       </div>
 
       {/* Centre — Game */}
-      <div className={`${mobileTab === "klikker" ? "flex" : "hidden"} md:flex flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-6 md:px-8`}>
+      <div className={`${mobileTab === "klikker" ? "flex" : "hidden"} md:flex flex-1 flex-col items-center md:justify-center overflow-y-auto px-4 pt-4 pb-6 md:px-8 md:py-6`}>
         {ClickPanel}
       </div>
 
