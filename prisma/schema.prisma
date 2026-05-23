@@ -240,6 +240,7 @@ model User {
   passwordResetToken   String?   @unique
   passwordResetExpires DateTime?
   emailConsent         Boolean   @default(true)
+  onboardingDismissedAt DateTime?  // null = creator onboarding-checklist vises på /home
 
   memberships             Membership[]
   posts                   Post[]

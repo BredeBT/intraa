@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { getOnboardingProgress } from "@/server/actions/onboarding";
 import HomeClient from "./HomeClient";
 
 export const dynamic   = "force-dynamic";
@@ -15,7 +16,7 @@ export default async function HomePage() {
   const weekAgo     = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
-  const [myMemberships, allCommunities, friendships, pendingRequests] = await Promise.all([
+  const [myMemberships, allCommunities, friendships, pendingRequests, onboarding] = await Promise.all([
     db.membership.findMany({
       where:   { userId },
       include: {
@@ -58,6 +59,8 @@ export default async function HomePage() {
       where:   { receiverId: userId, status: "PENDING" },
       include: { sender: { select: { id: true, name: true, avatarUrl: true, bio: true } } },
     }),
+
+    getOnboardingProgress(),
   ]);
 
   const myOrgIds   = myMemberships.map((m) => m.organizationId);
@@ -141,6 +144,7 @@ export default async function HomePage() {
       recommendedCommunities={recommendedCommunities}
       friends={friends}
       pendingRequests={pendingRequests.map((r) => ({ id: r.id, sender: r.sender }))}
+      onboarding={onboarding}
     />
   );
 }

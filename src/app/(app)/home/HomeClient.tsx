@@ -4,6 +4,8 @@ import { useState, useTransition, useEffect, CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, Check, X } from "lucide-react";
+import type { OnboardingProgress } from "@/server/actions/onboarding";
+import OnboardingChecklist from "./OnboardingChecklist";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,6 +40,7 @@ interface Props {
   recommendedCommunities: Community[];
   friends:                FriendItem[];
   pendingRequests:        PendingRequest[];
+  onboarding:             OnboardingProgress | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -397,6 +400,7 @@ export default function HomeClient({
   recommendedCommunities,
   friends,
   pendingRequests: initialRequests,
+  onboarding,
 }: Props) {
   const [requests, setRequests] = useState(initialRequests);
   const [, start]               = useTransition();
@@ -414,9 +418,15 @@ export default function HomeClient({
     });
   }
 
+  // Creator uten community: vis onboarding-checklist øverst over NewUserHome
   if (myCommunities.length === 0) {
     return (
       <div className="min-h-screen" style={{ background: "#050816" }}>
+        {onboarding && (
+          <div className="mx-auto max-w-2xl px-4 pt-6">
+            <OnboardingChecklist progress={onboarding} />
+          </div>
+        )}
         <NewUserHome communities={recommendedCommunities} />
       </div>
     );
@@ -425,6 +435,11 @@ export default function HomeClient({
   return (
     <div className="min-h-screen px-4 py-6" style={{ background: "#050816" }}>
       <div className="mx-auto max-w-5xl">
+        {onboarding && (
+          <div style={fadeStyle(0)}>
+            <OnboardingChecklist progress={onboarding} />
+          </div>
+        )}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_260px]">
 
           {/* ── Left — community list ── */}
