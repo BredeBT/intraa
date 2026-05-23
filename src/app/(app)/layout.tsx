@@ -594,7 +594,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <WebRTCProvider userId={user?.id ?? ""} userName={user?.name ?? undefined}>
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-[100dvh] bg-zinc-950 text-white">
       {/* Desktop sidebar — hidden when in admin (admin has its own) */}
       <aside className={`fixed left-0 top-0 z-30 hidden h-screen flex-col border-r border-zinc-800 bg-zinc-900 transition-all duration-200 ease-in-out md:flex ${sidebarW}`}>
         {!inAdmin && !inBrand && <SidebarContent {...sidebarProps} />}
@@ -617,9 +617,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Main content */}
-      <div className={`flex min-h-screen min-w-0 flex-col transition-all duration-200 ease-in-out ${mainPl}`}>
-        {/* Header */}
-        <header className="flex items-center gap-3 border-b border-zinc-800 bg-zinc-900 px-4 pt-[env(safe-area-inset-top)] min-h-14">
+      <div className={`flex min-h-[100dvh] min-w-0 flex-col transition-all duration-200 ease-in-out ${mainPl}`}>
+        {/* Header — bruker max(env(),12px) slik at iOS-statuslinjen aldri overlapper
+            content, og fallback finnes hvis env() rapporteres som 0. */}
+        <header
+          className="flex items-center gap-3 border-b border-zinc-800 bg-zinc-900 px-4 min-h-14"
+          style={{ paddingTop: "max(env(safe-area-inset-top), 0.75rem)" }}
+        >
           {/* Left: title */}
           <div className="flex shrink-0 items-center md:w-36">
             <span className="truncate text-sm font-semibold text-white">{title}</span>
@@ -645,7 +649,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">
+        <main className="min-w-0 flex-1 pb-[calc(3.5rem+max(env(safe-area-inset-bottom),0.5rem))] md:pb-0">
           {user?.isSuperAdmin && (
             <Suspense>
               <SuperAdminBanner />

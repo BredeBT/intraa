@@ -18,7 +18,16 @@ export default function BottomBar({ pathname, unreadCount, isCommunity, onSearch
     pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-14 items-center justify-around border-t border-zinc-800 bg-zinc-900 pb-[env(safe-area-inset-bottom)] md:hidden">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-40 flex min-h-14 items-center justify-around border-t border-zinc-800 bg-zinc-900 md:hidden"
+      style={{
+        // iOS home-indikator dekker ~20-30px nederst. Bruker max() med fallback
+        // slik at content ikke ligger oppi den selv hvis env() rapporteres som 0.
+        // Padding ligger UTENPÅ content (i tillegg til min-h-14), så icons har
+        // alltid 56px arbeidsrom uavhengig av safe-area.
+        paddingBottom: "max(env(safe-area-inset-bottom), 0.5rem)",
+      }}
+    >
       {/* Home */}
       <Link href="/home" className={`flex flex-col items-center gap-0.5 px-4 py-1 ${isActive("/home") ? accent : "text-zinc-500"}`}>
         <Home className="h-5 w-5" />
