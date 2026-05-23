@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import UserMenu from "@/components/UserMenu";
 import NotificationBell from "@/components/NotificationBell";
+import StreakBadge from "@/components/StreakBadge";
 import SearchOverlay from "@/components/SearchOverlay";
 import BottomBar from "@/components/BottomBar";
 import MobileDrawer from "@/components/MobileDrawer";
@@ -639,7 +640,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Right: actions */}
-          <div className="ml-auto flex shrink-0 items-center gap-2 md:w-36 md:justify-end">
+          <div className="ml-auto flex shrink-0 items-center gap-2 md:w-auto md:justify-end">
+            <StreakBadge />
             <NotificationBell />
             <UserMenu />
           </div>

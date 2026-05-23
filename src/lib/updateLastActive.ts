@@ -1,4 +1,5 @@
 import { db } from "@/server/db";
+import { bumpStreak } from "@/lib/dailyStreak";
 
 // In-memory throttle — avoids hitting the DB on every request per user.
 // Good enough for single-process; Vercel may spin up multiple instances,
@@ -13,6 +14,9 @@ export async function updateLastActive(userId: string): Promise<void> {
   _cache.set(userId, now);
   try {
     await db.user.update({ where: { id: userId }, data: { lastActive: new Date() } });
+    // Daglig streak — bumpStreak er idempotent per dag, så ingen risiko for
+    // dobbeltbump selv om denne callen skjer ofte.
+    void bumpStreak(userId);
   } catch {
     // Non-critical — don't surface errors to callers
   }
