@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, memo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Check, Upload, X, Loader2, Image as ImageIcon, Plus, Info,
@@ -195,9 +195,14 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   return <label className="mb-1.5 block text-xs font-medium" style={{ color: S.muted }}>{children}</label>;
 }
 
-function inputStyle(): React.CSSProperties {
-  return { background: S.surface2, border: `1px solid ${S.lineHi}`, color: S.text };
-}
+// Pre-allokerte stil-objekter slik at vi ikke lager nye på hver render
+const INPUT_STYLE: React.CSSProperties = { background: S.surface2, border: `1px solid ${S.lineHi}`, color: S.text };
+const FIELD_LABEL_STYLE: React.CSSProperties = { color: S.muted };
+const SUBTLE_TEXT_STYLE: React.CSSProperties = { color: S.subtle };
+const TEXT_STYLE: React.CSSProperties = { color: S.text };
+const MUTED_TEXT_STYLE: React.CSSProperties = { color: S.muted };
+const ROSE_TEXT_STYLE: React.CSSProperties = { color: S.rose };
+function inputStyle(): React.CSSProperties { return INPUT_STYLE; }
 
 function PrimaryButton({
   onClick, disabled, children,
@@ -287,7 +292,7 @@ interface ShopItemRow {
   enabled:       boolean;
 }
 
-function ShopAdminTab({ orgId }: { orgId: string }) {
+const ShopAdminTab = memo(function ShopAdminTabImpl({ orgId }: { orgId: string }) {
   const [items,   setItems]   = useState<ShopItemRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState<string | null>(null);
@@ -460,7 +465,7 @@ function ShopAdminTab({ orgId }: { orgId: string }) {
       </Section>
     </div>
   );
-}
+});
 
 // ─── Statistikk-tab ───────────────────────────────────────────────────────────
 
@@ -490,7 +495,7 @@ function StatCard({
   );
 }
 
-function Sparkline({ data, color, height = 60 }: { data: number[]; color: string; height?: number }) {
+const Sparkline = memo(function SparklineImpl({ data, color, height = 60 }: { data: number[]; color: string; height?: number }) {
   if (data.length < 2) {
     return <div className="text-xs" style={{ color: S.subtle, height }}>Ikke nok data ennå</div>;
   }
@@ -511,7 +516,7 @@ function Sparkline({ data, color, height = 60 }: { data: number[]; color: string
       <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
     </svg>
   );
-}
+});
 
 function ChartCard({
   title, sub, data, color, suffix,
@@ -554,7 +559,7 @@ function ChartCard({
   );
 }
 
-function StatistikkTab({ stats, accessMode }: { stats: OrgStats; accessMode: string }) {
+const StatistikkTab = memo(function StatistikkTabImpl({ stats, accessMode }: { stats: OrgStats; accessMode: string }) {
   const fanpassEnabled = accessMode !== "OPEN";
   const monthlyRevenue = stats.activeFanpass * 49;
 
@@ -630,7 +635,7 @@ function StatistikkTab({ stats, accessMode }: { stats: OrgStats; accessMode: str
       </Section>
     </div>
   );
-}
+});
 
 function MiniStat({ label, value }: { label: string; value: number }) {
   return (
