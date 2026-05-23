@@ -88,6 +88,7 @@ export async function PATCH(request: Request) {
   const response = NextResponse.json(orgToJson(membership.organization, membership.role));
   response.cookies.set("selected_org", slug, {
     httpOnly: true,
+    secure:   process.env.NODE_ENV === "production",
     path:     "/",
     sameSite: "lax",
     maxAge:   60 * 60 * 24 * 30,   // 30 days

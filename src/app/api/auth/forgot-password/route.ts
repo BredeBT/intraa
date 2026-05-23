@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/server/db";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { rateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
+  // Streng rate-limit — denne kaller sendPasswordResetEmail (kost penger + spam)
+  const limited = rateLimit(request, { key: "forgot-password", max: 5, windowMs: 15 * 60_000 });
+  if (limited) return limited;
+
   try {
     const body = await request.json() as { email?: string };
     const email = body.email?.trim().toLowerCase();

@@ -4,7 +4,8 @@ import { db } from "@/server/db";
 
 /** Build a deterministic token from userId + secret so we don't need to store it. */
 function buildUnsubToken(userId: string) {
-  const secret = process.env.NEXTAUTH_SECRET ?? "fallback-secret";
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("AUTH_SECRET er ikke konfigurert");
   return crypto.createHmac("sha256", secret).update(userId).digest("hex");
 }
 
@@ -22,7 +23,10 @@ export async function GET(request: NextRequest) {
   }
 
   const expected = buildUnsubToken(id);
-  if (token !== expected) {
+  // Constant-time-compare for å unngå timing-attack
+  const tokenBuf    = Buffer.from(token);
+  const expectedBuf = Buffer.from(expected);
+  if (tokenBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(tokenBuf, expectedBuf)) {
     return NextResponse.redirect(new URL("/avmeldt?error=1", request.url));
   }
 

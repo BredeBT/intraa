@@ -3,6 +3,13 @@ import bcrypt from "bcryptjs";
 import { db } from "@/server/db";
 import { validateUsername } from "@/lib/bannedUsernames";
 import { sendWelcomeEmail } from "@/lib/email";
+import { rateLimit } from "@/lib/rateLimit";
+
+const MAX_NAME_LEN     = 80;
+const MAX_USERNAME_LEN = 30;
+const MAX_BRAND_LEN    = 80;
+const MAX_DESC_LEN     = 500;
+const MAX_URL_LEN      = 200;
 
 function brandSlugify(s: string) {
   return s.trim().toLowerCase()
@@ -13,6 +20,10 @@ function brandSlugify(s: string) {
 }
 
 export async function POST(request: NextRequest) {
+  // Hindre masse-registrering / spam
+  const limited = rateLimit(request, { key: "register", max: 5, windowMs: 60 * 60_000 });
+  if (limited) return limited;
+
   try {
     const body = await request.json() as {
       name?:        string;
@@ -33,8 +44,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Mangler påkrevde felt" }, { status: 400 });
     }
 
+    // Lengdebegrensninger så ingen kan poste 10MB i registrering
+    if (name.length > MAX_NAME_LEN || username.length > MAX_USERNAME_LEN
+        || email.length > 254 || password.length > 200) {
+      return NextResponse.json({ error: "Felt for langt" }, { status: 400 });
+    }
+
     if (userType === "SPONSOR" && !brandName?.trim()) {
       return NextResponse.json({ error: "Brand-navn er påkrevd for sponsor-kontoer" }, { status: 400 });
+    }
+    if (userType === "SPONSOR" && (
+      (brandName    && brandName.length    > MAX_BRAND_LEN) ||
+      (brandWebsite && brandWebsite.length > MAX_URL_LEN)   ||
+      (brandDescription && brandDescription.length > MAX_DESC_LEN)
+    )) {
+      return NextResponse.json({ error: "Sponsor-felt for langt" }, { status: 400 });
     }
 
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;

@@ -21,6 +21,11 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Ikke autorisert" }, { status: 403 });
   }
 
+  // Length-checks før vi når DB
+  if (name.length > 80 || slug.length > 60 || (description && description.length > 500)) {
+    return NextResponse.json({ error: "Felt for langt" }, { status: 400 });
+  }
+
   try {
     const updated = await db.organization.update({
       where: { id: orgId },

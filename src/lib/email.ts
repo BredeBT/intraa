@@ -7,7 +7,10 @@ import { PasswordResetEmail } from "@/emails/PasswordResetEmail";
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://intraa.net";
 
 function unsubUrl(userId: string) {
-  const secret = process.env.NEXTAUTH_SECRET ?? "fallback-secret";
+  // Krever AUTH_SECRET (NextAuth v5-konvensjon). Ingen fallback — hvis denne
+  // mangler, skal serveren krasje hardt så vi oppdager det umiddelbart.
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("AUTH_SECRET er ikke konfigurert");
   const token  = crypto.createHmac("sha256", secret).update(userId).digest("hex");
   return `${BASE_URL}/api/email/unsubscribe?id=${userId}&token=${token}`;
 }

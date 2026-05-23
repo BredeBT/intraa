@@ -30,6 +30,9 @@ export async function createOrganization(
   if (!name.trim() || !slug.trim()) {
     return { success: false, error: "Navn og slug er påkrevd" };
   }
+  if (name.length > 80 || slug.length > 60) {
+    return { success: false, error: "Navn eller slug for langt" };
+  }
 
   const slugClean = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-");
 
