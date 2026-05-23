@@ -7,12 +7,12 @@ import { useRouter } from "next/navigation";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import ProfilTab from "./ProfilTab";
 
-type Tab = "profil" | "konto" | "abonnement" | "varsler" | "personvern";
+type Tab = "profil" | "konto" | "fanpass" | "varsler" | "personvern";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "profil",     label: "Profil" },
   { id: "konto",      label: "Konto" },
-  { id: "abonnement", label: "Abonnement" },
+  { id: "fanpass",    label: "Fanpass" },
   { id: "varsler",    label: "Varsler" },
   { id: "personvern", label: "Personvern" },
 ];
@@ -386,89 +386,161 @@ function PersonvernTab() {
   );
 }
 
-// ─── Abonnement tab ───────────────────────────────────────────────────────────
+// ─── Fanpass tab ──────────────────────────────────────────────────────────────
 
-function AbonnementTab() {
-  const { user } = useUser();
-  const plan = (user as { plan?: string } | null)?.plan ?? "FREE";
-  const isPro = plan === "PRO" || plan === "ENTERPRISE";
+interface FanpassCommunity {
+  orgId:       string;
+  orgSlug:     string;
+  orgName:     string;
+  logoUrl:     string | null;
+  accessMode:  "OPEN" | "FREEMIUM" | "EXCLUSIVE";
+  hasFanpass:  boolean;
+  endDate:     string | null;
+  cancelled:   boolean;
+  paidAmount:  number;
+}
+
+const FS = {
+  surface:  "#0B1027",
+  surface2: "#131A35",
+  line:     "rgba(240,244,255,0.08)",
+  text:     "#F0F4FF",
+  muted:    "rgba(240,244,255,0.6)",
+  subtle:   "rgba(240,244,255,0.4)",
+  teal:     "#5EEAD4",
+  purple:   "#A855F7",
+  amber:    "#FBBF24",
+} as const;
+
+const FANPASS_PERKS = [
+  { icon: "🎫", text: "Synlig ♛-badge ved navnet ditt i chat og feed" },
+  { icon: "🌿", text: "1,5× klikk og 2× passiv inntekt i klikker-spillet" },
+  { icon: "🪙", text: "1,5× coins fra alle daglige aktiviteter" },
+  { icon: "🔒", text: "Tilgang til Fanpass-only kanaler og innhold" },
+  { icon: "❤️", text: "Du støtter creatoren direkte" },
+];
+
+function FanpassTab() {
+  const [communities, setCommunities] = useState<FanpassCommunity[] | null>(null);
+
+  useEffect(() => {
+    fetch("/api/user/fanpass-portfolio")
+      .then((r) => r.ok ? r.json() as Promise<{ communities: FanpassCommunity[] }> : Promise.reject())
+      .then((d) => setCommunities(d.communities))
+      .catch(() => setCommunities([]));
+  }, []);
+
+  if (communities === null) {
+    return <div className="py-12 text-center text-sm" style={{ color: FS.muted }}>Laster…</div>;
+  }
+
+  const activeOnes  = communities.filter((c) => c.hasFanpass);
+  const availableIn = communities.filter((c) => !c.hasFanpass && c.accessMode !== "OPEN");
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Current plan */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-        <p className="mb-4 text-sm font-semibold text-white">Nåværende plan</p>
-        <div className="flex items-center gap-4">
-          <div className={`flex h-12 w-12 items-center justify-center rounded-xl text-lg font-bold ${
-            isPro ? "bg-indigo-500/20 text-indigo-400" : "bg-zinc-800 text-zinc-400"
-          }`}>
-            {isPro ? "★" : "☆"}
-          </div>
-          <div>
-            <p className="text-base font-semibold text-white">
-              {isPro ? (plan === "ENTERPRISE" ? "Enterprise" : "Pro") : "Gratis"}
-            </p>
-            <p className="text-xs text-zinc-500">
-              {isPro
-                ? "Du har tilgang til alle funksjoner."
-                : "Grunnleggende funksjoner. Oppgrader for mer."}
-            </p>
-          </div>
-          {isPro && (
-            <span className="ml-auto rounded-full bg-indigo-500/20 px-2.5 py-1 text-xs font-semibold text-indigo-400">
-              Aktiv
-            </span>
-          )}
-        </div>
+      {/* Perks-oversikt — alltid synlig så folk ser hva Fanpass faktisk er */}
+      <div
+        className="rounded-2xl p-5"
+        style={{
+          background: `linear-gradient(135deg, ${FS.teal}08, ${FS.purple}10)`,
+          border:     `1px solid ${FS.purple}25`,
+        }}
+      >
+        <p className="mb-3 text-sm font-semibold" style={{ color: FS.text }}>
+          Hva er Fanpass?
+        </p>
+        <p className="mb-4 text-xs leading-relaxed" style={{ color: FS.muted }}>
+          Fanpass er et månedlig medlemskap til ett spesifikt community. Du støtter
+          creatoren direkte og får ekstra fordeler over hele Intraa.
+        </p>
+        <ul className="space-y-2">
+          {FANPASS_PERKS.map((p) => (
+            <li key={p.text} className="flex items-start gap-2 text-xs" style={{ color: FS.muted }}>
+              <span className="shrink-0 text-sm">{p.icon}</span>
+              <span>{p.text}</span>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      {/* Upgrade */}
-      {!isPro && (
-        <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-5">
-          <p className="mb-1 text-sm font-semibold text-white">Intraa Pro</p>
-          <p className="mb-4 text-xs text-zinc-500">
-            Fjern begrensninger, få prioritert support og tilgang til avanserte funksjoner.
+      {/* Aktive Fanpass */}
+      {activeOnes.length > 0 && (
+        <section>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider" style={{ color: FS.subtle }}>
+            Dine aktive Fanpass ({activeOnes.length})
           </p>
-          <button
-            type="button"
-            disabled
-            className="cursor-not-allowed rounded-lg bg-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-400"
-          >
-            Oppgrader — Kommer snart
-          </button>
-        </div>
+          <div className="flex flex-col gap-2">
+            {activeOnes.map((c) => (
+              <FanpassRow key={c.orgId} community={c} />
+            ))}
+          </div>
+        </section>
       )}
 
-      {/* Feature comparison */}
-      <div className="overflow-hidden rounded-xl border border-zinc-800">
-        {[
-          { label: "Feed & innlegg",        free: true,  pro: true },
-          { label: "Chat-kanaler",           free: true,  pro: true },
-          { label: "Fillagring (500 MB)",    free: true,  pro: false },
-          { label: "Fillagring (50 GB)",     free: false, pro: true },
-          { label: "Ubegrenset medlemmer",   free: false, pro: true },
-          { label: "Prioritert support",     free: false, pro: true },
-          { label: "Avansert statistikk",    free: false, pro: true },
-        ].map((row, i, arr) => (
-          <div key={row.label}
-            className={`flex items-center gap-4 px-5 py-3 text-sm ${i < arr.length - 1 ? "border-b border-zinc-800" : ""}`}
-          >
-            <span className="flex-1 text-zinc-300">{row.label}</span>
-            <span className={`w-14 text-center text-xs font-semibold ${row.free ? "text-emerald-400" : "text-zinc-600"}`}>
-              {row.free ? "✓" : "—"}
-            </span>
-            <span className={`w-14 text-center text-xs font-semibold ${row.pro ? "text-indigo-400" : "text-zinc-600"}`}>
-              {row.pro ? "✓" : "—"}
-            </span>
+      {/* Tilgjengelig i andre communities */}
+      {availableIn.length > 0 && (
+        <section>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider" style={{ color: FS.subtle }}>
+            Tilgjengelig i {availableIn.length} av dine communities
+          </p>
+          <div className="flex flex-col gap-2">
+            {availableIn.map((c) => (
+              <FanpassRow key={c.orgId} community={c} />
+            ))}
           </div>
-        ))}
-        <div className="flex items-center gap-4 border-t border-zinc-800 bg-zinc-900/50 px-5 py-2 text-xs font-semibold">
-          <span className="flex-1 text-zinc-500">Plan</span>
-          <span className="w-14 text-center text-zinc-400">Gratis</span>
-          <span className="w-14 text-center text-indigo-400">Pro</span>
-        </div>
-      </div>
+        </section>
+      )}
+
+      {activeOnes.length === 0 && availableIn.length === 0 && (
+        <p className="text-center text-sm py-8" style={{ color: FS.subtle }}>
+          Ingen av dine communities har Fanpass aktivert ennå.
+        </p>
+      )}
     </div>
+  );
+}
+
+function FanpassRow({ community: c }: { community: FanpassCommunity }) {
+  const endDateFmt = c.endDate
+    ? new Date(c.endDate).toLocaleDateString("no-NO", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+  return (
+    <a
+      href={`/community/lojalitet?org=${c.orgId}`}
+      className="nav-link flex items-center gap-3 rounded-xl px-4 py-3"
+      style={{ background: FS.surface, border: `1px solid ${FS.line}` }}
+    >
+      {c.logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={c.logoUrl} alt="" className="h-9 w-9 rounded-lg object-cover shrink-0" />
+      ) : (
+        <div
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold"
+          style={{ background: FS.surface2, color: FS.text }}
+        >
+          {c.orgName[0]?.toUpperCase()}
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate" style={{ color: FS.text }}>{c.orgName}</p>
+        <p className="text-xs" style={{ color: FS.subtle }}>
+          {c.hasFanpass
+            ? (c.cancelled ? `Sies opp ${endDateFmt}` : `Fornyes ${endDateFmt} · ${c.paidAmount} kr/mnd`)
+            : `${c.paidAmount} kr/mnd`}
+        </p>
+      </div>
+      {c.hasFanpass ? (
+        <span
+          className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold shrink-0"
+          style={{ background: `${FS.teal}15`, color: FS.teal, border: `1px solid ${FS.teal}30` }}
+        >
+          Aktiv ♛
+        </span>
+      ) : (
+        <span className="text-xs font-semibold shrink-0" style={{ color: FS.purple }}>Aktiver →</span>
+      )}
+    </a>
   );
 }
 
@@ -494,7 +566,7 @@ export default function InnstillingerPage() {
 
       {tab === "profil"        && <ProfilTab />}
       {tab === "konto"         && <KontoTab />}
-      {tab === "abonnement"    && <AbonnementTab />}
+      {tab === "fanpass"       && <FanpassTab />}
       {tab === "varsler"       && <VarslerTab />}
       {tab === "personvern"    && <PersonvernTab />}
     </div>

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { WORLDS, MAX_WORLD, getWorldUpgrades, getUpgradeCost, PRESTIGE_PERKS, calcPerkConfig } from "@/lib/clickerUpgrades";
 import { Zap, Clock, Trophy, X, Lock, ShoppingBag } from "lucide-react";
+import FanpassHint from "@/components/FanpassHint";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -634,7 +635,7 @@ export default function ClickerPage() {
       )}
 
       {/* Stats row */}
-      <div className="mb-3 md:mb-7 flex gap-5 md:gap-6">
+      <div className="mb-3 md:mb-5 flex gap-5 md:gap-6">
         <div className="flex items-center gap-1.5">
           <Zap className="h-4 w-4" style={{ color: "#fbbf24" }} />
           <span className="text-sm font-semibold text-white">{fmt(effectiveCpc)}</span>
@@ -646,6 +647,13 @@ export default function ClickerPage() {
           <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>/sek</span>
         </div>
       </div>
+
+      {/* Fanpass-hint — kun for brukere uten Fanpass for denne orgen */}
+      {!hasFanpass && (
+        <div className="mb-4 md:mb-6 w-full">
+          <FanpassHint storageKey="clicker" perk="1,5× klikk og 2× passiv inntekt." />
+        </div>
+      )}
 
       {/* ─── Hovedsirkel — sentralt og dramatisk ─────────────────────────── */}
       <div className="relative mb-4 md:mb-5 flex h-[260px] w-[260px] md:h-[340px] md:w-[340px] items-center justify-center">

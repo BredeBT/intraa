@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import StatsPanel from "./StatsPanel";
+import FanpassHint from "@/components/FanpassHint";
 import { WORLDS } from "@/lib/clickerUpgrades";
 
 // ─── Aurora-tokens (matcher landing + resten av appen) ───────────────────────
@@ -110,15 +111,20 @@ export default async function SpillPage({
       <div className="mx-auto max-w-5xl">
 
         {/* Page header */}
-        <div className="mb-8 flex items-end justify-between gap-4">
+        <div className="mb-6 flex items-end justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: S.text }}>
               Spill
             </h1>
             <p className="mt-1 text-sm" style={{ color: S.subtle }}>
-              {GAMES.length} spill — alle gir Fanpass-coins når du spiller
+              {GAMES.length} spill — alle gir coins når du spiller
             </p>
           </div>
+        </div>
+
+        {/* Subtle Fanpass-hint */}
+        <div className="mb-6">
+          <FanpassHint storageKey="spill" perk="1,5× coins fra alle daglige spill-belønninger." />
         </div>
 
         {/* Main layout */}

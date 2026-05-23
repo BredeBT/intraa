@@ -35,10 +35,9 @@ const COMPANY_NAV = [
 
 function communityNav(slug: string) {
   return [
-    { href: `/${slug}/feed`,         label: "Feed",         icon: Newspaper,      feature: "community_feed" },
-    { href: `/${slug}/rangering`,    label: "Rangering",    icon: Trophy,         feature: "community_leaderboard" },
-    { href: `/${slug}/konkurranser`, label: "Konkurranser", icon: Swords,         feature: "community_contests" },
-    { href: `/${slug}/lojalitet`,    label: "Lojalitet",    icon: Star,           feature: "community_loyalty" },
+    { href: `/${slug}/feed`,         label: "Feed",         icon: Newspaper, feature: "community_feed" },
+    { href: `/${slug}/rangering`,    label: "Rangering",    icon: Trophy,    feature: "community_leaderboard" },
+    { href: `/${slug}/konkurranser`, label: "Konkurranser", icon: Swords,    feature: "community_contests" },
   ];
 }
 
