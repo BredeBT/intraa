@@ -57,7 +57,16 @@ export default async function InnstillingerPage({
   return (
     <InnstillingerClient
       initialTab={tab ?? "generelt"}
-      org={{ id: org.id, name: org.name, slug: org.slug, type: org.type, plan: org.plan, accessMode: org.accessMode }}
+      org={{
+        id:          org.id,
+        name:        org.name,
+        slug:        org.slug,
+        type:        org.type,
+        plan:        org.plan,
+        accessMode:  org.accessMode,
+        description: org.description ?? "",
+        createdAt:   org.createdAt.toISOString(),
+      }}
       theme={themeInitial}
       features={featureMap}
       userRole={role}

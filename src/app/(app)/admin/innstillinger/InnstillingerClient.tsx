@@ -50,12 +50,14 @@ interface Theme {
 }
 
 interface OrgInfo {
-  id:         string;
-  name:       string;
-  slug:       string;
-  type:       OrgType;
-  plan:       string;
-  accessMode: "OPEN" | "FREEMIUM" | "EXCLUSIVE";
+  id:          string;
+  name:        string;
+  slug:        string;
+  type:        OrgType;
+  plan:        string;
+  accessMode:  "OPEN" | "FREEMIUM" | "EXCLUSIVE";
+  description: string;
+  createdAt:   string;
 }
 
 interface StreamSettingsForm {
@@ -121,9 +123,6 @@ const TABS: { id: Tab; label: string; danger?: boolean; ownerOnly?: boolean }[] 
   { id: "faresone",   label: "Faresone", danger: true, ownerOnly: true },
 ];
 
-const PLAN_LABELS: Record<string, string> = {
-  FREE: "Gratis", PRO: "Pro", ENTERPRISE: "Enterprise",
-};
 
 // Hvor mange coins gir hver aktivitet (speilet fra src/lib/awardCoins.ts).
 // Vises som info — ikke konfigurerbart per org enda.
@@ -679,7 +678,7 @@ export default function InnstillingerClient({
     setGenSaving(true); setGenError("");
     const res = await fetch("/api/admin/organisation", {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orgId: org.id, name: org.name, slug: org.slug }),
+      body: JSON.stringify({ orgId: org.id, name: org.name, slug: org.slug, description: org.description }),
     });
     setGenSaving(false);
     if (res.ok) { setGenSaved(true); setTimeout(() => setGenSaved(false), 2000); }
@@ -829,10 +828,27 @@ export default function InnstillingerClient({
       {/* ══ TAB: GENERELT ══ */}
       {activeTab === "generelt" && (
         <div className="max-w-xl">
-          <Section title="Organisasjonsinformasjon">
+          <Section title="Communityet ditt">
             <div className="space-y-4">
+              {/* Klikkbar URL-preview */}
+              <a
+                href={`/${org.slug}/feed`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-lg px-4 py-3 transition-colors hover:opacity-90"
+                style={{ background: `${S.teal}10`, border: `1px solid ${S.teal}30` }}
+              >
+                <p className="text-[11px] uppercase tracking-wider mb-1" style={{ color: S.teal }}>
+                  Din community-URL
+                </p>
+                <p className="text-sm font-semibold" style={{ color: S.text }}>
+                  intraa.net/<span style={{ color: S.teal }}>{org.slug}</span>
+                  <span className="ml-2 text-xs opacity-60">↗</span>
+                </p>
+              </a>
+
               <div>
-                <FieldLabel>Organisasjonsnavn</FieldLabel>
+                <FieldLabel>Navn</FieldLabel>
                 <input
                   value={org.name}
                   onChange={(e) => setOrg((p) => ({ ...p, name: e.target.value }))}
@@ -840,8 +856,9 @@ export default function InnstillingerClient({
                   style={inputStyle()}
                 />
               </div>
+
               <div>
-                <FieldLabel>Slug (URL)</FieldLabel>
+                <FieldLabel>Slug</FieldLabel>
                 <div className="flex items-center rounded-lg px-4 py-2.5" style={inputStyle()}>
                   <span className="mr-1 shrink-0 text-sm" style={{ color: S.subtle }}>intraa.net/</span>
                   <input
@@ -851,29 +868,33 @@ export default function InnstillingerClient({
                     style={{ color: S.text }}
                   />
                 </div>
-              </div>
-              <div>
-                <FieldLabel>Type</FieldLabel>
-                <p className="text-sm" style={{ color: S.text }}>
-                  {org.type === "COMPANY" ? "🏢 Bedrift" : "🌐 Community"}
+                <p className="mt-1 text-xs" style={{ color: S.subtle }}>
+                  Endrer du slug, endres også URL-en folk bruker for å finne deg.
                 </p>
-                <p className="mt-1 text-xs" style={{ color: S.subtle }}>Org-type kan ikke endres etter opprettelse.</p>
               </div>
+
               <div>
-                <FieldLabel>Plan</FieldLabel>
-                <div className="flex items-center gap-2 rounded-lg px-4 py-2.5" style={{ background: S.surface2, border: `1px solid ${S.line}` }}>
-                  <span className="text-sm" style={{ color: S.text }}>{PLAN_LABELS[org.plan] ?? org.plan}</span>
-                  <span
-                    className="rounded-full px-2 py-0.5 text-xs font-medium"
-                    style={{ background: `${S.teal}20`, color: S.teal }}
-                  >
-                    {org.plan}
-                  </span>
-                  <span className="ml-auto text-xs" style={{ color: S.subtle }}>Endre plan via Superadmin</span>
-                </div>
+                <FieldLabel>Beskrivelse</FieldLabel>
+                <textarea
+                  value={org.description}
+                  onChange={(e) => setOrg((p) => ({ ...p, description: e.target.value }))}
+                  placeholder="Hva handler dette communityet om? Vises på discovery-siden."
+                  rows={3}
+                  maxLength={280}
+                  className="w-full resize-none rounded-lg px-4 py-2.5 text-sm outline-none placeholder:opacity-40"
+                  style={inputStyle()}
+                />
+                <p className="mt-1 text-right text-xs" style={{ color: S.subtle }}>
+                  {org.description.length}/280
+                </p>
               </div>
+
+              <p className="text-xs" style={{ color: S.subtle }}>
+                Opprettet {new Date(org.createdAt).toLocaleDateString("no-NO", { day: "numeric", month: "long", year: "numeric" })}
+              </p>
             </div>
           </Section>
+
           {genError && <p className="mb-3 text-sm" style={{ color: S.rose }}>{genError}</p>}
           <div className="flex items-center gap-3 mb-10">
             <PrimaryButton onClick={() => void saveGenerelt()} disabled={genSaving}>
