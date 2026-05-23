@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect, memo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import {
   Check, Upload, X, Loader2, Image as ImageIcon, Plus, Info,
   Users, Coins, Crown, MessageSquare, AlertTriangle,
@@ -653,16 +652,22 @@ export default function InnstillingerClient({
   initialTab, org: initialOrg, theme: initialTheme, features: initialFeatures,
   userRole, streamSettings: initialStream, accessStats, stats,
 }: Props) {
-  const router       = useRouter();
-  const searchParams = useSearchParams();
+  // Tab-switching gjøres lokalt (ikke via router.push), slik at vi ikke trigger
+  // full server-refetch (~20 DB-queries) hver gang brukeren bytter tab.
+  // URL oppdateres via history.replaceState slik at refresh og lenker fortsatt
+  // havner på riktig tab.
   const validTabs: Tab[] = ["generelt", "tilgang", "utseende", "funksjoner", "shop", "statistikk", "faresone"];
-  const activeTab = validTabs.includes(searchParams.get("tab") as Tab)
-    ? (searchParams.get("tab") as Tab)
-    : (validTabs.includes(initialTab as Tab) ? (initialTab as Tab) : "generelt");
+  const startTab: Tab = validTabs.includes(initialTab as Tab) ? (initialTab as Tab) : "generelt";
+  const [activeTab, setActiveTab] = useState<Tab>(startTab);
 
-  function setTab(tab: Tab) {
-    router.push(`?tab=${tab}`, { scroll: false });
-  }
+  const setTab = useCallback((tab: Tab) => {
+    setActiveTab(tab);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", tab);
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, []);
 
   // ── Generelt state ──
   const [org,        setOrg]        = useState(initialOrg);
@@ -805,7 +810,8 @@ export default function InnstillingerClient({
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className="flex-1 min-w-[44%] whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:min-w-0 md:flex-1 md:px-4"
+              className="nav-link flex-1 min-w-[44%] whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium sm:min-w-0 md:flex-1 md:px-4"
+              data-active={active || undefined}
               style={{
                 background: active ? S.surface2 : "transparent",
                 color:      active

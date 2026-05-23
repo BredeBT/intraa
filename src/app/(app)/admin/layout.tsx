@@ -59,7 +59,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={href}
                 href={href}
-                className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                className="nav-link flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium"
+                data-active={active || undefined}
                 style={{
                   background: active ? S.surface2 : "transparent",
                   color:      active ? S.text     : S.muted,
@@ -105,7 +106,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={href}
                 href={href}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition-colors"
+                className="nav-link flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium"
+                data-active={active || undefined}
                 style={{
                   background: active ? S.surface2 : "transparent",
                   color:      active ? S.text     : S.muted,

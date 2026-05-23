@@ -266,3 +266,30 @@ body {
   background: rgba(0,0,0,0.5);
   backdrop-filter: blur(2px);
 }
+
+/* ── Nav-link interaksjon — hover på desktop, instant tap-feedback på mobil.
+   Pseudo-classes er CSS-native og gjør seg ikke avhengig av React-re-render
+   (dvs. brukeren ser respons øyeblikkelig selv om navigering tar tid).        */
+.nav-link {
+  transition: background-color 0.12s ease, transform 0.08s ease, opacity 0.08s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+  .nav-link:not([data-active]):hover {
+    background-color: rgba(255, 255, 255, 0.04);
+    color: #F0F4FF;
+  }
+  .nav-link[data-active]:hover {
+    background-color: #1a2347; /* litt lysere enn surface2 */
+  }
+}
+.nav-link:active {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+/* Active-tap på mobil bør være enda tydeligere */
+@media (hover: none) {
+  .nav-link:active {
+    background-color: rgba(94, 234, 212, 0.12);
+  }
+}
