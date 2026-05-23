@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X, Radio, Sparkles, Crown, Users as UsersIcon, Image as ImgIcon } from "lucide-react";
+import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X, Sparkles, Crown, Users as UsersIcon, Image as ImgIcon } from "lucide-react";
 import { FanpassBadge } from "@/components/FanpassBadge";
 import { createPost, deletePost } from "@/server/actions/posts";
 import type { PostWithAuthor, CommentWithAuthor } from "@/lib/types";
@@ -60,14 +60,16 @@ interface Props {
   orgSlug:            string | null;
   orgCreatedAt:       string;
   memberCount:        number;
-  onlineCount:        number;
+  welcomeMessage?:    string | null;
+  bannerBg:           string | null;
+}
+
+interface FeedStats {
   onlineUsers:        OnlineUser[];
+  onlineCount:        number;
   weekPostCount:      number;
   weekFanpassCount:   number;
   activeStoriesCount: number;
-  welcomeMessage?:    string | null;
-  bannerBg:           string | null;
-  initialIsLive?:     boolean;
 }
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
@@ -103,12 +105,30 @@ function SidebarStat({ icon, value, label, color }: { icon: React.ReactNode; val
 
 export default function FeedClient({
   initialPosts, orgId, userName, userId, isSuperAdmin,
-  logoUrl, orgName, orgType, orgSlug, orgCreatedAt,
-  memberCount, onlineCount, onlineUsers, weekPostCount,
-  weekFanpassCount, activeStoriesCount, welcomeMessage,
-  bannerBg, initialIsLive,
+  logoUrl, orgName, orgSlug, orgCreatedAt,
+  memberCount, welcomeMessage, bannerBg, orgType,
 }: Props) {
-  void orgType; void weekPostCount; // legacy props (still passed; can clean up later)
+  void orgType; // legacy prop
+
+  // Stats (online, ukestall, stories) hentes etter first paint — ikke kritisk
+  // for å vise feeden. Tomt initialt så pulse-bar/sidebar bare har 0/[] mens
+  // de fylles inn.
+  const [stats, setStats] = useState<FeedStats>({
+    onlineUsers:        [],
+    onlineCount:        0,
+    weekPostCount:      0,
+    weekFanpassCount:   0,
+    activeStoriesCount: 0,
+  });
+  useEffect(() => {
+    let alive = true;
+    fetch(`/api/feed/stats?orgId=${orgId}`)
+      .then((r) => r.ok ? r.json() as Promise<FeedStats> : Promise.reject())
+      .then((data) => { if (alive) setStats(data); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [orgId]);
+  const { onlineCount, onlineUsers, weekFanpassCount, activeStoriesCount, weekPostCount } = stats;
   const [posts,            setPosts]            = useState<PostWithAuthor[]>(initialPosts);
   const [open,             setOpen]             = useState(false);
   const [content,          setContent]          = useState("");
@@ -129,7 +149,6 @@ export default function FeedClient({
   const openKey   = Array.from(openComments).sort().join(",");
   const ALLOWED_PASTE = ["image/png", "image/jpeg", "image/gif", "image/webp"];
 
-  void initialIsLive; // live handled at layout level
 
   function showPasteToast(msg: string) {
     setPasteToast(msg);
@@ -316,14 +335,6 @@ export default function FeedClient({
 
   // Pulse-bar items (only show when truthy/non-zero)
   const pulseItems = [
-    initialIsLive && orgSlug && {
-      key:   "live",
-      href:  `/${orgSlug}/live`,
-      icon:  <Radio className="h-3.5 w-3.5" />,
-      label: "Live nå",
-      color: "#F472B6",
-      pulse: true,
-    },
     onlineCount > 0 && {
       key:   "online",
       icon:  <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" /><span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" /></span>,

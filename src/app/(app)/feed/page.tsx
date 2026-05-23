@@ -27,11 +27,9 @@ export default async function FeedPage() {
 
   const { db } = await import("@/server/db");
 
-  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
-  const weekAgo    = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const dayAgo     = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-  const [posts, org, theme, memberCount, liveSession, onlineUsers, weekPostCount, weekFanpassCount, activeStories] = await Promise.all([
+  // Bare det som trengs for first paint. Stats (online, ukestall, stories)
+  // hentes client-side via /api/feed/stats.
+  const [posts, org, theme, memberCount] = await Promise.all([
     getPosts(ctx.organizationId),
     db.organization.findUnique({
       where:  { id: ctx.organizationId },
@@ -42,38 +40,7 @@ export default async function FeedPage() {
       select: { bannerUrl: true, bannerPreset: true, logoUrl: true, welcomeMessage: true },
     }),
     db.membership.count({ where: { organizationId: ctx.organizationId } }),
-    db.streamSession.findFirst({
-      where:  { organizationId: ctx.organizationId, endedAt: null },
-      select: { id: true },
-    }),
-    db.user.findMany({
-      where: {
-        memberships: { some: { organizationId: ctx.organizationId } },
-        lastActive:  { gte: fiveMinAgo },
-      },
-      orderBy: { lastActive: "desc" },
-      select:  { id: true, name: true, username: true, avatarUrl: true },
-      take:    12,
-    }),
-    db.post.count({
-      where: { orgId: ctx.organizationId, createdAt: { gte: weekAgo } },
-    }),
-    db.fanPass.count({
-      where: {
-        organizationId: ctx.organizationId,
-        startDate:      { gte: weekAgo },
-        status:         "ACTIVE",
-      },
-    }),
-    db.story.count({
-      where: {
-        channel:   { orgId: ctx.organizationId },
-        createdAt: { gte: dayAgo },
-        expiresAt: { gt: new Date() },
-      },
-    }),
   ]);
-  const onlineCount = onlineUsers.length;
 
   // Resolve banner background
   const bannerBg = theme?.bannerUrl
@@ -96,14 +63,8 @@ export default async function FeedPage() {
         orgSlug={org?.slug ?? null}
         orgCreatedAt={org?.createdAt.toISOString() ?? ""}
         memberCount={memberCount}
-        onlineCount={onlineCount}
-        onlineUsers={onlineUsers}
-        weekPostCount={weekPostCount}
-        weekFanpassCount={weekFanpassCount}
-        activeStoriesCount={activeStories}
         welcomeMessage={theme?.welcomeMessage ?? null}
         bannerBg={bannerBg ?? null}
-        initialIsLive={!!liveSession}
       />
     </div>
   );
