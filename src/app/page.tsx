@@ -48,7 +48,7 @@ export default async function Home() {
       className="min-h-screen relative overflow-x-hidden"
       style={{ background: C.bg, color: C.text }}
     >
-      {/* Aurora blobs — northern-lights backdrop, subtle (0.18–0.25 opacity) */}
+      {/* Aurora blobs — northern-lights backdrop, kun en antydning */}
       <div
         aria-hidden
         className="pointer-events-none absolute h-[600px] w-[600px] rounded-full blur-[120px]"
@@ -56,7 +56,7 @@ export default async function Home() {
           top:        "-10%",
           left:       "20%",
           background: `radial-gradient(circle, ${C.teal} 0%, transparent 70%)`,
-          opacity:    0.25,
+          opacity:    0.10,
         }}
       />
       <div
@@ -66,7 +66,7 @@ export default async function Home() {
           top:        "20%",
           right:      "10%",
           background: `radial-gradient(circle, ${C.purple} 0%, transparent 70%)`,
-          opacity:    0.22,
+          opacity:    0.09,
         }}
       />
       <div
@@ -76,7 +76,7 @@ export default async function Home() {
           bottom:     "10%",
           left:       "40%",
           background: `radial-gradient(circle, ${C.blue} 0%, transparent 70%)`,
-          opacity:    0.18,
+          opacity:    0.07,
         }}
       />
 
@@ -124,7 +124,16 @@ export default async function Home() {
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative mx-auto max-w-6xl px-6 sm:px-10 pt-20 pb-24 lg:pt-28 lg:pb-32">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-16 items-center">
+        {/* Film grain — dreper "flate AI-overflate"-følelsen. Veldig lav opacity, ligger over alle blobs men under content. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-overlay"
+          style={{
+            backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")`,
+            backgroundSize:  "240px 240px",
+          }}
+        />
+        <div className="relative grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-16 items-center">
 
           {/* Left: copy */}
           <div>
@@ -151,16 +160,8 @@ export default async function Home() {
               style={{ color: C.text }}
             >
               Communityet ditt.{" "}
-              <span
-                style={{
-                  background:           `linear-gradient(90deg, ${C.teal} 0%, ${C.purple} 50%, ${C.blue} 100%)`,
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor:  "transparent",
-                  backgroundClip:       "text",
-                }}
-              >
-                Hjemmet ditt.
-              </span>
+              <span style={{ color: C.teal }}>Hjemmet</span>{" "}
+              ditt.
             </h1>
 
             <p
@@ -207,9 +208,11 @@ export default async function Home() {
             </p>
           </div>
 
-          {/* Right: floating UI mock */}
-          <div className="relative">
-            <HeroMock />
+          {/* Right: floating UI mock — bevisst skjev så det ikke føles "algoritmisk midtstilt" */}
+          <div className="relative lg:translate-y-6">
+            <div className="lg:[transform:rotate(-1.5deg)]">
+              <HeroMock />
+            </div>
           </div>
         </div>
       </section>
@@ -635,7 +638,7 @@ function HeroMock() {
           />
           <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: C.pink }} />
         </span>
-        LIVE · 1 240 ser på
+        LIVE · 1 187 ser på
       </div>
 
       {/* Main mock card — glass panel per Aurora spec */}
@@ -656,10 +659,10 @@ function HeroMock() {
 
         {/* Chat messages — distributed across Aurora palette per spec */}
         <div className="space-y-3">
-          <MockMsg name="Ola"      color={C.teal}   text="GG, det der var sykt." />
-          <MockMsg name="Kari"     color={C.pink}   text="når går du live igjen??" fanpass />
-          <MockMsg name="Lars_TV"  color={C.purple} text="brett-temaet er sjukt fint 🔥" fanpass />
-          <MockMsg name="Sara"     color={C.blue}   text="kjørte sjakk mot maskin på umulig, tapte 😭" />
+          <MockMsg name="ola"      color={C.teal}   text="haha gg hva var det trekket" />
+          <MockMsg name="kari_"    color={C.pink}   text="strøm i morra også?" fanpass />
+          <MockMsg name="Lars_TV"  color={C.purple} text="nytt brett er sjukkt" fanpass />
+          <MockMsg name="sara"     color={C.blue}   text="tapte mot bot på 4 trekk lmao" />
         </div>
 
         {/* Input row */}
