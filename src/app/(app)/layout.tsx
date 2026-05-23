@@ -596,7 +596,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <WebRTCProvider userId={user?.id ?? ""} userName={user?.name ?? undefined}>
     <div className="min-h-[100dvh] bg-zinc-950 text-white">
       {/* Desktop sidebar — hidden when in admin (admin has its own) */}
-      <aside className={`fixed left-0 top-0 z-30 hidden h-screen flex-col border-r border-zinc-800 bg-zinc-900 transition-all duration-200 ease-in-out md:flex ${sidebarW}`}>
+      <aside
+        className={`fixed left-0 top-0 z-30 hidden h-screen flex-col bg-zinc-900 transition-all duration-200 ease-in-out md:flex ${sidebarW}`}
+        style={{ borderRight: "1px solid rgba(240,244,255,0.08)" }}
+      >
         {!inAdmin && !inBrand && <SidebarContent {...sidebarProps} />}
       </aside>
 
@@ -621,8 +624,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Header — bruker max(env(),12px) slik at iOS-statuslinjen aldri overlapper
             content, og fallback finnes hvis env() rapporteres som 0. */}
         <header
-          className="flex items-center gap-3 border-b border-zinc-800 bg-zinc-900 px-4 min-h-14"
-          style={{ paddingTop: "max(env(safe-area-inset-top), 0.75rem)" }}
+          className="flex items-center gap-3 bg-zinc-900 px-4 min-h-14"
+          style={{
+            paddingTop:   "max(env(safe-area-inset-top), 0.75rem)",
+            borderBottom: "1px solid rgba(240,244,255,0.08)",
+          }}
         >
           {/* Left: title */}
           <div className="flex shrink-0 items-center md:w-36">
@@ -636,7 +642,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               className="flex w-full max-w-md items-center gap-2.5 rounded-lg border border-zinc-700 bg-zinc-800/60 px-3.5 py-2 text-sm text-zinc-500 transition-colors hover:border-zinc-600 hover:text-zinc-300"
             >
               <Search className="h-4 w-4 shrink-0" />
-              <span className="flex-1 text-left">Søk etter personer, communities...</span>
+              <span className="flex-1 min-w-0 truncate text-left">Søk etter personer, communities…</span>
               <kbd className="hidden rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-600 sm:inline">⌘K</kbd>
             </button>
           </div>
