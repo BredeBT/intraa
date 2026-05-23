@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { WORLDS, MAX_WORLD, getWorldUpgrades, getUpgradeCost, PRESTIGE_PERKS, calcPerkConfig } from "@/lib/clickerUpgrades";
-import { Zap, Clock, Trophy, X, MessageSquare, Send, Lock, ShoppingBag } from "lucide-react";
+import { Zap, Clock, Trophy, X, Lock, ShoppingBag } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,13 +33,6 @@ interface LeaderboardEntry {
 
 interface ActiveEvent { type: string; multiplier: number; endsAt: string }
 
-interface ChatMessage {
-  id:        string;
-  content:   string;
-  createdAt: string;
-  author:    { id: string; name: string | null; avatarUrl: string | null };
-}
-
 interface FloatItem { id: number; x: number; y: number; value: number }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -55,6 +48,38 @@ function fmt(n: number): string {
 function initials(name: string | null) {
   if (!name) return "?";
   return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function OfflineToast({ value, onDismiss }: { value: number | null; onDismiss: () => void }) {
+  useEffect(() => {
+    if (value === null) return;
+    const id = setTimeout(onDismiss, 8000);
+    return () => clearTimeout(id);
+  }, [value, onDismiss]);
+
+  if (value === null) return null;
+  return (
+    <button
+      type="button"
+      onClick={onDismiss}
+      className="mb-4 w-full flex items-start gap-3 p-3 rounded-xl text-left transition-opacity hover:opacity-80 active:opacity-60"
+      style={{ background: "rgba(168,85,247,0.12)", border: "1px solid rgba(168,85,247,0.3)" }}
+    >
+      <span className="text-xl shrink-0">😴</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-white">Velkommen tilbake!</p>
+        <p className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
+          +<span className="font-bold" style={{ color: "#A855F7" }}>{fmt(value)}</span> coins mens du var borte. Klikk for å lukke.
+        </p>
+      </div>
+      <span
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
+        style={{ background: "rgba(168,85,247,0.2)", color: "rgba(255,255,255,0.7)" }}
+      >
+        <X className="h-4 w-4" />
+      </span>
+    </button>
+  );
 }
 
 // ── localStorage cache ────────────────────────────────────────────────────────
@@ -106,11 +131,6 @@ export default function ClickerPage() {
   const [isMobile,      setIsMobile]      = useState(false);
 
   // Chat
-  const [chatOpen,     setChatOpen]     = useState(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatInput,    setChatInput]    = useState("");
-  const [chatSending,  setChatSending]  = useState(false);
-  const chatBottomRef = useRef<HTMLDivElement>(null);
 
   // Coin refs
   const serverCoins    = useRef(0);
@@ -274,24 +294,6 @@ export default function ClickerPage() {
     };
   }, []);
 
-  // ── Chat polling ──────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!orgId || !chatOpen) return;
-    const poll = async () => {
-      const res = await fetch(`/api/stream/chat?orgId=${orgId}`).catch(() => null);
-      if (!res?.ok) return;
-      const data = await res.json() as { messages: ChatMessage[] };
-      setChatMessages(data.messages);
-    };
-    void poll();
-    const id = setInterval(() => void poll(), 4_000);
-    return () => clearInterval(id);
-  }, [orgId, chatOpen]);
-
-  useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages]);
-
   // ── Click handler ─────────────────────────────────────────────────────────
   const handleClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     if (!profile) return;
@@ -425,27 +427,6 @@ export default function ClickerPage() {
       } : prev);
     }
     setShopResetting(false);
-  }
-
-  // ── Chat send ─────────────────────────────────────────────────────────────
-  async function sendChatMessage() {
-    if (!orgId || !chatInput.trim() || chatSending) return;
-    const content = chatInput.trim();
-    setChatInput("");
-    setChatSending(true);
-    try {
-      await fetch("/api/stream/chat", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ orgId, content }),
-      });
-      const res = await fetch(`/api/stream/chat?orgId=${orgId}`);
-      if (res.ok) {
-        const data = await res.json() as { messages: ChatMessage[] };
-        setChatMessages(data.messages);
-      }
-    } catch { /* ignore */ }
-    setChatSending(false);
   }
 
   // ── Loading ───────────────────────────────────────────────────────────────
@@ -593,24 +574,10 @@ export default function ClickerPage() {
 
   const ClickPanel = (
     <div className="flex w-full max-w-sm flex-col items-center">
-      {/* Offline toast */}
-      {offlineMsg !== null && (
-        <div
-          className="mb-4 w-full flex items-start gap-3 p-3 rounded-xl"
-          style={{ background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.25)" }}
-        >
-          <span className="text-xl">😴</span>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-white">Velkommen tilbake!</p>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
-              +<span className="font-bold" style={{ color: "#A855F7" }}>{fmt(offlineMsg)}</span> coins mens du var borte.
-            </p>
-          </div>
-          <button onClick={() => setOfflineMsg(null)} style={{ color: "rgba(255,255,255,0.3)" }} className="hover:text-white transition-colors">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+      {/* Offline toast — hele kortet er klikkbart for å dismisse,
+          + auto-dismiss etter 8s slik at den ikke står og henger. */}
+      <OfflineToast value={offlineMsg} onDismiss={() => setOfflineMsg(null)} />
+
 
       {/* Event banner */}
       {activeEvent && activeEvent.type === "multiplier" && new Date(activeEvent.endsAt) > new Date() && (
@@ -1170,76 +1137,6 @@ export default function ClickerPage() {
         </div>
       )}
 
-      {/* Chat slide-over */}
-      <div
-        className={`fixed right-0 top-0 z-40 flex h-full w-full flex-col transition-transform duration-300 md:w-80 ${chatOpen ? "translate-x-0" : "translate-x-full"}`}
-        style={{
-          background: "rgba(13,13,20,0.96)",
-          backdropFilter: "blur(12px)",
-          borderLeft: "1px solid rgba(255,255,255,0.08)",
-        }}
-      >
-        <div
-          className="flex shrink-0 items-center justify-between px-4 py-3"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
-        >
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" style={{ color: "#A855F7" }} />
-            <span className="text-sm font-semibold text-white">Stream Chat</span>
-          </div>
-          <button
-            onClick={() => setChatOpen(false)}
-            className="transition-colors hover:text-white"
-            style={{ color: "rgba(255,255,255,0.35)" }}
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="scrollbar-hide flex-1 overflow-y-auto p-3 space-y-2.5">
-          {chatMessages.length === 0
-            ? <p className="mt-8 text-center text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>Ingen meldinger ennå. Si hei!</p>
-            : chatMessages.map((msg) => (
-              <div key={msg.id} className="flex gap-2">
-                <div
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                  style={{ background: "rgba(168,85,247,0.4)" }}
-                >
-                  {initials(msg.author.name)}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold" style={{ color: "#A855F7" }}>{msg.author.name ?? "Ukjent"}</p>
-                  <p className="break-words text-sm text-white">{msg.content}</p>
-                </div>
-              </div>
-            ))
-          }
-          <div ref={chatBottomRef} />
-        </div>
-        <div className="shrink-0 p-3" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-          <div className="flex gap-2">
-            <input
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void sendChatMessage(); } }}
-              placeholder="Skriv en melding…"
-              className="flex-1 rounded-lg px-3 py-2 text-sm text-white outline-none transition-colors"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-              }}
-            />
-            <button
-              onClick={() => void sendChatMessage()}
-              disabled={!chatInput.trim() || chatSending}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition-all hover:brightness-110 disabled:opacity-40"
-              style={{ background: "#A855F7" }}
-            >
-              <Send className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Mobile tab-bar */}
       <div
         className="flex shrink-0 md:hidden"
@@ -1284,19 +1181,6 @@ export default function ClickerPage() {
         {UpgradesPanel}
       </div>
 
-      {/* Floating chat button */}
-      {!chatOpen && orgId && (
-        <button
-          onClick={() => setChatOpen(true)}
-          className="fixed bottom-20 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full text-white transition-all hover:scale-110 hover:brightness-110 active:scale-95 md:bottom-6"
-          style={{
-            background: "#A855F7",
-            boxShadow: "0 4px 20px rgba(168,85,247,0.4)",
-          }}
-        >
-          <MessageSquare className="h-5 w-5" />
-        </button>
-      )}
     </div>
   );
 }
