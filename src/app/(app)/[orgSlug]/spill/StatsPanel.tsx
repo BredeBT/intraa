@@ -9,6 +9,21 @@ interface Props {
   worldName:  string;
 }
 
+const S = {
+  surface:  "#0B1027",
+  surface2: "#131A35",
+  line:     "rgba(240,244,255,0.08)",
+  text:     "#F0F4FF",
+  muted:    "rgba(240,244,255,0.6)",
+  subtle:   "rgba(240,244,255,0.4)",
+  teal:     "#5EEAD4",
+  purple:   "#A855F7",
+  blue:     "#60A5FA",
+  pink:     "#F472B6",
+  amber:    "#FBBF24",
+  rose:     "#F87171",
+} as const;
+
 function fmt(n: number): string {
   if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
   if (n >= 1_000_000)     return `${(n / 1_000_000).toFixed(1)}M`;
@@ -17,10 +32,37 @@ function fmt(n: number): string {
 }
 
 function ratingColor(r: number): string {
-  if (r >= 1600) return "#fbbf24";
-  if (r >= 1400) return "#A855F7";
-  if (r >= 1200) return "#34d399";
-  return "rgba(255,255,255,0.5)";
+  if (r >= 1600) return S.amber;
+  if (r >= 1400) return S.purple;
+  if (r >= 1200) return S.teal;
+  return S.subtle;
+}
+
+function Card({
+  emoji, title, accent, children,
+}: {
+  emoji:   string;
+  title:   string;
+  accent:  string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="rounded-xl p-4"
+      style={{ background: S.surface, border: `1px solid ${S.line}` }}
+    >
+      <div className="mb-3 flex items-center gap-2">
+        <div
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-base"
+          style={{ background: `${accent}15`, border: `1px solid ${accent}30` }}
+        >
+          {emoji}
+        </div>
+        <span className="text-sm font-semibold" style={{ color: S.text }}>{title}</span>
+      </div>
+      {children}
+    </div>
+  );
 }
 
 export default function StatsPanel({ chess, clicker, worldEmoji, worldName }: Props) {
@@ -33,10 +75,9 @@ export default function StatsPanel({ chess, clicker, worldEmoji, worldName }: Pr
       const streak = parseInt(localStorage.getItem("wordle_streak") ?? "0", 10);
       if (isFinite(streak)) setWordleStreak(streak);
 
-      // Check if today's wordle is done
-      const d    = new Date();
-      const key  = `wordle_${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
-      const raw  = localStorage.getItem(key);
+      const d   = new Date();
+      const key = `wordle_${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+      const raw = localStorage.getItem(key);
       if (raw) {
         const s = JSON.parse(raw) as { status: string };
         setWordleDone(s.status === "won" || s.status === "lost");
@@ -50,13 +91,10 @@ export default function StatsPanel({ chess, clicker, worldEmoji, worldName }: Pr
   const hasAny = chess || clicker || wordleStreak !== null || hs2048 !== null;
 
   return (
-    <aside
-      className="flex flex-col gap-3"
-      style={{ width: "100%" }}
-    >
+    <aside className="flex w-full flex-col gap-3">
       <p
         className="text-[10px] font-bold uppercase tracking-widest px-1"
-        style={{ color: "rgba(255,255,255,0.25)" }}
+        style={{ color: S.subtle }}
       >
         Dine stats
       </p>
@@ -64,108 +102,78 @@ export default function StatsPanel({ chess, clicker, worldEmoji, worldName }: Pr
       {!hasAny && (
         <div
           className="rounded-xl p-4 text-center text-xs"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.25)" }}
+          style={{ background: S.surface, border: `1px solid ${S.line}`, color: S.subtle }}
         >
           Spill noen spill for å se statistikk her
         </div>
       )}
 
-      {/* Chess */}
       {chess && (
-        <div
-          className="rounded-xl p-4"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
-        >
-          <div className="mb-3 flex items-center gap-2">
-            <span className="text-lg">♟️</span>
-            <span className="text-sm font-semibold text-white">Sjakk</span>
-          </div>
+        <Card emoji="♟" title="Sjakk" accent={S.purple}>
           <div className="mb-2 flex items-baseline gap-1.5">
-            <span className="text-2xl font-black" style={{ color: ratingColor(chess.rating) }}>
+            <span className="text-2xl font-bold tabular-nums" style={{ color: ratingColor(chess.rating) }}>
               {chess.rating}
             </span>
-            <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>rating</span>
+            <span className="text-xs" style={{ color: S.subtle }}>rating</span>
           </div>
-          <div className="flex gap-3 text-xs">
-            <span style={{ color: "#34d399" }}><strong>{chess.wins}</strong> V</span>
-            <span style={{ color: "rgba(255,255,255,0.4)" }}><strong>{chess.draws}</strong> U</span>
-            <span style={{ color: "#f87171" }}><strong>{chess.losses}</strong> T</span>
+          <div className="flex gap-3 text-xs tabular-nums">
+            <span style={{ color: S.teal }}><strong>{chess.wins}</strong> V</span>
+            <span style={{ color: S.subtle }}><strong>{chess.draws}</strong> U</span>
+            <span style={{ color: S.rose }}><strong>{chess.losses}</strong> T</span>
           </div>
-        </div>
+        </Card>
       )}
 
-      {/* Clicker */}
       {clicker && (
-        <div
-          className="rounded-xl p-4"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
-        >
-          <div className="mb-3 flex items-center gap-2">
-            <span className="text-lg">🖱️</span>
-            <span className="text-sm font-semibold text-white">Klikker</span>
+        <Card emoji="🖱" title="Klikker" accent={S.teal}>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="text-base">{worldEmoji}</span>
+            <span className="text-sm font-semibold" style={{ color: S.text }}>{worldName}</span>
           </div>
-          <div className="mb-1 flex items-center gap-2">
-            <span className="text-lg">{worldEmoji}</span>
-            <span className="text-sm font-semibold text-white">{worldName}</span>
-          </div>
-          <div className="flex gap-3 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-            <span>Prestige <strong className="text-white">{clicker.prestigeLevel}</strong></span>
+          <div className="flex gap-3 text-xs" style={{ color: S.muted }}>
+            <span>Prestige <strong style={{ color: S.text }}>{clicker.prestigeLevel}</strong></span>
             {clicker.allTimeHighCoins > 0 && (
-              <span>Rekord <strong className="text-white">{fmt(clicker.allTimeHighCoins)}</strong></span>
+              <span>Rekord <strong style={{ color: S.text }}>{fmt(clicker.allTimeHighCoins)}</strong></span>
             )}
           </div>
-        </div>
+        </Card>
       )}
 
-      {/* Wordle */}
       {wordleStreak !== null && (
-        <div
-          className="rounded-xl p-4"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
-        >
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🟩</span>
-              <span className="text-sm font-semibold text-white">Wordle</span>
+        <Card emoji="🟩" title="Wordle" accent={S.blue}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-baseline gap-1.5">
+              <span
+                className="text-2xl font-bold tabular-nums"
+                style={{ color: wordleStreak >= 7 ? S.amber : wordleStreak > 0 ? S.blue : S.subtle }}
+              >
+                {wordleStreak > 0 ? wordleStreak : "—"}
+              </span>
+              <span className="text-xs" style={{ color: S.subtle }}>
+                {wordleStreak === 1 ? "dag" : wordleStreak > 1 ? "dager" : "ingen streak"}
+              </span>
             </div>
             {wordleDone && (
-              <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ background: "rgba(29,158,117,0.2)", color: "#1d9e75" }}>
+              <span
+                className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                style={{ background: `${S.teal}20`, color: S.teal }}
+              >
                 ✓ I dag
               </span>
             )}
           </div>
-          {wordleStreak > 0 ? (
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black" style={{ color: wordleStreak >= 7 ? "#f9c74f" : "#1d9e75" }}>
-                {wordleStreak > 1 ? `🔥 ${wordleStreak}` : "1"}
-              </span>
-              <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
-                {wordleStreak === 1 ? "dag" : "dager på rad"}
-              </span>
-            </div>
-          ) : (
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Ingen streak ennå</p>
-          )}
-        </div>
+        </Card>
       )}
 
-      {/* 2048 */}
       {hs2048 !== null && (
-        <div
-          className="rounded-xl p-4"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
-        >
-          <div className="mb-3 flex items-center gap-2">
-            <span className="text-lg">🔢</span>
-            <span className="text-sm font-semibold text-white">2048</span>
-          </div>
+        <Card emoji="🔢" title="2048" accent={S.pink}>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl font-black" style={{ color: "#A855F7" }}>
+            <span className="text-2xl font-bold tabular-nums" style={{ color: S.pink }}>
               {hs2048.toLocaleString("no-NO")}
             </span>
-            <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>rekord</span>
+            <span className="text-xs" style={{ color: S.subtle }}>rekord</span>
           </div>
-        </div>
+        </Card>
       )}
     </aside>
   );

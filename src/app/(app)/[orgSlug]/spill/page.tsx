@@ -4,6 +4,24 @@ import { db } from "@/server/db";
 import StatsPanel from "./StatsPanel";
 import { WORLDS } from "@/lib/clickerUpgrades";
 
+// ─── Aurora-tokens (matcher landing + resten av appen) ───────────────────────
+const S = {
+  bg:       "#050816",
+  surface:  "#0B1027",
+  surface2: "#131A35",
+  line:     "rgba(240,244,255,0.08)",
+  lineHi:   "rgba(240,244,255,0.14)",
+  text:     "#F0F4FF",
+  muted:    "rgba(240,244,255,0.6)",
+  subtle:   "rgba(240,244,255,0.4)",
+  faint:    "rgba(240,244,255,0.25)",
+  teal:     "#5EEAD4",
+  purple:   "#A855F7",
+  blue:     "#60A5FA",
+  pink:     "#F472B6",
+  amber:    "#FBBF24",
+} as const;
+
 export default async function SpillPage({
   params,
 }: {
@@ -39,199 +57,144 @@ export default async function SpillPage({
     }
   } catch { /* non-critical — page still renders without stats */ }
 
-  const worldNum  = clicker?.prestigeWorld ?? 1;
-  const worldDef  = WORLDS[worldNum] ?? WORLDS[1]!;
+  const worldNum = clicker?.prestigeWorld ?? 1;
+  const worldDef = WORLDS[worldNum] ?? WORLDS[1]!;
 
-  // ── Game definitions ───────────────────────────────────────────────────
+  // ── Game definitions — 4 likeverdige kort med Aurora-aksenter ──────────
   const GAMES = [
     {
-      href:        `/${orgSlug}/clicker`,
-      icon:        "🖱️",
-      iconBg:      "rgba(168,85,247,0.25)",
-      title:       "Klikker",
-      badge:       "Solo",
-      badgeStyle:  { background: "rgba(168,85,247,0.2)", color: "#A855F7" },
-      description: "Klikk deg til rikdom, kjøp oppgraderinger og prestige gjennom 9 unike verdener.",
-      accentColor: "#A855F7",
-      borderColor: "rgba(168,85,247,0.2)",
-    },
-    {
-      href:        `/${orgSlug}/spill/sjakk`,
-      icon:        "♟️",
-      iconBg:      "rgba(16,185,129,0.2)",
+      key:         "sjakk",
       title:       "Sjakk",
-      badge:       "2 spillere",
-      badgeStyle:  { background: "rgba(16,185,129,0.15)", color: "#34d399" },
-      description: "Utfordre en venn til en klassisk sjakkpartie med Elo-rating. Trekk vises i sanntid.",
-      accentColor: "#10b981",
-      borderColor: "rgba(16,185,129,0.2)",
+      emoji:       "♟",
+      accent:      S.purple,
+      tagline:     "Klassisk parti med Elo-rating.",
+      actions: [
+        { href: `/${orgSlug}/spill/sjakk`,        label: "Mot venn",   note: "1v1 med Elo" },
+        { href: `/${orgSlug}/spill/sjakk/maskin`, label: "Mot maskin", note: "AI fra enkel til umulig" },
+      ],
     },
     {
-      href:        `/${orgSlug}/spill/2048`,
-      icon:        "🔢",
-      iconBg:      "rgba(249,115,22,0.2)",
+      key:         "klikker",
+      title:       "Klikker",
+      emoji:       "🖱",
+      accent:      S.teal,
+      tagline:     "Bygg en idle-økonomi gjennom 9 verdener.",
+      actions: [
+        { href: `/${orgSlug}/clicker`, label: "Spill nå", note: "Solo · idle" },
+      ],
+    },
+    {
+      key:         "2048",
       title:       "2048",
-      badge:       "Solo",
-      badgeStyle:  { background: "rgba(249,115,22,0.15)", color: "#fcd34d" },
-      description: "Slå sammen brikker og nå 2048. Bruk piltaster eller sveip. Enkel å lære, umulig å stoppe.",
-      accentColor: "#f97316",
-      borderColor: "rgba(249,115,22,0.2)",
+      emoji:       "🔢",
+      accent:      S.pink,
+      tagline:     "Slå sammen brikker til du når 2048.",
+      actions: [
+        { href: `/${orgSlug}/spill/2048`, label: "Spill nå", note: "Solo · piltaster" },
+      ],
     },
     {
-      href:        `/${orgSlug}/spill/wordle`,
-      icon:        "🟩",
-      iconBg:      "rgba(29,158,117,0.2)",
+      key:         "wordle",
       title:       "Wordle",
-      badge:       "Daglig",
-      badgeStyle:  { background: "rgba(29,158,117,0.15)", color: "#1d9e75" },
-      description: "Gjett det norske 5-bokstavsordet på 6 forsøk. Nytt ord hver dag — samme for alle.",
-      accentColor: "#1d9e75",
-      borderColor: "rgba(29,158,117,0.2)",
+      emoji:       "🟩",
+      accent:      S.blue,
+      tagline:     "Gjett dagens norske 5-bokstavsord.",
+      actions: [
+        { href: `/${orgSlug}/spill/wordle`, label: "Spill nå", note: "Daglig · samme ord for alle" },
+      ],
     },
   ];
 
-  const TOTAL_GAMES = GAMES.length + 1; // +1 for chess vs machine
-
   return (
-    <div className="min-h-screen px-4 py-8 md:py-12" style={{ background: "#050816" }}>
+    <div className="min-h-screen px-4 py-8 md:py-12" style={{ background: S.bg, color: S.text }}>
       <div className="mx-auto max-w-5xl">
 
         {/* Page header */}
-        <div className="mb-8">
-          <h1 className="mb-1 text-3xl font-black text-white tracking-tight">🎮 Spill</h1>
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
-            {TOTAL_GAMES} spill tilgjengelig
-          </p>
-        </div>
-
-        {/* Main layout: cards + sidebar */}
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-
-          {/* ── Game cards ─────────────────────────────────────────── */}
-          <div className="flex-1 min-w-0 flex flex-col gap-4">
-
-            {/* Featured card: Sjakk mot maskin */}
-            <Link
-              href={`/${orgSlug}/spill/sjakk/maskin`}
-              className="group flex overflow-hidden rounded-2xl transition-all duration-200 hover:scale-[1.01] hover:brightness-110"
-              style={{
-                background:  "rgba(255,255,255,0.04)",
-                border:      "1px solid rgba(249,115,22,0.3)",
-                minHeight:   "120px",
-              }}
-            >
-              {/* Left accent bar */}
-              <div
-                className="w-1 shrink-0"
-                style={{ background: "linear-gradient(to bottom, #A855F7, #34d399)" }}
-              />
-
-              <div className="flex flex-1 items-center gap-5 p-5">
-                {/* Icon */}
-                <div
-                  className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-4xl"
-                  style={{ background: "rgba(249,115,22,0.2)" }}
-                >
-                  🤖
-                </div>
-
-                {/* Text */}
-                <div className="flex-1 min-w-0">
-                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                    <span className="text-lg font-bold text-white">Sjakk mot maskin</span>
-                    <span
-                      className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-                      style={{ background: "rgba(249,115,22,0.2)", color: "#fcd34d" }}
-                    >
-                      Solo
-                    </span>
-                    <span
-                      className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-                      style={{ background: "rgba(16,185,129,0.15)", color: "#34d399" }}
-                    >
-                      AI-motstander
-                    </span>
-                  </div>
-                  <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
-                    Øv mot en AI-motstander. Velg vanskelighetsgrad — fra Enkel til Umulig.
-                  </p>
-                </div>
-
-                {/* CTA */}
-                <div
-                  className="hidden sm:flex shrink-0 items-center gap-1.5 text-sm font-semibold transition-colors"
-                  style={{ color: "#A855F7" }}
-                >
-                  Spill nå
-                  <span className="transition-transform group-hover:translate-x-1">→</span>
-                </div>
-              </div>
-            </Link>
-
-            {/* 2×2 grid for the remaining games */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {GAMES.map((g) => (
-                <Link
-                  key={g.href}
-                  href={g.href}
-                  className="group flex flex-col overflow-hidden rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:brightness-110"
-                  style={{
-                    background: "rgba(255,255,255,0.04)",
-                    border: `1px solid ${g.borderColor}`,
-                    minHeight: "200px",
-                  }}
-                >
-                  {/* Top accent bar */}
-                  <div className="h-1 w-full" style={{ background: g.accentColor }} />
-
-                  <div className="flex flex-1 flex-col p-5">
-                    {/* Icon + badge row */}
-                    <div className="mb-4 flex items-start justify-between">
-                      <div
-                        className="flex h-14 w-14 items-center justify-center rounded-2xl text-3xl"
-                        style={{ background: g.iconBg }}
-                      >
-                        {g.icon}
-                      </div>
-                      <span
-                        className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                        style={g.badgeStyle}
-                      >
-                        {g.badge}
-                      </span>
-                    </div>
-
-                    {/* Title */}
-                    <p className="mb-1.5 text-lg font-bold text-white">{g.title}</p>
-
-                    {/* Description */}
-                    <p
-                      className="flex-1 text-sm leading-relaxed"
-                      style={{ color: "rgba(255,255,255,0.45)" }}
-                    >
-                      {g.description}
-                    </p>
-
-                    {/* CTA */}
-                    <div
-                      className="mt-4 flex items-center gap-1.5 text-sm font-semibold transition-colors"
-                      style={{ color: g.accentColor }}
-                    >
-                      Spill nå
-                      <span className="transition-transform group-hover:translate-x-1">→</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            {/* Coin info note */}
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
-              🪙 Alle spill gir Fanpass-coins. Sjakk, 2048 og Wordle gir ekstra daglige coins.
+        <div className="mb-8 flex items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: S.text }}>
+              Spill
+            </h1>
+            <p className="mt-1 text-sm" style={{ color: S.subtle }}>
+              {GAMES.length} spill — alle gir Fanpass-coins når du spiller
             </p>
           </div>
+        </div>
 
-          {/* ── Stats sidebar (desktop) ──────────────────────────────── */}
+        {/* Main layout */}
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+
+          {/* ── Game cards ────────────────────────────────────────── */}
+          <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {GAMES.map((g) => (
+              <article
+                key={g.key}
+                className="relative flex flex-col rounded-2xl p-5 overflow-hidden"
+                style={{
+                  background: S.surface,
+                  border:     `1px solid ${S.line}`,
+                }}
+              >
+                {/* Accent-glow i kortets hjørne */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -top-12 -right-12 h-32 w-32 rounded-full"
+                  style={{
+                    background: `radial-gradient(circle, ${g.accent}30, transparent 70%)`,
+                    filter:     "blur(8px)",
+                  }}
+                />
+
+                {/* Header: emoji + tittel */}
+                <div className="relative mb-3 flex items-center gap-3">
+                  <div
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
+                    style={{
+                      background: `${g.accent}15`,
+                      border:     `1px solid ${g.accent}30`,
+                    }}
+                  >
+                    {g.emoji}
+                  </div>
+                  <h2 className="text-lg font-semibold" style={{ color: S.text }}>{g.title}</h2>
+                </div>
+
+                {/* Tagline */}
+                <p className="relative mb-5 text-sm leading-relaxed" style={{ color: S.muted }}>
+                  {g.tagline}
+                </p>
+
+                {/* Actions — 1 eller 2 knapper */}
+                <div className="relative mt-auto flex flex-col gap-2">
+                  {g.actions.map((a) => (
+                    <Link
+                      key={a.href}
+                      href={a.href}
+                      className="nav-link group flex items-center justify-between rounded-lg px-3.5 py-2.5"
+                      style={{
+                        background: `${g.accent}10`,
+                        border:     `1px solid ${g.accent}25`,
+                        color:      g.accent,
+                      }}
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold">{a.label}</span>
+                        <span className="text-[11px]" style={{ color: S.subtle }}>{a.note}</span>
+                      </div>
+                      <span
+                        className="text-base transition-transform group-hover:translate-x-0.5"
+                        style={{ color: g.accent }}
+                      >
+                        →
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {/* ── Stats sidebar ─────────────────────────────────────── */}
           <div className="w-full lg:w-64 lg:shrink-0">
             <StatsPanel
               chess={chess}
