@@ -460,6 +460,14 @@ export default function ClickerPage() {
   // ── Derived ───────────────────────────────────────────────────────────────
   const world         = profile.prestigeWorld ?? 1;
   const worldDef      = WORLDS[world];
+
+  // World-color name → hex. Brukes for tema-glow + float-numbers.
+  const worldHex: Record<string, string> = {
+    violet: "#A855F7", amber:  "#FBBF24", cyan:   "#22D3EE",
+    blue:   "#60A5FA", green:  "#34D399", pink:   "#EC4899",
+    orange: "#FB923C", indigo: "#818CF8", gold:   "#F59E0B",
+  };
+  const wColor = worldHex[worldDef?.color ?? "violet"] ?? "#A855F7";
   const prestigeCost  = worldDef?.prestigeCost ?? 0;
   const canPrestige   = prestigeCost > 0 && displayCoins >= prestigeCost;
   const nextWorld     = Math.min(world + 1, MAX_WORLD);
@@ -486,6 +494,13 @@ export default function ClickerPage() {
     if (!a.canAfford && b.canAfford) return 1;
     return a.cost - b.cost;
   });
+
+  // Neste milepæl = cheapest non-maxed upgrade. Brukes til progress-bar
+  // under hovedsirkelen så man ser «jeg er X% mot neste oppgradering».
+  const nextMilestone = upgradeRows.find((u) => u.level < u.maxLevel) ?? null;
+  const milestonePct  = nextMilestone
+    ? Math.min(100, (displayCoins / nextMilestone.cost) * 100)
+    : 0;
 
   // ── Panels ────────────────────────────────────────────────────────────────
 
@@ -665,60 +680,107 @@ export default function ClickerPage() {
         </div>
       </div>
 
-      {/* Click button */}
-      <div className="relative mb-7 flex items-center justify-center">
-        {/* Outer pulse ring */}
+      {/* ─── Hovedsirkel — sentralt og dramatisk ─────────────────────────── */}
+      <div className="relative mb-5 flex h-[340px] w-[340px] items-center justify-center">
+        {/* World-themed radial glow bak alt */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-[-40px] rounded-full"
+          style={{
+            background: `radial-gradient(circle at center, ${wColor}40 0%, ${wColor}15 35%, transparent 70%)`,
+            filter:     "blur(20px)",
+          }}
+        />
+
+        {/* Ytre pulserende ring (svak, kontinuerlig) */}
         {effectiveCps > 0 && (
-          <div
-            className="pulse-ring pointer-events-none absolute rounded-full"
-            style={{
-              width: 200,
-              height: 200,
-              background: "rgba(168,85,247,0.12)",
-              border: "2px solid rgba(168,85,247,0.2)",
-            }}
-          />
+          <>
+            <div
+              className="pulse-ring pointer-events-none absolute rounded-full"
+              style={{
+                width: 320, height: 320,
+                border: `2px solid ${wColor}50`,
+                animationDuration: "2.4s",
+              }}
+            />
+            <div
+              className="pulse-ring pointer-events-none absolute rounded-full"
+              style={{
+                width: 280, height: 280,
+                border: `2px solid ${wColor}30`,
+                animationDuration: "2.4s",
+                animationDelay: "0.6s",
+              }}
+            />
+          </>
         )}
 
-        {/* Outer container */}
-        <div
-          className="flex items-center justify-center rounded-full transition-all duration-150 hover:scale-[1.02]"
-          style={{
-            width: 196,
-            height: 196,
-            background: "#3a2410",
-            border: "2px solid rgba(168,85,247,0.25)",
-          }}
-        >
-          {/* Floating damage numbers */}
-          {floats.map((fl) => (
-            <span key={fl.id} className="clicker-float" style={{ left: fl.x, top: fl.y }}>
-              +{fmt(fl.value)}
-            </span>
-          ))}
-
-          {/* Inner clickable circle */}
-          <button
-            onClick={handleClick}
-            style={{
-              width: 160,
-              height: 160,
-              background: "#A855F7",
-              borderRadius: "50%",
-              touchAction: "manipulation",
-              transition: "transform 0.1s ease",
-              boxShadow: "0 0 32px rgba(168,85,247,0.4), inset 0 1px 0 rgba(255,255,255,0.15)",
-            }}
-            className="relative flex select-none items-center justify-center active:scale-[0.96] hover:brightness-110"
+        {/* Float-numbers — bevisst lagt utenfor button slik at de
+            ikke trigger pointer-events-clash på mobil. */}
+        {floats.map((fl) => (
+          <span
+            key={fl.id}
+            className="clicker-float"
+            style={{ left: fl.x, top: fl.y, color: wColor }}
           >
-            {logoUrl
-              // eslint-disable-next-line @next/next/no-img-element
-              ? <img src={logoUrl} alt="" className="h-28 w-28 rounded-full object-cover" />
-              : <span className="text-6xl">{worldDef.emoji}</span>
-            }
-          </button>
-        </div>
+            +{fmt(fl.value)}
+          </span>
+        ))}
+
+        {/* Hovedknapp — selve klikket */}
+        <button
+          onClick={handleClick}
+          aria-label={`Klikk for å tjene ${fmt(effectiveCpc)} coins`}
+          style={{
+            width: 240, height: 240,
+            background:    `radial-gradient(circle at 35% 30%, ${wColor}, ${wColor}cc 70%)`,
+            borderRadius:  "50%",
+            touchAction:   "manipulation",
+            transition:    "transform 0.12s ease, filter 0.12s ease",
+            boxShadow: `
+              0 0 60px ${wColor}55,
+              0 0 100px ${wColor}30,
+              inset 0 2px 0 rgba(255,255,255,0.25),
+              inset 0 -8px 24px rgba(0,0,0,0.25)
+            `,
+            border: `3px solid ${wColor}`,
+          }}
+          className="relative z-10 flex select-none items-center justify-center active:scale-[0.94] hover:brightness-110 hover:scale-[1.02]"
+        >
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="" className="h-40 w-40 rounded-full object-cover" />
+          ) : (
+            <span style={{ fontSize: 88, lineHeight: 1, filter: `drop-shadow(0 4px 12px rgba(0,0,0,0.5))` }}>
+              {worldDef.emoji}
+            </span>
+          )}
+        </button>
       </div>
+
+      {/* Milepæl-bar — fremgang mot neste oppgradering du kan kjøpe */}
+      {nextMilestone && (
+        <div className="mb-5 w-full">
+          <div className="mb-1 flex items-baseline justify-between text-[11px]">
+            <span style={{ color: "rgba(255,255,255,0.5)" }}>
+              Neste: <span style={{ color: wColor }}>{nextMilestone.emoji} {nextMilestone.name}</span>
+            </span>
+            <span style={{ color: "rgba(255,255,255,0.4)" }} className="tabular-nums">
+              {fmt(displayCoins)} / {fmt(nextMilestone.cost)}
+            </span>
+          </div>
+          <div className="overflow-hidden rounded-full" style={{ height: 4, background: "rgba(255,255,255,0.06)" }}>
+            <div
+              className="h-full rounded-full transition-all duration-300"
+              style={{
+                width: `${milestonePct.toFixed(2)}%`,
+                background: `linear-gradient(to right, ${wColor}aa, ${wColor})`,
+                boxShadow: `0 0 8px ${wColor}80`,
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       <p className="mb-5 text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
         {fmt(totalClicks)} totale klikk{totalPrestige > 0 && ` · Prestige ${totalPrestige}`}
