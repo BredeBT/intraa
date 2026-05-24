@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useTransition } from "react";
 import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
+import { useKeyboardOpen } from "@/lib/hooks/useKeyboardOpen";
 import {
   Search, Send, MessageSquare, ChevronDown, ChevronLeft,
   Hash, Plus, X, Check, UserPlus, Clock, Paperclip, Loader2,
@@ -852,8 +853,34 @@ export default function MeldingerClient({
     return null;
   })();
 
+  // Høyde-beregning som tar safe-area og keyboard-status med:
+  //  • desktop  → 100dvh - header (Tailwind md:h-... overtar)
+  //  • mobil m/keyboard → 100dvh - header (BottomBar er skjult)
+  //  • mobil u/keyboard → 100dvh - header - BottomBar
+  // 100dvh skrumper automatisk når iOS viser keyboardet.
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 768px)");
+    setIsDesktop(mql.matches);
+    const h = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mql.addEventListener("change", h);
+    return () => mql.removeEventListener("change", h);
+  }, []);
+  const keyboardOpen = useKeyboardOpen();
+  const heightStyle = isDesktop
+    ? undefined  // la Tailwind md:h-... gjelde
+    : keyboardOpen
+      ? "calc(100dvh - 3.5rem - max(env(safe-area-inset-top), 0.75rem))"
+      : "calc(100dvh - 7rem - max(env(safe-area-inset-top), 0.75rem) - max(env(safe-area-inset-bottom), 0.5rem))";
+
   return (
-    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] overflow-hidden" style={{ background: "var(--bg-primary)" }}>
+    <div
+      className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] overflow-hidden"
+      style={{
+        background: "var(--bg-primary)",
+        ...(heightStyle ? { height: heightStyle } : {}),
+      }}
+    >
 
       {/* ─── Sidebar ────────────────────────────────────────────────────────── */}
       <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-72 shrink-0 flex-col border-r border-white/[0.06]`} style={{ background: "var(--bg-secondary)" }}>

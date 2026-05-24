@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Home, Search, Mail, UserCircle, LayoutGrid } from "lucide-react";
+import { useKeyboardOpen } from "@/lib/hooks/useKeyboardOpen";
 
 interface Props {
   pathname:    string;
@@ -10,37 +10,6 @@ interface Props {
   isCommunity: boolean;
   onSearch:    () => void;
   onMenu:      () => void;
-}
-
-/**
- * Detekterer om mobiltastatur er oppe via visualViewport-API.
- *
- * iOS-spesifikk fallgruve: window.innerHeight kan også krympe når keyboardet
- * vises, så delta mot innerHeight blir 0 og fanger ikke endringen. Vi husker
- * heller den største visualViewport.height vi har sett (baseline = ingen
- * keyboard), og sammenligner senere målinger mot den. Baseline oppdateres
- * hvis viewporten vokser (f.eks. ved orientation-change).
- */
-function useKeyboardOpen(): boolean {
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    const vv = typeof window !== "undefined" ? window.visualViewport : null;
-    if (!vv) return;
-    let baseline = vv.height;
-    const check = () => {
-      const h = vv.height;
-      if (h > baseline) baseline = h;       // keyboardet gikk ned eller rotasjon
-      setOpen(baseline - h > 150);
-    };
-    check();
-    vv.addEventListener("resize", check);
-    vv.addEventListener("scroll", check);    // iOS fyrer scroll når keyboardet shifter
-    return () => {
-      vv.removeEventListener("resize", check);
-      vv.removeEventListener("scroll", check);
-    };
-  }, []);
-  return open;
 }
 
 export default function BottomBar({ pathname, unreadCount, isCommunity, onSearch, onMenu }: Props) {

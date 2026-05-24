@@ -18,6 +18,7 @@ import BottomBar from "@/components/BottomBar";
 import MobileDrawer from "@/components/MobileDrawer";
 import { useOrg, type Org } from "@/lib/context/OrgContext";
 import { useUser } from "@/lib/hooks/useUser";
+import { useKeyboardOpen } from "@/lib/hooks/useKeyboardOpen";
 import { WebRTCProvider } from "@/context/WebRTCContext";
 import { IncomingCallBanner } from "@/components/IncomingCallBanner";
 import { GlobalCallBar } from "@/components/GlobalCallBar";
@@ -447,6 +448,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     [allOrgs]
   );
   const { user, isSponsor } = useUser();
+  const keyboardOpen = useKeyboardOpen();
 
   // Sponsors always live on /brand/* — redirect them away from creator/fan pages
   useEffect(() => {
@@ -637,7 +639,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 pb-[calc(3.5rem+max(env(safe-area-inset-bottom),0.5rem))] md:pb-0">
+        <main
+          className="min-w-0 flex-1 pb-[calc(3.5rem+max(env(safe-area-inset-bottom),0.5rem))] md:pb-0"
+          style={{
+            // Override Tailwind pb til 0 når mobiltastatur er oppe — ellers
+            // dukker det opp et "tom gap" mellom content og tastatur (plassen
+            // var reservert til BottomBar som nå er skjult).
+            ...(keyboardOpen ? { paddingBottom: 0 } : {}),
+          }}
+        >
           {user?.isSuperAdmin && (
             <Suspense>
               <SuperAdminBanner />
