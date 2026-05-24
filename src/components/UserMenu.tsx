@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Settings, LogOut, ShieldAlert } from "lucide-react";
 import { useUser } from "@/lib/hooks/useUser";
-import { useOrg } from "@/lib/context/OrgContext";
 
 const STATUS_COLORS: Record<string, string> = {
   online:    "bg-emerald-500",
@@ -16,14 +15,12 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function UserMenu() {
   const { user, isAdmin } = useUser();
-  const { org }           = useOrg();
   const isSuperAdmin      = user?.isSuperAdmin ?? false;
   const [open,     setOpen]     = useState(false);
   const [status,   setStatus]   = useState<string>("online");
   const ref    = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const isOrgAdmin = org?.userRole === "OWNER" || org?.userRole === "ADMIN";
 
   // Fetch user status once
   useEffect(() => {
@@ -86,17 +83,6 @@ export default function UserMenu() {
               <div className="my-1 border-t border-zinc-800" />
             </>
           )}
-          {isOrgAdmin && (
-            <Link
-              href="/admin/innstillinger"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
-            >
-              <Settings className="h-4 w-4 shrink-0" />
-              Organisasjonsinnstillinger
-            </Link>
-          )}
-          {isOrgAdmin && <div className="my-1 border-t border-zinc-800" />}
           <Link
             href="/innstillinger"
             onClick={() => setOpen(false)}
