@@ -33,11 +33,11 @@ export default function FanpassHint({ storageKey, perk }: Props) {
     } catch { /* localStorage utilgjengelig */ }
 
     fetch("/api/user/fanpass-portfolio")
-      .then((r) => r.ok ? r.json() as Promise<{ communities: { hasFanpass: boolean; accessMode: string }[] }> : Promise.reject())
+      .then((r) => r.ok ? r.json() as Promise<{ communities: { hasFanpass: boolean }[] }> : Promise.reject())
       .then((d) => {
         if (!alive) return;
         // Vis kun hvis det finnes minst ett community brukeren KAN aktivere Fanpass i
-        const canActivate = d.communities.some((c) => !c.hasFanpass && c.accessMode !== "OPEN");
+        const canActivate = d.communities.some((c) => !c.hasFanpass);
         setShow(canActivate);
         setChecked(true);
       })

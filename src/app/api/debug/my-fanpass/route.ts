@@ -22,7 +22,7 @@ export async function GET() {
     }),
     db.membership.findMany({
       where: { userId },
-      include: { organization: { select: { id: true, slug: true, name: true, accessMode: true } } },
+      include: { organization: { select: { id: true, slug: true, name: true, requiresFanpassToJoin: true } } },
     }),
     db.fanPass.findMany({
       where: { userId },
@@ -38,11 +38,11 @@ export async function GET() {
     memberships: memberships.map((m) => {
       const fp = fpByOrg.get(m.organization.id);
       return {
-        orgId:      m.organization.id,
-        orgSlug:    m.organization.slug,
-        orgName:    m.organization.name,
-        accessMode: m.organization.accessMode,
-        role:       m.role,
+        orgId:                 m.organization.id,
+        orgSlug:               m.organization.slug,
+        orgName:               m.organization.name,
+        requiresFanpassToJoin: m.organization.requiresFanpassToJoin,
+        role:                  m.role,
         fanpass: fp ? {
           status:        fp.status,
           startDate:     fp.startDate.toISOString(),

@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
   });
   if (existing) return NextResponse.json({ ok: true, alreadyMember: true });
 
-  // EXCLUSIVE access mode: require active Fanpass before allowing join
-  if (org.accessMode === "EXCLUSIVE") {
+  // Hvis communityet krever Fanpass for å bli medlem
+  if (org.requiresFanpassToJoin) {
     const fanpass = await db.fanPass.findFirst({
       where: {
         userId:         session.user.id,

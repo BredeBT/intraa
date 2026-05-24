@@ -390,15 +390,15 @@ function PersonvernTab() {
 // ─── Fanpass tab ──────────────────────────────────────────────────────────────
 
 interface FanpassCommunity {
-  orgId:       string;
-  orgSlug:     string;
-  orgName:     string;
-  logoUrl:     string | null;
-  accessMode:  "OPEN" | "FREEMIUM" | "EXCLUSIVE";
-  hasFanpass:  boolean;
-  endDate:     string | null;
-  cancelled:   boolean;
-  paidAmount:  number;
+  orgId:                 string;
+  orgSlug:               string;
+  orgName:               string;
+  logoUrl:               string | null;
+  requiresFanpassToJoin: boolean;
+  hasFanpass:            boolean;
+  endDate:               string | null;
+  cancelled:             boolean;
+  paidAmount:            number;
 }
 
 const FS = {
@@ -436,7 +436,8 @@ function FanpassTab() {
   }
 
   const activeOnes  = communities.filter((c) => c.hasFanpass);
-  const availableIn = communities.filter((c) => !c.hasFanpass && c.accessMode !== "OPEN");
+  // Fanpass kan aktiveres i alle communities du er medlem av
+  const availableIn = communities.filter((c) => !c.hasFanpass);
 
   return (
     <div className="flex flex-col gap-6">

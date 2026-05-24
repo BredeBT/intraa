@@ -22,7 +22,7 @@ export async function GET() {
     select: {
       organization: {
         select: {
-          id: true, slug: true, name: true, accessMode: true,
+          id: true, slug: true, name: true, requiresFanpassToJoin: true,
           theme: { select: { logoUrl: true } },
         },
       },
@@ -40,12 +40,12 @@ export async function GET() {
     const fp     = fpMap.get(m.organization.id);
     const active = !!fp && fp.status === "ACTIVE" && fp.endDate > now;
     return {
-      orgId:       m.organization.id,
-      orgSlug:     m.organization.slug,
-      orgName:     m.organization.name,
-      logoUrl:     m.organization.theme?.logoUrl ?? null,
-      accessMode:  m.organization.accessMode,
-      hasFanpass:  active,
+      orgId:                 m.organization.id,
+      orgSlug:               m.organization.slug,
+      orgName:               m.organization.name,
+      logoUrl:               m.organization.theme?.logoUrl ?? null,
+      requiresFanpassToJoin: m.organization.requiresFanpassToJoin,
+      hasFanpass:            active,
       endDate:     fp?.endDate.toISOString() ?? null,
       cancelled:   !!fp?.cancelledAt,
       paidAmount:  fp?.paidAmount ?? 49,

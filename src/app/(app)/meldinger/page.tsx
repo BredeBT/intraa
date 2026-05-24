@@ -28,7 +28,6 @@ export default async function MeldingerPage({
             name:       true,
             type:       true,
             slug:       true,
-            accessMode: true,
             theme: { select: { logoUrl: true } },
             channels: {
               where:   { type: { not: "DIRECT" } },
@@ -126,7 +125,6 @@ export default async function MeldingerPage({
       orgName:    m.organization.name,
       orgType:    m.organization.type,
       orgSlug:    m.organization.slug,
-      accessMode: m.organization.accessMode,
       hasFanpass,
       logoUrl:    m.organization.theme?.logoUrl ?? null,
       role:       m.role,

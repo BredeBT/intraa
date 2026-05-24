@@ -24,11 +24,10 @@ function toSlug(name: string) {
 
 const AURORA = "linear-gradient(135deg, #5EEAD4, #A855F7)";
 const STEP_LABELS: { key: keyof OnboardingProgress["steps"]; title: string; hint: string }[] = [
-  { key: "createCommunity", title: "Opprett ditt community",          hint: "Gi det et navn og en URL" },
-  { key: "brandTheme",      title: "Last opp logo + banner",          hint: "Personliggjør utseendet" },
-  { key: "firstPost",       title: "Skriv din første post",           hint: "Velkommen til fansene dine" },
-  { key: "accessMode",      title: "Velg tilgangsmodus",              hint: "Åpen, Freemium eller Eksklusiv" },
-  { key: "invite",          title: "Inviter dine første fans",        hint: "Generer en delbar lenke" },
+  { key: "createCommunity", title: "Opprett ditt community",     hint: "Gi det et navn og en URL" },
+  { key: "brandTheme",      title: "Last opp logo + banner",     hint: "Personliggjør utseendet" },
+  { key: "firstPost",       title: "Skriv din første post",      hint: "Velkommen til fansene dine" },
+  { key: "invite",          title: "Inviter dine første fans",   hint: "Generer en delbar lenke" },
 ];
 
 export default function OnboardingChecklist({ progress }: Props) {
@@ -264,7 +263,6 @@ function hrefForStep(
   switch (key) {
     case "brandTheme": return `/admin/innstillinger?tab=utseende`;
     case "firstPost":  return `/${progress.orgSlug}/feed`;
-    case "accessMode": return `/community/${progress.orgSlug}/admin/tilgang`;
     case "invite":     return undefined; // håndteres via onClick
     default:           return undefined;
   }

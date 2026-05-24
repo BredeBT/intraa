@@ -63,7 +63,6 @@ export default async function InnstillingerPage({
         slug:        org.slug,
         type:        org.type,
         plan:        org.plan,
-        accessMode:  org.accessMode,
         description: org.description ?? "",
         createdAt:   org.createdAt.toISOString(),
       }}

@@ -13,7 +13,6 @@ export type OnboardingProgress = {
     createCommunity: boolean;  // alltid true når vi har orgId
     brandTheme:      boolean;  // logo + banner satt på TenantTheme
     firstPost:       boolean;  // ≥1 post i orgen
-    accessMode:      boolean;  // org.accessMode er eksplisitt valgt (≠ default ELLER en post er publisert)
     invite:          boolean;  // openInviteToken finnes (delbar link generert)
   };
   completed: number;
@@ -47,7 +46,7 @@ export async function getOnboardingProgress(): Promise<OnboardingProgress | null
     include: {
       organization: {
         select: {
-          id: true, slug: true, accessMode: true, openInviteToken: true,
+          id: true, slug: true, openInviteToken: true,
           theme: { select: { logoUrl: true, bannerUrl: true } },
           _count: { select: { posts: true } },
         },
@@ -62,11 +61,10 @@ export async function getOnboardingProgress(): Promise<OnboardingProgress | null
         createCommunity: false,
         brandTheme:      false,
         firstPost:       false,
-        accessMode:      false,
         invite:          false,
       },
       completed: 0,
-      total:     5,
+      total:     4,
     };
   }
 
@@ -75,9 +73,6 @@ export async function getOnboardingProgress(): Promise<OnboardingProgress | null
     createCommunity: true,
     brandTheme:      !!(org.theme?.logoUrl || org.theme?.bannerUrl),
     firstPost:       org._count.posts > 0,
-    // accessMode anses som "valgt" så snart bruker har publisert noe (de har sett siden)
-    // eller når accessMode ≠ default FREEMIUM
-    accessMode:      org.accessMode !== "FREEMIUM" || org._count.posts > 0,
     invite:          !!org.openInviteToken,
   };
 

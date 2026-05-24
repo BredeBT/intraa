@@ -37,7 +37,6 @@ interface Community {
   orgName:    string;
   orgType:    string;
   orgSlug?:   string;
-  accessMode?: "OPEN" | "FREEMIUM" | "EXCLUSIVE";
   hasFanpass?: boolean;
   logoUrl:    string | null;
   role:       string;

@@ -62,12 +62,6 @@ enum ChannelType {
   BROADCAST
 }
 
-enum CommunityAccessMode {
-  OPEN       // Free to join, no Fanpass features surfaced
-  FREEMIUM   // Free to join, Fanpass unlocks broadcast / exclusive content
-  EXCLUSIVE  // Fanpass required to join — entire community is paywalled
-}
-
 enum InvitationStatus {
   PENDING
   ACCEPTED
@@ -156,7 +150,7 @@ model Organization {
   plan        OrgPlan  @default(FREE)
   joinType        String   @default("OPEN")
   visibility      String   @default("open")  // "open" | "closed" | "private"
-  accessMode      CommunityAccessMode @default(FREEMIUM)
+  requiresFanpassToJoin  Boolean             @default(false)
   openInviteToken String?  @unique
   createdAt       DateTime @default(now())
 

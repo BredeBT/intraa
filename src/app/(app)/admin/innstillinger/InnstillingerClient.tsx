@@ -10,7 +10,6 @@ import {
 } from "@/lib/features";
 import type { Feature } from "@/lib/features";
 import { BANNER_PRESETS, AVATAR_PRESETS } from "@/lib/themePresets";
-import AccessModePicker from "@/app/(app)/community/[slug]/admin/tilgang/AccessModePicker";
 
 const DISABLED_BY_DEFAULT = new Set<Feature>(["live"]);
 
@@ -35,7 +34,7 @@ const S = {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = "generelt" | "tilgang" | "utseende" | "funksjoner" | "shop" | "statistikk" | "faresone";
+type Tab = "generelt" | "utseende" | "funksjoner" | "shop" | "statistikk" | "faresone";
 type OrgType = "COMPANY" | "COMMUNITY";
 type MemberRole = "OWNER" | "ADMIN" | "MODERATOR" | "VIP" | "MEMBER";
 
@@ -55,7 +54,6 @@ interface OrgInfo {
   slug:        string;
   type:        OrgType;
   plan:        string;
-  accessMode:  "OPEN" | "FREEMIUM" | "EXCLUSIVE";
   description: string;
   createdAt:   string;
 }
@@ -115,7 +113,6 @@ const FONT_OPTIONS = [
 
 const TABS: { id: Tab; label: string; danger?: boolean; ownerOnly?: boolean }[] = [
   { id: "generelt",   label: "Generelt"   },
-  { id: "tilgang",    label: "Tilgang"    },
   { id: "utseende",   label: "Utseende"   },
   { id: "funksjoner", label: "Funksjoner" },
   { id: "shop",       label: "Shop"       },
@@ -558,8 +555,9 @@ function ChartCard({
   );
 }
 
-const StatistikkTab = memo(function StatistikkTabImpl({ stats, accessMode }: { stats: OrgStats; accessMode: string }) {
-  const fanpassEnabled = accessMode !== "OPEN";
+const StatistikkTab = memo(function StatistikkTabImpl({ stats }: { stats: OrgStats }) {
+  // Fanpass er alltid tilgjengelig nå (vi har droppet OPEN/FREEMIUM-skille)
+  const fanpassEnabled = true;
   const monthlyRevenue = stats.activeFanpass * 49;
 
   return (
@@ -655,7 +653,7 @@ export default function InnstillingerClient({
   // full server-refetch (~20 DB-queries) hver gang brukeren bytter tab.
   // URL oppdateres via history.replaceState slik at refresh og lenker fortsatt
   // havner på riktig tab.
-  const validTabs: Tab[] = ["generelt", "tilgang", "utseende", "funksjoner", "shop", "statistikk", "faresone"];
+  const validTabs: Tab[] = ["generelt", "utseende", "funksjoner", "shop", "statistikk", "faresone"];
   const startTab: Tab = validTabs.includes(initialTab as Tab) ? (initialTab as Tab) : "generelt";
   const [activeTab, setActiveTab] = useState<Tab>(startTab);
 
@@ -972,25 +970,6 @@ export default function InnstillingerClient({
         </div>
       )}
 
-      {/* ══ TAB: TILGANG ══ */}
-      {activeTab === "tilgang" && (
-        <div className="max-w-2xl">
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold" style={{ color: S.text }}>Tilgangsmodus</h3>
-            <p className="mt-0.5 text-xs" style={{ color: S.muted }}>
-              Bestem hvordan folk får tilgang til {org.name}. Valget styrer om Fanpass-funksjoner og betalingsvegg er aktive.
-            </p>
-          </div>
-          <AccessModePicker
-            orgSlug={org.slug}
-            currentMode={org.accessMode}
-            memberCount={accessStats.memberCount}
-            fanpassCount={accessStats.fanpassCount}
-            broadcastChannelName={accessStats.broadcastChannelName}
-          />
-        </div>
-      )}
-
       {/* ══ TAB: UTSEENDE ══ */}
       {activeTab === "utseende" && (
         <div className="max-w-xl">
@@ -1211,7 +1190,7 @@ export default function InnstillingerClient({
 
       {/* ══ TAB: STATISTIKK ══ */}
       {activeTab === "statistikk" && (
-        <StatistikkTab stats={stats} accessMode={org.accessMode} />
+        <StatistikkTab stats={stats} />
       )}
 
       {/* ══ TAB: FARESONE (kun OWNER) ══ */}
