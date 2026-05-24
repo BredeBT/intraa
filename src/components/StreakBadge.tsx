@@ -49,11 +49,15 @@ export default function StreakBadge() {
   }, []);
 
   useEffect(() => {
-    function onClick(e: MouseEvent) {
+    function onPointerDown(e: Event) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+    };
   }, []);
 
   if (!data || data.streak === 0) return null;
@@ -82,7 +86,7 @@ export default function StreakBadge() {
 
       {open && (
         <div
-          className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl p-4 shadow-2xl"
+          className="fixed right-2 top-[calc(env(safe-area-inset-top)+3.5rem)] z-50 w-[calc(100vw-1rem)] max-w-[18rem] rounded-2xl p-4 shadow-2xl sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-72"
           style={{
             background: S.surface,
             border:     `1px solid ${S.line}`,

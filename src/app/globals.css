@@ -161,6 +161,24 @@ body {
   font-family: system-ui, sans-serif;
   /* Smooth overgang ved theme-bytte */
   transition: background-color 0.2s ease, color 0.2s ease;
+  /* Forhindre at content som er bredere enn viewport (f.eks. bilder, lange
+     ord, eller iOS-zoom-rester) lar siden scrolles horisontalt. */
+  overflow-x: hidden;
+}
+
+/* iOS Safari auto-zoomer på input-fokus hvis font-size < 16px og dytter
+   hele viewporten ut av posisjon. Tving 16px på små skjermer. */
+@media (max-width: 640px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="number"],
+  input[type="url"],
+  input[type="tel"],
+  textarea {
+    font-size: 16px;
+  }
 }
 
 /* ── Page enter animation ── */
@@ -276,6 +294,11 @@ body {
   max-height: 7rem;
   overflow-y: auto;
   word-break: break-words;
+}
+/* iOS Safari auto-zoomer på input-fokus hvis font-size < 16px og skyver
+   hele viewporten — bruk 16px på mobilbredder for å unngå det. */
+@media (max-width: 640px) {
+  .tiptap { font-size: 16px; }
 }
 /* Når brukt for innlegg (feed-compose), la editoren vokse seg større */
 .tiptap-tall .tiptap {

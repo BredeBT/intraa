@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Home, Search, Mail, UserCircle, LayoutGrid } from "lucide-react";
 
@@ -11,11 +12,36 @@ interface Props {
   onMenu:      () => void;
 }
 
+/**
+ * Detekterer om mobiltastatur er oppe via visualViewport-API. iOS Safari
+ * krymper visualViewport.height når keyboardet vises — vi sammenligner mot
+ * window.innerHeight for å finne forskjellen.
+ */
+function useKeyboardOpen(): boolean {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const vv = typeof window !== "undefined" ? window.visualViewport : null;
+    if (!vv) return;
+    const onResize = () => {
+      const delta = window.innerHeight - vv.height;
+      setOpen(delta > 150);
+    };
+    onResize();
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
+  return open;
+}
+
 export default function BottomBar({ pathname, unreadCount, isCommunity, onSearch, onMenu }: Props) {
-  const accent = isCommunity ? "text-violet-400" : "text-indigo-400";
+  const accent          = isCommunity ? "text-violet-400" : "text-indigo-400";
+  const keyboardOpen    = useKeyboardOpen();
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
+
+  // Skjul bottom-nav når mobiltastatur er oppe — frigjør plass til compose-boksen
+  if (keyboardOpen) return null;
 
   return (
     <nav
