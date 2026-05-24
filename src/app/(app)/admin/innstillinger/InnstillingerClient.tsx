@@ -5,13 +5,7 @@ import {
   Check, Upload, X, Loader2, Image as ImageIcon, Plus, Info,
   Users, Coins, Crown, MessageSquare, AlertTriangle,
 } from "lucide-react";
-import {
-  COMPANY_FEATURES, COMMUNITY_FEATURES, FEATURE_LABELS, FEATURE_DESCRIPTIONS,
-} from "@/lib/features";
-import type { Feature } from "@/lib/features";
 import { BANNER_PRESETS, AVATAR_PRESETS } from "@/lib/themePresets";
-
-const DISABLED_BY_DEFAULT = new Set<Feature>(["live"]);
 
 // ─── Aurora-tokens (matcher landing + resten av appen) ───────────────────────
 const S = {
@@ -34,7 +28,7 @@ const S = {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = "generelt" | "utseende" | "funksjoner" | "shop" | "statistikk" | "faresone";
+type Tab = "generelt" | "utseende" | "shop" | "statistikk" | "faresone";
 type OrgType = "COMPANY" | "COMMUNITY";
 type MemberRole = "OWNER" | "ADMIN" | "MODERATOR" | "VIP" | "MEMBER";
 
@@ -64,12 +58,6 @@ interface StreamSettingsForm {
   preferredPlatform: string;
 }
 
-interface AccessStats {
-  memberCount:           number;
-  fanpassCount:          number;
-  broadcastChannelName:  string | null;
-}
-
 export interface OrgStats {
   totalMembers:        number;
   newMembers7d:        number;
@@ -88,10 +76,8 @@ interface Props {
   initialTab:     string;
   org:            OrgInfo;
   theme:          Theme;
-  features:       Record<string, boolean>;
   userRole:       MemberRole;
   streamSettings: StreamSettingsForm;
-  accessStats:    AccessStats;
   stats:          OrgStats;
 }
 
@@ -114,7 +100,6 @@ const FONT_OPTIONS = [
 const TABS: { id: Tab; label: string; danger?: boolean; ownerOnly?: boolean }[] = [
   { id: "generelt",   label: "Generelt"   },
   { id: "utseende",   label: "Utseende"   },
-  { id: "funksjoner", label: "Funksjoner" },
   { id: "shop",       label: "Shop"       },
   { id: "statistikk", label: "Statistikk" },
   { id: "faresone",   label: "Faresone", danger: true, ownerOnly: true },
@@ -646,14 +631,14 @@ function MiniStat({ label, value }: { label: string; value: number }) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function InnstillingerClient({
-  initialTab, org: initialOrg, theme: initialTheme, features: initialFeatures,
-  userRole, streamSettings: initialStream, accessStats, stats,
+  initialTab, org: initialOrg, theme: initialTheme,
+  userRole, streamSettings: initialStream, stats,
 }: Props) {
   // Tab-switching gjøres lokalt (ikke via router.push), slik at vi ikke trigger
   // full server-refetch (~20 DB-queries) hver gang brukeren bytter tab.
   // URL oppdateres via history.replaceState slik at refresh og lenker fortsatt
   // havner på riktig tab.
-  const validTabs: Tab[] = ["generelt", "utseende", "funksjoner", "shop", "statistikk", "faresone"];
+  const validTabs: Tab[] = ["generelt", "utseende", "shop", "statistikk", "faresone"];
   const startTab: Tab = validTabs.includes(initialTab as Tab) ? (initialTab as Tab) : "generelt";
   const [activeTab, setActiveTab] = useState<Tab>(startTab);
 
@@ -752,22 +737,7 @@ export default function InnstillingerClient({
     setThemeSaving(false);
   }, [themeSaving, theme, logoFile, bannerFile]);
 
-  // ── Funksjoner state ──
-  const [features,     setFeatures]     = useState<Record<string, boolean>>(initialFeatures);
-  const [featSaving,   setFeatSaving]   = useState<Record<string, boolean>>({});
   const isOwner = userRole === "OWNER";
-  const relevantFeatures: Feature[] = (org.type === "COMMUNITY" ? COMMUNITY_FEATURES : COMPANY_FEATURES)
-    .filter((f) => f !== "community_subscription");
-
-  async function toggleFeature(feature: string, enabled: boolean) {
-    setFeatSaving((p) => ({ ...p, [feature]: true }));
-    const res = await fetch("/api/org/features", {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ feature, enabled }),
-    });
-    setFeatSaving((p) => ({ ...p, [feature]: false }));
-    if (res.ok) setFeatures((p) => ({ ...p, [feature]: enabled }));
-  }
 
   // ── Stream state ──
   const [stream,       setStream]       = useState<StreamSettingsForm>(initialStream);
@@ -1129,59 +1099,6 @@ export default function InnstillingerClient({
             </PrimaryButton>
             {themeSaved && <SavedBadge />}
           </div>
-        </div>
-      )}
-
-      {/* ══ TAB: FUNKSJONER ══ */}
-      {activeTab === "funksjoner" && (
-        <div className="max-w-xl">
-          {!isOwner && (
-            <div
-              className="mb-6 rounded-xl px-5 py-4"
-              style={{ background: `${S.amber}10`, border: `1px solid ${S.amber}30` }}
-            >
-              <p className="text-sm" style={{ color: S.amber }}>Kun eieren av organisasjonen kan endre funksjoner.</p>
-            </div>
-          )}
-          <div className="overflow-hidden rounded-xl" style={{ border: `1px solid ${S.line}`, background: S.surface }}>
-            {relevantFeatures.map((feature, i) => {
-              const defaultEnabled = !DISABLED_BY_DEFAULT.has(feature);
-              const isEnabled = features[feature] ?? defaultEnabled;
-              const isLast = i === relevantFeatures.length - 1;
-              return (
-                <div
-                  key={feature}
-                  className="flex items-center justify-between px-5 py-4 transition-colors"
-                  style={{ borderBottom: isLast ? undefined : `1px solid ${S.line}` }}
-                >
-                  <div>
-                    <p className="text-sm font-medium" style={{ color: S.text }}>{FEATURE_LABELS[feature]}</p>
-                    <p className="text-xs" style={{ color: S.muted }}>{FEATURE_DESCRIPTIONS[feature]}</p>
-                    {feature === "live" && isEnabled && (
-                      <button
-                        onClick={() => setTab("generelt")}
-                        className="mt-1 text-xs font-medium transition-opacity hover:opacity-80"
-                        style={{ color: S.teal }}
-                      >
-                        Konfigurer stream →
-                      </button>
-                    )}
-                  </div>
-                  <div className="ml-4 flex items-center gap-2">
-                    {featSaving[feature] && <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: S.muted }} />}
-                    <Toggle
-                      checked={isEnabled}
-                      onChange={() => void toggleFeature(feature, !isEnabled)}
-                      disabled={!isOwner || !!featSaving[feature]}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <p className="mt-3 text-xs" style={{ color: S.subtle }}>
-            Endringer trer i kraft umiddelbart for alle medlemmer.
-          </p>
         </div>
       )}
 

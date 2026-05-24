@@ -1,6 +1,5 @@
 import { requireAdmin } from "@/server/requireAdmin";
 import { db } from "@/server/db";
-import { seedDefaultFeatures } from "@/server/seedFeatures";
 import InnstillingerClient, { type OrgStats } from "./InnstillingerClient";
 
 export default async function InnstillingerPage({
@@ -14,33 +13,14 @@ export default async function InnstillingerPage({
   const fiveMinAgo  = new Date(Date.now() - 5 * 60 * 1000);
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const [
-    org, theme, featureRows, streamSettings,
-    memberCount, fanpassCount, broadcastChannel,
-    stats,
-  ] = await Promise.all([
+  const [org, theme, streamSettings, stats] = await Promise.all([
     db.organization.findUnique({ where: { id: organizationId } }),
     db.tenantTheme.findUnique({ where: { organizationId } }),
-    db.organizationFeature.findMany({ where: { organizationId } }),
     db.streamSettings.findUnique({ where: { organizationId } }),
-    db.membership.count({ where: { organizationId } }),
-    db.fanPass.count({
-      where: { organizationId, status: "ACTIVE", endDate: { gt: new Date() } },
-    }),
-    db.channel.findFirst({
-      where:  { orgId: organizationId, type: "BROADCAST" },
-      select: { name: true },
-    }),
     loadOrgStats(organizationId, fiveMinAgo, sevenDaysAgo),
   ]);
 
   if (!org) return null;
-
-  let features = featureRows;
-  if (features.length === 0) {
-    await seedDefaultFeatures(organizationId, org.type);
-    features = await db.organizationFeature.findMany({ where: { organizationId } });
-  }
 
   const themeInitial = {
     logoUrl:        theme?.logoUrl        ?? null,
@@ -51,8 +31,6 @@ export default async function InnstillingerPage({
     fontStyle:      theme?.fontStyle      ?? "default",
     welcomeMessage: theme?.welcomeMessage ?? "",
   };
-
-  const featureMap = Object.fromEntries(features.map((f) => [f.feature, f.enabled]));
 
   return (
     <InnstillingerClient
@@ -67,17 +45,11 @@ export default async function InnstillingerPage({
         createdAt:   org.createdAt.toISOString(),
       }}
       theme={themeInitial}
-      features={featureMap}
       userRole={role}
       streamSettings={{
         twitchChannel:     streamSettings?.twitchChannel     ?? "",
         youtubeChannel:    streamSettings?.youtubeChannel    ?? "",
         preferredPlatform: streamSettings?.preferredPlatform ?? "twitch",
-      }}
-      accessStats={{
-        memberCount,
-        fanpassCount,
-        broadcastChannelName: broadcastChannel?.name ?? null,
       }}
       stats={stats}
     />
