@@ -86,9 +86,11 @@ async function loadOrgStats(orgId: string, fiveMinAgo: Date, sevenDaysAgo: Date)
     db.fanPass.count({
       where: { organizationId: orgId, status: "ACTIVE", endDate: { gt: now } },
     }),
-    db.clickerProfile.aggregate({
+    // Coins i omløp = sum av Membership.points (shop-saldo).
+    // IKKE ClickerProfile.coins — det er klikkerspillets interne valuta som vokser til milliarder.
+    db.membership.aggregate({
       where:   { organizationId: orgId },
-      _sum:    { coins: true },
+      _sum:    { points: true },
     }),
     db.coinTransaction.aggregate({
       where:   { organizationId: orgId, amount: { gt: 0 }, createdAt: { gte: sevenDaysAgo } },
@@ -128,7 +130,7 @@ async function loadOrgStats(orgId: string, fiveMinAgo: Date, sevenDaysAgo: Date)
     posts7d,
     messages7d,
     activeFanpass,
-    coinsInCirculation: Math.round(coinAgg._sum.coins ?? 0),
+    coinsInCirculation: coinAgg._sum.points ?? 0,
     coinsAwarded7d:     coinsAwarded7dAgg._sum.amount ?? 0,
     memberGrowth,
     coinFlow,
