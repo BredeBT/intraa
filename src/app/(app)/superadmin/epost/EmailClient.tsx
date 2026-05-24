@@ -160,7 +160,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
           {preview ? (
             <div
               className="min-h-[240px] rounded-xl p-4 text-sm"
-              style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)", color: "rgba(255,255,255,0.7)", whiteSpace: "pre-wrap", lineHeight: 1.7 }}
+              style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)", color: "var(--text-secondary)", whiteSpace: "pre-wrap", lineHeight: 1.7 }}
             >
               {body || <span style={{ color: "var(--border-strong)" }}>Ingenting å forhåndsvise…</span>}
             </div>

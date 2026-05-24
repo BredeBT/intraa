@@ -53,7 +53,7 @@ export function SuspendAction({ orgId }: { orgId: string }) {
       ) : (
         <div className="space-y-3">
           {error && <p className="text-sm text-red-400">{error}</p>}
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
             Er du sikker? Community skjules fra discovery — eksisterende medlemmer beholder tilgang.
           </p>
           <div className="flex gap-2">

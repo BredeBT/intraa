@@ -19,7 +19,7 @@ const C = {
   lineHi:    "var(--border-strong)",
   text:      "var(--text-primary)",
   muted:     "var(--text-secondary)",
-  mutedHi:   "rgba(255,255,255,0.75)",
+  mutedHi:   "var(--text-secondary)",
   teal:      "#5EEAD4",
   purple:    "#A855F7",
   blue:      "#60A5FA",
@@ -94,7 +94,7 @@ export default async function Home() {
             className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-sm font-black"
             style={{
               background:           "var(--border-default)",
-              border:               "0.5px solid rgba(255,255,255,0.20)",
+              border:               "0.5px solid var(--border-strong)",
               backdropFilter:       "blur(10px)",
               WebkitBackdropFilter: "blur(10px)",
               color:                "#fff",
@@ -420,7 +420,7 @@ export default async function Home() {
               className="inline-flex h-6 w-6 items-center justify-center rounded-md text-xs font-black"
               style={{
                 background:           "var(--border-default)",
-                border:               "0.5px solid rgba(255,255,255,0.20)",
+                border:               "0.5px solid var(--border-strong)",
                 backdropFilter:       "blur(10px)",
                 WebkitBackdropFilter: "blur(10px)",
                 color:                "#fff",

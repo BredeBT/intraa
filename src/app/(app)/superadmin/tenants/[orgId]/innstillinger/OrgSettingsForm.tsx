@@ -316,7 +316,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                         </span>
                         <span
                           className="ml-2 text-xs"
-                          style={{ color: "rgba(255,255,255,0.38)" }}
+                          style={{ color: "var(--text-tertiary)" }}
                         >
                           {opt.desc}
                         </span>

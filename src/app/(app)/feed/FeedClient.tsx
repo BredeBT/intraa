@@ -106,7 +106,7 @@ function CollapsiblePostBody({ html }: { html: string }) {
   }, [html]);
 
   return (
-    <div className="px-4 pb-3 text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.8)" }}>
+    <div className="px-4 pb-3 text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>
       <div
         ref={ref}
         className="relative overflow-hidden transition-[max-height] duration-200"
@@ -679,7 +679,7 @@ export default function FeedClient({
                             {comment.author.hasFanpass && <FanpassBadge size={10} />}
                             <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>{relativeTime(comment.createdAt)}</span>
                           </div>
-                          <div className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
+                          <div className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                             <SafeHtml content={comment.content} />
                           </div>
                         </div>

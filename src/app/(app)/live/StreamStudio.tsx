@@ -296,7 +296,7 @@ export default function StreamStudio({
                 <SectionHeader title="Historikk" subtitle="Tidligere streams og events" />
                 <div
                   className="rounded-2xl divide-y divide-white/[0.04]"
-                  style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-subtle)" }}
+                  style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}
                 >
                   {/* Merge into one chronological list */}
                   {[
@@ -348,7 +348,7 @@ function EmptyCard({ text }: { text: string }) {
   return (
     <div
       className="rounded-2xl py-5 px-4 text-center"
-      style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed var(--border-subtle)" }}
+      style={{ background: "var(--bg-glass)", border: "1px dashed var(--border-subtle)" }}
     >
       <p className="text-xs text-white/40">{text}</p>
     </div>

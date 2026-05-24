@@ -46,7 +46,7 @@ export default function StoryStrip({ groups, canPost, onAdd, onOpen }: Props) {
                 className="flex h-16 w-16 items-center justify-center rounded-full transition-transform group-hover:scale-105"
                 style={{
                   background: "var(--border-subtle)",
-                  border:     "2px dashed rgba(255,255,255,0.20)",
+                  border:     "2px dashed var(--border-strong)",
                 }}
               >
                 <Plus className="h-5 w-5" style={{ color: "#A855F7" }} />
@@ -94,7 +94,7 @@ export default function StoryStrip({ groups, canPost, onAdd, onOpen }: Props) {
               </div>
               <span
                 className="text-[10px] font-medium max-w-[64px] truncate"
-                style={{ color: allSeen ? "var(--text-tertiary)" : "rgba(255,255,255,0.8)" }}
+                style={{ color: allSeen ? "var(--text-tertiary)" : "var(--text-primary)" }}
               >
                 {g.author.name ?? "Ukjent"}
               </span>

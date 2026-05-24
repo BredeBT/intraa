@@ -75,7 +75,7 @@ function OfflineToast({ value, onDismiss }: { value: number | null; onDismiss: (
       </div>
       <span
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
-        style={{ background: "rgba(168,85,247,0.2)", color: "rgba(255,255,255,0.7)" }}
+        style={{ background: "rgba(168,85,247,0.2)", color: "var(--text-secondary)" }}
       >
         <X className="h-4 w-4" />
       </span>
@@ -506,7 +506,7 @@ export default function ClickerPage() {
                 ? { background: "rgba(168,85,247,0.13)", border: "1px solid rgba(168,85,247,0.38)", borderRadius: 10 }
                 : unlocked
                 ? { background: "var(--bg-glass)", border: "1px solid var(--border-subtle)", borderRadius: 10, opacity: 0.7 }
-                : { background: "rgba(255,255,255,0.02)", border: "1px solid var(--bg-glass)", borderRadius: 10, opacity: 0.5 }
+                : { background: "var(--bg-glass)", border: "1px solid var(--bg-glass)", borderRadius: 10, opacity: 0.5 }
             }
             className="p-2.5"
           >
@@ -1019,7 +1019,7 @@ export default function ClickerPage() {
             <p className="mb-4 text-sm" style={{ color: "var(--text-tertiary)" }}>
               Nullstiller alle coins og oppgraderinger for Verden {world}.
             </p>
-            <ul className="mb-5 space-y-2 text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
+            <ul className="mb-5 space-y-2 text-sm" style={{ color: "var(--text-secondary)" }}>
               <li>🪙 <strong style={{ color: "#fbbf24" }}>{worldDef?.fanpassCoins ?? 0} Fanpass-coins</strong></li>
               <li>{worldDef?.badge} Badge lagt til profilen</li>
               <li>⚡ <strong style={{ color: "#34d399" }}>+{Math.round((0.10 + perkCfg.prestigeExtraBonus) * 100)}% permanent bonus</strong></li>

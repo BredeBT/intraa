@@ -12,7 +12,7 @@ export function PasswordResetEmail({ name, resetUrl }: { name: string; resetUrl:
           <Text style={{ color: "var(--text-tertiary)", fontSize: 15, lineHeight: 1.6 }}>
             Hei {name}, vi mottok en forespørsel om å tilbakestille passordet ditt på Intraa.
           </Text>
-          <Text style={{ color: "rgba(255,255,255,0.38)", fontSize: 14 }}>
+          <Text style={{ color: "var(--text-tertiary)", fontSize: 14 }}>
             Klikk på knappen under for å velge et nytt passord. Lenken er gyldig i 1 time.
           </Text>
           <Button

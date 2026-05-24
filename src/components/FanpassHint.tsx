@@ -72,7 +72,7 @@ export default function FanpassHint({ storageKey, perk }: Props) {
           Med Fanpass
         </Link>
         {": "}
-        <span style={{ color: "rgba(240,244,255,0.7)" }}>{perk}</span>
+        <span style={{ color: "var(--text-secondary)" }}>{perk}</span>
       </span>
       <button
         type="button"

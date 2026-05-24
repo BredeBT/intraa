@@ -13,7 +13,7 @@ export default async function FaresonePage({ params }: { params: Promise<{ orgId
   if (!org) notFound();
 
   return (
-    <div className="px-8 py-8" style={{ color: "rgba(255,255,255,0.9)" }}>
+    <div className="px-8 py-8" style={{ color: "var(--text-primary)" }}>
       <h2 className="mb-1 text-lg font-semibold text-white">Faresone</h2>
       <p className="mb-8 text-sm" style={{ color: "var(--text-tertiary)" }}>
         Disse handlingene er irreversible. Vær sikker på hva du gjør.

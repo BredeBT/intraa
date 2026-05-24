@@ -16,7 +16,7 @@ function formatContent(text: string): string {
     .split("\n\n")
     .map(
       (paragraph) =>
-        `<p style="margin:0 0 16px;color:rgba(255,255,255,0.56);font-size:15px;line-height:1.7;">${
+        `<p style="margin:0 0 16px;color:var(--text-secondary);font-size:15px;line-height:1.7;">${
           paragraph.split("\n").join("<br/>")
         }</p>`
     )

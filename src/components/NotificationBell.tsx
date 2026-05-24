@@ -300,7 +300,7 @@ function NotifRow({ notif, onClick }: { notif: DbNotification; onClick: () => vo
       onClick={onClick}
       className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-white/[0.04] border-b border-white/[0.04]"
       style={{
-        background: !isRead ? "rgba(255,255,255,0.02)" : "transparent",
+        background: !isRead ? "var(--bg-glass)" : "transparent",
       }}
     >
       {/* Icon or avatar */}

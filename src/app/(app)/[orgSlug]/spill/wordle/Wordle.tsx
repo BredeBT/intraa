@@ -374,7 +374,7 @@ export default function Wordle({ orgSlug }: { orgSlug: string }) {
                       borderRadius: 6,
                       fontWeight: 700,
                       fontSize: "clamp(1.1rem, 4vw, 1.4rem)",
-                      color: submitted ? "#ffffff" : "rgba(255,255,255,0.9)",
+                      color: submitted ? "#ffffff" : "var(--text-primary)",
                       background: STATE_COLORS[state],
                       border: ch && !submitted ? "2px solid var(--text-tertiary)" : "2px solid transparent",
                       animationDelay: isFlipping ? `${ci * 80}ms` : "0ms",
@@ -448,7 +448,7 @@ export default function Wordle({ orgSlug }: { orgSlug: string }) {
                       borderRadius: 6,
                       fontWeight: 600,
                       fontSize: isWide ? 11 : 14,
-                      color: st ? "#ffffff" : "rgba(255,255,255,0.85)",
+                      color: st ? "#ffffff" : "var(--text-primary)",
                       background: st
                         ? STATE_COLORS[st]
                         : "var(--border-default)",
