@@ -68,7 +68,7 @@ export function SuspendAction({ orgId }: { orgId: string }) {
             <button
               onClick={() => { setOpen(false); setError(null); }}
               className="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-              style={{ border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.5)" }}
+              style={{ border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}
             >
               Avbryt
             </button>
@@ -108,8 +108,8 @@ export function DeleteAction({ orgId, orgSlug }: { orgId: string; orgSlug: strin
   return (
     <div className="space-y-3">
       {error && <p className="text-sm text-red-400">{error}</p>}
-      <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
-        Skriv inn <code className="rounded px-1 py-0.5 text-xs" style={{ background: "rgba(255,255,255,0.08)", color: "#f87171" }}>{orgSlug}</code> for å bekrefte permanent sletting.
+      <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+        Skriv inn <code className="rounded px-1 py-0.5 text-xs" style={{ background: "var(--border-subtle)", color: "#f87171" }}>{orgSlug}</code> for å bekrefte permanent sletting.
       </p>
       <input
         value={input}
@@ -117,7 +117,7 @@ export function DeleteAction({ orgId, orgSlug }: { orgId: string; orgSlug: strin
         placeholder={orgSlug}
         className="w-full rounded-lg px-3 py-2 text-sm text-white focus:outline-none"
         style={{
-          background:   "rgba(255,255,255,0.05)",
+          background:   "var(--bg-glass)",
           border:       "1px solid rgba(239,68,68,0.3)",
           caretColor:   "#f87171",
         }}

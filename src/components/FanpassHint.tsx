@@ -59,7 +59,7 @@ export default function FanpassHint({ storageKey, perk }: Props) {
       style={{
         background: "rgba(168,85,247,0.06)",
         border:     "1px solid rgba(168,85,247,0.15)",
-        color:      "rgba(240,244,255,0.55)",
+        color:      "var(--text-secondary)",
       }}
     >
       <span className="text-sm">♛</span>
@@ -78,7 +78,7 @@ export default function FanpassHint({ storageKey, perk }: Props) {
         type="button"
         onClick={dismiss}
         className="shrink-0 rounded p-0.5 transition-colors hover:bg-white/5"
-        style={{ color: "rgba(240,244,255,0.3)" }}
+        style={{ color: "var(--text-tertiary)" }}
         aria-label="Skjul"
       >
         <X className="h-3 w-3" />

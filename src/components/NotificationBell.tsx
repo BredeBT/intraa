@@ -187,7 +187,7 @@ export default function NotificationBell() {
           className="absolute right-0 top-full z-50 mt-2 w-96 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl shadow-2xl"
           style={{
             background: "var(--bg-secondary)",
-            border:     "1px solid rgba(255,255,255,0.10)",
+            border:     "1px solid var(--border-default)",
           }}
         >
           {/* Header */}
@@ -308,7 +308,7 @@ function NotifRow({ notif, onClick }: { notif: DbNotification; onClick: () => vo
         {notif.iconUrl ? (
           <div
             className="h-9 w-9 rounded-full"
-            style={{ background: `url(${notif.iconUrl}) center/cover, rgba(255,255,255,0.05)` }}
+            style={{ background: `url(${notif.iconUrl}) center/cover, var(--bg-glass)` }}
           />
         ) : (
           <div

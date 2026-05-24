@@ -15,10 +15,10 @@ const C = {
   bg:        "var(--bg-primary)",
   surface:   "var(--bg-secondary)",
   surface2:  "var(--bg-tertiary)",
-  line:      "rgba(255,255,255,0.08)",
-  lineHi:    "rgba(255,255,255,0.16)",
+  line:      "var(--border-subtle)",
+  lineHi:    "var(--border-strong)",
   text:      "var(--text-primary)",
-  muted:     "rgba(255,255,255,0.6)",
+  muted:     "var(--text-secondary)",
   mutedHi:   "rgba(255,255,255,0.75)",
   teal:      "#5EEAD4",
   purple:    "#A855F7",
@@ -93,7 +93,7 @@ export default async function Home() {
           <span
             className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-sm font-black"
             style={{
-              background:           "rgba(255,255,255,0.10)",
+              background:           "var(--border-default)",
               border:               "0.5px solid rgba(255,255,255,0.20)",
               backdropFilter:       "blur(10px)",
               WebkitBackdropFilter: "blur(10px)",
@@ -191,8 +191,8 @@ export default async function Home() {
                 href="#funksjoner"
                 className="flex items-center gap-1.5 rounded-full px-5 py-3.5 text-sm font-medium transition-colors hover:bg-white/[0.08]"
                 style={{
-                  background:           "rgba(255,255,255,0.05)",
-                  border:               "0.5px solid rgba(255,255,255,0.12)",
+                  background:           "var(--bg-glass)",
+                  border:               "0.5px solid var(--border-default)",
                   backdropFilter:       "blur(10px)",
                   WebkitBackdropFilter: "blur(10px)",
                   color:                C.text,
@@ -419,7 +419,7 @@ export default async function Home() {
             <span
               className="inline-flex h-6 w-6 items-center justify-center rounded-md text-xs font-black"
               style={{
-                background:           "rgba(255,255,255,0.10)",
+                background:           "var(--border-default)",
                 border:               "0.5px solid rgba(255,255,255,0.20)",
                 backdropFilter:       "blur(10px)",
                 WebkitBackdropFilter: "blur(10px)",
@@ -586,14 +586,14 @@ function HeroMock() {
         className="relative rounded-2xl p-5 shadow-2xl glass-panel"
         style={{
           background: "rgba(255, 255, 255, 0.04)",
-          border:     "0.5px solid rgba(255,255,255,0.10)",
+          border:     "0.5px solid var(--border-default)",
         }}
       >
         {/* Window chrome */}
         <div className="flex items-center gap-1.5 mb-4">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "rgba(255,255,255,0.15)" }} />
-          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "rgba(255,255,255,0.15)" }} />
-          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "rgba(255,255,255,0.15)" }} />
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--border-default)" }} />
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--border-default)" }} />
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--border-default)" }} />
           <span className="ml-3 text-[11px]" style={{ color: C.muted }}>community/chat</span>
         </div>
 

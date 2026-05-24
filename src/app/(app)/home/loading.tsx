@@ -8,13 +8,13 @@ export default function Loading() {
               <div
                 key={i}
                 className="h-[150px] rounded-2xl animate-pulse"
-                style={{ background: "rgba(255,255,255,0.04)" }}
+                style={{ background: "var(--bg-glass)" }}
               />
             ))}
           </div>
           <div
             className="hidden lg:block h-48 rounded-2xl animate-pulse"
-            style={{ background: "rgba(255,255,255,0.04)" }}
+            style={{ background: "var(--bg-glass)" }}
           />
         </div>
       </div>

@@ -73,7 +73,7 @@ function Piece({ color, type }: { color: Color; type: PieceSymbol }) {
         color:            color === "w" ? "#fff" : "#1c1410",
         filter:           color === "w"
           ? "drop-shadow(0 1px 3px rgba(0,0,0,0.9))"
-          : "drop-shadow(0 1px 2px rgba(255,255,255,0.15))",
+          : "drop-shadow(0 1px 2px var(--border-default))",
         WebkitTextStroke: color === "w" ? "0.5px rgba(0,0,0,0.3)" : "none",
       }}
     >
@@ -558,7 +558,7 @@ export default function ChessGame({
                       style={{
                         width: 28,
                         height: 20,
-                        outline: boardTheme === key ? "2px solid #A855F7" : "1px solid rgba(255,255,255,0.1)",
+                        outline: boardTheme === key ? "2px solid #A855F7" : "1px solid var(--border-default)",
                         outlineOffset: 1,
                       }}
                     >

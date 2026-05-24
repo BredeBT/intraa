@@ -44,7 +44,7 @@ export default async function BrandPage({
           className="relative overflow-hidden rounded-3xl p-8 mb-8"
           style={{
             background: "linear-gradient(135deg, rgba(96,165,250,0.15), rgba(168,85,247,0.12), rgba(94,234,212,0.10))",
-            border:     "1px solid rgba(255,255,255,0.10)",
+            border:     "1px solid var(--border-default)",
           }}
         >
           <div className="flex items-center gap-5 relative z-10">
@@ -102,7 +102,7 @@ function StatCard({ label, value, accent }: { label: string; value: number; acce
     <div
       className="rounded-2xl p-5"
       style={{
-        background: "rgba(255,255,255,0.03)",
+        background: "var(--bg-glass)",
         border:     `1px solid ${accent}25`,
       }}
     >

@@ -244,13 +244,13 @@ export default function BroadcastView({
             onClick={() => setComposeOpen(true)}
             className="relative mt-5 flex w-full items-center gap-3 rounded-2xl px-4 py-3 transition-all hover:scale-[1.01]"
             style={{
-              background: "rgba(255,255,255,0.06)",
-              border:     "1px solid rgba(255,255,255,0.10)",
+              background: "var(--border-subtle)",
+              border:     "1px solid var(--border-default)",
             }}
           >
             <div
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold"
-              style={{ background: "rgba(255,255,255,0.08)", color: "#fff" }}
+              style={{ background: "var(--border-subtle)", color: "#fff" }}
             >
               {initials(userName)}
             </div>
@@ -419,9 +419,9 @@ export default function BroadcastView({
             {/* Regular feed */}
             {regular.length > 0 && pinned.length > 0 && (
               <div className="flex items-center gap-3 px-1 mb-4">
-                <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.10)" }} />
+                <div className="h-px flex-1" style={{ background: "var(--border-default)" }} />
                 <span className="text-[10px] uppercase tracking-wider text-white/30">Alle broadcasts</span>
-                <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.10)" }} />
+                <div className="h-px flex-1" style={{ background: "var(--border-default)" }} />
               </div>
             )}
 
@@ -561,10 +561,10 @@ function BroadcastPost({
       style={{
         background: pinned
           ? "linear-gradient(135deg, rgba(94,234,212,0.06), rgba(168,85,247,0.06))"
-          : "rgba(255,255,255,0.03)",
+          : "var(--bg-glass)",
         border:     pinned
           ? "1px solid rgba(168,85,247,0.30)"
-          : "1px solid rgba(255,255,255,0.08)",
+          : "1px solid var(--border-subtle)",
       }}
     >
       {pinned && (
@@ -610,7 +610,7 @@ function BroadcastPost({
               <div
                 onClick={(e) => e.stopPropagation()}
                 className="absolute right-0 top-full mt-1 z-30 w-40 overflow-hidden rounded-xl shadow-2xl"
-                style={{ background: "var(--bg-tertiary)", border: "1px solid rgba(255,255,255,0.10)" }}
+                style={{ background: "var(--bg-tertiary)", border: "1px solid var(--border-default)" }}
               >
                 {canEdit && (
                   <button

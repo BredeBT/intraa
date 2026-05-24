@@ -31,7 +31,7 @@ export default function TenantSideNav({
       <Link
         href="/superadmin/tenants"
         className="mb-5 flex items-center gap-1.5 text-xs transition-colors hover:text-white"
-        style={{ color: "rgba(255,255,255,0.35)" }}
+        style={{ color: "var(--text-tertiary)" }}
       >
         <ChevronLeft className="h-3.5 w-3.5" /> Alle tenants
       </Link>
@@ -51,7 +51,7 @@ export default function TenantSideNav({
         )}
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold leading-tight text-white">{orgName}</p>
-          <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+          <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
             {orgType === "COMMUNITY" ? "Community" : "Bedrift"}
           </p>
         </div>
@@ -69,7 +69,7 @@ export default function TenantSideNav({
               className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
               style={active
                 ? { background: "rgba(168,85,247,0.18)", color: "#A855F7" }
-                : { color: "rgba(255,255,255,0.45)" }}
+                : { color: "var(--text-tertiary)" }}
             >
               <Icon className="h-4 w-4 shrink-0" />
               {label}
@@ -78,7 +78,7 @@ export default function TenantSideNav({
         })}
 
         {/* Separator */}
-        <div className="my-2" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }} />
+        <div className="my-2" style={{ borderTop: "1px solid var(--border-subtle)" }} />
 
         {/* Faresone */}
         {(() => {

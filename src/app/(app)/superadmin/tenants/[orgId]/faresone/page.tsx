@@ -15,7 +15,7 @@ export default async function FaresonePage({ params }: { params: Promise<{ orgId
   return (
     <div className="px-8 py-8" style={{ color: "rgba(255,255,255,0.9)" }}>
       <h2 className="mb-1 text-lg font-semibold text-white">Faresone</h2>
-      <p className="mb-8 text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
+      <p className="mb-8 text-sm" style={{ color: "var(--text-tertiary)" }}>
         Disse handlingene er irreversible. Vær sikker på hva du gjør.
       </p>
 
@@ -31,7 +31,7 @@ export default async function FaresonePage({ params }: { params: Promise<{ orgId
           <h3 className="mb-1 text-sm font-semibold" style={{ color: "#fbbf24" }}>
             Deaktiver tenant
           </h3>
-          <p className="mb-4 text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
+          <p className="mb-4 text-sm" style={{ color: "var(--text-tertiary)" }}>
             Community skjules fra discovery. Eksisterende medlemmer beholder tilgang.
           </p>
           <SuspendAction orgId={org.id} />
@@ -48,7 +48,7 @@ export default async function FaresonePage({ params }: { params: Promise<{ orgId
           <h3 className="mb-1 text-sm font-semibold" style={{ color: "#f87171" }}>
             Slett tenant permanent
           </h3>
-          <p className="mb-4 text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
+          <p className="mb-4 text-sm" style={{ color: "var(--text-tertiary)" }}>
             Sletter organisasjonen og all tilhørende data. Kan ikke angres.
           </p>
           <DeleteAction orgId={org.id} orgSlug={org.slug} />

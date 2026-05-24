@@ -237,7 +237,7 @@ export default function StoryCapture({ channelId, onClose, onPosted }: Props) {
       <button
         onClick={onClose}
         className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-white/10"
-        style={{ background: "rgba(255,255,255,0.06)", color: "#fff" }}
+        style={{ background: "var(--border-subtle)", color: "#fff" }}
       >
         <X className="h-5 w-5" />
       </button>
@@ -273,13 +273,13 @@ export default function StoryCapture({ channelId, onClose, onPosted }: Props) {
               onClick={() => fileInputRef.current?.click()}
               className="flex aspect-square flex-col items-center justify-center gap-3 rounded-3xl p-6 transition-transform hover:scale-[1.03]"
               style={{
-                background: "rgba(255,255,255,0.05)",
-                border:     "1px solid rgba(255,255,255,0.10)",
+                background: "var(--bg-glass)",
+                border:     "1px solid var(--border-default)",
               }}
             >
               <div
                 className="flex h-14 w-14 items-center justify-center rounded-2xl"
-                style={{ background: "rgba(255,255,255,0.10)", color: "#fff" }}
+                style={{ background: "var(--border-default)", color: "#fff" }}
               >
                 <ImageIcon className="h-6 w-6" />
               </div>
@@ -341,7 +341,7 @@ export default function StoryCapture({ channelId, onClose, onPosted }: Props) {
               aria-label="Ta bilde"
               className="flex h-20 w-20 items-center justify-center rounded-full transition-transform active:scale-90"
               style={{
-                background: "rgba(255,255,255,0.15)",
+                background: "var(--border-default)",
                 border:     "4px solid #fff",
               }}
             >
@@ -386,8 +386,8 @@ export default function StoryCapture({ channelId, onClose, onPosted }: Props) {
               className="mb-2 flex items-center gap-2 rounded-full px-3 py-1.5 text-xs transition-colors"
               style={{
                 background: selectedSponsor ? "rgba(96,165,250,0.20)" : "rgba(0,0,0,0.4)",
-                border:     selectedSponsor ? "1px solid rgba(96,165,250,0.45)" : "1px solid rgba(255,255,255,0.15)",
-                color:      selectedSponsor ? "#fff" : "rgba(255,255,255,0.6)",
+                border:     selectedSponsor ? "1px solid rgba(96,165,250,0.45)" : "1px solid var(--border-default)",
+                color:      selectedSponsor ? "#fff" : "var(--text-secondary)",
                 backdropFilter: "blur(10px)",
               }}
             >
@@ -473,7 +473,7 @@ export default function StoryCapture({ channelId, onClose, onPosted }: Props) {
               <div
                 onClick={(e) => e.stopPropagation()}
                 className="w-full sm:max-w-sm sm:rounded-2xl overflow-hidden"
-                style={{ background: "var(--bg-secondary)", border: "1px solid rgba(255,255,255,0.10)" }}
+                style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-default)" }}
               >
                 <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
                   <p className="text-sm font-semibold text-white">Velg sponsor</p>

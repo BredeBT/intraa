@@ -9,7 +9,7 @@ export function PasswordResetEmail({ name, resetUrl }: { name: string; resetUrl:
           <Heading style={{ color: "#a78bfa", fontSize: 24, marginBottom: 8 }}>
             Tilbakestill passordet ditt
           </Heading>
-          <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 15, lineHeight: 1.6 }}>
+          <Text style={{ color: "var(--text-tertiary)", fontSize: 15, lineHeight: 1.6 }}>
             Hei {name}, vi mottok en forespørsel om å tilbakestille passordet ditt på Intraa.
           </Text>
           <Text style={{ color: "rgba(255,255,255,0.38)", fontSize: 14 }}>
@@ -21,8 +21,8 @@ export function PasswordResetEmail({ name, resetUrl }: { name: string; resetUrl:
           >
             Tilbakestill passord →
           </Button>
-          <Hr style={{ borderColor: "rgba(255,255,255,0.08)", margin: "24px 0" }} />
-          <Text style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>
+          <Hr style={{ borderColor: "var(--border-subtle)", margin: "24px 0" }} />
+          <Text style={{ color: "var(--text-tertiary)", fontSize: 12 }}>
             Hvis du ikke ba om dette kan du ignorere denne eposten. Passordet ditt endres ikke.
           </Text>
         </Container>

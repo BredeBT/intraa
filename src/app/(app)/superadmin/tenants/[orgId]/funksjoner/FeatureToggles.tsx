@@ -17,7 +17,7 @@ function Toggle({
       onClick={onToggle}
       disabled={saving}
       className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none disabled:opacity-60"
-      style={{ background: checked ? "#059669" : "rgba(255,255,255,0.12)" }}
+      style={{ background: checked ? "#059669" : "var(--border-default)" }}
       aria-label={checked ? "Deaktiver" : "Aktiver"}
     >
       <span
@@ -77,17 +77,17 @@ export default function FeatureToggles({
           <div className="mb-3">
             <h3
               className="text-xs font-semibold uppercase tracking-wider"
-              style={{ color: "rgba(255,255,255,0.35)" }}
+              style={{ color: "var(--text-tertiary)" }}
             >
               {group.label}
             </h3>
-            <p className="mt-0.5 text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+            <p className="mt-0.5 text-xs" style={{ color: "var(--border-strong)" }}>
               {group.desc}
             </p>
           </div>
           <div
             className="overflow-hidden rounded-xl"
-            style={{ border: "1px solid rgba(255,255,255,0.07)" }}
+            style={{ border: "1px solid var(--border-subtle)" }}
           >
             {group.features.map((feature, i) => {
               const enabled = features[feature.key] ?? false;
@@ -99,14 +99,14 @@ export default function FeatureToggles({
                   key={feature.key}
                   className="flex items-center justify-between gap-4 px-5 py-4 transition-colors"
                   style={{
-                    background:  "rgba(255,255,255,0.03)",
-                    borderBottom: isLast ? "none" : "1px solid rgba(255,255,255,0.06)",
+                    background:  "var(--bg-glass)",
+                    borderBottom: isLast ? "none" : "1px solid var(--border-subtle)",
                   }}
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-white">{feature.label}</p>
                     {feature.desc && (
-                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+                      <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
                         {feature.desc}
                       </p>
                     )}
@@ -121,7 +121,7 @@ export default function FeatureToggles({
                       </span>
                     )}
                     {isBusy && (
-                      <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+                      <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
                         …
                       </span>
                     )}

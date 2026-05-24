@@ -180,7 +180,7 @@ function LivePreview({ theme, logoUrl }: { theme: Theme; logoUrl: string | null 
                 className="rounded px-1.5 py-1 text-[7px] font-medium"
                 style={{
                   backgroundColor: i === 0 ? theme.primaryColor : "transparent",
-                  color: i === 0 ? "#fff" : "rgba(255,255,255,0.4)",
+                  color: i === 0 ? "#fff" : "var(--text-tertiary)",
                   borderRadius: br,
                 }}
               >

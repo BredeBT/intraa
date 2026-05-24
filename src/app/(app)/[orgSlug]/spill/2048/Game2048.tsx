@@ -274,7 +274,7 @@ export default function Game2048({ orgSlug }: { orgSlug: string }) {
       >
         {/* Back link */}
         <div className="mb-4 w-full max-w-[420px]">
-          <Link href={`/${orgSlug}/spill`} className="text-sm transition-colors hover:text-white" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <Link href={`/${orgSlug}/spill`} className="text-sm transition-colors hover:text-white" style={{ color: "var(--text-tertiary)" }}>
             ← Tilbake til spill
           </Link>
         </div>
@@ -292,7 +292,7 @@ export default function Game2048({ orgSlug }: { orgSlug: string }) {
                 className="rounded-xl px-3 py-2 text-center"
                 style={{ background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.2)", minWidth: 72 }}
               >
-                <p className="text-[9px] font-bold tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>{label}</p>
+                <p className="text-[9px] font-bold tracking-widest" style={{ color: "var(--text-tertiary)" }}>{label}</p>
                 <p className="text-sm font-bold text-white">{value.toLocaleString("no-NO")}</p>
               </div>
             ))}
@@ -311,7 +311,7 @@ export default function Game2048({ orgSlug }: { orgSlug: string }) {
           className="relative select-none"
           style={{
             width: "min(420px, calc(100vw - 2rem))",
-            background: "rgba(255,255,255,0.06)",
+            background: "var(--border-subtle)",
             borderRadius: 14,
             padding: 8,
           }}
@@ -340,7 +340,7 @@ export default function Game2048({ orgSlug }: { orgSlug: string }) {
                       justifyContent: "center",
                       fontWeight: 700,
                       fontSize: ts?.fontSize ?? "0",
-                      background: ts?.bg ?? "rgba(255,255,255,0.04)",
+                      background: ts?.bg ?? "var(--bg-glass)",
                       color: ts?.color ?? "transparent",
                       transition: "background 0.1s",
                       userSelect: "none",
@@ -360,7 +360,7 @@ export default function Game2048({ orgSlug }: { orgSlug: string }) {
               style={{ background: "rgba(13,13,20,0.88)", backdropFilter: "blur(4px)" }}
             >
               <p className="mb-1 text-2xl font-black text-white">Spill over!</p>
-              <p className="mb-1 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+              <p className="mb-1 text-sm" style={{ color: "var(--text-tertiary)" }}>
                 Score: <span className="font-bold text-white">{score.toLocaleString("no-NO")}</span>
               </p>
               {score >= highScore && score > 0 && (
@@ -395,7 +395,7 @@ export default function Game2048({ orgSlug }: { orgSlug: string }) {
         </div>
 
         {/* Hint */}
-        <p className="mt-4 text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+        <p className="mt-4 text-xs" style={{ color: "var(--border-strong)" }}>
           Bruk piltaster eller sveip for å spille
         </p>
 

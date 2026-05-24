@@ -191,9 +191,9 @@ export default function NotifikasjonerPage() {
               onClick={() => setFilter(f.key)}
               className="rounded-full px-3 py-1.5 text-xs font-medium transition-colors flex items-center gap-1.5"
               style={{
-                background: isActive ? "rgba(168,85,247,0.20)" : "rgba(255,255,255,0.04)",
+                background: isActive ? "rgba(168,85,247,0.20)" : "var(--bg-glass)",
                 color:      isActive ? "#fff" : "rgba(255,255,255,0.60)",
-                border:     `1px solid ${isActive ? "rgba(168,85,247,0.45)" : "rgba(255,255,255,0.08)"}`,
+                border:     `1px solid ${isActive ? "rgba(168,85,247,0.45)" : "var(--border-subtle)"}`,
               }}
             >
               {f.label}
@@ -212,7 +212,7 @@ export default function NotifikasjonerPage() {
 
       {/* Content */}
       {filtered.length === 0 ? (
-        <div className="rounded-2xl py-16 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="rounded-2xl py-16 text-center" style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}>
           <BellOff className="h-7 w-7 text-white/20 mx-auto mb-3" />
           <p className="text-sm font-medium text-white/60">
             {filter === "ALL" ? "Ingen varsler ennå" : "Ingen varsler i denne kategorien"}
@@ -229,7 +229,7 @@ export default function NotifikasjonerPage() {
             return (
               <div key={day}>
                 <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">{day}</p>
-                <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-subtle)" }}>
                   {items.map((notif) => {
                     const meta = TYPE_META[notif.type] ?? TYPE_META.USER;
                     const Icon = meta.icon;
@@ -252,7 +252,7 @@ export default function NotifikasjonerPage() {
                           {notif.iconUrl ? (
                             <div
                               className="h-10 w-10 rounded-full"
-                              style={{ background: `url(${notif.iconUrl}) center/cover, rgba(255,255,255,0.05)` }}
+                              style={{ background: `url(${notif.iconUrl}) center/cover, var(--bg-glass)` }}
                             />
                           ) : (
                             <div

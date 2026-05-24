@@ -45,7 +45,7 @@ export default function StoryStrip({ groups, canPost, onAdd, onOpen }: Props) {
               <div
                 className="flex h-16 w-16 items-center justify-center rounded-full transition-transform group-hover:scale-105"
                 style={{
-                  background: "rgba(255,255,255,0.06)",
+                  background: "var(--border-subtle)",
                   border:     "2px dashed rgba(255,255,255,0.20)",
                 }}
               >
@@ -76,7 +76,7 @@ export default function StoryStrip({ groups, canPost, onAdd, onOpen }: Props) {
                 className="rounded-full transition-transform group-hover:scale-105"
                 style={{
                   background: allSeen
-                    ? "rgba(255,255,255,0.15)"
+                    ? "var(--border-default)"
                     : "linear-gradient(135deg, #5EEAD4 0%, #A855F7 50%, #60A5FA 100%)",
                   padding:    2,
                 }}
@@ -94,7 +94,7 @@ export default function StoryStrip({ groups, canPost, onAdd, onOpen }: Props) {
               </div>
               <span
                 className="text-[10px] font-medium max-w-[64px] truncate"
-                style={{ color: allSeen ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.8)" }}
+                style={{ color: allSeen ? "var(--text-tertiary)" : "rgba(255,255,255,0.8)" }}
               >
                 {g.author.name ?? "Ukjent"}
               </span>

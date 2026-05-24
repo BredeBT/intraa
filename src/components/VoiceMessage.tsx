@@ -72,7 +72,7 @@ export default function VoiceMessage({
     <div
       className="inline-flex items-center gap-3 rounded-2xl px-3 py-2 max-w-[280px]"
       style={{
-        background: "rgba(255,255,255,0.06)",
+        background: "var(--border-subtle)",
         border:     "1px solid rgba(168,85,247,0.2)",
       }}
     >
@@ -95,7 +95,7 @@ export default function VoiceMessage({
         <div
           onClick={seek}
           className="relative h-1.5 w-full cursor-pointer rounded-full overflow-hidden"
-          style={{ background: "rgba(255,255,255,0.10)" }}
+          style={{ background: "var(--border-default)" }}
         >
           <div
             className="absolute inset-y-0 left-0 rounded-full transition-all"
@@ -107,7 +107,7 @@ export default function VoiceMessage({
         </div>
 
         {/* Time row */}
-        <div className="mt-1 flex items-center justify-between text-[10px] tabular-nums" style={{ color: "rgba(255,255,255,0.5)" }}>
+        <div className="mt-1 flex items-center justify-between text-[10px] tabular-nums" style={{ color: "var(--text-tertiary)" }}>
           <span>{fmt(playing || current > 0 ? current : 0)}</span>
           <span>{duration ? fmt(duration) : "--:--"}</span>
         </div>

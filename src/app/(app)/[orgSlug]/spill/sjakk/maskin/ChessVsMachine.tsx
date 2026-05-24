@@ -45,7 +45,7 @@ function Piece({ color, type }: { color: Color; type: PieceSymbol }) {
         color:            color === "w" ? "#fff" : "#1c1410",
         filter:           color === "w"
           ? "drop-shadow(0 1px 3px rgba(0,0,0,0.9))"
-          : "drop-shadow(0 1px 2px rgba(255,255,255,0.15))",
+          : "drop-shadow(0 1px 2px var(--border-default))",
         WebkitTextStroke: color === "w" ? "0.5px rgba(0,0,0,0.3)" : "none",
       }}
     >
@@ -443,7 +443,7 @@ export default function ChessVsMachine({
 
           <div>
             <h1 className="text-3xl font-black text-white tracking-tight mb-1">🤖 Sjakk mot maskin</h1>
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
               Du spiller hvit. Velg vanskelighetsgrad for å starte.
             </p>
           </div>
@@ -466,7 +466,7 @@ export default function ChessVsMachine({
                     style={{ background: cfg.color, boxShadow: `0 0 6px ${cfg.color}` }}
                   />
                 </div>
-                <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>{cfg.description}</p>
+                <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>{cfg.description}</p>
                 <div
                   className="mt-1 text-sm font-semibold transition-colors group-hover:opacity-80"
                   style={{ color: cfg.color }}
@@ -521,7 +521,7 @@ export default function ChessVsMachine({
             className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5"
             style={{
               background: chess.turn() === "b" && status === "playing"
-                ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.05)",
+                ? "var(--border-default)" : "var(--bg-glass)",
               maxWidth: "min(100vw - 2rem, 540px)",
             }}
           >
@@ -557,7 +557,7 @@ export default function ChessVsMachine({
             className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5"
             style={{
               background: chess.turn() === "w" && status === "playing"
-                ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.05)",
+                ? "var(--border-default)" : "var(--bg-glass)",
               maxWidth: "min(100vw - 2rem, 540px)",
             }}
           >
@@ -586,7 +586,7 @@ export default function ChessVsMachine({
               className="w-full text-center rounded-xl py-3 px-4 text-sm font-semibold"
               style={{
                 maxWidth: "min(100vw - 2rem, 540px)",
-                background: status !== "playing" ? "rgba(255,255,255,0.08)" : "rgba(59,130,246,0.1)",
+                background: status !== "playing" ? "var(--border-subtle)" : "rgba(59,130,246,0.1)",
               }}
             >
               {statusMsg}

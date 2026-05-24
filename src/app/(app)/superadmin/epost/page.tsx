@@ -23,7 +23,7 @@ export default async function EpostPage() {
 
       <div className="mb-8">
         <h1 className="text-xl font-semibold text-white">Epost</h1>
-        <p className="mt-1 text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
+        <p className="mt-1 text-sm" style={{ color: "var(--text-tertiary)" }}>
           Send epost til brukere. Totalt{" "}
           <strong className="text-white">{userCount.toLocaleString("nb")}</strong> brukere,{" "}
           <strong className="text-white">{consentCount.toLocaleString("nb")}</strong> med epostsamtykke.

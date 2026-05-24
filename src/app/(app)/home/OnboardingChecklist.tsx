@@ -58,7 +58,7 @@ export default function OnboardingChecklist({ progress }: Props) {
           </div>
           <div>
             <h2 className="text-base font-semibold text-white">Kom i gang som creator</h2>
-            <p className="text-xs" style={{ color: "rgba(240,244,255,0.55)" }}>
+            <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
               {progress.completed} av {progress.total} fullført
             </p>
           </div>
@@ -69,7 +69,7 @@ export default function OnboardingChecklist({ progress }: Props) {
       </div>
 
       {/* Progress bar */}
-      <div className="h-1.5 rounded-full overflow-hidden mb-5" style={{ background: "rgba(255,255,255,0.06)" }}>
+      <div className="h-1.5 rounded-full overflow-hidden mb-5" style={{ background: "var(--border-subtle)" }}>
         <div
           className="h-full transition-all duration-500"
           style={{ width: `${pct}%`, background: AURORA }}
@@ -124,25 +124,25 @@ function StepRow({
     <div
       className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors"
       style={{
-        background: done ? "rgba(94,234,212,0.06)" : "rgba(255,255,255,0.03)",
-        border:     done ? "1px solid rgba(94,234,212,0.18)" : "1px solid rgba(255,255,255,0.06)",
+        background: done ? "rgba(94,234,212,0.06)" : "var(--bg-glass)",
+        border:     done ? "1px solid rgba(94,234,212,0.18)" : "1px solid var(--border-subtle)",
       }}
     >
       <div
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
         style={done
           ? { background: AURORA, color: "#fff" }
-          : { background: "rgba(255,255,255,0.06)", color: "rgba(240,244,255,0.55)" }
+          : { background: "var(--border-subtle)", color: "var(--text-secondary)" }
         }
       >
         {done ? <Check className="h-4 w-4" /> : index + 1}
       </div>
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-medium ${done ? "line-through" : ""}`}
-           style={{ color: done ? "rgba(240,244,255,0.45)" : "var(--text-primary)" }}>
+           style={{ color: done ? "var(--text-tertiary)" : "var(--text-primary)" }}>
           {title}
         </p>
-        <p className="text-xs" style={{ color: "rgba(240,244,255,0.4)" }}>{hint}</p>
+        <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{hint}</p>
       </div>
       {!done && (href || onClick) && (
         <span className="text-xs font-medium" style={{ color: "#5EEAD4" }}>Start →</span>
@@ -185,18 +185,18 @@ function CreateCommunityRow({
     <form
       onSubmit={submit}
       className="rounded-xl px-3 py-3"
-      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(168,85,247,0.25)" }}
+      style={{ background: "var(--bg-glass)", border: "1px solid rgba(168,85,247,0.25)" }}
     >
       <div className="flex items-center gap-3 mb-3">
         <div
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
-          style={{ background: "rgba(255,255,255,0.06)", color: "rgba(240,244,255,0.55)" }}
+          style={{ background: "var(--border-subtle)", color: "var(--text-secondary)" }}
         >
           {index + 1}
         </div>
         <div>
           <p className="text-sm font-medium text-white">{step.title}</p>
-          <p className="text-xs" style={{ color: "rgba(240,244,255,0.4)" }}>{step.hint}</p>
+          <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{step.hint}</p>
         </div>
       </div>
 
@@ -207,12 +207,12 @@ function CreateCommunityRow({
           onChange={(e) => setName(e.target.value)}
           placeholder="Navn på communityet (f.eks. «Studio Lykke»)"
           className="w-full rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none"
-          style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
+          style={{ background: "var(--border-subtle)", border: "1px solid var(--border-subtle)" }}
         />
         <div className="flex items-center overflow-hidden rounded-lg"
-             style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
+             style={{ background: "var(--border-subtle)", border: "1px solid var(--border-subtle)" }}>
           <span className="select-none px-3 py-2 text-xs"
-                style={{ color: "rgba(240,244,255,0.4)", borderRight: "1px solid rgba(255,255,255,0.08)" }}>
+                style={{ color: "var(--text-tertiary)", borderRight: "1px solid var(--border-subtle)" }}>
             intraa.net/
           </span>
           <input
@@ -245,7 +245,7 @@ function DismissButton({ onDone }: { onDone: () => void }) {
       onClick={() => start(async () => { await dismissOnboarding(); onDone(); })}
       disabled={pending}
       className="rounded-lg p-1.5 transition-colors hover:bg-white/5"
-      style={{ color: "rgba(240,244,255,0.4)" }}
+      style={{ color: "var(--text-tertiary)" }}
       title="Skjul checklisten"
     >
       {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}

@@ -63,8 +63,8 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
   }
 
   const inputStyle = {
-    background: "rgba(255,255,255,0.05)",
-    border:     "1px solid rgba(255,255,255,0.1)",
+    background: "var(--bg-glass)",
+    border:     "1px solid var(--border-default)",
     borderRadius: 10,
     color:      "white",
     outline:    "none",
@@ -77,7 +77,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
           <Send className="h-8 w-8" style={{ color: "#34d399" }} />
         </div>
         <h2 className="text-xl font-semibold text-white">Epost sendt!</h2>
-        <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
+        <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
           {result.sent} epost ble sendt.
         </p>
         <button
@@ -97,7 +97,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
       <div className="space-y-5">
         {/* Audience */}
         <div>
-          <label className="mb-2 block text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>
+          <label className="mb-2 block text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
             Mottakere
           </label>
           <div className="flex gap-2">
@@ -108,7 +108,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
                 className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
                 style={audience === a
                   ? { background: "rgba(168,85,247,0.2)", color: "#A855F7", border: "1px solid rgba(168,85,247,0.4)" }
-                  : { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.08)" }}
+                  : { background: "var(--bg-glass)", color: "var(--text-tertiary)", border: "1px solid var(--border-subtle)" }}
               >
                 {a === "all" ? "Alle brukere" : a === "pro" ? "PRO/Enterprise" : "Spesifikk tenant"}
               </button>
@@ -130,7 +130,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
 
         {/* Subject */}
         <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
             Emne
           </label>
           <input
@@ -145,13 +145,13 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
         {/* Body */}
         <div>
           <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
               Innhold
             </label>
             <button
               onClick={() => setPreview(p => !p)}
               className="flex items-center gap-1 text-xs"
-              style={{ color: "rgba(255,255,255,0.4)" }}
+              style={{ color: "var(--text-tertiary)" }}
             >
               {preview ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
               {preview ? "Rediger" : "Forhåndsvis"}
@@ -160,9 +160,9 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
           {preview ? (
             <div
               className="min-h-[240px] rounded-xl p-4 text-sm"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", whiteSpace: "pre-wrap", lineHeight: 1.7 }}
+              style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)", color: "rgba(255,255,255,0.7)", whiteSpace: "pre-wrap", lineHeight: 1.7 }}
             >
-              {body || <span style={{ color: "rgba(255,255,255,0.2)" }}>Ingenting å forhåndsvise…</span>}
+              {body || <span style={{ color: "var(--border-strong)" }}>Ingenting å forhåndsvise…</span>}
             </div>
           ) : (
             <textarea
@@ -174,7 +174,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
               style={{ ...inputStyle, lineHeight: 1.7 }}
             />
           )}
-          <p className="mt-1 text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+          <p className="mt-1 text-xs" style={{ color: "var(--border-strong)" }}>
             Ett linjeskift = ny linje. To linjeskift = nytt avsnitt.
           </p>
         </div>
@@ -217,7 +217,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
               <button
                 onClick={() => setConfirm(false)}
                 className="rounded-lg px-4 py-2 text-sm font-medium"
-                style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}
+                style={{ border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}
               >
                 Avbryt
               </button>
@@ -230,7 +230,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
       <div>
         <div
           className="sticky top-24 rounded-xl p-5 space-y-4"
-          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+          style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}
         >
           <h3 className="text-sm font-semibold text-white">Mottaker-statistikk</h3>
           {stats ? (
@@ -240,11 +240,11 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
               <StatRow label="Uten samtykke" value={stats.total - stats.consented} color="#f87171" />
             </div>
           ) : (
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>Laster…</p>
+            <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Laster…</p>
           )}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 12 }}>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
-              Epost sendes kun til brukere med <code className="rounded px-1" style={{ background: "rgba(255,255,255,0.06)" }}>emailConsent: true</code>.
+          <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+            <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+              Epost sendes kun til brukere med <code className="rounded px-1" style={{ background: "var(--border-subtle)" }}>emailConsent: true</code>.
             </p>
           </div>
         </div>
@@ -256,7 +256,7 @@ export default function EmailClient({ orgs }: { orgs: OrgOption[] }) {
 function StatRow({ label, value, color, icon }: { label: string; value: number; color?: string; icon?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
+      <div className="flex items-center gap-2 text-sm" style={{ color: "var(--text-tertiary)" }}>
         {icon}
         {label}
       </div>

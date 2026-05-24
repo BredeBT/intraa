@@ -33,8 +33,8 @@ function buildHtml(content: string) {
       <span style="color:white;font-size:18px;font-weight:600;">Intraa</span>
     </div>
     ${formatContent(content)}
-    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:24px 0;" />
-    <p style="color:rgba(255,255,255,0.25);font-size:12px;margin:0;">
+    <hr style="border:none;border-top:1px solid var(--border-subtle);margin:24px 0;" />
+    <p style="color:var(--text-tertiary);font-size:12px;margin:0;">
       Du mottar denne eposten fordi du er registrert på intraa.net.<br/>
       <a href="https://intraa.net/avmeldt" style="color:#A855F7;">Meld deg av epostlisten</a>
     </p>

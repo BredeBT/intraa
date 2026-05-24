@@ -66,14 +66,14 @@ function ThreeDotMenu({
       <button
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
         className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-white/10"
-        style={{ color: "rgba(255,255,255,0.4)" }}
+        style={{ color: "var(--text-tertiary)" }}
       >
         <MoreHorizontal className="h-4 w-4" />
       </button>
       {open && (
         <div
           className="absolute right-0 top-9 z-50 w-48 overflow-hidden rounded-xl py-1 shadow-xl"
-          style={{ background: "#18181f", border: "1px solid rgba(255,255,255,0.1)" }}
+          style={{ background: "#18181f", border: "1px solid var(--border-default)" }}
         >
           <button
             onClick={() => { setOpen(false); onEdit(); }}
@@ -97,7 +97,7 @@ function ThreeDotMenu({
           >
             <Eye className="h-4 w-4 text-zinc-400" /> Se som bruker
           </Link>
-          <div className="my-1 border-t" style={{ borderColor: "rgba(255,255,255,0.07)" }} />
+          <div className="my-1 border-t" style={{ borderColor: "var(--border-subtle)" }} />
           <button
             onClick={() => { setOpen(false); onDelete(); }}
             className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-red-400 transition-colors hover:bg-red-500/10"
@@ -130,7 +130,7 @@ function TenantCard({
   return (
     <div
       className="overflow-hidden rounded-xl transition-all"
-      style={{ background: "var(--bg-secondary)", border: "1px solid rgba(255,255,255,0.08)" }}
+      style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-subtle)" }}
     >
       {/* Banner */}
       <div className="relative h-20 w-full" style={bannerStyle}>
@@ -147,7 +147,7 @@ function TenantCard({
           <div className="shrink-0">
             {tenant.theme?.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={tenant.theme.logoUrl} alt="" className="h-10 w-10 rounded-lg border object-cover" style={{ borderColor: "rgba(255,255,255,0.1)" }} />
+              <img src={tenant.theme.logoUrl} alt="" className="h-10 w-10 rounded-lg border object-cover" style={{ borderColor: "var(--border-default)" }} />
             ) : (
               <div
                 className="flex h-10 w-10 items-center justify-center rounded-lg text-base font-bold text-white"
@@ -161,7 +161,7 @@ function TenantCard({
           {/* Name + slug + badges */}
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-white">{tenant.name}</p>
-            <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>/{tenant.slug}</p>
+            <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>/{tenant.slug}</p>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               <span
                 className="rounded-full px-2 py-0.5 text-[10px] font-medium"
@@ -179,7 +179,7 @@ function TenantCard({
         </div>
 
         {/* Stats */}
-        <div className="mt-3 flex items-center gap-4 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+        <div className="mt-3 flex items-center gap-4 text-xs" style={{ color: "var(--text-tertiary)" }}>
           <span className="flex items-center gap-1">
             <Users className="h-3 w-3" />
             {tenant._count.memberships.toLocaleString("nb-NO")} medlemmer
@@ -194,14 +194,14 @@ function TenantCard({
         </div>
 
         {/* Administrer */}
-        <div className="mt-3 border-t pt-3" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+        <div className="mt-3 border-t pt-3" style={{ borderColor: "var(--border-subtle)" }}>
           <Link
             href={`/superadmin/tenants/${tenant.id}`}
             className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors hover:text-white"
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.07)",
-              color: "rgba(255,255,255,0.6)",
+              background: "var(--bg-glass)",
+              border: "1px solid var(--border-subtle)",
+              color: "var(--text-secondary)",
             }}
           >
             Administrer <ArrowRight className="h-3 w-3" />
@@ -246,11 +246,11 @@ function DeleteDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" onClick={onClose}>
       <div
         className="w-full max-w-md rounded-2xl p-6"
-        style={{ background: "var(--bg-secondary)", border: "1px solid rgba(255,255,255,0.1)" }}
+        style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-default)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="mb-1 text-lg font-bold text-white">Slett {tenant.name}?</h3>
-        <p className="mb-4 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+        <p className="mb-4 text-sm" style={{ color: "var(--text-tertiary)" }}>
           Dette sletter alle data permanent. Skriv inn{" "}
           <strong className="text-white">{tenant.slug}</strong> for å bekrefte.
         </p>
@@ -260,8 +260,8 @@ function DeleteDialog({
           placeholder={tenant.slug}
           className="mb-4 w-full rounded-lg px-3 py-2.5 text-sm text-white outline-none"
           style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
+            background: "var(--bg-glass)",
+            border: "1px solid var(--border-default)",
           }}
         />
         {error && <p className="mb-3 text-xs text-red-400">{error}</p>}
@@ -269,7 +269,7 @@ function DeleteDialog({
           <button
             onClick={onClose}
             className="flex-1 rounded-lg py-2.5 text-sm transition-colors hover:text-white"
-            style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}
+            style={{ border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}
           >
             Avbryt
           </button>
@@ -359,16 +359,16 @@ function NewTenantModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" onClick={onClose}>
       <div
         className="w-full max-w-lg rounded-2xl"
-        style={{ background: "var(--bg-secondary)", border: "1px solid rgba(255,255,255,0.1)" }}
+        style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-default)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-6 py-4" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+        <div className="flex items-center justify-between border-b px-6 py-4" style={{ borderColor: "var(--border-subtle)" }}>
           <div>
             <h3 className="text-base font-bold text-white">Ny tenant</h3>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Steg {step} av 3</p>
+            <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>Steg {step} av 3</p>
           </div>
-          <button onClick={onClose} style={{ color: "rgba(255,255,255,0.4)" }} className="hover:text-white">
+          <button onClick={onClose} style={{ color: "var(--text-tertiary)" }} className="hover:text-white">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -379,7 +379,7 @@ function NewTenantModal({
             <div
               key={s}
               className="h-1 flex-1 rounded-full transition-all"
-              style={{ background: s <= step ? "#A855F7" : "rgba(255,255,255,0.1)" }}
+              style={{ background: s <= step ? "#A855F7" : "var(--border-default)" }}
             />
           ))}
         </div>
@@ -388,34 +388,34 @@ function NewTenantModal({
         {step === 1 && (
           <div className="space-y-4 px-6 py-5">
             <div>
-              <label className="mb-1.5 block text-xs font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>Navn *</label>
+              <label className="mb-1.5 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Navn *</label>
               <input
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 placeholder="Community-navn"
                 className="w-full rounded-lg px-3 py-2.5 text-sm text-white outline-none"
-                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+                style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)" }}
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>Slug *</label>
+              <label className="mb-1.5 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Slug *</label>
               <div className="flex items-center gap-2">
-                <span className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>intraa.net/</span>
+                <span className="text-sm" style={{ color: "var(--text-tertiary)" }}>intraa.net/</span>
                 <input
                   value={form.slug}
                   onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))}
                   placeholder="min-slug"
                   className="flex-1 rounded-lg px-3 py-2.5 text-sm text-white outline-none"
                   style={{
-                    background: "rgba(255,255,255,0.05)",
-                    border: `1px solid ${form.slug && !slugValid ? "#ef4444" : "rgba(255,255,255,0.1)"}`,
+                    background: "var(--bg-glass)",
+                    border: `1px solid ${form.slug && !slugValid ? "#ef4444" : "var(--border-default)"}`,
                   }}
                 />
               </div>
               {form.slug && !slugValid && <p className="mt-1 text-xs text-red-400">Kun a-z, 0-9 og bindestrek</p>}
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>Type *</label>
+              <label className="mb-1.5 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Type *</label>
               <div className="grid grid-cols-2 gap-3">
                 {(["COMMUNITY", "COMPANY"] as const).map((t) => (
                   <button
@@ -424,7 +424,7 @@ function NewTenantModal({
                     className="rounded-xl py-3 text-sm font-medium transition-all"
                     style={form.type === t
                       ? { background: "rgba(168,85,247,0.2)", border: "1px solid #A855F7", color: "#A855F7" }
-                      : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}
+                      : { background: "var(--bg-glass)", border: "1px solid var(--border-subtle)", color: "var(--text-tertiary)" }}
                   >
                     {TYPE_LABELS[t]}
                   </button>
@@ -432,14 +432,14 @@ function NewTenantModal({
               </div>
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>Eier (søk bruker)</label>
+              <label className="mb-1.5 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Eier (søk bruker)</label>
               <div className="relative">
                 <input
                   value={form.ownerSearch}
                   onChange={(e) => setForm((f) => ({ ...f, ownerSearch: e.target.value }))}
                   placeholder="Navn eller e-post…"
                   className="w-full rounded-lg px-3 py-2.5 text-sm text-white outline-none"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+                  style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)" }}
                 />
                 {ownerName && (
                   <div className="mt-1 flex items-center gap-2">
@@ -450,7 +450,7 @@ function NewTenantModal({
                 {userResults.length > 0 && !ownerName && (
                   <div
                     className="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-xl py-1 shadow-xl"
-                    style={{ background: "#18181f", border: "1px solid rgba(255,255,255,0.1)" }}
+                    style={{ background: "#18181f", border: "1px solid var(--border-default)" }}
                   >
                     {userResults.map((u) => (
                       <button
@@ -458,7 +458,7 @@ function NewTenantModal({
                         onClick={() => { setForm((f) => ({ ...f, ownerId: u.id, ownerSearch: "" })); setOwnerName(u.name ?? u.email); setUserResults([]); }}
                         className="flex w-full flex-col px-3 py-2 text-left text-sm text-white hover:bg-white/5"
                       >
-                        {u.name ?? "Ukjent"} <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{u.email}</span>
+                        {u.name ?? "Ukjent"} <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>{u.email}</span>
                       </button>
                     ))}
                   </div>
@@ -472,7 +472,7 @@ function NewTenantModal({
         {step === 2 && (
           <div className="space-y-4 px-6 py-5">
             <div>
-              <label className="mb-1.5 block text-xs font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>Plan</label>
+              <label className="mb-1.5 block text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Plan</label>
               <div className="grid grid-cols-3 gap-3">
                 {(["FREE", "PRO", "ENTERPRISE"] as const).map((p) => (
                   <button
@@ -481,16 +481,16 @@ function NewTenantModal({
                     className="rounded-xl py-3 text-sm font-medium transition-all"
                     style={form.plan === p
                       ? { background: "rgba(168,85,247,0.2)", border: "1px solid #A855F7", color: "#A855F7" }
-                      : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}
+                      : { background: "var(--bg-glass)", border: "1px solid var(--border-subtle)", color: "var(--text-tertiary)" }}
                   >
                     {p}
                   </button>
                 ))}
               </div>
             </div>
-            <div className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <div className="rounded-xl p-4" style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}>
               <p className="text-xs font-medium text-white mb-2">Features som opprettes automatisk:</p>
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+              <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
                 {form.type === "COMMUNITY"
                   ? "Feed, Rangering, Konkurranser, Lojalitet, Chat, Abonnement"
                   : "Feed, Chat, Tickets, Kalender, Oppgaver, Filer, Medlemmer, Live"}
@@ -502,7 +502,7 @@ function NewTenantModal({
         {/* Step 3 — Bekreft */}
         {step === 3 && (
           <div className="px-6 py-5">
-            <div className="rounded-xl p-4 space-y-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <div className="rounded-xl p-4 space-y-3" style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}>
               <p className="text-sm font-semibold text-white">Oppsummering</p>
               {[
                 ["Navn",   form.name],
@@ -512,7 +512,7 @@ function NewTenantModal({
                 ["Eier",   ownerName || "Superadmin (deg selv)"],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between text-sm">
-                  <span style={{ color: "rgba(255,255,255,0.4)" }}>{k}</span>
+                  <span style={{ color: "var(--text-tertiary)" }}>{k}</span>
                   <span className="font-medium text-white">{v}</span>
                 </div>
               ))}
@@ -522,12 +522,12 @@ function NewTenantModal({
         )}
 
         {/* Footer */}
-        <div className="flex gap-3 border-t px-6 py-4" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+        <div className="flex gap-3 border-t px-6 py-4" style={{ borderColor: "var(--border-subtle)" }}>
           {step > 1 && (
             <button
               onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}
               className="flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm transition-colors hover:text-white"
-              style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}
+              style={{ border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}
             >
               <ChevronLeft className="h-4 w-4" /> Forrige
             </button>
@@ -599,7 +599,7 @@ export default function TenantsClient({ initialTenants }: { initialTenants: Tena
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-xl font-bold text-white">Tenants</h1>
-          <p className="mt-0.5 text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <p className="mt-0.5 text-sm" style={{ color: "var(--text-tertiary)" }}>
             {tenants.length} organisasjoner på plattformen
           </p>
         </div>
@@ -616,9 +616,9 @@ export default function TenantsClient({ initialTenants }: { initialTenants: Tena
       <div className="mb-6 flex flex-wrap gap-3">
         <div
           className="flex flex-1 items-center gap-2 rounded-xl px-3 py-2.5 min-w-[200px]"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+          style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}
         >
-          <Search className="h-4 w-4 shrink-0" style={{ color: "rgba(255,255,255,0.3)" }} />
+          <Search className="h-4 w-4 shrink-0" style={{ color: "var(--text-tertiary)" }} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -630,7 +630,7 @@ export default function TenantsClient({ initialTenants }: { initialTenants: Tena
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}
           className="rounded-xl px-3 py-2.5 text-sm text-white outline-none"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+          style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}
         >
           <option value="ALL">Alle typer</option>
           <option value="COMMUNITY">Community</option>
@@ -640,7 +640,7 @@ export default function TenantsClient({ initialTenants }: { initialTenants: Tena
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
           className="rounded-xl px-3 py-2.5 text-sm text-white outline-none"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+          style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}
         >
           <option value="newest">Nyeste først</option>
           <option value="oldest">Eldste først</option>
@@ -652,7 +652,7 @@ export default function TenantsClient({ initialTenants }: { initialTenants: Tena
       {/* Grid */}
       {filtered.length === 0 ? (
         <div className="py-16 text-center">
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>
+          <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
             {search || typeFilter !== "ALL" ? "Ingen tenants matcher filteret." : "Ingen tenants ennå."}
           </p>
         </div>

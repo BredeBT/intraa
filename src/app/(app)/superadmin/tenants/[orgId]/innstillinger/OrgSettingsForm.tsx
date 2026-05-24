@@ -51,10 +51,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <div
       className="overflow-hidden rounded-xl"
-      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+      style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}
     >
-      <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>{title}</h2>
+      <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+        <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>{title}</h2>
       </div>
       <div className="p-4">{children}</div>
     </div>
@@ -148,8 +148,8 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
   }
 
   const inputStyle = {
-    background: "rgba(255,255,255,0.06)",
-    border:     "1px solid rgba(255,255,255,0.1)",
+    background: "var(--border-subtle)",
+    border:     "1px solid var(--border-default)",
     fontSize:   "16px",
     color:      "white",
     borderRadius: 8,
@@ -161,7 +161,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-lg font-medium text-white">Innstillinger</h1>
-          <p className="mt-0.5 text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
+          <p className="mt-0.5 text-xs" style={{ color: "var(--text-tertiary)" }}>
             Rediger grunnleggende informasjon
           </p>
         </div>
@@ -186,7 +186,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
             <div className="space-y-3">
 
               <div>
-                <label className="mb-1 block text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Navn</label>
+                <label className="mb-1 block text-xs" style={{ color: "var(--text-tertiary)" }}>Navn</label>
                 <input
                   value={name}
                   onChange={(e) => mark(setName)(e.target.value)}
@@ -196,17 +196,17 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Slug</label>
+                <label className="mb-1 block text-xs" style={{ color: "var(--text-tertiary)" }}>Slug</label>
                 <div
                   className="flex items-center overflow-hidden rounded-lg focus-within:ring-1 focus-within:ring-purple-500/40"
-                  style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+                  style={{ border: "1px solid var(--border-default)" }}
                 >
                   <span
                     className="shrink-0 border-r px-3 py-2 text-xs"
                     style={{
-                      background:  "rgba(255,255,255,0.04)",
-                      borderColor: "rgba(255,255,255,0.1)",
-                      color:       "rgba(255,255,255,0.3)",
+                      background:  "var(--bg-glass)",
+                      borderColor: "var(--border-default)",
+                      color:       "var(--text-tertiary)",
                     }}
                   >
                     intraa.net/
@@ -215,7 +215,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                     value={slug}
                     onChange={(e) => mark(setSlug)(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
                     className="flex-1 bg-transparent px-3 py-2 text-sm text-white focus:outline-none"
-                    style={{ background: "rgba(255,255,255,0.06)", fontSize: "16px" }}
+                    style={{ background: "var(--border-subtle)", fontSize: "16px" }}
                   />
                 </div>
                 <p className="mt-1 text-xs" style={{ color: "rgba(255,255,255,0.22)" }}>
@@ -224,8 +224,8 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
-                  Beskrivelse <span style={{ color: "rgba(255,255,255,0.25)" }}>(valgfri)</span>
+                <label className="mb-1 block text-xs" style={{ color: "var(--text-tertiary)" }}>
+                  Beskrivelse <span style={{ color: "var(--text-tertiary)" }}>(valgfri)</span>
                 </label>
                 <textarea
                   value={description}
@@ -243,7 +243,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
           {/* Plan og status */}
           <Section title="Plan og status">
             <div>
-              <label className="mb-2 block text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Plan</label>
+              <label className="mb-2 block text-xs" style={{ color: "var(--text-tertiary)" }}>Plan</label>
               <div className="grid grid-cols-3 gap-2">
                 {PLANS.map((p) => (
                   <button
@@ -253,7 +253,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                     className="truncate rounded-lg px-2 py-2 text-xs font-medium transition-all"
                     style={plan === p
                       ? { background: "rgba(168,85,247,0.2)", border: "1px solid rgba(168,85,247,0.5)", color: "#fcd34d" }
-                      : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.45)" }
+                      : { background: "var(--bg-glass)", border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }
                     }
                   >
                     {p}
@@ -264,10 +264,10 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
               {/* Type + Opprettet side by side */}
               <div
                 className="mt-3 grid grid-cols-2 gap-4 pt-3"
-                style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+                style={{ borderTop: "1px solid var(--border-subtle)" }}
               >
                 <div>
-                  <p className="mb-1 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Type</p>
+                  <p className="mb-1 text-xs" style={{ color: "var(--text-tertiary)" }}>Type</p>
                   <span
                     className="rounded-full px-2.5 py-0.5 text-xs font-medium"
                     style={org.type === "COMMUNITY"
@@ -279,8 +279,8 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                   </span>
                 </div>
                 <div>
-                  <p className="mb-1 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Opprettet</p>
-                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>{formatDate(org.createdAt)}</p>
+                  <p className="mb-1 text-xs" style={{ color: "var(--text-tertiary)" }}>Opprettet</p>
+                  <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{formatDate(org.createdAt)}</p>
                 </div>
               </div>
             </div>
@@ -302,7 +302,7 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
                     className="w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-left transition-all"
                     style={active
                       ? { background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.4)" }
-                      : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }
+                      : { background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }
                     }
                   >
                     <span className="text-base leading-none">{opt.icon}</span>
@@ -338,13 +338,13 @@ export default function OrgSettingsForm({ org }: { org: OrgProps }) {
               {visibility === "private" && (
                 <div
                   className="mt-1 rounded-xl p-3"
-                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}
                 >
                   <p className="mb-1 text-xs font-medium text-white">Invitasjonslenke</p>
                   {inviteToken && (
                     <p
                       className="mb-2 rounded px-2 py-1.5 font-mono text-xs break-all"
-                      style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)" }}
+                      style={{ background: "var(--bg-glass)", color: "var(--text-tertiary)" }}
                     >
                       {typeof window !== "undefined"
                         ? `${window.location.origin}/inviter/open/${inviteToken}`

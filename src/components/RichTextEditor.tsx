@@ -173,7 +173,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
         className="nav-link flex h-7 w-7 items-center justify-center rounded-md transition-colors"
         style={{
           background: active ? "rgba(94,234,212,0.12)" : "transparent",
-          color:      active ? "#5EEAD4" : "rgba(240,244,255,0.55)",
+          color:      active ? "#5EEAD4" : "var(--text-secondary)",
         }}
       >
         {children}
@@ -188,7 +188,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
       className={`flex flex-col rounded-xl transition-colors focus-within:border-[#5EEAD4]/40 ${minHeight ? "tiptap-tall" : ""} ${className}`}
       style={{
         background: "var(--bg-tertiary)",
-        border:     "1px solid rgba(240,244,255,0.08)",
+        border:     "1px solid var(--border-subtle)",
         ...(minHeight ? { ["--tiptap-min-h" as string]: `${minHeight}px` } : {}),
       }}
     >
@@ -201,7 +201,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
 
         {showFormat && (
           <>
-            <span className="mx-0.5 h-4 w-px" style={{ background: "rgba(240,244,255,0.08)" }} />
+            <span className="mx-0.5 h-4 w-px" style={{ background: "var(--border-subtle)" }} />
             <ToolBtn active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()} title="Fet (⌘B)">
               <Bold className="h-3.5 w-3.5" />
             </ToolBtn>
@@ -211,7 +211,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
             <ToolBtn active={editor.isActive("underline")} onClick={() => editor.chain().focus().toggleUnderline().run()} title="Understrek (⌘U)">
               <UnderlineIcon className="h-3.5 w-3.5" />
             </ToolBtn>
-            <span className="mx-0.5 h-4 w-px" style={{ background: "rgba(240,244,255,0.08)" }} />
+            <span className="mx-0.5 h-4 w-px" style={{ background: "var(--border-subtle)" }} />
             <ToolBtn active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()} title="Punktliste">
               <List className="h-3.5 w-3.5" />
             </ToolBtn>
@@ -221,7 +221,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
             <ToolBtn active={editor.isActive("code")} onClick={() => editor.chain().focus().toggleCode().run()} title="Kode">
               <Code className="h-3.5 w-3.5" />
             </ToolBtn>
-            <span className="mx-0.5 h-4 w-px" style={{ background: "rgba(240,244,255,0.08)" }} />
+            <span className="mx-0.5 h-4 w-px" style={{ background: "var(--border-subtle)" }} />
             {/* Tekststørrelse-dropdown */}
             <div className="relative">
               <button
@@ -229,7 +229,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
                 onMouseDown={(e) => { e.preventDefault(); setShowSize((v) => !v); setShowColor(false); }}
                 title="Tekststørrelse"
                 className="nav-link flex h-7 items-center gap-0.5 rounded-md px-2 transition-colors"
-                style={{ color: "rgba(240,244,255,0.55)" }}
+                style={{ color: "var(--text-secondary)" }}
               >
                 <span className="text-[11px] font-semibold leading-none whitespace-nowrap">{currentSizeLabel}</span>
                 <ChevronDown className="h-3 w-3" />
@@ -237,7 +237,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
               {showSize && (
                 <div
                   className="absolute left-0 top-full z-50 mt-1 flex w-44 flex-col rounded-lg p-1 shadow-2xl"
-                  style={{ background: "var(--bg-secondary)", border: "1px solid rgba(240,244,255,0.08)" }}
+                  style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-subtle)" }}
                 >
                   {SIZES.map((s) => {
                     const active = (currentSize ?? null) === s.value;
@@ -266,7 +266,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
               )}
             </div>
 
-            <span className="mx-0.5 h-4 w-px" style={{ background: "rgba(240,244,255,0.08)" }} />
+            <span className="mx-0.5 h-4 w-px" style={{ background: "var(--border-subtle)" }} />
             {/* Color-picker — popover med Aurora-palette */}
             <div className="relative">
               <button
@@ -274,14 +274,14 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
                 onMouseDown={(e) => { e.preventDefault(); setShowColor((v) => !v); }}
                 title="Tekstfarge"
                 className="nav-link flex h-7 w-7 items-center justify-center rounded-md transition-colors"
-                style={{ color: editor.getAttributes("textStyle").color ?? "rgba(240,244,255,0.55)" }}
+                style={{ color: editor.getAttributes("textStyle").color ?? "var(--text-secondary)" }}
               >
                 <Palette className="h-3.5 w-3.5" />
               </button>
               {showColor && (
                 <div
                   className="absolute left-0 top-full z-50 mt-1 flex gap-1 rounded-lg p-1.5 shadow-2xl"
-                  style={{ background: "var(--bg-secondary)", border: "1px solid rgba(240,244,255,0.08)" }}
+                  style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-subtle)" }}
                 >
                   {COLORS.map((c) => (
                     <button
@@ -297,7 +297,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
                       className="h-5 w-5 rounded transition-transform hover:scale-110"
                       style={{
                         background: c.hex,
-                        border: c.value === null ? "1px dashed rgba(240,244,255,0.3)" : "1px solid rgba(0,0,0,0.2)",
+                        border: c.value === null ? "1px dashed var(--text-tertiary)" : "1px solid rgba(0,0,0,0.2)",
                       }}
                     />
                   ))}
@@ -314,7 +314,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
               onMouseDown={(e) => { e.preventDefault(); setShowEmoji((v) => !v); setShowGif(false); }}
               title="Emoji"
               className="nav-link flex h-7 w-7 items-center justify-center rounded-md transition-colors"
-              style={{ color: "rgba(240,244,255,0.55)" }}
+              style={{ color: "var(--text-secondary)" }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/>
@@ -333,7 +333,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
               onMouseDown={(e) => { e.preventDefault(); setShowGif((v) => !v); setShowEmoji(false); }}
               title="Send GIF"
               className="nav-link flex h-7 items-center justify-center rounded-md px-1.5 transition-colors"
-              style={{ color: "rgba(240,244,255,0.55)" }}
+              style={{ color: "var(--text-secondary)" }}
             >
               <span className="text-[11px] font-bold leading-none">GIF</span>
             </button>

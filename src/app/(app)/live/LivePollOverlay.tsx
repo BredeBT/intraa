@@ -145,8 +145,8 @@ export default function LivePollOverlay({ orgId, isAdmin, onClose }: Props) {
               disabled={voting}
               className="relative w-full overflow-hidden rounded-lg px-3 py-2.5 text-left transition-colors disabled:opacity-60"
               style={{
-                background: "rgba(255,255,255,0.04)",
-                border:     isMine ? "1px solid rgba(94,234,212,0.50)" : "1px solid rgba(255,255,255,0.08)",
+                background: "var(--bg-glass)",
+                border:     isMine ? "1px solid rgba(94,234,212,0.50)" : "1px solid var(--border-subtle)",
               }}
             >
               {/* Bar fill */}

@@ -98,7 +98,7 @@ function CommunityCard({ c, index }: { c: Community; index: number }) {
         {/* Logo */}
         {c.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={c.logoUrl} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" style={{ border: "1px solid rgba(255,255,255,0.1)" }} />
+          <img src={c.logoUrl} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" style={{ border: "1px solid var(--border-default)" }} />
         ) : (
           <div className="w-9 h-9 rounded-lg bg-purple-600 flex items-center justify-center font-bold text-sm shrink-0 text-white">
             {c.name[0]}
@@ -108,7 +108,7 @@ function CommunityCard({ c, index }: { c: Community; index: number }) {
         {/* Name + type */}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-white truncate">{c.name}</p>
-          <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
             {c.memberCount.toLocaleString("no-NO")} med.
           </p>
         </div>
@@ -117,11 +117,11 @@ function CommunityCard({ c, index }: { c: Community; index: number }) {
         <div className="flex gap-4 shrink-0">
           <div className="text-center">
             <p className="text-sm font-semibold text-white">{c.postCount}</p>
-            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>Innlegg</p>
+            <p className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>Innlegg</p>
           </div>
           <div className="text-center">
             <p className="text-sm font-semibold text-green-400">{c.onlineCount}</p>
-            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>Online</p>
+            <p className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>Online</p>
           </div>
         </div>
 
@@ -146,7 +146,7 @@ function FriendsPanel({ friends }: { friends: FriendItem[] }) {
   return (
     <div className="rounded-2xl border border-white/[0.06] p-4" style={{ background: "var(--bg-secondary)" }}>
       <div className="flex justify-between items-center mb-3">
-        <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>
+        <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
           Venner
         </span>
         {onlineCount > 0 && (
@@ -157,7 +157,7 @@ function FriendsPanel({ friends }: { friends: FriendItem[] }) {
       </div>
 
       {friends.length === 0 ? (
-        <p className="text-xs text-center py-4" style={{ color: "rgba(255,255,255,0.3)" }}>Ingen venner ennå</p>
+        <p className="text-xs text-center py-4" style={{ color: "var(--text-tertiary)" }}>Ingen venner ennå</p>
       ) : (
         <div>
           {friends.map((friend) => (
@@ -178,10 +178,10 @@ function FriendsPanel({ friends }: { friends: FriendItem[] }) {
                 </p>
                 {friend.isOnline
                   ? <p className="text-[11px] text-green-400">Online nå</p>
-                  : <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.25)" }}>Offline</p>
+                  : <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>Offline</p>
                 }
               </div>
-              <span className="text-lg transition-colors" style={{ color: "rgba(255,255,255,0.2)" }}>✉</span>
+              <span className="text-lg transition-colors" style={{ color: "var(--border-strong)" }}>✉</span>
             </div>
           ))}
         </div>
@@ -202,7 +202,7 @@ function PendingRequests({
   if (requests.length === 0) return null;
   return (
     <div className="rounded-2xl border border-white/[0.06] p-4" style={{ background: "var(--bg-secondary)" }}>
-      <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>
+      <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
         Venneforespørsler ({requests.length})
       </h2>
       <div className="space-y-3">
@@ -223,7 +223,7 @@ function PendingRequests({
               <button
                 onClick={() => onRespond(r.id, "decline")}
                 className="rounded-md p-1.5 transition-colors hover:bg-red-500/20 hover:text-red-400"
-                style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)" }}
+                style={{ background: "var(--bg-glass)", color: "var(--text-tertiary)" }}
                 title="Avslå"
               >
                 <X className="h-3.5 w-3.5" />
@@ -248,7 +248,7 @@ function DiscoveryCommunityCard({
   joining: boolean;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border transition-colors" style={{ background: "var(--bg-secondary)", borderColor: "rgba(255,255,255,0.08)" }}>
+    <div className="overflow-hidden rounded-xl border transition-colors" style={{ background: "var(--bg-secondary)", borderColor: "var(--border-subtle)" }}>
       <div
         className="h-28 w-full"
         style={c.bannerUrl
@@ -260,7 +260,7 @@ function DiscoveryCommunityCard({
         <div className="flex items-center gap-3 mb-3">
           {c.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={c.logoUrl} alt="" className="h-10 w-10 rounded-xl object-cover shrink-0" style={{ border: "1px solid rgba(255,255,255,0.12)" }} />
+            <img src={c.logoUrl} alt="" className="h-10 w-10 rounded-xl object-cover shrink-0" style={{ border: "1px solid var(--border-default)" }} />
           ) : (
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-base font-bold text-white" style={{ background: "#A855F7" }}>
               {c.name[0]}
@@ -268,7 +268,7 @@ function DiscoveryCommunityCard({
           )}
           <div className="flex-1 min-w-0">
             <p className="font-medium text-white leading-tight truncate">{c.name}</p>
-            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>
               {c.memberCount.toLocaleString("no-NO")} medlemmer · Åpent for alle
             </p>
           </div>
@@ -282,7 +282,7 @@ function DiscoveryCommunityCard({
           </button>
         </div>
         {c.description && (
-          <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
+          <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
             {c.description}
           </p>
         )}
@@ -339,20 +339,20 @@ function NewUserHome({ communities }: { communities: Community[] }) {
     <div className="mx-auto max-w-2xl px-4 py-8">
       <div className="text-center py-6 px-4 mb-8" style={fadeStyle(0)}>
         <h1 className="text-2xl font-semibold text-white mb-2">Finn ditt community</h1>
-        <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
+        <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
           Bli med, chat og vær en del av fellesskapet
         </p>
         <div className="relative max-w-md mx-auto mt-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "rgba(255,255,255,0.35)" }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "var(--text-tertiary)" }} />
           <input
             placeholder="Søk etter communities…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:outline-none"
-            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", caretColor: "#A855F7" }}
+            style={{ background: "var(--border-subtle)", border: "1px solid var(--border-default)", caretColor: "#A855F7" }}
           />
           {searching && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style={{ color: "var(--text-tertiary)" }}>
               Søker…
             </span>
           )}
@@ -360,7 +360,7 @@ function NewUserHome({ communities }: { communities: Community[] }) {
       </div>
 
       {search.trim() && results !== null && results.length === 0 ? (
-        <p className="text-center text-sm mb-8" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <p className="text-center text-sm mb-8" style={{ color: "var(--text-tertiary)" }}>
           Ingen communities funnet for «{search}»
         </p>
       ) : (
@@ -380,11 +380,11 @@ function NewUserHome({ communities }: { communities: Community[] }) {
             <div
               key={step.title}
               className="rounded-xl p-4 text-center"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+              style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}
             >
               <div className="text-2xl mb-2">{step.icon}</div>
               <p className="text-sm font-medium text-white mb-1">{step.title}</p>
-              <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{step.text}</p>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--text-tertiary)" }}>{step.text}</p>
             </div>
           ))}
         </div>

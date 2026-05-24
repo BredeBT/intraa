@@ -189,7 +189,7 @@ const SidebarContent = memo(function SidebarContentImpl({
         {!collapsed ? (
           <div
             className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
-            style={{ background: "rgba(255,255,255,0.04)" }}
+            style={{ background: "var(--bg-glass)" }}
             title={userName}
           >
             <div
@@ -413,7 +413,7 @@ function SuperAdminBanner() {
   return (
     <div
       className="sticky top-0 z-40 flex items-center justify-between px-4 py-2"
-      style={{ background: "#A855F7", borderBottom: "1px solid rgba(255,255,255,0.15)" }}
+      style={{ background: "#A855F7", borderBottom: "1px solid var(--border-default)" }}
     >
       <span className="text-xs font-semibold text-white">Superadmin-modus — du ser denne siden som bruker</span>
       <Link
@@ -598,7 +598,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Desktop sidebar — hidden when in admin (admin has its own) */}
       <aside
         className={`fixed left-0 top-0 z-30 hidden h-screen flex-col bg-zinc-900 transition-all duration-200 ease-in-out md:flex ${sidebarW}`}
-        style={{ borderRight: "1px solid rgba(240,244,255,0.08)" }}
+        style={{ borderRight: "1px solid var(--border-subtle)" }}
       >
         {!inAdmin && !inBrand && <SidebarContent {...sidebarProps} />}
       </aside>
@@ -627,7 +627,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           className="flex items-center gap-3 bg-zinc-900 px-4 min-h-14"
           style={{
             paddingTop:   "max(env(safe-area-inset-top), 0.75rem)",
-            borderBottom: "1px solid rgba(240,244,255,0.08)",
+            borderBottom: "1px solid var(--border-subtle)",
           }}
         >
           {/* Left: title */}

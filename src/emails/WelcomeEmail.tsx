@@ -9,7 +9,7 @@ export function WelcomeEmail({ name, unsubUrl }: { name: string; unsubUrl: strin
           <Heading style={{ color: "#a78bfa", fontSize: 24, marginBottom: 8 }}>
             Velkommen til Intraa, {name}!
           </Heading>
-          <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 15, lineHeight: 1.6 }}>
+          <Text style={{ color: "var(--text-tertiary)", fontSize: 15, lineHeight: 1.6 }}>
             Vi er glad for at du er med. Finn et community å bli med i, chat med andre og bli en del av fellesskapet.
           </Text>
           <Button
@@ -18,8 +18,8 @@ export function WelcomeEmail({ name, unsubUrl }: { name: string; unsubUrl: strin
           >
             Gå til Intraa →
           </Button>
-          <Hr style={{ borderColor: "rgba(255,255,255,0.08)", margin: "24px 0" }} />
-          <Text style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>
+          <Hr style={{ borderColor: "var(--border-subtle)", margin: "24px 0" }} />
+          <Text style={{ color: "var(--text-tertiary)", fontSize: 12 }}>
             Du mottar denne eposten fordi du registrerte deg på intraa.net.{" "}
             <a href={unsubUrl} style={{ color: "#6c47ff" }}>
               Meld deg av epostlisten

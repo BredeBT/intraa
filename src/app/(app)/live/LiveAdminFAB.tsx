@@ -60,7 +60,7 @@ export default function LiveAdminFAB({ orgId, onOpenPoll, onOpenGiveaway, onOpen
           className="flex h-14 w-14 items-center justify-center rounded-full shadow-2xl transition-transform hover:scale-105"
           style={{
             background: open
-              ? "rgba(255,255,255,0.10)"
+              ? "var(--border-default)"
               : "linear-gradient(135deg, #A855F7, #F472B6)",
             color:      "#fff",
             boxShadow:  open ? undefined : "0 8px 32px rgba(168,85,247,0.50)",

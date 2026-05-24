@@ -155,7 +155,7 @@ export default function StreamStudio({
           <button
             onClick={onClose}
             className="ml-2 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/[0.06]"
-            style={{ color: "#fff", border: "1px solid rgba(255,255,255,0.10)" }}
+            style={{ color: "#fff", border: "1px solid var(--border-default)" }}
           >
             <X className="h-3.5 w-3.5" /> Lukk Studio
           </button>
@@ -189,7 +189,7 @@ export default function StreamStudio({
             {/* Always-visible action panel */}
             <section
               className="rounded-2xl p-4"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
+              style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}
             >
               {activeTool === null && (
                 <>
@@ -296,7 +296,7 @@ export default function StreamStudio({
                 <SectionHeader title="Historikk" subtitle="Tidligere streams og events" />
                 <div
                   className="rounded-2xl divide-y divide-white/[0.04]"
-                  style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-subtle)" }}
                 >
                   {/* Merge into one chronological list */}
                   {[
@@ -348,7 +348,7 @@ function EmptyCard({ text }: { text: string }) {
   return (
     <div
       className="rounded-2xl py-5 px-4 text-center"
-      style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.08)" }}
+      style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed var(--border-subtle)" }}
     >
       <p className="text-xs text-white/40">{text}</p>
     </div>
@@ -393,8 +393,8 @@ function LogRow({ event, onDmWinner, compact }: {
   return (
     <div className="flex items-start gap-3 p-3">
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg" style={{
-        background: cancelled ? "rgba(255,255,255,0.05)" : "rgba(251,191,36,0.15)",
-        color:      cancelled ? "rgba(255,255,255,0.4)" : "#FBBF24",
+        background: cancelled ? "var(--bg-glass)" : "rgba(251,191,36,0.15)",
+        color:      cancelled ? "var(--text-tertiary)" : "#FBBF24",
       }}>
         {cancelled ? <X className="h-3.5 w-3.5" /> : <Trophy className="h-3.5 w-3.5" />}
       </div>

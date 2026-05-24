@@ -43,11 +43,11 @@ export default function OpenInvitePage({ params }: { params: Promise<{ token: st
           <div className="text-2xl font-bold tracking-tight text-white">Intraa</div>
         </div>
 
-        <div className="rounded-2xl p-8 shadow-xl" style={{ background: "var(--bg-secondary)", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="rounded-2xl p-8 shadow-xl" style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-subtle)" }}>
           {state === "joining" && (
             <div className="flex flex-col items-center gap-4 py-4">
-              <div className="h-10 w-10 animate-spin rounded-full" style={{ border: "3px solid rgba(255,255,255,0.1)", borderTopColor: "#A855F7" }} />
-              <p className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>Bli med i community…</p>
+              <div className="h-10 w-10 animate-spin rounded-full" style={{ border: "3px solid var(--border-default)", borderTopColor: "#A855F7" }} />
+              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Bli med i community…</p>
             </div>
           )}
 
@@ -58,7 +58,7 @@ export default function OpenInvitePage({ params }: { params: Promise<{ token: st
               </div>
               <div>
                 <h2 className="text-base font-semibold text-white">Invitasjonslenke ugyldig</h2>
-                <p className="mt-2 text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>{error}</p>
+                <p className="mt-2 text-sm" style={{ color: "var(--text-tertiary)" }}>{error}</p>
               </div>
               <Link
                 href="/home"

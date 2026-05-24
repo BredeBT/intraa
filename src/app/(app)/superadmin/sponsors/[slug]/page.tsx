@@ -62,7 +62,7 @@ export default async function SponsorAdminDetailPage({
         className="relative overflow-hidden rounded-3xl p-7 mb-8"
         style={{
           background: "linear-gradient(135deg, rgba(96,165,250,0.15), rgba(168,85,247,0.10))",
-          border:     "1px solid rgba(255,255,255,0.10)",
+          border:     "1px solid var(--border-default)",
         }}
       >
         <div className="flex items-start justify-between gap-4">
@@ -212,7 +212,7 @@ function StoryGrid({ stories, now }: { stories: StoryRow[]; now: Date }) {
 
 function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: number; accent: string }) {
   return (
-    <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${accent}25` }}>
+    <div className="rounded-2xl p-4" style={{ background: "var(--bg-glass)", border: `1px solid ${accent}25` }}>
       <div className="mb-2 flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: `${accent}15`, color: accent }}>
         {icon}
       </div>

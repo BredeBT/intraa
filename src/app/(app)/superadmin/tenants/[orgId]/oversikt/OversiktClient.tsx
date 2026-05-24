@@ -66,9 +66,9 @@ function InlineField({
   return (
     <div
       className="group flex items-center justify-between gap-4 py-3"
-      style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+      style={{ borderBottom: "1px solid var(--border-subtle)" }}
     >
-      <span className="text-sm shrink-0" style={{ color: "rgba(255,255,255,0.4)", width: 100 }}>{label}</span>
+      <span className="text-sm shrink-0" style={{ color: "var(--text-tertiary)", width: 100 }}>{label}</span>
       <div className="flex flex-1 items-center gap-2">
         {editing ? children : (
           <>
@@ -76,7 +76,7 @@ function InlineField({
             <button
               onClick={onEdit}
               className="opacity-0 group-hover:opacity-100 rounded p-1 transition-all hover:bg-white/10"
-              style={{ color: "rgba(255,255,255,0.4)" }}
+              style={{ color: "var(--text-tertiary)" }}
             >
               <Pencil className="h-3.5 w-3.5" />
             </button>
@@ -98,19 +98,19 @@ function StatCard({
   return (
     <div
       className="rounded-xl p-5"
-      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+      style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}
     >
       <div className={`mb-3 inline-flex rounded-lg p-2 ${bg}`}>
         <Icon className={`h-5 w-5 ${color}`} />
       </div>
       <p className="text-2xl font-bold text-white">{value.toLocaleString("nb-NO")}</p>
-      <p className="mt-0.5 text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>{label}</p>
+      <p className="mt-0.5 text-sm" style={{ color: "var(--text-tertiary)" }}>{label}</p>
     </div>
   );
 }
 
 const PLAN_COLORS: Record<string, string> = {
-  FREE:       "rgba(255,255,255,0.4)",
+  FREE:       "var(--text-tertiary)",
   PRO:        "#A855F7",
   ENTERPRISE: "#fbbf24",
 };
@@ -216,14 +216,14 @@ export default function OversiktClient({ org: initial, stats }: Props) {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-white">Oversikt</h2>
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>Nøkkelinformasjon og hurtighandlinger</p>
+          <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Nøkkelinformasjon og hurtighandlinger</p>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href={`/${slug}/feed?sa=1`}
             target="_blank"
             className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all hover:text-white"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}
+            style={{ background: "var(--border-subtle)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
           >
             <Eye className="h-4 w-4" /> Se som bruker
           </Link>
@@ -252,9 +252,9 @@ export default function OversiktClient({ org: initial, stats }: Props) {
       {/* Details — inline edit */}
       <div
         className="mb-6 rounded-xl p-5"
-        style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}
       >
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
           Detaljer — klikk felt for å redigere
         </p>
 
@@ -266,7 +266,7 @@ export default function OversiktClient({ org: initial, stats }: Props) {
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") confirmEdit(); if (e.key === "Escape") cancelEdit(); }}
             className="flex-1 rounded-lg px-2.5 py-1.5 text-sm text-white outline-none"
-            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(168,85,247,0.5)" }}
+            style={{ background: "var(--border-subtle)", border: "1px solid rgba(168,85,247,0.5)" }}
           />
           <button onClick={confirmEdit}  className="text-emerald-400 hover:text-emerald-300"><Check className="h-4 w-4" /></button>
           <button onClick={cancelEdit}   className="text-zinc-500 hover:text-zinc-300"><X className="h-4 w-4" /></button>
@@ -275,7 +275,7 @@ export default function OversiktClient({ org: initial, stats }: Props) {
         {/* Slug */}
         <InlineField label="Slug" value={`/${slug}`} editing={editing === "slug"} onEdit={() => startEdit("slug")}>
           <div className="flex flex-1 items-center gap-1">
-            <span className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>intraa.net/</span>
+            <span className="text-sm" style={{ color: "var(--text-tertiary)" }}>intraa.net/</span>
             <input
               autoFocus
               value={slug}
@@ -283,7 +283,7 @@ export default function OversiktClient({ org: initial, stats }: Props) {
               onKeyDown={(e) => { if (e.key === "Enter") confirmEdit(); if (e.key === "Escape") cancelEdit(); }}
               className="flex-1 rounded-lg px-2.5 py-1.5 text-sm text-white outline-none"
               style={{
-                background: "rgba(255,255,255,0.08)",
+                background: "var(--border-subtle)",
                 border: `1px solid ${slugValid ? "rgba(168,85,247,0.5)" : "#ef4444"}`,
               }}
             />
@@ -305,7 +305,7 @@ export default function OversiktClient({ org: initial, stats }: Props) {
             onChange={(e) => { setPlan(e.target.value as "FREE" | "PRO" | "ENTERPRISE"); confirmEdit(); }}
             onKeyDown={(e) => { if (e.key === "Escape") cancelEdit(); }}
             className="flex-1 rounded-lg px-2.5 py-1.5 text-sm text-white outline-none"
-            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(168,85,247,0.5)" }}
+            style={{ background: "var(--border-subtle)", border: "1px solid rgba(168,85,247,0.5)" }}
           >
             <option value="FREE">FREE</option>
             <option value="PRO">PRO</option>
@@ -314,32 +314,32 @@ export default function OversiktClient({ org: initial, stats }: Props) {
         </InlineField>
 
         {/* Type (read-only) */}
-        <div className="flex items-center justify-between gap-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <span className="shrink-0 text-sm" style={{ color: "rgba(255,255,255,0.4)", width: 100 }}>Type</span>
-          <span className="flex-1 text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
+        <div className="flex items-center justify-between gap-4 py-3" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+          <span className="shrink-0 text-sm" style={{ color: "var(--text-tertiary)", width: 100 }}>Type</span>
+          <span className="flex-1 text-sm" style={{ color: "var(--text-secondary)" }}>
             {initial.type === "COMMUNITY" ? "Community" : "Bedrift"}
           </span>
         </div>
 
         {/* Opprettet (read-only) */}
-        <div className="flex items-center justify-between gap-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <span className="shrink-0 text-sm" style={{ color: "rgba(255,255,255,0.4)", width: 100 }}>Opprettet</span>
-          <span className="flex-1 text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{formatDate(initial.createdAt)}</span>
+        <div className="flex items-center justify-between gap-4 py-3" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+          <span className="shrink-0 text-sm" style={{ color: "var(--text-tertiary)", width: 100 }}>Opprettet</span>
+          <span className="flex-1 text-sm" style={{ color: "var(--text-secondary)" }}>{formatDate(initial.createdAt)}</span>
         </div>
 
         {/* ID (read-only) */}
         <div className="flex items-center justify-between gap-4 py-3">
-          <span className="shrink-0 text-sm" style={{ color: "rgba(255,255,255,0.4)", width: 100 }}>ID</span>
-          <span className="flex-1 font-mono text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{initial.id}</span>
+          <span className="shrink-0 text-sm" style={{ color: "var(--text-tertiary)", width: 100 }}>ID</span>
+          <span className="flex-1 font-mono text-xs" style={{ color: "var(--text-tertiary)" }}>{initial.id}</span>
         </div>
       </div>
 
       {/* Quick actions */}
       <div
         className="rounded-xl p-5"
-        style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ background: "var(--bg-glass)", border: "1px solid var(--border-subtle)" }}
       >
-        <p className="mb-4 text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>
+        <p className="mb-4 text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
           Hurtighandlinger
         </p>
         <div className="grid grid-cols-2 gap-3">
@@ -362,7 +362,7 @@ export default function OversiktClient({ org: initial, stats }: Props) {
         </div>
       </div>
 
-      <p className="mt-3 text-[11px]" style={{ color: "rgba(255,255,255,0.2)" }}>
+      <p className="mt-3 text-[11px]" style={{ color: "var(--border-strong)" }}>
         Tips: Trykk ⌘S (Mac) eller Ctrl+S for å lagre endringer
       </p>
 

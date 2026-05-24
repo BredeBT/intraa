@@ -134,9 +134,9 @@ function bumpStreak() {
 const STATE_COLORS: Record<LetterState | "empty" | "filled", string> = {
   correct: "#1d9e75",
   present: "#f9c74f",
-  absent:  "rgba(255,255,255,0.12)",
-  empty:   "rgba(255,255,255,0.04)",
-  filled:  "rgba(255,255,255,0.12)",
+  absent:  "var(--border-default)",
+  empty:   "var(--bg-glass)",
+  filled:  "var(--border-default)",
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -315,7 +315,7 @@ export default function Wordle({ orgSlug }: { orgSlug: string }) {
       <div className="flex min-h-screen flex-col items-center px-4 py-6" style={{ background: "var(--bg-primary)" }}>
         {/* Back link */}
         <div className="mb-4 w-full max-w-[420px]">
-          <Link href={`/${orgSlug}/spill`} className="text-sm transition-colors hover:text-white" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <Link href={`/${orgSlug}/spill`} className="text-sm transition-colors hover:text-white" style={{ color: "var(--text-tertiary)" }}>
             ← Tilbake til spill
           </Link>
         </div>
@@ -324,7 +324,7 @@ export default function Wordle({ orgSlug }: { orgSlug: string }) {
         <div className="mb-4 flex w-full max-w-[420px] items-center justify-between">
           <div>
             <h1 className="text-2xl font-black text-white tracking-tight">Wordle</h1>
-            <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>Daglig norsk ord</p>
+            <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>Daglig norsk ord</p>
           </div>
           <div className="flex items-center gap-3">
             {streak > 1 && (
@@ -332,8 +332,8 @@ export default function Wordle({ orgSlug }: { orgSlug: string }) {
                 🔥 {streak} dager
               </span>
             )}
-            <div className="rounded-xl px-3 py-1.5 text-center" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <p className="text-[9px] font-bold tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>FORSØK</p>
+            <div className="rounded-xl px-3 py-1.5 text-center" style={{ background: "var(--border-subtle)", border: "1px solid var(--border-subtle)" }}>
+              <p className="text-[9px] font-bold tracking-widest" style={{ color: "var(--text-tertiary)" }}>FORSØK</p>
               <p className="text-sm font-bold text-white">{guesses.length}/6</p>
             </div>
           </div>
@@ -376,7 +376,7 @@ export default function Wordle({ orgSlug }: { orgSlug: string }) {
                       fontSize: "clamp(1.1rem, 4vw, 1.4rem)",
                       color: submitted ? "#ffffff" : "rgba(255,255,255,0.9)",
                       background: STATE_COLORS[state],
-                      border: ch && !submitted ? "2px solid rgba(255,255,255,0.25)" : "2px solid transparent",
+                      border: ch && !submitted ? "2px solid var(--text-tertiary)" : "2px solid transparent",
                       animationDelay: isFlipping ? `${ci * 80}ms` : "0ms",
                       transition: submitted ? "background 0s" : "border 0.1s",
                     }}
@@ -404,7 +404,7 @@ export default function Wordle({ orgSlug }: { orgSlug: string }) {
                   {guesses.length === 1 ? "🤯 Umulig bra!" :
                    guesses.length <= 3 ? "🎉 Imponerende!" : "✅ Riktig!"}
                 </p>
-                <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+                <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
                   Ordets var: <strong className="text-white">{target.current}</strong>
                 </p>
                 {!coinDone && (
@@ -414,7 +414,7 @@ export default function Wordle({ orgSlug }: { orgSlug: string }) {
             ) : (
               <>
                 <p className="text-lg font-bold" style={{ color: "#ef4444" }}>Beklager!</p>
-                <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+                <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
                   Svaret var: <strong className="text-white">{target.current}</strong>
                 </p>
               </>
@@ -422,7 +422,7 @@ export default function Wordle({ orgSlug }: { orgSlug: string }) {
             <button
               onClick={share}
               className="mt-3 rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all hover:brightness-110"
-              style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}
+              style={{ background: "var(--border-default)", border: "1px solid var(--border-default)" }}
             >
               {copied ? "✓ Kopiert!" : "Del resultatet"}
             </button>
@@ -451,7 +451,7 @@ export default function Wordle({ orgSlug }: { orgSlug: string }) {
                       color: st ? "#ffffff" : "rgba(255,255,255,0.85)",
                       background: st
                         ? STATE_COLORS[st]
-                        : "rgba(255,255,255,0.1)",
+                        : "var(--border-default)",
                       border: "none",
                       cursor: "pointer",
                       transition: "background 0.15s",

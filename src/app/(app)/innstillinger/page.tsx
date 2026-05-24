@@ -404,10 +404,10 @@ interface FanpassCommunity {
 const FS = {
   surface:  "var(--bg-secondary)",
   surface2: "var(--bg-tertiary)",
-  line:     "rgba(240,244,255,0.08)",
+  line:     "var(--border-subtle)",
   text:     "var(--text-primary)",
-  muted:    "rgba(240,244,255,0.6)",
-  subtle:   "rgba(240,244,255,0.4)",
+  muted:    "var(--text-secondary)",
+  subtle:   "var(--text-tertiary)",
   teal:     "#5EEAD4",
   purple:   "#A855F7",
   amber:    "#FBBF24",

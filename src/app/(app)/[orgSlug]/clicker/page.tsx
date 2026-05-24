@@ -69,7 +69,7 @@ function OfflineToast({ value, onDismiss }: { value: number | null; onDismiss: (
       <span className="text-xl shrink-0">😴</span>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-white">Velkommen tilbake!</p>
-        <p className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
+        <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
           +<span className="font-bold" style={{ color: "#A855F7" }}>{fmt(value)}</span> coins mens du var borte. Klikk for å lukke.
         </p>
       </div>
@@ -488,7 +488,7 @@ export default function ClickerPage() {
 
   const WorldsPanel = (
     <div className="flex flex-col gap-1.5">
-      <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>
+      <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
         Verdener
       </p>
 
@@ -505,24 +505,24 @@ export default function ClickerPage() {
               isActive
                 ? { background: "rgba(168,85,247,0.13)", border: "1px solid rgba(168,85,247,0.38)", borderRadius: 10 }
                 : unlocked
-                ? { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, opacity: 0.7 }
-                : { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 10, opacity: 0.5 }
+                ? { background: "var(--bg-glass)", border: "1px solid var(--border-subtle)", borderRadius: 10, opacity: 0.7 }
+                : { background: "rgba(255,255,255,0.02)", border: "1px solid var(--bg-glass)", borderRadius: 10, opacity: 0.5 }
             }
             className="p-2.5"
           >
             <div className="flex items-center gap-2">
               <span className="text-base leading-none">
-                {unlocked ? wDef.emoji : <Lock className="h-3.5 w-3.5" style={{ color: "rgba(255,255,255,0.3)" }} />}
+                {unlocked ? wDef.emoji : <Lock className="h-3.5 w-3.5" style={{ color: "var(--text-tertiary)" }} />}
               </span>
               <div className="min-w-0 flex-1">
                 <p
                   className="truncate text-xs leading-tight"
-                  style={{ fontWeight: 500, color: isActive ? "#A855F7" : "rgba(255,255,255,0.5)" }}
+                  style={{ fontWeight: 500, color: isActive ? "#A855F7" : "var(--text-tertiary)" }}
                 >
                   {n}. {wDef.name}
                 </p>
                 {!unlocked && (
-                  <p className="text-[10px] leading-tight" style={{ color: "rgba(255,255,255,0.25)" }}>
+                  <p className="text-[10px] leading-tight" style={{ color: "var(--text-tertiary)" }}>
                     Lås opp med prestige
                   </p>
                 )}
@@ -540,7 +540,7 @@ export default function ClickerPage() {
 
             {isActive && !isFinal && (
               <div className="mt-2">
-                <div className="h-[3px] overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
+                <div className="h-[3px] overflow-hidden rounded-full" style={{ background: "var(--border-subtle)" }}>
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{ width: `${prestigePct.toFixed(2)}%`, background: "#A855F7" }}
@@ -563,7 +563,7 @@ export default function ClickerPage() {
             <ShoppingBag className="h-4 w-4 shrink-0" style={{ color: "#fbbf24" }} />
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold leading-tight" style={{ color: "#fbbf24" }}>Prestige-butikk</p>
-              <p className="text-[10px] leading-tight" style={{ color: "rgba(255,255,255,0.4)" }}>
+              <p className="text-[10px] leading-tight" style={{ color: "var(--text-tertiary)" }}>
                 {pointsAvail} poeng tilgjengelig
               </p>
             </div>
@@ -602,7 +602,7 @@ export default function ClickerPage() {
           {fmt(displayCoins)}
         </span>
       </div>
-      <p className="mb-1 text-xs md:text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>coins</p>
+      <p className="mb-1 text-xs md:text-sm" style={{ color: "var(--text-tertiary)" }}>coins</p>
 
       {/* Fanpass badges */}
       {(hasFanpass || profile.permanentBonus > 1) && (
@@ -639,12 +639,12 @@ export default function ClickerPage() {
         <div className="flex items-center gap-1.5">
           <Zap className="h-4 w-4" style={{ color: "#fbbf24" }} />
           <span className="text-sm font-semibold text-white">{fmt(effectiveCpc)}</span>
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>/klikk</span>
+          <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>/klikk</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Clock className="h-4 w-4" style={{ color: "#818cf8" }} />
           <span className="text-sm font-semibold text-white">{fmt(effectiveCps)}</span>
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>/sek</span>
+          <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>/sek</span>
         </div>
       </div>
 
@@ -705,7 +705,7 @@ export default function ClickerPage() {
             boxShadow: `
               0 0 60px ${wColor}55,
               0 0 100px ${wColor}30,
-              inset 0 2px 0 rgba(255,255,255,0.25),
+              inset 0 2px 0 var(--text-tertiary),
               inset 0 -8px 24px rgba(0,0,0,0.25)
             `,
             border: `3px solid ${wColor}`,
@@ -730,14 +730,14 @@ export default function ClickerPage() {
       {nextMilestone && (
         <div className="mb-5 w-full">
           <div className="mb-1 flex items-baseline justify-between text-[11px]">
-            <span style={{ color: "rgba(255,255,255,0.5)" }}>
+            <span style={{ color: "var(--text-tertiary)" }}>
               Neste: <span style={{ color: wColor }}>{nextMilestone.emoji} {nextMilestone.name}</span>
             </span>
-            <span style={{ color: "rgba(255,255,255,0.4)" }} className="tabular-nums">
+            <span style={{ color: "var(--text-tertiary)" }} className="tabular-nums">
               {fmt(displayCoins)} / {fmt(nextMilestone.cost)}
             </span>
           </div>
-          <div className="overflow-hidden rounded-full" style={{ height: 4, background: "rgba(255,255,255,0.06)" }}>
+          <div className="overflow-hidden rounded-full" style={{ height: 4, background: "var(--border-subtle)" }}>
             <div
               className="h-full rounded-full transition-all duration-300"
               style={{
@@ -750,7 +750,7 @@ export default function ClickerPage() {
         </div>
       )}
 
-      <p className="mb-5 text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+      <p className="mb-5 text-xs" style={{ color: "var(--border-strong)" }}>
         {fmt(totalClicks)} totale klikk{totalPrestige > 0 && ` · Prestige ${totalPrestige}`}
       </p>
 
@@ -772,10 +772,10 @@ export default function ClickerPage() {
       ) : prestigeCost > 0 ? (
         <div className="mb-6 w-full">
           <div className="mb-1.5 flex justify-between">
-            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>Prestige fremgang</span>
-            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>{fmt(displayCoins)} / {fmt(prestigeCost)}</span>
+            <span className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>Prestige fremgang</span>
+            <span className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>{fmt(displayCoins)} / {fmt(prestigeCost)}</span>
           </div>
-          <div className="overflow-hidden rounded-full" style={{ height: 6, background: "rgba(255,255,255,0.06)" }}>
+          <div className="overflow-hidden rounded-full" style={{ height: 6, background: "var(--border-subtle)" }}>
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{ width: `${prestigePct.toFixed(2)}%`, background: "linear-gradient(to right, #5EEAD4, #A855F7)" }}
@@ -785,7 +785,7 @@ export default function ClickerPage() {
       ) : world === MAX_WORLD ? (
         <div className="mb-6 w-full rounded-xl px-4 py-3 text-center" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
           <p className="text-sm font-semibold" style={{ color: "#fbbf24" }}>👑 Du er i den siste verden!</p>
-          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Ingen prestige herfra</p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>Ingen prestige herfra</p>
         </div>
       ) : null}
 
@@ -794,8 +794,8 @@ export default function ClickerPage() {
         <div
           className="w-full rounded-xl p-4"
           style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            background: "var(--bg-glass)",
+            border: "1px solid var(--border-subtle)",
             borderRadius: 12,
           }}
         >
@@ -803,7 +803,7 @@ export default function ClickerPage() {
             <Trophy className="h-3.5 w-3.5" style={{ color: "#fbbf24" }} />
             <p
               className="text-[10px] font-semibold uppercase tracking-wider"
-              style={{ color: "rgba(255,255,255,0.35)" }}
+              style={{ color: "var(--text-tertiary)" }}
             >
               TOPP 5 — etter rekord
             </p>
@@ -817,12 +817,12 @@ export default function ClickerPage() {
                 i === 0 ? "#fbbf24"
                 : i === 1 ? "#94a3b8"
                 : i === 2 ? "#b45309"
-                : "rgba(255,255,255,0.3)";
+                : "var(--text-tertiary)";
               const avatarRing =
                 i === 0 ? "rgba(251,191,36,0.5)"
                 : i === 1 ? "rgba(148,163,184,0.4)"
                 : i === 2 ? "rgba(180,83,9,0.4)"
-                : "rgba(255,255,255,0.1)";
+                : "var(--border-default)";
               return (
                 <div key={entry.user.id} className="flex items-center gap-2.5">
                   <span className="w-5 shrink-0 text-center text-xs font-bold" style={{ color: medalColor }}>
@@ -859,12 +859,12 @@ export default function ClickerPage() {
     <>
       <div
         className="shrink-0 px-3 py-3"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ borderBottom: "1px solid var(--border-subtle)" }}
       >
-        <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>
+        <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
           {worldDef.emoji} Oppgraderinger
         </p>
-        <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>{upgradeRows.length} tilgjengelige</p>
+        <p className="text-[10px]" style={{ color: "var(--border-strong)" }}>{upgradeRows.length} tilgjengelige</p>
       </div>
 
       {/* Mobile: full-width cards */}
@@ -874,12 +874,12 @@ export default function ClickerPage() {
             key={upg.id}
             className="flex items-center gap-3 rounded-xl p-3 transition-all"
             style={{
-              background: upg.canAfford ? "rgba(168,85,247,0.08)" : "rgba(255,255,255,0.03)",
+              background: upg.canAfford ? "rgba(168,85,247,0.08)" : "var(--bg-glass)",
               border: upg.canAfford
                 ? "1px solid rgba(168,85,247,0.3)"
                 : upg.level > 0
-                ? "1px solid rgba(255,255,255,0.08)"
-                : "1px solid rgba(255,255,255,0.05)",
+                ? "1px solid var(--border-subtle)"
+                : "1px solid var(--bg-glass)",
               borderRadius: 10,
             }}
           >
@@ -893,7 +893,7 @@ export default function ClickerPage() {
             {/* Name + stat */}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">{upg.name}</p>
-              <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+              <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
                 {upg.coinsPerClick  > 0 && `+${upg.coinsPerClick}/klikk`}
                 {upg.coinsPerClick  > 0 && upg.coinsPerSecond > 0 && " · "}
                 {upg.coinsPerSecond > 0 && `+${upg.coinsPerSecond}/sek`}
@@ -915,15 +915,15 @@ export default function ClickerPage() {
                 className="min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-semibold transition-all active:scale-95"
                 style={{
                   background: upg.level >= upg.maxLevel
-                    ? "rgba(255,255,255,0.05)"
+                    ? "var(--bg-glass)"
                     : upg.canAfford
                     ? "#A855F7"
-                    : "rgba(255,255,255,0.05)",
+                    : "var(--bg-glass)",
                   color: upg.level >= upg.maxLevel
-                    ? "rgba(255,255,255,0.25)"
+                    ? "var(--text-tertiary)"
                     : upg.canAfford
                     ? "#fff"
-                    : "rgba(255,255,255,0.25)",
+                    : "var(--text-tertiary)",
                   cursor: upg.canAfford && upg.level < upg.maxLevel ? "pointer" : "default",
                 }}
               >
@@ -941,12 +941,12 @@ export default function ClickerPage() {
             key={upg.id}
             className="flex items-center gap-2 rounded-xl p-2.5 transition-all"
             style={{
-              background: upg.canAfford ? "rgba(168,85,247,0.08)" : "rgba(255,255,255,0.04)",
+              background: upg.canAfford ? "rgba(168,85,247,0.08)" : "var(--bg-glass)",
               border: upg.canAfford
                 ? "1px solid rgba(168,85,247,0.28)"
                 : upg.level > 0
-                ? "1px solid rgba(255,255,255,0.07)"
-                : "1px solid rgba(255,255,255,0.04)",
+                ? "1px solid var(--border-subtle)"
+                : "1px solid var(--bg-glass)",
               borderRadius: 10,
             }}
           >
@@ -961,7 +961,7 @@ export default function ClickerPage() {
             {/* Name + stat */}
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-medium text-white leading-tight truncate">{upg.name}</p>
-              <p className="text-[11px] leading-tight" style={{ color: "rgba(255,255,255,0.25)" }}>
+              <p className="text-[11px] leading-tight" style={{ color: "var(--text-tertiary)" }}>
                 {upg.coinsPerClick  > 0 && `+${upg.coinsPerClick}/klikk`}
                 {upg.coinsPerClick  > 0 && upg.coinsPerSecond > 0 && " · "}
                 {upg.coinsPerSecond > 0 && `+${upg.coinsPerSecond}/sek`}
@@ -984,10 +984,10 @@ export default function ClickerPage() {
                 className="rounded-lg px-2 py-1 text-[11px] font-semibold transition-all active:scale-95"
                 style={{
                   color: upg.level >= upg.maxLevel
-                    ? "rgba(255,255,255,0.2)"
+                    ? "var(--border-strong)"
                     : upg.canAfford
                     ? "#A855F7"
-                    : "rgba(255,255,255,0.2)",
+                    : "var(--border-strong)",
                   cursor: upg.canAfford && upg.level < upg.maxLevel ? "pointer" : "default",
                   fontWeight: upg.canAfford ? 600 : 400,
                 }}
@@ -1013,10 +1013,10 @@ export default function ClickerPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div
             className="w-full max-w-sm rounded-2xl p-6"
-            style={{ background: "var(--bg-secondary)", border: "1px solid rgba(255,255,255,0.1)" }}
+            style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-default)" }}
           >
             <h3 className="mb-2 text-lg font-bold text-white">Gå i Prestige?</h3>
-            <p className="mb-4 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+            <p className="mb-4 text-sm" style={{ color: "var(--text-tertiary)" }}>
               Nullstiller alle coins og oppgraderinger for Verden {world}.
             </p>
             <ul className="mb-5 space-y-2 text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
@@ -1032,7 +1032,7 @@ export default function ClickerPage() {
               <button
                 onClick={() => setPrestigeModal(false)}
                 className="flex-1 rounded-lg py-2.5 text-sm transition-colors hover:text-white"
-                style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}
+                style={{ border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}
               >
                 Nei, fortsett
               </button>
@@ -1054,17 +1054,17 @@ export default function ClickerPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div
             className="flex w-full max-w-md flex-col rounded-2xl"
-            style={{ background: "var(--bg-secondary)", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "85vh" }}
+            style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-default)", maxHeight: "85vh" }}
           >
             {/* Header */}
-            <div className="flex shrink-0 items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="flex shrink-0 items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
               <div>
                 <h3 className="text-base font-bold text-white">Prestige-butikk</h3>
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
                   {pointsAvail} poeng tilgjengelig · {pointsSpent} brukt av {totalPrestige} totalt
                 </p>
               </div>
-              <button onClick={() => setShopModal(false)} style={{ color: "rgba(255,255,255,0.35)" }} className="hover:text-white">
+              <button onClick={() => setShopModal(false)} style={{ color: "var(--text-tertiary)" }} className="hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1076,7 +1076,7 @@ export default function ClickerPage() {
                 const perks = PRESTIGE_PERKS.filter((p) => p.category === cat);
                 return (
                   <div key={cat}>
-                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>{catLabel}</p>
+                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>{catLabel}</p>
                     <div className="space-y-2">
                       {perks.map((perk) => {
                         const owned    = shopData[perk.id] ?? 0;
@@ -1087,20 +1087,20 @@ export default function ClickerPage() {
                             key={perk.id}
                             className="flex items-center gap-3 rounded-xl p-3"
                             style={{
-                              background: maxed ? "rgba(52,211,153,0.06)" : canBuy ? "rgba(168,85,247,0.07)" : "rgba(255,255,255,0.03)",
-                              border: maxed ? "1px solid rgba(52,211,153,0.2)" : canBuy ? "1px solid rgba(168,85,247,0.25)" : "1px solid rgba(255,255,255,0.06)",
+                              background: maxed ? "rgba(52,211,153,0.06)" : canBuy ? "rgba(168,85,247,0.07)" : "var(--bg-glass)",
+                              border: maxed ? "1px solid rgba(52,211,153,0.2)" : canBuy ? "1px solid rgba(168,85,247,0.25)" : "1px solid var(--border-subtle)",
                               borderRadius: 10,
                             }}
                           >
                             <span className="text-xl shrink-0">{perk.emoji}</span>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-semibold text-white leading-tight">{perk.name}</p>
-                              <p className="text-[11px] leading-tight" style={{ color: "rgba(255,255,255,0.4)" }}>{perk.description}</p>
+                              <p className="text-[11px] leading-tight" style={{ color: "var(--text-tertiary)" }}>{perk.description}</p>
                               <div className="mt-1 flex items-center gap-2">
                                 <span className="text-[10px] font-semibold" style={{ color: maxed ? "#34d399" : "#A855F7" }}>
                                   {maxed ? `Maks (${owned}/${perk.maxPurchases})` : `${owned}/${perk.maxPurchases} kjøpt`}
                                 </span>
-                                <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>{perk.effect}</span>
+                                <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>{perk.effect}</span>
                               </div>
                             </div>
                             <button
@@ -1108,8 +1108,8 @@ export default function ClickerPage() {
                               disabled={!canBuy || shopBuying === perk.id}
                               className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 disabled:opacity-40"
                               style={{
-                                background: maxed ? "rgba(52,211,153,0.15)" : canBuy ? "#A855F7" : "rgba(255,255,255,0.06)",
-                                color: maxed ? "#34d399" : canBuy ? "#fff" : "rgba(255,255,255,0.3)",
+                                background: maxed ? "rgba(52,211,153,0.15)" : canBuy ? "#A855F7" : "var(--border-subtle)",
+                                color: maxed ? "#34d399" : canBuy ? "#fff" : "var(--text-tertiary)",
                                 cursor: canBuy ? "pointer" : "default",
                               }}
                             >
@@ -1125,7 +1125,7 @@ export default function ClickerPage() {
             </div>
 
             {/* Footer with reset */}
-            <div className="shrink-0 px-5 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="shrink-0 px-5 py-4" style={{ borderTop: "1px solid var(--border-subtle)" }}>
               {pointsSpent > 0 ? (
                 <button
                   onClick={() => void resetShop()}
@@ -1136,7 +1136,7 @@ export default function ClickerPage() {
                   {shopResetting ? "Nullstiller…" : "Nullstill alle kjøp (refunderer poeng)"}
                 </button>
               ) : (
-                <p className="text-center text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+                <p className="text-center text-xs" style={{ color: "var(--border-strong)" }}>
                   Ingen kjøp å nullstille ennå
                 </p>
               )}
@@ -1148,7 +1148,7 @@ export default function ClickerPage() {
       {/* Mobile tab-bar */}
       <div
         className="flex shrink-0 md:hidden"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "var(--bg-secondary)" }}
+        style={{ borderBottom: "1px solid var(--border-subtle)", background: "var(--bg-secondary)" }}
       >
         {(["verdener", "klikker", "oppgraderinger"] as const).map((tab) => {
           const labels = { klikker: "Klikk", verdener: "Verdener", oppgraderinger: "Oppgrader" };
@@ -1158,7 +1158,7 @@ export default function ClickerPage() {
               onClick={() => setMobileTab(tab)}
               className="flex-1 py-2.5 text-xs font-semibold transition-colors"
               style={{
-                color: mobileTab === tab ? "#A855F7" : "rgba(255,255,255,0.35)",
+                color: mobileTab === tab ? "#A855F7" : "var(--text-tertiary)",
                 borderBottom: mobileTab === tab ? "2px solid #A855F7" : "2px solid transparent",
               }}
             >
@@ -1171,7 +1171,7 @@ export default function ClickerPage() {
       {/* Left — Worlds */}
       <div
         className={`${mobileTab === "verdener" ? "flex" : "hidden"} md:flex w-full md:w-[180px] shrink-0 flex-col overflow-y-auto py-4 px-3 scrollbar-hide`}
-        style={{ background: "var(--bg-secondary)", borderRight: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ background: "var(--bg-secondary)", borderRight: "1px solid var(--border-subtle)" }}
       >
         {WorldsPanel}
       </div>
@@ -1184,7 +1184,7 @@ export default function ClickerPage() {
       {/* Right — Upgrades */}
       <div
         className={`${mobileTab === "oppgraderinger" ? "flex" : "hidden"} md:flex w-full md:w-[260px] shrink-0 flex-col overflow-hidden`}
-        style={{ background: "var(--bg-secondary)", borderLeft: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ background: "var(--bg-secondary)", borderLeft: "1px solid var(--border-subtle)" }}
       >
         {UpgradesPanel}
       </div>

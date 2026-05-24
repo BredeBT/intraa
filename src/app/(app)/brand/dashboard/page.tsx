@@ -58,7 +58,7 @@ export default async function BrandDashboardPage() {
           className="relative overflow-hidden rounded-3xl p-7 mb-8"
           style={{
             background: "linear-gradient(135deg, rgba(96,165,250,0.15), rgba(168,85,247,0.12))",
-            border:     "1px solid rgba(255,255,255,0.10)",
+            border:     "1px solid var(--border-default)",
           }}
         >
           <div className="flex items-start justify-between gap-4">
@@ -120,7 +120,7 @@ export default async function BrandDashboardPage() {
         {brand.stories.length === 0 ? (
           <div
             className="rounded-2xl p-10 text-center"
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.10)" }}
+            style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)" }}
           >
             <div
               className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
@@ -199,7 +199,7 @@ function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label
   return (
     <div
       className="rounded-2xl p-4"
-      style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${accent}25` }}
+      style={{ background: "var(--bg-glass)", border: `1px solid ${accent}25` }}
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: `${accent}15`, color: accent }}>

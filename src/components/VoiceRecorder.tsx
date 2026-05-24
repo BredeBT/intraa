@@ -247,7 +247,7 @@ export default function VoiceRecorder({ onSend, onCancel, maxSeconds = 300 }: Pr
 
   // Preview state
   return (
-    <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)" }}>
+    <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)" }}>
       <Mic className="h-4 w-4 shrink-0" style={{ color: "#A855F7" }} />
       <span className="text-xs text-zinc-400 shrink-0">{formatTime(durationRef.current)}</span>
       {previewUrl && (

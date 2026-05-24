@@ -14,9 +14,9 @@ const S = {
   surface:  "var(--bg-secondary)",
   surface2: "var(--bg-tertiary)",
   text:     "var(--text-primary)",
-  muted:    "rgba(240,244,255,0.6)",
-  subtle:   "rgba(240,244,255,0.4)",
-  line:     "rgba(240,244,255,0.08)",
+  muted:    "var(--text-secondary)",
+  subtle:   "var(--text-tertiary)",
+  line:     "var(--border-subtle)",
   flame:    "#FB923C",  // varm orange — flame
   teal:     "#5EEAD4",
 } as const;

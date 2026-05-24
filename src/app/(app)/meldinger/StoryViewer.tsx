@@ -184,7 +184,7 @@ export default function StoryViewer({ groups, startGroupIdx, currentUserId, canD
           {/* Progress segments */}
           <div className="flex gap-1 mb-3">
             {group.stories.map((_, i) => (
-              <div key={i} className="h-1 flex-1 overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.25)" }}>
+              <div key={i} className="h-1 flex-1 overflow-hidden rounded-full" style={{ background: "var(--text-tertiary)" }}>
                 <div
                   className="h-full"
                   style={{

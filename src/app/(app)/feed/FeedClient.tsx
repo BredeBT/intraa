@@ -495,7 +495,7 @@ export default function FeedClient({
                style={{ background: "var(--bg-secondary)" }}>
             {pasteToast && (
               <div className="m-3 mb-0 flex items-center justify-between rounded-lg border border-white/[0.06] px-3 py-2 text-xs text-white/60"
-                   style={{ background: "rgba(255,255,255,0.04)" }}>
+                   style={{ background: "var(--bg-glass)" }}>
                 <span>📋 {pasteToast}</span>
                 <button onClick={() => setPasteToast(null)} className="ml-2 opacity-60 hover:opacity-100"><X className="h-3 w-3" /></button>
               </div>
@@ -538,19 +538,19 @@ export default function FeedClient({
                       <button
                         onClick={clearImage}
                         className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full text-white shadow-lg"
-                        style={{ background: "var(--bg-secondary)", border: "1px solid rgba(240,244,255,0.16)" }}
+                        style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-strong)" }}
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   )}
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-[11px]" style={{ color: "rgba(240,244,255,0.4)" }}>
+                    <div className="flex items-center gap-2 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
                       <button
                         type="button"
                         onClick={() => imageInputRef.current?.click()}
                         className="nav-link flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition-colors"
-                        style={{ color: "rgba(240,244,255,0.55)" }}
+                        style={{ color: "var(--text-secondary)" }}
                         title="Legg til bilde"
                       >
                         <Paperclip className="h-4 w-4" />
@@ -564,7 +564,7 @@ export default function FeedClient({
                         type="button"
                         onClick={handleClose}
                         className="nav-link rounded-lg px-3 py-2 text-sm font-medium"
-                        style={{ color: "rgba(240,244,255,0.5)" }}
+                        style={{ color: "var(--text-tertiary)" }}
                       >
                         Avbryt
                       </button>
@@ -587,7 +587,7 @@ export default function FeedClient({
 
       {/* ── Post list ── */}
       {posts.length === 0 ? (
-        <p className="py-12 text-center text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>
+        <p className="py-12 text-center text-sm" style={{ color: "var(--text-tertiary)" }}>
           Ingen innlegg ennå — vær den første til å poste!
         </p>
       ) : (
@@ -614,13 +614,13 @@ export default function FeedClient({
                       <p className="text-sm font-medium text-white">{post.author.name ?? ""}</p>
                       {post.author.hasFanpass && <FanpassBadge />}
                     </div>
-                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{relativeTime(post.createdAt)}</p>
+                    <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{relativeTime(post.createdAt)}</p>
                   </div>
                   {canDelete && (
                     <button
                       onClick={() => setConfirmDeleteId(post.id)}
                       className="p-1.5 rounded-lg transition-colors opacity-30 hover:opacity-70 hover:text-red-400"
-                      style={{ color: "rgba(255,255,255,0.6)" }}
+                      style={{ color: "var(--text-secondary)" }}
                       title="Slett innlegg"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -646,7 +646,7 @@ export default function FeedClient({
                     className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm transition-all ${
                       post.likedByMe ? "text-pink-400" : "hover:text-white"
                     }`}
-                    style={{ color: post.likedByMe ? undefined : "rgba(255,255,255,0.35)" }}
+                    style={{ color: post.likedByMe ? undefined : "var(--text-tertiary)" }}
                   >
                     <Heart className="h-4 w-4" fill={post.likedByMe ? "currentColor" : "none"} />
                     {post.likeCount > 0 && <span>{post.likeCount}</span>}
@@ -657,7 +657,7 @@ export default function FeedClient({
                     className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm transition-all ${
                       isCommentsOpen ? "text-purple-400" : "hover:text-white"
                     }`}
-                    style={{ color: isCommentsOpen ? undefined : "rgba(255,255,255,0.35)" }}
+                    style={{ color: isCommentsOpen ? undefined : "var(--text-tertiary)" }}
                   >
                     <MessageCircle className="h-4 w-4" />
                     {post.comments.length > 0 && <span>{post.comments.length}</span>}
@@ -673,11 +673,11 @@ export default function FeedClient({
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-600/20 text-[10px] font-semibold text-purple-300">
                           {initials(comment.author.name ?? "")}
                         </div>
-                        <div className="flex-1 rounded-xl px-3 py-2" style={{ background: "rgba(255,255,255,0.05)" }}>
+                        <div className="flex-1 rounded-xl px-3 py-2" style={{ background: "var(--bg-glass)" }}>
                           <div className="mb-0.5 flex items-center gap-1.5">
                             <span className="text-xs font-semibold text-white">{comment.author.name}</span>
                             {comment.author.hasFanpass && <FanpassBadge size={10} />}
-                            <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>{relativeTime(comment.createdAt)}</span>
+                            <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>{relativeTime(comment.createdAt)}</span>
                           </div>
                           <div className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
                             <SafeHtml content={comment.content} />
@@ -697,7 +697,7 @@ export default function FeedClient({
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-600 text-[10px] font-semibold text-white">
                         {initials(userName)}
                       </div>
-                      <div className="flex flex-1 items-center gap-2 rounded-xl px-3 py-2" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div className="flex flex-1 items-center gap-2 rounded-xl px-3 py-2" style={{ background: "var(--border-subtle)", border: "1px solid var(--border-subtle)" }}>
                         <input
                           type="text"
                           value={commentInputs[post.id] ?? ""}
@@ -813,13 +813,13 @@ export default function FeedClient({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-sm rounded-2xl border border-white/[0.08] p-6 shadow-2xl" style={{ background: "var(--bg-secondary)" }}>
             <h3 className="mb-2 text-base font-semibold text-white">Slett innlegg</h3>
-            <p className="mb-5 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+            <p className="mb-5 text-sm" style={{ color: "var(--text-tertiary)" }}>
               Er du sikker? Handlingen kan ikke angres.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setConfirmDeleteId(null)}
                 className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>
+                style={{ background: "var(--border-subtle)", border: "1px solid var(--border-subtle)", color: "var(--text-secondary)" }}>
                 Avbryt
               </button>
               <button onClick={() => void handleDelete(confirmDeleteId)}

@@ -561,7 +561,7 @@ export default function UsersClient({
       {/* Type filter chips */}
       <div className="mb-5 flex flex-wrap gap-2">
         {([
-          { id: "ALL",     label: "Alle",     color: "rgba(255,255,255,0.08)" },
+          { id: "ALL",     label: "Alle",     color: "var(--border-subtle)" },
           { id: "FAN",     label: "Fans",     color: "rgba(94,234,212,0.20)"  },
           { id: "CREATOR", label: "Creators", color: "rgba(168,85,247,0.20)"  },
           { id: "SPONSOR", label: "Sponsors", color: "rgba(96,165,250,0.20)"  },
@@ -574,8 +574,8 @@ export default function UsersClient({
               className="rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
               style={{
                 background: active ? opt.color : "transparent",
-                color:      active ? "#fff" : "rgba(255,255,255,0.5)",
-                border:     active ? `1px solid ${opt.color.replace("0.20", "0.45")}` : "1px solid rgba(255,255,255,0.10)",
+                color:      active ? "#fff" : "var(--text-tertiary)",
+                border:     active ? `1px solid ${opt.color.replace("0.20", "0.45")}` : "1px solid var(--border-default)",
               }}
             >
               {opt.label}
