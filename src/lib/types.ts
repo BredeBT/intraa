@@ -121,10 +121,11 @@ export type CommentWithAuthor = Comment & {
 };
 
 export type PostWithAuthor = Post & {
-  author:    User;
-  comments:  CommentWithAuthor[];
-  likeCount: number;
-  likedByMe: boolean;
+  author:         User;
+  comments:       CommentWithAuthor[];
+  likeCount:      number;
+  likedByMe:      boolean;
+  bookmarkedByMe: boolean;
 };
 
 export type TicketWithAssignee = Ticket & {

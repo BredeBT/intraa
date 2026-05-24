@@ -252,6 +252,7 @@ model User {
   posts                   Post[]
   comments                Comment[]
   likes                   Like[]
+  bookmarks               Bookmark[]
   messages                Message[]
   messageReactions        MessageReaction[]
   authoredTickets         Ticket[]       @relation("TicketAuthor")
@@ -387,8 +388,22 @@ model Post {
   author       User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments     Comment[]
   likes        Like[]
+  bookmarks    Bookmark[]
 
   @@index([orgId, createdAt(sort: Desc)])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId, createdAt(sort: Desc)])
 }
 
 model Like {

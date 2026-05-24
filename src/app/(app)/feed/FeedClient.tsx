@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X, Sparkles, Crown, Users as UsersIcon, Image as ImgIcon, Paperclip } from "lucide-react";
+import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X, Sparkles, Crown, Users as UsersIcon, Image as ImgIcon, Paperclip, Bookmark } from "lucide-react";
 import { FanpassBadge } from "@/components/FanpassBadge";
 import { createPost, deletePost } from "@/server/actions/posts";
 import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditorLazy";
@@ -349,6 +349,13 @@ export default function FeedClient({
         ? { ...p, likedByMe, likeCount: likedByMe ? p.likeCount + 1 : p.likeCount - 1 } : p)));
   }
 
+  function handleBookmark(postId: string, bookmarkedByMe: boolean) {
+    // Optimistic toggle
+    setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, bookmarkedByMe: !bookmarkedByMe } : p));
+    fetch(`/api/posts/${postId}/bookmark`, { method: bookmarkedByMe ? "DELETE" : "POST" })
+      .catch(() => setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, bookmarkedByMe } : p)));
+  }
+
   function toggleComments(postId: string) {
     const isOpen = openComments.has(postId);
     setOpenComments((prev) => { const n = new Set(prev); isOpen ? n.delete(postId) : n.add(postId); return n; });
@@ -662,6 +669,17 @@ export default function FeedClient({
                     <MessageCircle className="h-4 w-4" />
                     {post.comments.length > 0 && <span>{post.comments.length}</span>}
                     <span>Kommenter</span>
+                  </button>
+                  <button
+                    onClick={() => handleBookmark(post.id, post.bookmarkedByMe)}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm transition-all ${
+                      post.bookmarkedByMe ? "text-amber-300" : "hover:text-white"
+                    }`}
+                    style={{ color: post.bookmarkedByMe ? undefined : "var(--text-tertiary)" }}
+                    title={post.bookmarkedByMe ? "Fjern fra lagret" : "Lagre for senere"}
+                  >
+                    <Bookmark className="h-4 w-4" fill={post.bookmarkedByMe ? "currentColor" : "none"} />
+                    <span>{post.bookmarkedByMe ? "Lagret" : "Lagre"}</span>
                   </button>
                 </div>
 

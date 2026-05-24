@@ -8,7 +8,7 @@ import {
   Search, CalendarDays, CheckSquare, Menu, X,
   Trophy, Swords, Star, Radio, Gamepad2,
   LifeBuoy, MessageCircle,
-  Home, Mail, UserCircle,
+  Home, Mail, UserCircle, Compass,
 } from "lucide-react";
 import UserMenu from "@/components/UserMenu";
 import NotificationBell from "@/components/NotificationBell";
@@ -45,6 +45,8 @@ function communityNav(slug: string) {
 
 const PAGE_TITLES: Record<string, string> = {
   "/home":               "Hjem",
+  "/utforsk":            "Utforsk",
+  "/lagret":             "Lagret",
   "/meldinger":          "Meldinger",
   "/profil/meg":         "Min profil",
   "/feed":               "Feed",
@@ -222,6 +224,7 @@ const SidebarContent = memo(function SidebarContentImpl({
   // Global links always visible regardless of org
   const GLOBAL_NAV = [
     { href: "/home",        label: "Hjem",       icon: Home,       badge: 0 },
+    { href: "/utforsk",     label: "Utforsk",    icon: Compass,    badge: 0 },
     { href: "/meldinger",   label: "Meldinger",  icon: Mail,       badge: unreadCount },
     { href: "/profil/meg",  label: "Min profil", icon: UserCircle, badge: 0 },
   ];
@@ -402,7 +405,7 @@ const SidebarContent = memo(function SidebarContentImpl({
 
 // Paths accessible without any org membership
 const NO_ORG_PATHS = [
-  "/home", "/support", "/innstillinger", "/notifikasjoner",
+  "/home", "/utforsk", "/lagret", "/support", "/innstillinger", "/notifikasjoner",
   "/meldinger", "/bytt-org", "/profil", "/soek", "/brand",
 ];
 

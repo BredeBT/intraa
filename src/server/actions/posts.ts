@@ -27,6 +27,7 @@ export async function getPosts(orgId: string): Promise<PostWithAuthor[]> {
       },
       _count:   { select: { likes: true } },
       likes:    { where: { userId: session.user.id }, select: { id: true } },
+      bookmarks: { where: { userId: session.user.id }, select: { id: true } },
     },
     orderBy: { createdAt: "desc" },
     take:    20, // show 20 most recent posts
@@ -58,8 +59,9 @@ export async function getPosts(orgId: string): Promise<PostWithAuthor[]> {
     authorId:  p.authorId,
     author:    { ...p.author, hasFanpass: fanpassSet.has(p.authorId) },
     comments:  p.comments.map((c) => ({ ...c, author: { ...c.author, hasFanpass: fanpassSet.has(c.authorId) } })),
-    likeCount: p._count.likes,
-    likedByMe: p.likes.length > 0,
+    likeCount:      p._count.likes,
+    likedByMe:      p.likes.length > 0,
+    bookmarkedByMe: p.bookmarks.length > 0,
   }));
 }
 
@@ -82,7 +84,7 @@ export async function createPost(orgId: string, content: string, imageUrl?: stri
 
   void awardCoins({ userId: session.user.id, organizationId: orgId, amount: 10, reason: "post", description: "Opprettet et innlegg" });
   revalidatePath("/feed");
-  return { ...post, likeCount: 0, likedByMe: false };
+  return { ...post, likeCount: 0, likedByMe: false, bookmarkedByMe: false };
 }
 
 export async function deletePost(postId: string): Promise<void> {
