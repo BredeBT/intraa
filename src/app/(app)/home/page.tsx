@@ -66,7 +66,9 @@ export default async function HomePage() {
   const myOrgIds   = myMemberships.map((m) => m.organizationId);
   const myOrgIdSet = new Set(myOrgIds);
 
-  // Second round — per-org post counts and online user counts
+  // Second round — per-org post counts and online user counts.
+  // Online-tellingen var tidligere N+1 (én user.count() per org); nå er det én
+  // groupBy på Membership joinet med User.lastActive (indekseret).
   const [postCountsRaw, onlineCountsRaw] = myOrgIds.length > 0
     ? await Promise.all([
         db.post.groupBy({
@@ -74,26 +76,26 @@ export default async function HomePage() {
           where: { orgId: { in: myOrgIds }, createdAt: { gte: weekAgo } },
           _count: { id: true },
         }),
-        Promise.all(
-          myOrgIds.map((orgId) =>
-            db.user
-              .count({
-                where: {
-                  memberships: { some: { organizationId: orgId } },
-                  lastActive:  { gte: fiveMinAgo },
-                },
-              })
-              .then((count) => ({ orgId, count }))
-          )
-        ),
+        db.membership.groupBy({
+          by:    ["organizationId"],
+          where: {
+            organizationId: { in: myOrgIds },
+            user: { lastActive: { gte: fiveMinAgo } },
+          },
+          _count: { userId: true },
+        }),
       ])
-    : [[], []] as [{ orgId: string; _count: { id: number } }[], { orgId: string; count: number }[]];
+    : [[], []] as [
+        { orgId: string; _count: { id: number } }[],
+        { organizationId: string; _count: { userId: number } }[],
+      ];
 
   const postCountMap   = new Map(
     (postCountsRaw as { orgId: string; _count: { id: number } }[]).map((r) => [r.orgId, r._count.id])
   );
   const onlineCountMap = new Map(
-    (onlineCountsRaw as { orgId: string; count: number }[]).map((r) => [r.orgId, r.count])
+    (onlineCountsRaw as { organizationId: string; _count: { userId: number } }[])
+      .map((r) => [r.organizationId, r._count.userId])
   );
 
   const myCommunities = myMemberships

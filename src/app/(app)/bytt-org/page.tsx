@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Building2, Globe, ArrowLeft } from "lucide-react";
 import { useOrg, type Org } from "@/lib/context/OrgContext";
@@ -16,16 +15,9 @@ const PLAN_STYLE: Record<string, string> = {
 };
 
 export default function ByttOrgPage() {
-  const { org, setOrg } = useOrg();
-  const router          = useRouter();
-  const [orgs, setOrgs] = useState<Org[]>([]);
-
-  useEffect(() => {
-    fetch("/api/user/orgs")
-      .then((r) => r.ok ? r.json() as Promise<Org[]> : Promise.reject())
-      .then(setOrgs)
-      .catch(() => setOrgs([]));
-  }, []);
+  const { org, allOrgs, setOrg } = useOrg();
+  const router                    = useRouter();
+  const orgs                      = allOrgs;
 
   async function select(selected: Org) {
     // Set persistent cookie via PATCH — server validates membership

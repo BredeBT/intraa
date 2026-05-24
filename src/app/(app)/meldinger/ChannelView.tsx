@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition, useCallback } from "react";
 import { SendHorizontal, Loader2, X, Paperclip, Mic } from "lucide-react";
-import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
+import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditorLazy";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import {
   sendMessage, getMessages, editMessage, deleteMessage, pinMessage,

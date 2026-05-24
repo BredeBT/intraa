@@ -436,12 +436,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [drawerOpen,        setDrawerOpen]         = useState(false);
   const [desktopCollapsed,  setDesktopCollapsed]   = useState(false);
   const [mounted,           setMounted]             = useState(false);
-  const [enabledFeatures,   setEnabledFeatures]    = useState<string[] | null>(null);
-  const [tenantTheme,       setTenantTheme]         = useState<TenantTheme | null>(null);
   const [liveStatus,        setLiveStatus]          = useState<LiveStatus | null>(null);
-  const [unreadCount,       setUnreadCount]         = useState(0);
-  const [allCommunities,    setAllCommunities]       = useState<OrgSummary[]>([]);
-  const { org, orgLoaded, setOrg } = useOrg();
+  const {
+    org, orgLoaded, setOrg,
+    allOrgs, features: enabledFeatures, theme: tenantTheme,
+    unreadCount, refreshUnread,
+  } = useOrg();
+  const allCommunities = useMemo(
+    () => allOrgs.filter((o) => o.type === "COMMUNITY"),
+    [allOrgs]
+  );
   const { user, isSponsor } = useUser();
 
   // Sponsors always live on /brand/* — redirect them away from creator/fan pages
@@ -464,24 +468,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [mounted, orgLoaded, org, pathname, router, isSponsor]);
 
-  useEffect(() => {
-    setEnabledFeatures(null); // clear stale features immediately on org change
-    fetch("/api/layout/bootstrap")
-      .then((r) => r.ok ? r.json() as Promise<{ features: string[]; theme: TenantTheme | null }> : Promise.reject())
-      .then((data) => {
-        setEnabledFeatures(data.features);
-        if (data.theme) setTenantTheme(data.theme);
-      })
-      .catch(() => setEnabledFeatures(null));
-  }, [org?.id]);
-
-  // Fetch all communities once on mount for quick-switcher
-  useEffect(() => {
-    fetch("/api/user/orgs")
-      .then((r) => r.ok ? r.json() as Promise<OrgSummary[]> : Promise.reject())
-      .then((data) => setAllCommunities(data.filter((o) => o.type === "COMMUNITY")))
-      .catch(() => {});
-  }, []);
+  // org, features, theme, allOrgs og initial unread kommer nå fra OrgContext
+  // via én bundlet /api/layout/init-fetch. Layouten poller bare det som faktisk
+  // endres ofte (stream-status og unread).
 
   // Poll live status every 60s
   useEffect(() => {
@@ -501,21 +490,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const INTERVAL = 60_000;
     let id: ReturnType<typeof setInterval>;
-    const check = () => {
-      fetch("/api/user/unread")
-        .then((r) => r.ok ? r.json() as Promise<{ total: number }> : Promise.reject())
-        .then((d) => setUnreadCount(d.total))
-        .catch(() => null);
-    };
-    check();
-    id = setInterval(check, INTERVAL);
+    id = setInterval(refreshUnread, INTERVAL);
     const onVisibility = () => {
       if (document.hidden) clearInterval(id);
-      else { check(); id = setInterval(check, INTERVAL); }
+      else { void refreshUnread(); id = setInterval(refreshUnread, INTERVAL); }
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => { clearInterval(id); document.removeEventListener("visibilitychange", onVisibility); };
-  }, []);
+  }, [refreshUnread]);
 
   // Persist desktop sidebar collapsed state — read after mount to avoid SSR mismatch
   useEffect(() => {

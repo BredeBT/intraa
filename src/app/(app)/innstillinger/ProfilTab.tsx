@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { Camera, Check, X, Globe, Link as LinkIcon, Loader2 } from "lucide-react";
-import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
+import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditorLazy";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

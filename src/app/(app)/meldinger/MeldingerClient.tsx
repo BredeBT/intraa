@@ -7,7 +7,7 @@ import {
   Hash, Plus, X, Check, UserPlus, Clock, Paperclip, Loader2,
   Radio, Lock,
 } from "lucide-react";
-import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
+import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditorLazy";
 import SafeHtml from "@/components/SafeHtml";
 import type { UserSearchResult } from "@/app/api/users/search/route";
 import dynamic from "next/dynamic";

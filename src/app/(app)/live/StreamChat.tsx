@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
-import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
+import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditorLazy";
 import SafeHtml from "@/components/SafeHtml";
 import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
 

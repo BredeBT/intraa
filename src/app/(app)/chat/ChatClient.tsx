@@ -8,7 +8,7 @@ import {
   Check, MoreHorizontal, Pin, X, Loader2, Settings, Search,
   Pencil, Trash2, Plus, ChevronLeft,
 } from "lucide-react";
-import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
+import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditorLazy";
 import {
   sendMessage, getMessages, getOrCreateDmChannel,
   editMessage, deleteMessage, pinMessage,

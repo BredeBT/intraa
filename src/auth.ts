@@ -2,6 +2,7 @@ import NextAuth, { CredentialsSignin, type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
+import { cache } from "react";
 import { db } from "@/server/db";
 import { verifyTotpCode } from "@/lib/totp";
 import { authConfig } from "./auth.config";
@@ -34,7 +35,7 @@ declare module "@auth/core/jwt" {
   }
 }
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+const nextAuthResult = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(db),
   providers: [
@@ -106,3 +107,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
 });
+
+export const { handlers, signIn, signOut } = nextAuthResult;
+
+// auth() decoder JWT + spør Prisma-adapter per kall. Wrappes i React cache()
+// slik at flere `await auth()`-kall innenfor SAMME request returnerer
+// samme Promise istedenfor å re-dekrypte og re-spørre DB. Stor effekt på
+// page-renders der både page, layout, server-actions og helpers gjør
+// `await auth()` uavhengig av hverandre.
+export const auth = cache(nextAuthResult.auth);

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { redirect } from "next/navigation";
@@ -17,7 +18,7 @@ export interface UserOrg {
  * and returns org + userId. Falls back to the user's first org if the cookie
  * points to an org they're not a member of. Redirects to /login if unauthenticated.
  */
-export async function getUserOrg(): Promise<UserOrg | null> {
+async function getUserOrgImpl(): Promise<UserOrg | null> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
@@ -59,3 +60,7 @@ export async function getUserOrg(): Promise<UserOrg | null> {
     orgType:        membership.organization.type,
   };
 }
+
+// React cache() dedup'er per request — flere kall i samme render-pass
+// (page + checkFeature + server-actions) returnerer samme Promise.
+export const getUserOrg = cache(getUserOrgImpl);

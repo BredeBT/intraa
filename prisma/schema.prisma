@@ -300,6 +300,7 @@ model User {
   liveGiveawayEntries     LiveGiveawayEntry[]
 
   @@index([username])
+  @@index([lastActive])
 }
 
 model NotificationPreference {
@@ -906,6 +907,8 @@ model Friendship {
   receiver User @relation("FriendshipReceiver",  fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@unique([senderId, receiverId])
+  @@index([receiverId, status])
+  @@index([senderId, status])
 }
 
 model DirectMessage {
@@ -921,6 +924,7 @@ model DirectMessage {
   receiver User @relation("DMReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@index([senderId, receiverId, createdAt(sort: Desc)])
+  @@index([receiverId, readAt])
 }
 
 model GroupChat {

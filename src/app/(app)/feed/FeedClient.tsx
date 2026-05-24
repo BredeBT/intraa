@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X, Sparkles, Crown, Users as UsersIcon, Image as ImgIcon, Paperclip } from "lucide-react";
 import { FanpassBadge } from "@/components/FanpassBadge";
 import { createPost, deletePost } from "@/server/actions/posts";
-import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
+import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditorLazy";
 import type { PostWithAuthor, CommentWithAuthor } from "@/lib/types";
 import SafeHtml from "@/components/SafeHtml";
 
