@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { Camera, Check, X, Globe, Link as LinkIcon, Loader2 } from "lucide-react";
+import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditor";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -151,23 +152,27 @@ export default function ProfilTab() {
 
   const fileInputRef  = useRef<HTMLInputElement>(null);
   const hasTriedSave  = useRef(false);
+  const bioEditorRef  = useRef<RichTextEditorRef>(null);
 
   useEffect(() => {
     fetch("/api/user/profile")
       .then((r) => r.json())
       .then((data: Partial<Profile>) => {
+        const bio = data.bio ?? "";
         setProfile({
           id:          data.id ?? "",
           name:        data.name ?? "",
           email:       data.email ?? "",
           avatarUrl:   data.avatarUrl ?? null,
-          bio:         data.bio ?? "",
+          bio,
           website:     data.website ?? "",
           socialLinks: (data.socialLinks as SocialLinks) ?? {},
           status:      (data.status as Status) ?? "online",
           orgType:     (data as { orgType?: string | null }).orgType ?? null,
           orgRole:     (data as { orgRole?: string | null }).orgRole ?? null,
         });
+        // Sett bio i editoren etter at den har mountet
+        if (bio) bioEditorRef.current?.setContent(bio);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -323,15 +328,23 @@ export default function ProfilTab() {
           />
           <div>
             <label className="mb-1.5 block text-xs font-medium text-zinc-400">Bio</label>
-            <textarea
-              value={profile.bio}
-              onChange={(e) => update("bio", e.target.value)}
+            <RichTextEditor
+              ref={bioEditorRef}
               placeholder="Fortell litt om deg selv…"
-              maxLength={300}
-              rows={3}
-              className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-indigo-500"
+              enterMakesNewline
+              minHeight={120}
+              onChange={(text) => {
+                // Lagre HTML i state slik at save() bruker det
+                const html = bioEditorRef.current?.getHTML() ?? "";
+                // Hvis editoren er tom skal vi lagre tom streng (ikke "<p></p>")
+                const isEmpty = bioEditorRef.current?.isEmpty() ?? true;
+                update("bio", isEmpty ? "" : html);
+                void text;
+              }}
             />
-            <p className="mt-1 text-right text-xs text-zinc-600">{profile.bio.length}/300</p>
+            <p className="mt-1 text-right text-xs text-zinc-600">
+              Bruk avsnitt, lister og formatering for å gjøre profilen din rikere.
+            </p>
           </div>
           <InputField
             label="Nettside"

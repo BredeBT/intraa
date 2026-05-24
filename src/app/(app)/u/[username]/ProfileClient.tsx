@@ -3,6 +3,7 @@
 import { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
+import SafeHtml from "@/components/SafeHtml";
 
 interface Profile {
   id:          string;
@@ -584,9 +585,9 @@ export default function ProfileClient({
         )}
 
         {displayBio && (
-          <p className="text-sm text-white/70 leading-relaxed mt-3 max-w-lg">
-            {displayBio}
-          </p>
+          <div className="text-sm text-white/70 leading-relaxed mt-3 max-w-lg">
+            <SafeHtml content={displayBio} />
+          </div>
         )}
 
         {/* Stats */}

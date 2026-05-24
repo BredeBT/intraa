@@ -54,6 +54,11 @@ export async function PATCH(request: Request) {
 
   const { name, bio, website, socialLinks, status, avatarUrl, bannerUrl, interests, isPublic, orgUsername } = body;
 
+  // Begrens bio til 2000 tegn HTML (rom for litt formatering uten DoS-risiko)
+  if (bio !== undefined && bio.length > 2000) {
+    return NextResponse.json({ error: "Bio er for lang (maks 2000 tegn)" }, { status: 400 });
+  }
+
   // Validate status
   const VALID_STATUSES = ["online", "away", "dnd", "invisible"];
   if (status && !VALID_STATUSES.includes(status)) {

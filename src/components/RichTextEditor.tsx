@@ -18,6 +18,8 @@ export interface RichTextEditorRef {
   clear: () => void;
   isEmpty: () => boolean;
   getHTML: () => string;
+  /** Erstatt hele innholdet med ny HTML */
+  setContent: (html: string) => void;
   /** Replace the last @word before the cursor with @name + space */
   insertMention: (name: string) => void;
 }
@@ -43,6 +45,8 @@ interface Props {
   showFormatByDefault?: boolean;
   /** Hvis true: ⌘+Enter sender, vanlig Enter lager linjeskift (passer for innlegg). */
   enterMakesNewline?: boolean;
+  /** Innledende HTML-innhold. Settes én gang ved mount. */
+  initialContent?: string;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -56,10 +60,12 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
     minHeight,
     showFormatByDefault = false,
     enterMakesNewline = false,
+    initialContent,
   },
   ref,
 ) {
   const editor = useEditor({
+    content: initialContent,
     extensions: [
       StarterKit.configure({
         // Disable heading / horizontal rule / blockquote — overkill for chat
@@ -128,6 +134,10 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
     clear: () => editor?.commands.clearContent(true),
     isEmpty: () => editor?.isEmpty ?? true,
     getHTML: () => editor?.getHTML() ?? "",
+    setContent(html: string) {
+      // emitUpdate=false unngår å trigge onChange ved programmatisk set
+      editor?.commands.setContent(html, { emitUpdate: false });
+    },
     insertMention(name: string) {
       if (!editor) return;
       const { from } = editor.state.selection;

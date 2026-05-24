@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import Link from "next/link";
 import { Users, Radio, Lock, Globe, UserCheck } from "lucide-react";
+import SafeHtml from "@/components/SafeHtml";
 import { JoinButton, RequestToJoinButton } from "./JoinButtons";
 import { BANNER_PRESETS, AVATAR_PRESETS } from "@/lib/themePresets";
 
@@ -358,7 +359,9 @@ export default async function CommunityLandingPage({
                   </div>
                 </div>
                 {owner.user.bio && (
-                  <p className="mt-3 text-xs leading-relaxed text-zinc-400">{owner.user.bio}</p>
+                  <div className="mt-3 text-xs leading-relaxed text-zinc-400">
+                    <SafeHtml content={owner.user.bio} />
+                  </div>
                 )}
                 {owner.user.website && (
                   <a
