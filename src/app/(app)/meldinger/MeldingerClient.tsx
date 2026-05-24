@@ -300,11 +300,17 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
   const [uploadedUrl,  setUploadedUrl]  = useState<string | null>(null);
   const [isUploading,  setIsUploading]  = useState(false);
   const [lastReadByThem, setLastReadByThem] = useState<{ id: string; readAt: string | null } | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<RichTextEditorRef>(null);
-  const [, start] = useTransition();
+  const bottomRef       = useRef<HTMLDivElement>(null);
+  const scrollRef       = useRef<HTMLDivElement>(null);
+  const isAtBottomRef   = useRef(true);
+  const isFirstLoadRef  = useRef(true);
+  const editorRef       = useRef<RichTextEditorRef>(null);
+  const [, start]       = useTransition();
 
   useEffect(() => {
+    setMessages([]);
+    isFirstLoadRef.current = true;
+    isAtBottomRef.current  = true;
     fetch(`/api/dm/${friendId}`)
       .then((r) => r.json() as Promise<{ messages: DMMessage[]; lastReadByThem: { id: string; readAt: string | null } | null }>)
       .then(({ messages: msgs, lastReadByThem: lr }) => {
@@ -319,9 +325,45 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
     setMessages((prev) => prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]);
   });
 
+  // Scroll-tracking
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Første lasting → instant hopp til bunn. Etterpå → smooth-scroll hvis ved bunn.
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    if (isFirstLoadRef.current) {
+      requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight;
+        isFirstLoadRef.current = false;
+        isAtBottomRef.current  = true;
+      });
+    } else if (isAtBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
+
+  // Re-scroll når bilder laster.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onLoad = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName !== "IMG" && target.tagName !== "VIDEO") return;
+      if (isAtBottomRef.current) el.scrollTop = el.scrollHeight;
+    };
+    el.addEventListener("load", onLoad, true);
+    return () => el.removeEventListener("load", onLoad, true);
+  }, []);
 
   async function uploadImage(file: File): Promise<string | null> {
     const form = new FormData();
@@ -380,7 +422,7 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
         {messages.length === 0 && (
           <div className="flex h-full items-center justify-center">
             <div className="text-center">

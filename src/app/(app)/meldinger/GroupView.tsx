@@ -71,6 +71,9 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
   const [confirmDelete,  setConfirmDelete]  = useState(false);
 
   const bottomRef       = useRef<HTMLDivElement>(null);
+  const scrollRef       = useRef<HTMLDivElement>(null);
+  const isAtBottomRef   = useRef(true);
+  const isFirstLoadRef  = useRef(true);
   const pasteToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editorRef       = useRef<RichTextEditorRef>(null);
 
@@ -81,6 +84,8 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
   // Load messages
   useEffect(() => {
     setMessages([]);
+    isFirstLoadRef.current = true;
+    isAtBottomRef.current  = true;
     fetch(`/api/groups/${groupId}/messages`)
       .then((r) => r.json() as Promise<{ messages: GroupMsg[] }>)
       .then(({ messages: msgs }) => setMessages(msgs))
@@ -95,10 +100,46 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
     });
   });
 
-  // Scroll to bottom on new messages
+  // Scroll-tracking
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Første lasting: instant hopp til bunn. Etterpå: smooth-scroll hvis bruker
+  // er ved bunnen (ikke avbryt scrolling oppover for historikk-lesing).
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    if (isFirstLoadRef.current) {
+      requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight;
+        isFirstLoadRef.current = false;
+        isAtBottomRef.current  = true;
+      });
+    } else if (isAtBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
+
+  // Re-scroll når bilder/GIFs laster (de utvider scrollHeight etterpå).
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onLoad = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName !== "IMG" && target.tagName !== "VIDEO") return;
+      if (isAtBottomRef.current) el.scrollTop = el.scrollHeight;
+    };
+    el.addEventListener("load", onLoad, true);
+    return () => el.removeEventListener("load", onLoad, true);
+  }, []);
 
   // Paste handler
   const showPasteToast = useCallback((msg: string) => {
@@ -236,7 +277,7 @@ export default function GroupView({ groupId, groupName, createdBy, currentUserId
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto bg-zinc-950 px-5 py-4 space-y-3">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-zinc-950 px-5 py-4 space-y-3">
         {messages.length === 0 && (
           <div className="flex h-full items-center justify-center">
             <p className="text-sm text-zinc-600">Ingen meldinger ennå. Si hei!</p>

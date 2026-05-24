@@ -42,6 +42,7 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
   const bottomRef      = useRef<HTMLDivElement>(null);
   const scrollRef      = useRef<HTMLDivElement>(null);
   const isAtBottomRef  = useRef(true);
+  const isFirstLoadRef = useRef(true);
   const lastMsgIdRef   = useRef<string | undefined>(undefined);
   const pasteToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editorRef      = useRef<RichTextEditorRef>(null);
@@ -56,6 +57,8 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
   useEffect(() => {
     setMessages([]);
     editorRef.current?.clear();
+    isFirstLoadRef.current = true;
+    isAtBottomRef.current  = true;
     getMessages(channelId).then((msgs) => {
       setMessages(msgs as LocalMessage[]);
       lastMsgIdRef.current = msgs[msgs.length - 1]?.id;
@@ -84,9 +87,40 @@ export default function ChannelView({ channelId, channelName, userId, userName, 
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Scroll til bunn på meldinger-endring. Første lasting bruker instant scroll
+  // (smooth-animasjon på første render er upålitelig før layout har satt seg).
   useEffect(() => {
-    if (isAtBottomRef.current) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length === 0) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    if (isFirstLoadRef.current) {
+      // Vent én frame så bilder/layout rekker å regne ut høyder, så hopp.
+      requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight;
+        isFirstLoadRef.current = false;
+        isAtBottomRef.current  = true;
+      });
+    } else if (isAtBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
+
+  // Bilder/GIFs laster asynkront → scrollHeight vokser etter at vi scrolla.
+  // Lytter etter image-load-events som bobler opp og re-scroller hvis bruker
+  // fortsatt er ved bunnen.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onLoad = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName !== "IMG" && target.tagName !== "VIDEO") return;
+      if (isAtBottomRef.current) {
+        el.scrollTop = el.scrollHeight;
+      }
+    };
+    el.addEventListener("load", onLoad, true);
+    return () => el.removeEventListener("load", onLoad, true);
+  }, []);
 
   // ── Image paste ─────────────────────────────────────────────────────────────
 
