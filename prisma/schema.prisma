@@ -266,6 +266,8 @@ model User {
   userActivities          UserActivity[]
   following               Follow[]       @relation("Follower")
   followers               Follow[]       @relation("Following")
+  userFollowing           UserFollow[]   @relation("UserFollower")
+  userFollowers           UserFollow[]   @relation("UserFollowing")
   notificationPreference  NotificationPreference?
   clickerProfiles         ClickerProfile[]
   clickerUpgrades         ClickerUpgrade[]
@@ -772,6 +774,22 @@ model Follow {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId, organizationId])
+}
+
+// Global user→user follow — én-veis abonnement på en person på tvers av orgs.
+// Brukes for "følg creator" der følger ikke trenger å være medlem av samme
+// community. Skiller seg fra Follow (org-scoped) og Friendship (gjensidig).
+model UserFollow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower    User @relation("UserFollower",  fields: [followerId],  references: [id], onDelete: Cascade)
+  following   User @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followingId])
 }
 
 model ProfileSidebarSettings {

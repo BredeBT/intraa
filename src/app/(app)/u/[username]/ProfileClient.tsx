@@ -49,6 +49,8 @@ interface Props {
   profileFrame:    { shopItem: { value: string } } | null;
   totalCoins:      number;
   activeFanpass:   { organization: { name: string } } | null;
+  followerCount:   number;
+  isFollowing:     boolean;
 }
 
 function initials(name: string | null) {
@@ -346,12 +348,35 @@ export default function ProfileClient({
   profileFrame  = null,
   totalCoins    = 0,
   activeFanpass = null,
+  followerCount: initialFollowerCount = 0,
+  isFollowing:   initialIsFollowing   = false,
 }: Props) {
   const router = useRouter();
 
   const [friendStatus,  setFriendStatus]  = useState<FriendStatus>(initialStatus);
   const [friendshipId,  setFriendshipId]  = useState<string | null>(initialFriendshipId);
+  const [followerCount, setFollowerCount] = useState(initialFollowerCount);
+  const [isFollowing,   setIsFollowing]   = useState(initialIsFollowing);
   const [pending,       start]            = useTransition();
+
+  async function toggleFollow() {
+    const wasFollowing = isFollowing;
+    // Optimistic
+    setIsFollowing(!wasFollowing);
+    setFollowerCount((c) => c + (wasFollowing ? -1 : 1));
+    try {
+      const r = await fetch(`/api/users/${profile.id}/follow`, {
+        method: wasFollowing ? "DELETE" : "POST",
+      });
+      if (!r.ok) {
+        setIsFollowing(wasFollowing);
+        setFollowerCount((c) => c + (wasFollowing ? 1 : -1));
+      }
+    } catch {
+      setIsFollowing(wasFollowing);
+      setFollowerCount((c) => c + (wasFollowing ? 1 : -1));
+    }
+  }
   const [menuOpen,      setMenuOpen]      = useState(false);
   const [isMobile,      setIsMobile]      = useState(false);
   const [editOpen,      setEditOpen]      = useState(false);
@@ -570,6 +595,22 @@ export default function ProfileClient({
             </button>
           </div>
         )}
+
+        {/* Følg-knapp — alltid synlig for andre profiler. Lavere-terskel
+            alternativ til vennskap; krever ikke gjensidighet eller medlemskap. */}
+        {!isOwnProfile && (
+          <button
+            onClick={() => void toggleFollow()}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-all"
+            style={{
+              background: isFollowing ? "var(--bg-tertiary)" : "rgba(94,234,212,0.15)",
+              color:      isFollowing ? "var(--text-secondary)" : "#5EEAD4",
+              border:     `1px solid ${isFollowing ? "var(--border-subtle)" : "rgba(94,234,212,0.35)"}`,
+            }}
+          >
+            {isFollowing ? "✓ Følger" : "+ Følg"}
+          </button>
+        )}
       </div>
 
       {/* Profile info */}
@@ -595,6 +636,10 @@ export default function ProfileClient({
           <div>
             <span className="text-base font-semibold text-white">{friendCount}</span>
             <span className="text-sm text-white/40 ml-1.5">Venner</span>
+          </div>
+          <div>
+            <span className="text-base font-semibold text-white">{followerCount}</span>
+            <span className="text-sm text-white/40 ml-1.5">Følgere</span>
           </div>
           <div>
             <span className="text-base font-semibold text-white">{membershipCount}</span>

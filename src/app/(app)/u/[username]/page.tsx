@@ -74,7 +74,7 @@ export default async function UserProfilePage({
   const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
   const isOnline   = profileUser.lastActive ? profileUser.lastActive >= fiveMinAgo : false;
 
-  const [friendCount, purchases, totalCoinsAgg, activeFanpass] = await Promise.all([
+  const [friendCount, purchases, totalCoinsAgg, activeFanpass, followerCount, isFollowing] = await Promise.all([
     db.friendship.count({
       where: {
         status: "ACCEPTED",
@@ -100,6 +100,11 @@ export default async function UserProfilePage({
       },
       include: { organization: { select: { name: true } } },
     }),
+    db.userFollow.count({ where: { followingId: profileUser.id } }),
+    isOwnProfile ? Promise.resolve(false) : db.userFollow.findUnique({
+      where:  { followerId_followingId: { followerId: session.user.id, followingId: profileUser.id } },
+      select: { id: true },
+    }).then((f) => !!f),
   ]);
 
   const badges       = purchases?.filter((p) => p.shopItem.type === "BADGE") ?? [];
@@ -149,6 +154,8 @@ export default async function UserProfilePage({
         profileFrame={showFullProfile && profileFrame ? { shopItem: { value: profileFrame.shopItem.value } } : null}
         totalCoins={showFullProfile ? totalCoins : 0}
         activeFanpass={showFullProfile && activeFanpass ? { organization: { name: activeFanpass.organization.name } } : null}
+        followerCount={followerCount}
+        isFollowing={isFollowing as boolean}
       />
     </div>
   );
