@@ -49,6 +49,7 @@ interface OrgInfo {
   type:        OrgType;
   plan:        string;
   description: string;
+  joinType:    string;  // "OPEN" | "CLOSED" | "PRIVATE"
   createdAt:   string;
 }
 
@@ -661,7 +662,13 @@ export default function InnstillingerClient({
     setGenSaving(true); setGenError("");
     const res = await fetch("/api/admin/organisation", {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orgId: org.id, name: org.name, slug: org.slug, description: org.description }),
+      body: JSON.stringify({
+        orgId:       org.id,
+        name:        org.name,
+        slug:        org.slug,
+        description: org.description,
+        joinType:    org.joinType,
+      }),
     });
     setGenSaving(false);
     if (res.ok) { setGenSaved(true); setTimeout(() => setGenSaved(false), 2000); }
@@ -861,6 +868,66 @@ export default function InnstillingerClient({
                 Opprettet {new Date(org.createdAt).toLocaleDateString("no-NO", { day: "numeric", month: "long", year: "numeric" })}
               </p>
             </div>
+          </Section>
+
+          {/* Hvem kan bli medlem */}
+          <Section title="Hvem kan bli medlem" desc="Styr hvordan nye medlemmer kan bli en del av communityet ditt.">
+            <div className="space-y-2">
+              {([
+                {
+                  value: "OPEN",
+                  label: "Åpent",
+                  desc:  "Alle kan bli medlem umiddelbart — uten godkjenning.",
+                  icon:  "🌐",
+                },
+                {
+                  value: "CLOSED",
+                  label: "Lukket — krever godkjenning",
+                  desc:  "Folk ser communityet og kan be om å bli med. Du godkjenner eller avslår hver forespørsel.",
+                  icon:  "🛡️",
+                },
+                {
+                  value: "PRIVATE",
+                  label: "Privat — kun invitasjon",
+                  desc:  "Folk kan ikke be om å bli med. Du må sende invitasjon for at noen skal kunne bli medlem.",
+                  icon:  "🔒",
+                },
+              ] as const).map((opt) => {
+                const active = org.joinType === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setOrg((p) => ({ ...p, joinType: opt.value }))}
+                    className="flex w-full items-start gap-3 rounded-xl p-4 text-left transition-all"
+                    style={{
+                      background: active ? `${S.teal}10` : S.surface2,
+                      border:     `1px solid ${active ? S.teal : S.lineHi}`,
+                    }}
+                  >
+                    <span className="text-2xl shrink-0">{opt.icon}</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold" style={{ color: S.text }}>{opt.label}</p>
+                      <p className="mt-0.5 text-xs leading-relaxed" style={{ color: S.muted }}>{opt.desc}</p>
+                    </div>
+                    <div
+                      className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full"
+                      style={{ border: `1.5px solid ${active ? S.teal : S.lineHi}` }}
+                    >
+                      {active && <div className="h-2 w-2 rounded-full" style={{ background: S.teal }} />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {org.joinType === "CLOSED" && (
+              <p
+                className="mt-3 rounded-lg px-3 py-2 text-xs"
+                style={{ background: `${S.teal}10`, color: S.teal, border: `1px solid ${S.teal}30` }}
+              >
+                Forespørsler vises i <a href="/admin/foresporsler" className="underline">Forespørsler</a> i venstre meny.
+              </p>
+            )}
           </Section>
 
           {genError && <p className="mb-3 text-sm" style={{ color: S.rose }}>{genError}</p>}

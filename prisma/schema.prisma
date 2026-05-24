@@ -183,6 +183,7 @@ model Organization {
   ticketCategories       TicketCategory[]
   agentCategories        AgentCategory[]
   userReports            UserReport[]
+  joinRequests           JoinRequest[]
 }
 
 model TenantTheme {
@@ -268,6 +269,8 @@ model User {
   followers               Follow[]       @relation("Following")
   userFollowing           UserFollow[]   @relation("UserFollower")
   userFollowers           UserFollow[]   @relation("UserFollowing")
+  joinRequests            JoinRequest[]  @relation("JoinRequester")
+  joinRequestsReviewed    JoinRequest[]  @relation("JoinReviewer")
   notificationPreference  NotificationPreference?
   clickerProfiles         ClickerProfile[]
   clickerUpgrades         ClickerUpgrade[]
@@ -774,6 +777,26 @@ model Follow {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId, organizationId])
+}
+
+// Forespørsel om å bli medlem av et lukket community. Admin/Owner gjennomgår
+// listen og godkjenner eller avslår. Status APPROVED → trigger membership-create.
+model JoinRequest {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String
+  status         String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  message        String?
+  createdAt      DateTime @default(now())
+  reviewedAt     DateTime?
+  reviewedById   String?
+
+  user         User         @relation("JoinRequester",  fields: [userId],         references: [id], onDelete: Cascade)
+  organization Organization @relation(                  fields: [organizationId], references: [id], onDelete: Cascade)
+  reviewer     User?        @relation("JoinReviewer",   fields: [reviewedById],   references: [id], onDelete: SetNull)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId, status, createdAt(sort: Desc)])
 }
 
 // Global user→user follow — én-veis abonnement på en person på tvers av orgs.

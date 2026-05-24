@@ -6,17 +6,18 @@ import { useRouter } from "next/navigation";
 import { Search, Users, Radio, Crown, Loader2, Sparkles, Clock, ArrowUpDown, X } from "lucide-react";
 
 interface Community {
-  id:              string;
-  slug:            string;
-  name:            string;
-  description:     string | null;
-  joinType:        string;
-  requiresFanpass: boolean;
-  memberCount:     number;
-  isLive:          boolean;
-  logoUrl:         string | null;
-  bannerUrl:       string | null;
-  isMember:        boolean;
+  id:                string;
+  slug:              string;
+  name:              string;
+  description:       string | null;
+  joinType:          string;
+  requiresFanpass:   boolean;
+  memberCount:       number;
+  isLive:            boolean;
+  logoUrl:           string | null;
+  bannerUrl:         string | null;
+  isMember:          boolean;
+  hasPendingRequest: boolean;
 }
 
 const S = {
@@ -87,6 +88,10 @@ export default function UtforskClient({ initialCommunities }: { initialCommuniti
       router.push(`/${c.slug}/feed`);
       return;
     }
+    if (c.hasPendingRequest) {
+      setError("Forespørselen din venter på godkjenning fra eier.");
+      return;
+    }
     setJoiningId(c.id);
     setError(null);
     try {
@@ -96,19 +101,25 @@ export default function UtforskClient({ initialCommunities }: { initialCommuniti
         body:    JSON.stringify({ orgId: c.id }),
       });
       const data = await r.json() as {
-        ok?: boolean;
+        ok?:              boolean;
+        joined?:          boolean;
         fanpassRequired?: boolean;
         fanpassCheckout?: string;
-        pending?: boolean;
-        message?: string;
-        error?: string;
+        pending?:         boolean;
+        alreadyRequested?: boolean;
+        message?:         string;
+        error?:           string;
       };
       if (data.fanpassRequired && data.fanpassCheckout) {
         router.push(data.fanpassCheckout);
         return;
       }
       if (data.pending) {
-        setError("Forespørsel sendt til eier — venter på godkjenning.");
+        // Marker som pending i UI så knappen blir disabled
+        setCommunities((prev) => prev.map((x) => x.id === c.id ? { ...x, hasPendingRequest: true } : x));
+        setError(data.alreadyRequested
+          ? "Du har allerede en forespørsel som venter på godkjenning."
+          : "Forespørsel sendt! Du får beskjed når eieren har behandlet den.");
         return;
       }
       if (!r.ok || !data.ok) {
@@ -348,7 +359,7 @@ function CommunityCard({
               className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium"
               style={{ background: `${S.amber}15`, color: S.amber, border: `1px solid ${S.amber}30` }}
             >
-              Søknad
+              Lukket
             </span>
           )}
         </div>
@@ -356,23 +367,27 @@ function CommunityCard({
         {/* Action */}
         <button
           onClick={onJoin}
-          disabled={joining}
-          className="mt-auto flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-opacity disabled:opacity-50"
+          disabled={joining || c.hasPendingRequest}
+          className="mt-auto flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
           style={{
-            background: c.isMember ? S.surface2 : S.teal,
-            color:      c.isMember ? S.text     : S.bg,
-            border:     c.isMember ? `1px solid ${S.line}` : "none",
+            background: c.isMember || c.hasPendingRequest ? S.surface2 : S.teal,
+            color:      c.isMember || c.hasPendingRequest ? S.text     : S.bg,
+            border:     c.isMember || c.hasPendingRequest ? `1px solid ${S.line}` : "none",
           }}
         >
           {joining ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
           ) : c.isMember ? (
             "Åpne →"
+          ) : c.hasPendingRequest ? (
+            "Venter på svar…"
           ) : c.requiresFanpass ? (
             <>
               <Crown className="h-3.5 w-3.5" />
               Aktiver Fanpass
             </>
+          ) : c.joinType === "CLOSED" ? (
+            "Forespør om å bli med"
           ) : (
             "Bli medlem"
           )}

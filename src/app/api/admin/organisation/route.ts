@@ -6,11 +6,12 @@ export async function PATCH(request: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Ikke innlogget" }, { status: 401 });
 
-  const { orgId, name, slug, description } = (await request.json()) as {
+  const { orgId, name, slug, description, joinType } = (await request.json()) as {
     orgId:        string;
     name:         string;
     slug:         string;
     description?: string | null;
+    joinType?:    string;
   };
 
   const membership = await db.membership.findUnique({
@@ -26,6 +27,12 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Felt for langt" }, { status: 400 });
   }
 
+  // joinType-validering
+  const VALID_JOIN_TYPES = ["OPEN", "CLOSED", "PRIVATE"];
+  if (joinType !== undefined && !VALID_JOIN_TYPES.includes(joinType)) {
+    return NextResponse.json({ error: "Ugyldig joinType" }, { status: 400 });
+  }
+
   try {
     const updated = await db.organization.update({
       where: { id: orgId },
@@ -33,6 +40,7 @@ export async function PATCH(request: Request) {
         name:        name.trim(),
         slug:        slug.trim(),
         description: description === undefined ? undefined : (description?.trim() || null),
+        ...(joinType !== undefined ? { joinType } : {}),
       },
     });
     return NextResponse.json(updated);

@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, UserCog, Settings,
-  ArrowLeft,
+  ArrowLeft, UserPlus,
 } from "lucide-react";
 import { useOrg } from "@/lib/context/OrgContext";
 import { useUser } from "@/lib/hooks/useUser";
@@ -21,15 +22,34 @@ const S = {
 } as const;
 
 const ADMIN_NAV = [
-  { href: "/admin",               label: "Oversikt",      icon: LayoutDashboard },
-  { href: "/admin/brukere",       label: "Brukere",       icon: UserCog         },
-  { href: "/admin/innstillinger", label: "Innstillinger", icon: Settings        },
+  { href: "/admin",               label: "Oversikt",      icon: LayoutDashboard, key: "overview" },
+  { href: "/admin/brukere",       label: "Brukere",       icon: UserCog,         key: "users" },
+  { href: "/admin/foresporsler",  label: "Forespørsler",  icon: UserPlus,        key: "requests" },
+  { href: "/admin/innstillinger", label: "Innstillinger", icon: Settings,        key: "settings" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { org }  = useOrg();
   const { user } = useUser();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Poll antall pending forespørsler hvert 60s + på org-bytte
+  useEffect(() => {
+    if (!org?.id) return;
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const r = await fetch("/api/admin/join-requests?status=PENDING");
+        if (!r.ok) return;
+        const data = await r.json() as { requests: { id: string }[] };
+        if (!cancelled) setPendingCount(data.requests.length);
+      } catch { /* ignore */ }
+    };
+    void check();
+    const id = setInterval(check, 60_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [org?.id]);
 
   return (
     <div className="flex flex-col md:flex-row min-h-[calc(100dvh-7rem)] md:min-h-[calc(100dvh-3.5rem)]">
@@ -53,8 +73,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             Admin
           </p>
 
-          {ADMIN_NAV.map(({ href, label, icon: Icon }) => {
+          {ADMIN_NAV.map(({ href, label, icon: Icon, key }) => {
             const active = pathname === href;
+            const showBadge = key === "requests" && pendingCount > 0;
             return (
               <Link
                 key={href}
@@ -68,7 +89,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }}
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                {label}
+                <span className="flex-1">{label}</span>
+                {showBadge && (
+                  <span
+                    className="rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                    style={{ background: S.teal, color: S.bg }}
+                  >
+                    {pendingCount > 99 ? "99+" : pendingCount}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -100,13 +129,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
-          {ADMIN_NAV.map(({ href, label, icon: Icon }) => {
+          {ADMIN_NAV.map(({ href, label, icon: Icon, key }) => {
             const active = pathname === href;
+            const showBadge = key === "requests" && pendingCount > 0;
             return (
               <Link
                 key={href}
                 href={href}
-                className="nav-link flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium"
+                className="nav-link relative flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium"
                 data-active={active || undefined}
                 style={{
                   background: active ? S.surface2 : "transparent",
@@ -117,6 +147,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               >
                 <Icon className="h-4 w-4 shrink-0" />
                 <span className="truncate">{label}</span>
+                {showBadge && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold"
+                    style={{ background: S.teal, color: S.bg }}
+                  >
+                    {pendingCount > 99 ? "99+" : pendingCount}
+                  </span>
+                )}
               </Link>
             );
           })}

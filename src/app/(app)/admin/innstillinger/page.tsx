@@ -42,6 +42,7 @@ export default async function InnstillingerPage({
         type:        org.type,
         plan:        org.plan,
         description: org.description ?? "",
+        joinType:    org.joinType,
         createdAt:   org.createdAt.toISOString(),
       }}
       theme={themeInitial}
