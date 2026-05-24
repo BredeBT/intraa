@@ -131,7 +131,7 @@ export default function NotifikasjonerPage() {
   }, {} as Record<FilterKey, number>);
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-8" style={{ background: "#050816", minHeight: "100vh" }}>
+    <div className="mx-auto max-w-3xl px-6 py-8" style={{ background: "var(--bg-primary)", minHeight: "100vh" }}>
       {/* Header */}
       <div className="mb-6 flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -269,7 +269,7 @@ export default function NotifikasjonerPage() {
                           <div
                             className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full"
                             style={{
-                              background: "#0B1027",
+                              background: "var(--bg-secondary)",
                               border:     `1.5px solid ${meta.color}`,
                               color:      meta.color,
                             }}

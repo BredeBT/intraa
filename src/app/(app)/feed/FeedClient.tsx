@@ -117,7 +117,7 @@ function CollapsiblePostBody({ html }: { html: string }) {
           <div
             aria-hidden
             className="pointer-events-none absolute inset-x-0 bottom-0 h-16"
-            style={{ background: "linear-gradient(to bottom, transparent, #0B1027)" }}
+            style={{ background: "linear-gradient(to bottom, transparent, var(--bg-secondary))" }}
           />
         )}
       </div>
@@ -411,7 +411,7 @@ export default function FeedClient({
   ].filter(Boolean) as { key: string; href?: string; icon: React.ReactNode; label: string; color: string; pulse?: boolean }[];
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-10" style={{ background: "#050816" }}>
+    <div className="mx-auto max-w-6xl px-4 pb-10" style={{ background: "var(--bg-primary)" }}>
 
       {/* ── Compressed banner with avatar overlap ── */}
       <div className="relative -mx-4 mb-14">
@@ -432,7 +432,7 @@ export default function FeedClient({
             className="w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-black shrink-0 overflow-hidden shadow-2xl"
             style={{
               background: logoUrl ? "transparent" : "linear-gradient(135deg, #A855F7, #60A5FA)",
-              border:     "3px solid #050816",
+              border:     "3px solid var(--bg-primary)",
             }}
           >
             {logoUrl
@@ -492,7 +492,7 @@ export default function FeedClient({
 
           {/* ── Compose box — compact by default, expanded on focus ── */}
           <div className="rounded-2xl border border-white/[0.08] mb-5 transition-all"
-               style={{ background: "#0B1027" }}>
+               style={{ background: "var(--bg-secondary)" }}>
             {pasteToast && (
               <div className="m-3 mb-0 flex items-center justify-between rounded-lg border border-white/[0.06] px-3 py-2 text-xs text-white/60"
                    style={{ background: "rgba(255,255,255,0.04)" }}>
@@ -538,7 +538,7 @@ export default function FeedClient({
                       <button
                         onClick={clearImage}
                         className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full text-white shadow-lg"
-                        style={{ background: "#0B1027", border: "1px solid rgba(240,244,255,0.16)" }}
+                        style={{ background: "var(--bg-secondary)", border: "1px solid rgba(240,244,255,0.16)" }}
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -602,7 +602,7 @@ export default function FeedClient({
               <article
                 key={post.id}
                 className="rounded-2xl border border-white/[0.06] overflow-hidden transition-colors hover:border-white/[0.10]"
-                style={{ background: "#0B1027" }}
+                style={{ background: "var(--bg-secondary)" }}
               >
                 {/* Header */}
                 <div className="flex items-center gap-3 px-4 pt-4 pb-3">
@@ -729,7 +729,7 @@ export default function FeedClient({
         <aside className="hidden lg:flex flex-col gap-4 sticky top-4">
 
           {/* Online now */}
-          <div className="rounded-2xl border border-white/[0.08] p-4" style={{ background: "#0B1027" }}>
+          <div className="rounded-2xl border border-white/[0.08] p-4" style={{ background: "var(--bg-secondary)" }}>
             <div className="flex items-center justify-between mb-3">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50">
                 Online nå
@@ -755,7 +755,7 @@ export default function FeedClient({
                       >
                         {!u.avatarUrl && initials(u.name ?? u.username)}
                       </div>
-                      <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2" style={{ borderColor: "#0B1027" }} />
+                      <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2" style={{ borderColor: "var(--bg-secondary)" }} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-medium text-white truncate group-hover:text-emerald-300 transition-colors">{u.name ?? u.username}</p>
@@ -771,7 +771,7 @@ export default function FeedClient({
           </div>
 
           {/* Hva skjer denne uka */}
-          <div className="rounded-2xl border border-white/[0.08] p-4" style={{ background: "#0B1027" }}>
+          <div className="rounded-2xl border border-white/[0.08] p-4" style={{ background: "var(--bg-secondary)" }}>
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50 mb-3">
               Denne uka
             </p>
@@ -787,7 +787,7 @@ export default function FeedClient({
             <a
               href={`/community/medlemmer`}
               className="rounded-2xl border border-white/[0.08] p-4 transition-colors hover:border-white/20 group"
-              style={{ background: "#0B1027" }}
+              style={{ background: "var(--bg-secondary)" }}
             >
               <div className="flex items-center gap-3">
                 <div
@@ -811,7 +811,7 @@ export default function FeedClient({
       {/* Delete confirmation modal */}
       {confirmDeleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-white/[0.08] p-6 shadow-2xl" style={{ background: "#0B1027" }}>
+          <div className="w-full max-w-sm rounded-2xl border border-white/[0.08] p-6 shadow-2xl" style={{ background: "var(--bg-secondary)" }}>
             <h3 className="mb-2 text-base font-semibold text-white">Slett innlegg</h3>
             <p className="mb-5 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
               Er du sikker? Handlingen kan ikke angres.

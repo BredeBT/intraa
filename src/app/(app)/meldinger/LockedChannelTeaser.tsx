@@ -66,7 +66,7 @@ export default function LockedChannelTeaser({
       <div
         className="w-full max-w-md rounded-3xl p-8 text-center relative overflow-hidden"
         style={{
-          background: "linear-gradient(140deg, #131A35 0%, #0B1027 100%)",
+          background: "linear-gradient(140deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%)",
           border:     "1px solid rgba(168,85,247,0.25)",
           boxShadow:  "0 0 80px rgba(168,85,247,0.15)",
         }}

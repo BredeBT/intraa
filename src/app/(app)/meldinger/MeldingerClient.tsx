@@ -129,7 +129,7 @@ function relativeLastSeen(iso: string) {
 function Avatar({ avatarUrl, name, size = 10, isOnline }: { avatarUrl: string | null; name: string | null; size?: number; isOnline?: boolean }) {
   const cls = `h-${size} w-${size} shrink-0 rounded-full object-cover`;
   const dot = isOnline ? (
-    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#0B1027]" />
+    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[var(--bg-secondary)]" />
   ) : null;
   const inner = avatarUrl
     // eslint-disable-next-line @next/next/no-img-element
@@ -811,10 +811,10 @@ export default function MeldingerClient({
   })();
 
   return (
-    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] overflow-hidden" style={{ background: "#050816" }}>
+    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] overflow-hidden" style={{ background: "var(--bg-primary)" }}>
 
       {/* ─── Sidebar ────────────────────────────────────────────────────────── */}
-      <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-72 shrink-0 flex-col border-r border-white/[0.06]`} style={{ background: "#0B1027" }}>
+      <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-72 shrink-0 flex-col border-r border-white/[0.06]`} style={{ background: "var(--bg-secondary)" }}>
 
         {/* Search */}
         <div className="shrink-0 p-3 border-b border-white/[0.06]">
@@ -1023,7 +1023,7 @@ export default function MeldingerClient({
       </div>
 
       {/* ─── Chat area ──────────────────────────────────────────────────────── */}
-      <div className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0`} style={{ background: "#050816" }}>
+      <div className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0`} style={{ background: "var(--bg-primary)" }}>
 
         {/* Header */}
         {chatHeader && (
@@ -1037,7 +1037,7 @@ export default function MeldingerClient({
             <div className="relative">
               {chatHeader.avatar}
               {active?.type === "dm" && onlineUsers.includes(active.userId) && (
-                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#0B1027]" />
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[var(--bg-secondary)]" />
               )}
             </div>
             <div>
@@ -1158,7 +1158,7 @@ export default function MeldingerClient({
 
             {/* ── Incoming call banner ──────────────────────────────────────── */}
             {webrtc.incomingCall && (
-              <div className="mx-4 mt-3 shrink-0 flex items-center gap-4 rounded-2xl border border-purple-500/30 p-4" style={{ background: "#131A35" }}>
+              <div className="mx-4 mt-3 shrink-0 flex items-center gap-4 rounded-2xl border border-purple-500/30 p-4" style={{ background: "var(--bg-tertiary)" }}>
                 <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-lg animate-pulse">
                   {webrtc.incomingCall.type === "video" ? "📹" : "📞"}
                 </div>
@@ -1195,7 +1195,7 @@ export default function MeldingerClient({
               <div
                 className="shrink-0 flex flex-col items-center justify-center gap-3 border-b border-white/10"
                 style={{
-                  background: "#050816",
+                  background: "var(--bg-primary)",
                   // ~55% of available viewport height — leaves room for chat below
                   height:     "min(55vh, 540px)",
                   minHeight:  "240px",

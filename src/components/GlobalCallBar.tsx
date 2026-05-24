@@ -26,7 +26,7 @@ export function GlobalCallBar() {
 
   return (
     <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
-      <div className="flex items-center gap-3 rounded-2xl bg-[#131A35] border border-white/10 px-4 py-3 shadow-2xl backdrop-blur-sm">
+      <div className="flex items-center gap-3 rounded-2xl bg-[var(--bg-tertiary)] border border-white/10 px-4 py-3 shadow-2xl backdrop-blur-sm">
         {/* Pulsing dot */}
         <span className="relative flex h-2.5 w-2.5 shrink-0">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />

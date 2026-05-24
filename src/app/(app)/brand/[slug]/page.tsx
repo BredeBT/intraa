@@ -36,7 +36,7 @@ export default async function BrandPage({
   ]);
 
   return (
-    <div className="min-h-screen px-6 py-10" style={{ background: "#050816", color: "#F0F4FF" }}>
+    <div className="min-h-screen px-6 py-10" style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}>
       <div className="mx-auto max-w-3xl">
 
         {/* Hero — aurora gradient backdrop */}

@@ -473,7 +473,7 @@ export default function StoryCapture({ channelId, onClose, onPosted }: Props) {
               <div
                 onClick={(e) => e.stopPropagation()}
                 className="w-full sm:max-w-sm sm:rounded-2xl overflow-hidden"
-                style={{ background: "#0B1027", border: "1px solid rgba(255,255,255,0.10)" }}
+                style={{ background: "var(--bg-secondary)", border: "1px solid rgba(255,255,255,0.10)" }}
               >
                 <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
                   <p className="text-sm font-semibold text-white">Velg sponsor</p>

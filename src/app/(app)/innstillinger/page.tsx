@@ -402,10 +402,10 @@ interface FanpassCommunity {
 }
 
 const FS = {
-  surface:  "#0B1027",
-  surface2: "#131A35",
+  surface:  "var(--bg-secondary)",
+  surface2: "var(--bg-tertiary)",
   line:     "rgba(240,244,255,0.08)",
-  text:     "#F0F4FF",
+  text:     "var(--text-primary)",
   muted:    "rgba(240,244,255,0.6)",
   subtle:   "rgba(240,244,255,0.4)",
   teal:     "#5EEAD4",
@@ -682,7 +682,7 @@ function SikkerhetTab() {
           onClick={() => void startSetup()}
           disabled={busy}
           className="self-start rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity disabled:opacity-50"
-          style={{ background: FS.teal, color: "#050816" }}
+          style={{ background: FS.teal, color: "var(--bg-primary)" }}
         >
           {busy ? "Genererer…" : "Sett opp 2FA"}
         </button>
@@ -717,7 +717,7 @@ function SikkerhetTab() {
                   onClick={() => void confirmEnable()}
                   disabled={busy || code.length !== 6}
                   className="rounded-lg px-5 py-2 text-sm font-semibold disabled:opacity-50"
-                  style={{ background: FS.teal, color: "#050816" }}
+                  style={{ background: FS.teal, color: "var(--bg-primary)" }}
                 >
                   {busy ? "Verifiserer…" : "Aktiver 2FA"}
                 </button>

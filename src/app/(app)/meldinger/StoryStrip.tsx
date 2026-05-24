@@ -85,7 +85,7 @@ export default function StoryStrip({ groups, canPost, onAdd, onOpen }: Props) {
                   className="h-16 w-16 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold text-white"
                   style={{
                     background:  previewUrl ? `url(${previewUrl}) center/cover` : "linear-gradient(135deg, #5EEAD4, #A855F7)",
-                    border:      "2px solid #050816",
+                    border:      "2px solid var(--bg-primary)",
                     opacity:     allSeen ? 0.7 : 1,
                   }}
                 >

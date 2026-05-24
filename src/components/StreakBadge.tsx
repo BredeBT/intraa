@@ -11,9 +11,9 @@ interface StreakData {
 }
 
 const S = {
-  surface:  "#0B1027",
-  surface2: "#131A35",
-  text:     "#F0F4FF",
+  surface:  "var(--bg-secondary)",
+  surface2: "var(--bg-tertiary)",
+  text:     "var(--text-primary)",
   muted:    "rgba(240,244,255,0.6)",
   subtle:   "rgba(240,244,255,0.4)",
   line:     "rgba(240,244,255,0.08)",

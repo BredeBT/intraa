@@ -12,12 +12,12 @@ export const dynamic = "force-dynamic";
  * Mirrors the CSS variables in globals.css.
  */
 const C = {
-  bg:        "#050816",
-  surface:   "#0B1027",
-  surface2:  "#131A35",
+  bg:        "var(--bg-primary)",
+  surface:   "var(--bg-secondary)",
+  surface2:  "var(--bg-tertiary)",
   line:      "rgba(255,255,255,0.08)",
   lineHi:    "rgba(255,255,255,0.16)",
-  text:      "#F0F4FF",
+  text:      "var(--text-primary)",
   muted:     "rgba(255,255,255,0.6)",
   mutedHi:   "rgba(255,255,255,0.75)",
   teal:      "#5EEAD4",
@@ -25,7 +25,7 @@ const C = {
   blue:      "#60A5FA",
   pink:      "#F472B6",
   // legacy aliases kept so existing JSX continues to compile while we transition
-  cream:     "#F0F4FF",
+  cream:     "var(--text-primary)",
   orange:    "#A855F7",
   amber:     "#A855F7",
   mint:      "#5EEAD4",

@@ -149,7 +149,7 @@ export default function ChessLobby({
   }
 
   return (
-    <div className="min-h-screen bg-[#050816] px-4 py-8">
+    <div className="min-h-screen bg-[var(--bg-primary)] px-4 py-8">
       <div className="mx-auto max-w-lg">
 
         {/* Header */}
@@ -408,7 +408,7 @@ export default function ChessLobby({
       {/* Opponent picker modal */}
       {showPicker && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#131A35] shadow-2xl overflow-hidden">
+          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[var(--bg-tertiary)] shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
               <h2 className="font-semibold text-white">Velg motstander</h2>
               <button onClick={() => setShowPicker(false)} className="text-white/40 hover:text-white text-xl leading-none">×</button>

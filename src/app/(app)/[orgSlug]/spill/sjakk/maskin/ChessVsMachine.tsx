@@ -156,7 +156,7 @@ function ChessBoard({
 
       {promoting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="rounded-2xl border border-white/10 bg-[#131A35] p-6 shadow-2xl">
+          <div className="rounded-2xl border border-white/10 bg-[var(--bg-tertiary)] p-6 shadow-2xl">
             <p className="mb-4 text-center text-sm font-semibold text-white">Velg brikke</p>
             <div className="flex gap-3">
               {(["q","r","b","n"] as const).map((p) => (
@@ -431,7 +431,7 @@ export default function ChessVsMachine({
   // ── Difficulty selection screen ───────────────────────────────────────────
   if (!difficulty || !chess) {
     return (
-      <div className="min-h-screen bg-[#050816] text-white flex flex-col">
+      <div className="min-h-screen bg-[var(--bg-primary)] text-white flex flex-col">
         <div className="mx-auto w-full max-w-lg px-4 py-10 flex flex-col gap-8">
 
           <Link
@@ -510,7 +510,7 @@ export default function ChessVsMachine({
   }
 
   return (
-    <div className="min-h-screen bg-[#050816] text-white">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-white">
       <div className="mx-auto flex max-w-[1100px] flex-col gap-4 px-4 py-4 md:flex-row md:items-start md:gap-6 md:py-8">
 
         {/* ── Board column ── */}

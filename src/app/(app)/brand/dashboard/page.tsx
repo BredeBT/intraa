@@ -50,7 +50,7 @@ export default async function BrandDashboardPage() {
   ]);
 
   return (
-    <div className="min-h-screen px-6 py-10" style={{ background: "#050816", color: "#F0F4FF" }}>
+    <div className="min-h-screen px-6 py-10" style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}>
       <div className="mx-auto max-w-5xl">
 
         {/* Brand header */}
@@ -142,7 +142,7 @@ export default async function BrandDashboardPage() {
                 <div
                   key={s.id}
                   className="relative overflow-hidden rounded-2xl aspect-[9/16]"
-                  style={{ background: `url(${s.imageUrl}) center/cover, #131A35`, opacity: expired ? 0.5 : 1 }}
+                  style={{ background: `url(${s.imageUrl}) center/cover, var(--bg-tertiary)`, opacity: expired ? 0.5 : 1 }}
                 >
                   {/* Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40" />

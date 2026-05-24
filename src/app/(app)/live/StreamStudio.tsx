@@ -126,7 +126,7 @@ export default function StreamStudio({
   );
 
   return (
-    <div className="absolute inset-0 z-30 flex flex-col" style={{ background: "#050816" }}>
+    <div className="absolute inset-0 z-30 flex flex-col" style={{ background: "var(--bg-primary)" }}>
 
       {/* Studio header */}
       <div
@@ -476,7 +476,7 @@ function DmWinnerModal({ winner, onClose }: {
       <div
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-sm rounded-2xl p-5 shadow-2xl"
-        style={{ background: "#0B1027", border: "1px solid rgba(94,234,212,0.30)" }}
+        style={{ background: "var(--bg-secondary)", border: "1px solid rgba(94,234,212,0.30)" }}
       >
         <div className="flex items-center gap-3 mb-4">
           <div

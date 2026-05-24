@@ -186,7 +186,7 @@ export default function NotificationBell() {
         <div
           className="absolute right-0 top-full z-50 mt-2 w-96 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl shadow-2xl"
           style={{
-            background: "#0B1027",
+            background: "var(--bg-secondary)",
             border:     "1px solid rgba(255,255,255,0.10)",
           }}
         >
@@ -326,7 +326,7 @@ function NotifRow({ notif, onClick }: { notif: DbNotification; onClick: () => vo
         <div
           className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full"
           style={{
-            background: "#0B1027",
+            background: "var(--bg-secondary)",
             border:     `1.5px solid ${meta.color}`,
             color:      meta.color,
           }}

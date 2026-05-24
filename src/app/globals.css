@@ -1,28 +1,33 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-:root {
-  /* ── Aurora palette ─────────────────────────────────────────────── */
-  /* Base — never #000, always with blue undertone */
+/* ────────────────────────────────────────────────────────────────────────
+   Theme tokens. Definert i :root som dark som default, og overstyrt under
+   [data-theme="light"]. Komponenter som bruker var() vil automatisk flippe
+   farger når ThemeProvider setter data-theme på <html>.
+
+   Tilsvarende sjikt for `--color-zinc-*` (Tailwind-klasser) settes via
+   :root + [data-theme="light"]-blokkene under sammen med @theme-mappingen.
+   ───────────────────────────────────────────────────────────────────── */
+
+:root, :root[data-theme="dark"] {
+  /* ── Aurora palette (DARK) ──────────────────────────────────────── */
   --bg-primary:    #050816;
   --bg-secondary:  #0B1027;
   --bg-tertiary:   #131A35;
   --bg-glass:       rgba(255, 255, 255, 0.04);
   --bg-glass-hover: rgba(255, 255, 255, 0.07);
 
-  /* Text — never pure white */
   --text-primary:   #F0F4FF;
   --text-secondary: rgba(255, 255, 255, 0.6);
   --text-tertiary:  rgba(255, 255, 255, 0.45);
   --text-on-light:  #050816;
 
-  /* Aurora accents — northern lights */
   --aurora-teal:   #5EEAD4;
   --aurora-purple: #A855F7;
   --aurora-blue:   #60A5FA;
   --aurora-pink:   #F472B6;
 
-  /* Accent backgrounds */
   --aurora-teal-bg:     rgba(94, 234, 212, 0.10);
   --aurora-teal-border: rgba(94, 234, 212, 0.30);
   --aurora-purple-bg:     rgba(168, 85, 247, 0.10);
@@ -32,14 +37,52 @@
   --aurora-pink-bg:     rgba(244, 114, 182, 0.10);
   --aurora-pink-border: rgba(244, 114, 182, 0.30);
 
-  /* Borders */
   --border-subtle:  rgba(255, 255, 255, 0.08);
   --border-default: rgba(255, 255, 255, 0.12);
   --border-strong:  rgba(255, 255, 255, 0.20);
 
-  /* Legacy aliases — kept so existing `bg-background`/`text-foreground` keep working */
   --background: var(--bg-primary);
   --foreground: var(--text-primary);
+}
+
+[data-theme="light"] {
+  /* ── Aurora palette (LIGHT) ─────────────────────────────────────── */
+  --bg-primary:    #F7F8FB;   /* soft off-white, ikke skarpt #fff */
+  --bg-secondary:  #FFFFFF;   /* surface */
+  --bg-tertiary:   #F0F2F7;   /* nested surface, inputs */
+  --bg-glass:       rgba(0, 0, 0, 0.03);
+  --bg-glass-hover: rgba(0, 0, 0, 0.06);
+
+  --text-primary:   #0F172A;
+  --text-secondary: rgba(15, 23, 42, 0.65);
+  --text-tertiary:  rgba(15, 23, 42, 0.45);
+  --text-on-light:  #0F172A;
+
+  /* Aurora-aksenter beholdes — de fungerer bra på lyse bakgrunner også,
+     men vi gjør de litt mørkere så de blir lesbare som tekst. */
+  --aurora-teal:   #0D9488;
+  --aurora-purple: #7C3AED;
+  --aurora-blue:   #2563EB;
+  --aurora-pink:   #DB2777;
+
+  --aurora-teal-bg:     rgba(13, 148, 136, 0.10);
+  --aurora-teal-border: rgba(13, 148, 136, 0.25);
+  --aurora-purple-bg:     rgba(124, 58, 237, 0.10);
+  --aurora-purple-border: rgba(124, 58, 237, 0.25);
+  --aurora-blue-bg:     rgba(37, 99, 235, 0.10);
+  --aurora-blue-border: rgba(37, 99, 235, 0.25);
+  --aurora-pink-bg:     rgba(219, 39, 119, 0.10);
+  --aurora-pink-border: rgba(219, 39, 119, 0.25);
+
+  --border-subtle:  rgba(15, 23, 42, 0.08);
+  --border-default: rgba(15, 23, 42, 0.14);
+  --border-strong:  rgba(15, 23, 42, 0.22);
+
+  /* Tailwind-klasse-overstyringer: bg-zinc-* + text-white osv. */
+  --color-zinc-950: var(--bg-primary);
+  --color-zinc-900: var(--bg-secondary);
+  --color-zinc-800: var(--bg-tertiary);
+  --color-white:    var(--text-primary);
 }
 
 @theme inline {
@@ -113,9 +156,11 @@
 }
 
 body {
-  background: #050816;
-  color: #F0F4FF;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: system-ui, sans-serif;
+  /* Smooth overgang ved theme-bytte */
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* ── Page enter animation ── */

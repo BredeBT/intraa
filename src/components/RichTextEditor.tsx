@@ -93,7 +93,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
 
   // Aurora-palette + nøytrale farger for tekstfarge-velgeren
   const COLORS = [
-    { name: "Standard", value: null,       hex: "#F0F4FF" },
+    { name: "Standard", value: null,       hex: "var(--text-primary)" },
     { name: "Teal",     value: "#5EEAD4",  hex: "#5EEAD4" },
     { name: "Lilla",    value: "#A855F7",  hex: "#A855F7" },
     { name: "Blå",      value: "#60A5FA",  hex: "#60A5FA" },
@@ -187,7 +187,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
     <div
       className={`flex flex-col rounded-xl transition-colors focus-within:border-[#5EEAD4]/40 ${minHeight ? "tiptap-tall" : ""} ${className}`}
       style={{
-        background: "#131A35",
+        background: "var(--bg-tertiary)",
         border:     "1px solid rgba(240,244,255,0.08)",
         ...(minHeight ? { ["--tiptap-min-h" as string]: `${minHeight}px` } : {}),
       }}
@@ -237,7 +237,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
               {showSize && (
                 <div
                   className="absolute left-0 top-full z-50 mt-1 flex w-44 flex-col rounded-lg p-1 shadow-2xl"
-                  style={{ background: "#0B1027", border: "1px solid rgba(240,244,255,0.08)" }}
+                  style={{ background: "var(--bg-secondary)", border: "1px solid rgba(240,244,255,0.08)" }}
                 >
                   {SIZES.map((s) => {
                     const active = (currentSize ?? null) === s.value;
@@ -253,7 +253,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
                         }}
                         className="flex items-center justify-between rounded px-2.5 py-1.5 text-left transition-colors hover:bg-white/[0.06]"
                         style={{
-                          color: active ? "#5EEAD4" : "#F0F4FF",
+                          color: active ? "#5EEAD4" : "var(--text-primary)",
                           fontSize: s.value ?? "1em",
                         }}
                       >
@@ -281,7 +281,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, Props>(function RichTextEdi
               {showColor && (
                 <div
                   className="absolute left-0 top-full z-50 mt-1 flex gap-1 rounded-lg p-1.5 shadow-2xl"
-                  style={{ background: "#0B1027", border: "1px solid rgba(240,244,255,0.08)" }}
+                  style={{ background: "var(--bg-secondary)", border: "1px solid rgba(240,244,255,0.08)" }}
                 >
                   {COLORS.map((c) => (
                     <button

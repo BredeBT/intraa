@@ -83,7 +83,7 @@ export default function VoiceMessage({
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-transform hover:scale-105"
         style={{
           background: "linear-gradient(135deg, #5EEAD4, #A855F7)",
-          color:      "#050816",
+          color:      "var(--bg-primary)",
         }}
         aria-label={playing ? "Pause" : "Spill av"}
       >

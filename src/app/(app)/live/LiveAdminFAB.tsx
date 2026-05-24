@@ -86,7 +86,7 @@ function FabButton({ icon, label, onClick, color }: { icon: React.ReactNode; lab
       onClick={onClick}
       className="flex items-center gap-2 rounded-full pl-4 pr-5 py-2.5 text-xs font-semibold shadow-xl transition-transform hover:scale-105"
       style={{
-        background: "#0B1027",
+        background: "var(--bg-secondary)",
         color:      "#fff",
         border:     `1px solid ${color}50`,
       }}
@@ -345,7 +345,7 @@ function ModalShell({ children, onClose, title, accent, icon }: {
       <div
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-sm rounded-2xl p-5 shadow-2xl"
-        style={{ background: "#0B1027", border: `1px solid ${accent}40` }}
+        style={{ background: "var(--bg-secondary)", border: `1px solid ${accent}40` }}
       >
         <div className="flex items-center gap-2 mb-4">
           <div

@@ -433,7 +433,7 @@ export default function ClickerPage() {
   // ── Loading ───────────────────────────────────────────────────────────────
   if (!profile) {
     return (
-      <div className="flex h-full items-center justify-center" style={{ background: "#050816" }}>
+      <div className="flex h-full items-center justify-center" style={{ background: "var(--bg-primary)" }}>
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" style={{ borderColor: "#A855F7", borderTopColor: "transparent" }} />
       </div>
     );
@@ -1006,14 +1006,14 @@ export default function ClickerPage() {
   return (
     <div
       className="relative flex flex-col md:flex-row h-[calc(100dvh-7rem)] md:h-[calc(100vh-56px)]"
-      style={{ background: "#050816" }}
+      style={{ background: "var(--bg-primary)" }}
     >
       {/* Prestige modal */}
       {prestigeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div
             className="w-full max-w-sm rounded-2xl p-6"
-            style={{ background: "#0B1027", border: "1px solid rgba(255,255,255,0.1)" }}
+            style={{ background: "var(--bg-secondary)", border: "1px solid rgba(255,255,255,0.1)" }}
           >
             <h3 className="mb-2 text-lg font-bold text-white">Gå i Prestige?</h3>
             <p className="mb-4 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
@@ -1054,7 +1054,7 @@ export default function ClickerPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div
             className="flex w-full max-w-md flex-col rounded-2xl"
-            style={{ background: "#0B1027", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "85vh" }}
+            style={{ background: "var(--bg-secondary)", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "85vh" }}
           >
             {/* Header */}
             <div className="flex shrink-0 items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
@@ -1148,7 +1148,7 @@ export default function ClickerPage() {
       {/* Mobile tab-bar */}
       <div
         className="flex shrink-0 md:hidden"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#0B1027" }}
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "var(--bg-secondary)" }}
       >
         {(["verdener", "klikker", "oppgraderinger"] as const).map((tab) => {
           const labels = { klikker: "Klikk", verdener: "Verdener", oppgraderinger: "Oppgrader" };
@@ -1171,7 +1171,7 @@ export default function ClickerPage() {
       {/* Left — Worlds */}
       <div
         className={`${mobileTab === "verdener" ? "flex" : "hidden"} md:flex w-full md:w-[180px] shrink-0 flex-col overflow-y-auto py-4 px-3 scrollbar-hide`}
-        style={{ background: "#0B1027", borderRight: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ background: "var(--bg-secondary)", borderRight: "1px solid rgba(255,255,255,0.07)" }}
       >
         {WorldsPanel}
       </div>
@@ -1184,7 +1184,7 @@ export default function ClickerPage() {
       {/* Right — Upgrades */}
       <div
         className={`${mobileTab === "oppgraderinger" ? "flex" : "hidden"} md:flex w-full md:w-[260px] shrink-0 flex-col overflow-hidden`}
-        style={{ background: "#0B1027", borderLeft: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ background: "var(--bg-secondary)", borderLeft: "1px solid rgba(255,255,255,0.07)" }}
       >
         {UpgradesPanel}
       </div>

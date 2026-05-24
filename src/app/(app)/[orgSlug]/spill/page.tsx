@@ -7,12 +7,12 @@ import { WORLDS } from "@/lib/clickerUpgrades";
 
 // ─── Aurora-tokens (matcher landing + resten av appen) ───────────────────────
 const S = {
-  bg:       "#050816",
-  surface:  "#0B1027",
-  surface2: "#131A35",
+  bg:       "var(--bg-primary)",
+  surface:  "var(--bg-secondary)",
+  surface2: "var(--bg-tertiary)",
   line:     "rgba(240,244,255,0.08)",
   lineHi:   "rgba(240,244,255,0.14)",
-  text:     "#F0F4FF",
+  text:     "var(--text-primary)",
   muted:    "rgba(240,244,255,0.6)",
   subtle:   "rgba(240,244,255,0.4)",
   faint:    "rgba(240,244,255,0.25)",

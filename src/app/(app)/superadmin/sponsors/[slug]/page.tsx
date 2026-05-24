@@ -184,7 +184,7 @@ function StoryGrid({ stories, now }: { stories: StoryRow[]; now: Date }) {
           <div
             key={s.id}
             className="relative overflow-hidden rounded-xl aspect-[9/16]"
-            style={{ background: `url(${s.imageUrl}) center/cover, #131A35`, opacity: expired ? 0.55 : 1 }}
+            style={{ background: `url(${s.imageUrl}) center/cover, var(--bg-tertiary)`, opacity: expired ? 0.55 : 1 }}
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40" />
             <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-1">

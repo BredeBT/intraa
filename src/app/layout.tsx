@@ -38,6 +38,15 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased bg-zinc-950`}
     >
+      <head>
+        {/* Setter data-theme før hydrering så vi unngår «flash of wrong theme»
+            ved første sideinnlasting. Leser fra localStorage + OS-pref. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var c=localStorage.getItem('theme')||'system';var t=c==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):c;document.documentElement.setAttribute('data-theme',t);document.documentElement.classList.add(t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-zinc-950">
         <Providers><ThemeProvider><OrgProvider>{children}</OrgProvider></ThemeProvider></Providers>
       </body>

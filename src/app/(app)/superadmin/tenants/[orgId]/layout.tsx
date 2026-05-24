@@ -21,11 +21,11 @@ export default async function TenantLayout({
   if (!org) notFound();
 
   return (
-    <div className="grid min-h-full" style={{ gridTemplateColumns: "220px 1fr", background: "#050816" }}>
+    <div className="grid min-h-full" style={{ gridTemplateColumns: "220px 1fr", background: "var(--bg-primary)" }}>
       {/* Sidebar */}
       <aside
         className="flex flex-col px-3 py-5"
-        style={{ background: "#0B1027", borderRight: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ background: "var(--bg-secondary)", borderRight: "1px solid rgba(255,255,255,0.07)" }}
       >
         <TenantSideNav
           orgId={org.id}

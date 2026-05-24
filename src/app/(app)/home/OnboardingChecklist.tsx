@@ -139,7 +139,7 @@ function StepRow({
       </div>
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-medium ${done ? "line-through" : ""}`}
-           style={{ color: done ? "rgba(240,244,255,0.45)" : "#F0F4FF" }}>
+           style={{ color: done ? "rgba(240,244,255,0.45)" : "var(--text-primary)" }}>
           {title}
         </p>
         <p className="text-xs" style={{ color: "rgba(240,244,255,0.4)" }}>{hint}</p>

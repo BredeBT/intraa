@@ -193,7 +193,7 @@ export default function BroadcastView({
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden" style={{ background: "#050816" }}>
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden" style={{ background: "var(--bg-primary)" }}>
 
       {/* ── Aurora hero header ─────────────────────────────────────────────── */}
       <div
@@ -610,7 +610,7 @@ function BroadcastPost({
               <div
                 onClick={(e) => e.stopPropagation()}
                 className="absolute right-0 top-full mt-1 z-30 w-40 overflow-hidden rounded-xl shadow-2xl"
-                style={{ background: "#131A35", border: "1px solid rgba(255,255,255,0.10)" }}
+                style={{ background: "var(--bg-tertiary)", border: "1px solid rgba(255,255,255,0.10)" }}
               >
                 {canEdit && (
                   <button
@@ -738,7 +738,7 @@ function BroadcastPost({
           {showQuickReact && (
             <div
               className="absolute bottom-full left-0 mb-2 flex gap-1 rounded-2xl border border-white/10 px-2 py-1.5 shadow-2xl z-20"
-              style={{ background: "#0B1027" }}
+              style={{ background: "var(--bg-secondary)" }}
             >
               {QUICK_REACTIONS.map((emoji) => (
                 <button

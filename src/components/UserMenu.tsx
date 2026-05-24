@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Settings, LogOut, ShieldAlert } from "lucide-react";
+import { Settings, LogOut, ShieldAlert, Sun, Moon, Monitor } from "lucide-react";
 import { useUser } from "@/lib/hooks/useUser";
+import { useTheme, type ThemeChoice } from "@/components/ThemeProvider";
 
 const STATUS_COLORS: Record<string, string> = {
   online:    "bg-emerald-500",
@@ -16,6 +17,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function UserMenu() {
   const { user, isAdmin } = useUser();
   const isSuperAdmin      = user?.isSuperAdmin ?? false;
+  const { choice, setChoice } = useTheme();
   const [open,     setOpen]     = useState(false);
   const [status,   setStatus]   = useState<string>("online");
   const ref    = useRef<HTMLDivElement>(null);
@@ -91,6 +93,41 @@ export default function UserMenu() {
             <Settings className="h-4 w-4 shrink-0" />
             Innstillinger
           </Link>
+
+          {/* Theme-velger — 3 små ikon-knapper */}
+          <div className="my-1 border-t border-zinc-800" />
+          <div className="px-3 py-2">
+            <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+              Tema
+            </p>
+            <div className="grid grid-cols-3 gap-1 rounded-lg p-0.5" style={{ background: "var(--bg-tertiary)" }}>
+              {([
+                { id: "light",  icon: Sun,     label: "Lyst" },
+                { id: "system", icon: Monitor, label: "Auto" },
+                { id: "dark",   icon: Moon,    label: "Mørkt" },
+              ] as { id: ThemeChoice; icon: typeof Sun; label: string }[]).map((opt) => {
+                const Icon   = opt.icon;
+                const active = choice === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => setChoice(opt.id)}
+                    className="flex flex-col items-center gap-0.5 rounded-md py-1.5 text-[10px] font-medium transition-colors"
+                    style={{
+                      background: active ? "var(--bg-secondary)" : "transparent",
+                      color:      active ? "var(--text-primary)" : "var(--text-secondary)",
+                      boxShadow:  active ? `inset 0 0 0 1px var(--aurora-teal-border)` : undefined,
+                    }}
+                    title={opt.label}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="my-1 border-t border-zinc-800" />
           <button
             onClick={handleLogout}
