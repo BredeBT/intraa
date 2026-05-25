@@ -297,7 +297,7 @@ export function notifyFanpassGranted(opts: {
     type:           "FANPASS_GRANTED",
     title:          "♛ Du har fått Fanpass!",
     body:           `Velkommen til ${opts.orgName}'s Fanpass-medlemmer`,
-    href:           `/${opts.orgSlug}`,
+    href:           `/${opts.orgSlug}/fanpass`,
     organizationId: opts.orgId,
     metadata:       { kind: "fanpass" },
   });
