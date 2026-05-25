@@ -8,6 +8,7 @@ import VoiceMessage from "@/components/VoiceMessage";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import { FanpassBadge } from "@/components/FanpassBadge";
 import SafeHtml from "@/components/SafeHtml";
+import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditorLazy";
 import { useRealtimeChannel } from "@/hooks/useRealtimeChannel";
 import StoryStrip from "./StoryStrip";
 import StoryCapture from "./StoryCapture";
@@ -66,7 +67,7 @@ export default function BroadcastView({
   const [composeText, setComposeText] = useState("");
   const [recording,   setRecording]   = useState(false);
   const [isPending,   startTransition] = useTransition();
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<RichTextEditorRef>(null);
 
   // Stories state
   const [storyGroups,    setStoryGroups]    = useState<StoryGroup[]>([]);
@@ -108,19 +109,26 @@ export default function BroadcastView({
     });
   });
 
-  // Focus textarea when compose opens
+  // Focus editor når compose åpnes
   useEffect(() => {
-    if (composeOpen) inputRef.current?.focus();
+    if (composeOpen) {
+      // Liten delay så TipTap-editoren rekker å mounte før vi fokuserer
+      setTimeout(() => editorRef.current?.focus(), 50);
+    }
   }, [composeOpen]);
 
   async function postBroadcast(content: string, audioUrl?: string, audioDuration?: number, imageUrl?: string) {
-    if (!content.trim() && !audioUrl && !imageUrl) return;
+    // For tekst-broadcasts er content HTML fra RichTextEditor — sjekk om
+    // editoren er tom (bare <p></p>) før vi sender.
+    const isHtmlEmpty = /^\s*(<p>(\s|&nbsp;|<br\s*\/?>)*<\/p>\s*)*$/i.test(content);
+    if ((!content.trim() || isHtmlEmpty) && !audioUrl && !imageUrl) return;
     startTransition(async () => {
       try {
         const msg = await sendMessage(channelId, content || " ", undefined, imageUrl, audioUrl, audioDuration);
         setMessages((prev) => [msg, ...prev]);
         void broadcast(msg);
         setComposeText("");
+        editorRef.current?.clear();
         setComposeOpen(false);
       } catch (err) {
         console.warn("[broadcast] post failed:", err);
@@ -331,19 +339,14 @@ export default function BroadcastView({
             >
               {initials(userName)}
             </div>
-            <div className="flex-1">
-              <textarea
-                ref={inputRef}
-                value={composeText}
-                onChange={(e) => setComposeText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void postBroadcast(composeText); }
-                  if (e.key === "Escape") { setComposeOpen(false); setComposeText(""); }
-                }}
+            <div className="flex-1 min-w-0">
+              <RichTextEditor
+                ref={editorRef}
                 placeholder="Skriv en broadcast til dine ♛-medlemmer…"
-                rows={3}
-                className="w-full bg-transparent text-base text-white placeholder:text-white/30 outline-none resize-none"
-                style={{ minHeight: 70 }}
+                showFormatByDefault
+                enterMakesNewline
+                minHeight={120}
+                onChange={(text) => setComposeText(text)}
               />
               <div className="mt-3 flex items-center justify-between">
                 <div className="flex gap-1">
@@ -372,20 +375,24 @@ export default function BroadcastView({
                         const res = await fetch("/api/upload", { method: "POST", body: fd });
                         if (!res.ok) return;
                         const data = await res.json() as { url: string };
-                        await postBroadcast(composeText, undefined, undefined, data.url);
+                        const html = editorRef.current?.getHTML() ?? "";
+                        await postBroadcast(html, undefined, undefined, data.url);
                       }}
                     />
                   </label>
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => { setComposeOpen(false); setComposeText(""); }}
+                    onClick={() => { setComposeOpen(false); setComposeText(""); editorRef.current?.clear(); }}
                     className="rounded-full px-4 py-1.5 text-xs text-white/60 transition-colors hover:text-white"
                   >
                     Avbryt
                   </button>
                   <button
-                    onClick={() => void postBroadcast(composeText)}
+                    onClick={() => {
+                      const html = editorRef.current?.getHTML() ?? "";
+                      void postBroadcast(html);
+                    }}
                     disabled={!composeText.trim() || isPending}
                     className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-transform hover:scale-[1.03] disabled:opacity-40"
                     style={{
@@ -410,7 +417,8 @@ export default function BroadcastView({
             onCancel={() => setRecording(false)}
             onSend={async (audioUrl, duration) => {
               setRecording(false);
-              await postBroadcast(composeText || " ", audioUrl, duration);
+              const html = editorRef.current?.getHTML() ?? "";
+              await postBroadcast(html || " ", audioUrl, duration);
             }}
           />
         </div>
