@@ -1048,11 +1048,16 @@ model FanpassWaitlist {
 model PushSubscription {
   id        String   @id @default(cuid())
   userId    String
+  // platform = "web" → Web Push (VAPID). p256dh + auth obligatorisk, endpoint = browser endpoint
+  // platform = "ios" eller "android" → native push via FCM/APNs. endpoint = device token
+  platform  String   @default("web")
   endpoint  String   @unique
-  p256dh    String
-  auth      String
+  p256dh    String?  // null for native
+  auth      String?  // null for native
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, platform])
 }
 
 model ChessProfile {

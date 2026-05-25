@@ -13,6 +13,7 @@ import {
 import UserMenu from "@/components/UserMenu";
 import NotificationBell from "@/components/NotificationBell";
 import StreakBadge from "@/components/StreakBadge";
+import CapacitorBridge from "@/components/CapacitorBridge";
 import SearchOverlay from "@/components/SearchOverlay";
 import BottomBar from "@/components/BottomBar";
 import MobileDrawer from "@/components/MobileDrawer";
@@ -581,6 +582,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <WebRTCProvider userId={user?.id ?? ""} userName={user?.name ?? undefined}>
+    <CapacitorBridge />
     <div className="min-h-[100dvh] bg-zinc-950 text-white">
       {/* Desktop sidebar — hidden when in admin (admin has its own) */}
       <aside
