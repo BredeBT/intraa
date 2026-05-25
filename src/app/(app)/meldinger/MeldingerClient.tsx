@@ -852,7 +852,27 @@ export default function MeldingerClient({
     if (!active) return null;
     if (active.type === "dm") return { avatar: <Avatar avatarUrl={activeConvFriend?.avatarUrl ?? null} name={activeConvFriend?.name ?? null} size={8} />, title: activeConvFriend?.name ?? "DM", subtitle: null };
     if (active.type === "group") return { avatar: <GroupAvatar members={active.members} />, title: active.groupName, subtitle: `${active.members.length} medlemmer` };
-    if (active.type === "channel") return { avatar: <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800"><Hash className="h-4 w-4 text-zinc-400" /></div>, title: active.channelName, subtitle: active.orgName };
+    if (active.type === "channel") {
+      const isBroadcast = active.channelType === "BROADCAST";
+      const avatar = isBroadcast
+        ? (
+          <div
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-base"
+            style={{
+              background: "linear-gradient(135deg, #5EEAD4, #A855F7)",
+              color:      "#FFFFFF",
+              boxShadow:  "0 4px 12px rgba(168,85,247,0.35)",
+            }}
+          >
+            ♛
+          </div>
+        )
+        : <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800"><Hash className="h-4 w-4 text-zinc-400" /></div>;
+      const subtitle = isBroadcast
+        ? `${active.orgName} · ♛ Fanpass-broadcast`
+        : active.orgName;
+      return { avatar, title: active.channelName, subtitle };
+    }
     return null;
   })();
 

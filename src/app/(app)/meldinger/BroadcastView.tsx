@@ -203,55 +203,14 @@ export default function BroadcastView({
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden" style={{ background: "var(--bg-primary)" }}>
 
-      {/* ── Aurora hero header ─────────────────────────────────────────────── */}
-      <div
-        className="relative shrink-0 px-6 py-6 border-b border-white/10 overflow-hidden"
-        style={{ background: "linear-gradient(135deg, rgba(94,234,212,0.08) 0%, rgba(168,85,247,0.10) 50%, rgba(96,165,250,0.08) 100%)" }}
-      >
-        <div
-          aria-hidden
-          className="absolute -top-20 -right-20 h-48 w-48 rounded-full opacity-40 blur-[60px] pointer-events-none"
-          style={{ background: "radial-gradient(circle, #A855F7, transparent 70%)" }}
-        />
-        <div
-          aria-hidden
-          className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full opacity-30 blur-[50px] pointer-events-none"
-          style={{ background: "radial-gradient(circle, #5EEAD4, transparent 70%)" }}
-        />
-
-        <div className="relative flex items-start gap-4">
-          <div
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl"
-            style={{
-              background: "linear-gradient(135deg, #5EEAD4, #A855F7)",
-              color:      "#FFFFFF",
-              boxShadow:  "0 8px 24px rgba(168,85,247,0.4)",
-            }}
-          >
-            ♛
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#5EEAD4" }}>
-                Fanpass-broadcast
-              </p>
-            </div>
-            <h1 className="text-xl font-bold text-white">#{channelName}</h1>
-            <p className="text-xs text-white/50 mt-1">
-              {orgName} · {messages.length} {messages.length === 1 ? "post" : "poster"}
-              {regular.length > 0 && (
-                <> · Sist {fmt(regular[0]!.createdAt)}</>
-              )}
-            </p>
-          </div>
-        </div>
-
-        {/* Creator compose toggle — vises kun når det allerede er broadcasts,
-            ellers tar EmptyState over som primær CTA og dette ville duplisert. */}
-        {isCreator && !composeOpen && !recording && messages.length > 0 && (
+      {/* Kompakt compose-toggle (kun når det er broadcasts fra før).
+          Vi har droppet den store hero-card-en — channel-tittelen er allerede
+          i MeldingerClient sin chat-header (med ♛-avatar når BROADCAST). */}
+      {isCreator && !composeOpen && !recording && messages.length > 0 && (
+        <div className="shrink-0 px-5 pt-4 pb-2">
           <button
             onClick={() => setComposeOpen(true)}
-            className="relative mt-5 flex w-full items-center gap-3 rounded-2xl px-4 py-3 transition-all hover:scale-[1.01]"
+            className="relative flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 transition-all hover:scale-[1.01]"
             style={{
               background: "var(--bg-tertiary)",
               border:     "1px solid var(--border-default)",
@@ -269,17 +228,16 @@ export default function BroadcastView({
             <span className="flex-1 text-left text-sm" style={{ color: "var(--text-tertiary)" }}>
               Hva vil du dele med ♛-ene dine?
             </span>
-            {/* Mini-action-chips for raske formater */}
             <div className="hidden sm:flex items-center gap-1">
               <span
-                className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:scale-110"
+                className="flex h-7 w-7 items-center justify-center rounded-lg"
                 style={{ background: "rgba(94,234,212,0.15)", color: "#5EEAD4" }}
                 title="Voice-note"
               >
                 <Mic className="h-3.5 w-3.5" />
               </span>
               <span
-                className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:scale-110"
+                className="flex h-7 w-7 items-center justify-center rounded-lg"
                 style={{ background: "rgba(96,165,250,0.15)", color: "#60A5FA" }}
                 title="Bilde"
               >
@@ -288,8 +246,8 @@ export default function BroadcastView({
             </div>
             <Sparkles className="h-4 w-4" style={{ color: "#A855F7" }} />
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ── Stories strip ──────────────────────────────────────────────────── */}
       {/* Skjul story-strip når både stories OG broadcasts er tomme — i den
@@ -430,7 +388,7 @@ export default function BroadcastView({
           <div className="flex items-center justify-center py-12 text-sm text-white/40">
             <Loader2 className="h-4 w-4 animate-spin mr-2" /> Henter broadcasts…
           </div>
-        ) : messages.length === 0 ? (
+        ) : messages.length === 0 && !composeOpen && !recording ? (
           <EmptyState
             isCreator={isCreator}
             channelName={channelName}
@@ -438,6 +396,14 @@ export default function BroadcastView({
             onVoiceNote={() => setRecording(true)}
             onStoryAdd={() => setStoryCaptureOn(true)}
           />
+        ) : messages.length === 0 ? (
+          // Compose eller voice-recorder er åpent — vis kompakt "no messages yet"
+          // istedenfor den fyldige empty-state-en. Bare en liten guide-tekst.
+          <div className="flex items-center justify-center py-12 text-center">
+            <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+              {recording ? "Spiller inn… meldingen blir første broadcast." : "Skriv ferdig så blir det første broadcast i kanalen."}
+            </p>
+          </div>
         ) : (
           <>
             {/* Pinned */}
@@ -561,7 +527,7 @@ function EmptyState({
             </div>
 
             <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>
-              Velkommen til #{channelName}
+              Send din første broadcast
             </h2>
             <p className="text-sm mb-6 leading-relaxed max-w-md" style={{ color: "var(--text-secondary)" }}>
               Dette er ditt private rom for de mest engasjerte fansene dine. Bare
