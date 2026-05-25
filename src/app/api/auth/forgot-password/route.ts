@@ -6,7 +6,7 @@ import { rateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
   // Streng rate-limit — denne kaller sendPasswordResetEmail (kost penger + spam)
-  const limited = rateLimit(request, { key: "forgot-password", max: 5, windowMs: 15 * 60_000 });
+  const limited = await rateLimit(request, { key: "forgot-password", max: 5, windowMs: 15 * 60_000 });
   if (limited) return limited;
 
   try {

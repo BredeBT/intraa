@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, UserCog, Settings,
-  ArrowLeft, UserPlus,
+  ArrowLeft, UserPlus, FileText,
 } from "lucide-react";
 import { useOrg } from "@/lib/context/OrgContext";
 import { useUser } from "@/lib/hooks/useUser";
@@ -25,6 +25,7 @@ const ADMIN_NAV = [
   { href: "/admin",               label: "Oversikt",      icon: LayoutDashboard, key: "overview" },
   { href: "/admin/brukere",       label: "Brukere",       icon: UserCog,         key: "users" },
   { href: "/admin/foresporsler",  label: "Forespørsler",  icon: UserPlus,        key: "requests" },
+  { href: "/admin/aktivitet",     label: "Aktivitet",     icon: FileText,        key: "activity" },
   { href: "/admin/innstillinger", label: "Innstillinger", icon: Settings,        key: "settings" },
 ];
 

@@ -4,7 +4,7 @@ import { rateLimit } from "@/lib/rateLimit";
 
 export async function GET(req: NextRequest) {
   // Hindre email-enumeration via brute-force iterasjon
-  const limited = rateLimit(req, { key: "check-email", max: 20, windowMs: 60_000 });
+  const limited = await rateLimit(req, { key: "check-email", max: 20, windowMs: 60_000 });
   if (limited) return limited;
 
   const email = req.nextUrl.searchParams.get("email")?.toLowerCase().trim() ?? "";

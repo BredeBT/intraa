@@ -29,7 +29,7 @@ export default async function FeedPage() {
 
   // Bare det som trengs for first paint. Stats (online, ukestall, stories)
   // hentes client-side via /api/feed/stats.
-  const [posts, org, theme, memberCount] = await Promise.all([
+  const [posts, org, theme, memberCount, myMembership] = await Promise.all([
     getPosts(ctx.organizationId),
     db.organization.findUnique({
       where:  { id: ctx.organizationId },
@@ -40,7 +40,13 @@ export default async function FeedPage() {
       select: { bannerUrl: true, bannerPreset: true, logoUrl: true, welcomeMessage: true },
     }),
     db.membership.count({ where: { organizationId: ctx.organizationId } }),
+    db.membership.findUnique({
+      where:  { userId_organizationId: { userId: ctx.userId, organizationId: ctx.organizationId } },
+      select: { role: true },
+    }),
   ]);
+
+  const isMod = !!myMembership && ["OWNER", "ADMIN", "MODERATOR"].includes(myMembership.role);
 
   // Resolve banner background
   const bannerBg = theme?.bannerUrl
@@ -57,6 +63,7 @@ export default async function FeedPage() {
         userId={ctx.userId}
         userName={session.user.name ?? ""}
         isSuperAdmin={session.user.isSuperAdmin ?? false}
+        isMod={isMod}
         logoUrl={theme?.logoUrl ?? null}
         orgName={org?.name ?? ""}
         orgType={org?.type ?? "COMPANY"}

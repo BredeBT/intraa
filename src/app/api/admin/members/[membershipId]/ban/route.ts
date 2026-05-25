@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { audit, AuditActions } from "@/lib/audit";
 
 export async function PATCH(
   req: NextRequest,
@@ -35,6 +36,15 @@ export async function PATCH(
       bannedAt: ban ? new Date() : null,
       bannedBy: ban ? session.user.id : null,
     },
+  });
+
+  void audit({
+    actorId:        session.user.id,
+    organizationId: target.organizationId,
+    action:         ban ? AuditActions.MEMBER_BAN : AuditActions.MEMBER_UNBAN,
+    targetType:     "user",
+    targetId:       target.userId,
+    metadata:       { membershipId },
   });
 
   return NextResponse.json({ membership: updated });

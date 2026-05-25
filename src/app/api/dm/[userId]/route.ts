@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { stripHtml } from "@/lib/webpush";
 import { notifyDM } from "@/server/notifications/dispatch";
+import { rateLimit } from "@/lib/rateLimit";
 
 async function areFriends(userId1: string, userId2: string) {
   const f = await db.friendship.findFirst({
@@ -72,6 +73,11 @@ export async function POST(
 ) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Anti-spam: 30 DM-er per minutt per bruker (≈ aggressiv samtale-tempo OK,
+  // men ikke nok for å spamme noen med tusenvis av meldinger).
+  const limited = await rateLimit(req, { key: `dm:${session.user.id}`, max: 30, windowMs: 60_000 });
+  if (limited) return limited;
 
   const { userId } = await params;
 

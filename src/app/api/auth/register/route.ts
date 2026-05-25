@@ -21,7 +21,7 @@ function brandSlugify(s: string) {
 
 export async function POST(request: NextRequest) {
   // Hindre masse-registrering / spam
-  const limited = rateLimit(request, { key: "register", max: 5, windowMs: 60 * 60_000 });
+  const limited = await rateLimit(request, { key: "register", max: 5, windowMs: 60 * 60_000 });
   if (limited) return limited;
 
   try {

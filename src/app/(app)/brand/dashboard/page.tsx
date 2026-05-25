@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/server/db";
 import Link from "next/link";
 import { Globe, Edit, Eye, Heart, Image as ImageIcon, ExternalLink, TrendingUp } from "lucide-react";
+import { safeUrl } from "@/lib/safeUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -76,8 +77,8 @@ export default async function BrandDashboardPage() {
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#60A5FA" }}>Sponsor-dashboard</p>
                 <h1 className="text-2xl font-bold mt-0.5">{brand.brandName}</h1>
-                {brand.website && (
-                  <a href={brand.website} target="_blank" rel="noopener noreferrer"
+                {brand.website && safeUrl(brand.website) && (
+                  <a href={safeUrl(brand.website)!} target="_blank" rel="noopener noreferrer"
                      className="mt-1 inline-flex items-center gap-1.5 text-xs text-white/60 hover:text-white">
                     <Globe className="h-3 w-3" />
                     {brand.website.replace(/^https?:\/\//, "")}

@@ -126,6 +126,8 @@ export type PostWithAuthor = Post & {
   likeCount:      number;
   likedByMe:      boolean;
   bookmarkedByMe: boolean;
+  hiddenAt:       Date | null;
+  hiddenReason:   string | null;
 };
 
 export type TicketWithAssignee = Ticket & {

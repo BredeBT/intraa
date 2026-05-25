@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { audit, AuditActions } from "@/lib/audit";
 
 export async function PATCH(request: Request) {
   const session = await auth();
@@ -33,6 +34,12 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Ugyldig joinType" }, { status: 400 });
   }
 
+  // Hent gammel verdi før update så audit-log kan registrere endringen
+  const before = await db.organization.findUnique({
+    where:  { id: orgId },
+    select: { name: true, slug: true, joinType: true },
+  });
+
   try {
     const updated = await db.organization.update({
       where: { id: orgId },
@@ -43,6 +50,28 @@ export async function PATCH(request: Request) {
         ...(joinType !== undefined ? { joinType } : {}),
       },
     });
+
+    // Spesiell audit-entry for joinType-endring siden den endrer hvem som kommer inn
+    if (joinType !== undefined && before && before.joinType !== joinType) {
+      void audit({
+        actorId:        session.user.id,
+        organizationId: orgId,
+        action:         AuditActions.ORG_JOIN_TYPE,
+        targetType:     "organization",
+        targetId:       orgId,
+        metadata:       { from: before.joinType, to: joinType },
+      });
+    }
+
+    void audit({
+      actorId:        session.user.id,
+      organizationId: orgId,
+      action:         AuditActions.ORG_UPDATE,
+      targetType:     "organization",
+      targetId:       orgId,
+      metadata:       { changedSlug: before?.slug !== slug.trim() },
+    });
+
     return NextResponse.json(updated);
   } catch {
     return NextResponse.json({ error: "Slug er allerede i bruk" }, { status: 400 });

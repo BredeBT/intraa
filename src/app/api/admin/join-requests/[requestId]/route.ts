@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { requireAdmin } from "@/server/requireAdmin";
 import { db } from "@/server/db";
+import { audit, AuditActions } from "@/lib/audit";
 
 /**
  * PATCH /api/admin/join-requests/[requestId] { action: "approve" | "reject" }
@@ -57,6 +58,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ reques
         },
       }),
     ]);
+    void audit({
+      actorId:        session.user.id,
+      organizationId,
+      action:         AuditActions.JOIN_REQUEST_APPROVE,
+      targetType:     "user",
+      targetId:       request.userId,
+      metadata:       { joinRequestId: requestId },
+    });
     return NextResponse.json({ ok: true, status: "APPROVED" });
   }
 
@@ -78,6 +87,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ reques
       },
     }),
   ]);
+
+  void audit({
+    actorId:        session.user.id,
+    organizationId,
+    action:         AuditActions.JOIN_REQUEST_REJECT,
+    targetType:     "user",
+    targetId:       request.userId,
+    metadata:       { joinRequestId: requestId },
+  });
 
   return NextResponse.json({ ok: true, status: "REJECTED" });
 }

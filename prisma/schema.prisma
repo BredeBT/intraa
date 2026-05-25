@@ -184,6 +184,7 @@ model Organization {
   agentCategories        AgentCategory[]
   userReports            UserReport[]
   joinRequests           JoinRequest[]
+  auditLogs              AuditLog[]
 }
 
 model TenantTheme {
@@ -271,6 +272,7 @@ model User {
   userFollowers           UserFollow[]   @relation("UserFollowing")
   joinRequests            JoinRequest[]  @relation("JoinRequester")
   joinRequestsReviewed    JoinRequest[]  @relation("JoinReviewer")
+  auditLogs               AuditLog[]
   notificationPreference  NotificationPreference?
   clickerProfiles         ClickerProfile[]
   clickerUpgrades         ClickerUpgrade[]
@@ -389,6 +391,12 @@ model Post {
   orgId     String
   authorId  String
 
+  // Moderation — soft-hide. Når hiddenAt ≠ null skjules posten i feeden
+  // for ikke-mods. Mods kan unhide eller hard-delete.
+  hiddenAt     DateTime?
+  hiddenById   String?
+  hiddenReason String?
+
   organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
   author       User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments     Comment[]
@@ -396,6 +404,7 @@ model Post {
   bookmarks    Bookmark[]
 
   @@index([orgId, createdAt(sort: Desc)])
+  @@index([orgId, hiddenAt])
 }
 
 model Bookmark {
@@ -425,14 +434,22 @@ model Like {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  createdAt DateTime @default(now())
-  postId    String
-  authorId  String
+  id           String    @id @default(cuid())
+  content      String
+  createdAt    DateTime  @default(now())
+  postId       String
+  authorId     String
+
+  // Moderation — soft-hide. Når hiddenAt ≠ null returneres "[skjult]" til
+  // ikke-mods. Mods kan unhide eller hard-delete via DELETE-endpoint.
+  hiddenAt     DateTime?
+  hiddenById   String?
+  hiddenReason String?
 
   post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId, hiddenAt])
 }
 
 model Channel {
@@ -777,6 +794,28 @@ model Follow {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId, organizationId])
+}
+
+// Audit log — uforanderlig sporing av admin/superadmin-handlinger.
+// Brukes for compliance (GDPR), debugging og at brukere kan kreve innsyn.
+// Skrives "fire and forget" så DB-feil aldri blokkerer hovedaksjonen.
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String?  // null for plattform-globale handlinger (superadmin)
+  actorId        String   // hvem som utførte handlingen
+  action         String   // f.eks. "post.hide", "member.ban", "join_request.approve"
+  targetType     String?  // "user" | "post" | "comment" | "membership" | "organization" | ...
+  targetId       String?
+  metadata       Json?    // fri-form kontekst (årsak, gammel/ny verdi)
+  ipAddress      String?
+  createdAt      DateTime @default(now())
+
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  actor          User          @relation(fields: [actorId],        references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([actorId, createdAt(sort: Desc)])
+  @@index([action, createdAt(sort: Desc)])
 }
 
 // Forespørsel om å bli medlem av et lukket community. Admin/Owner gjennomgår

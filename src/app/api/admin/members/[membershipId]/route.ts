@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { audit } from "@/lib/audit";
 
 export async function DELETE(
   _req: NextRequest,
@@ -27,5 +28,15 @@ export async function DELETE(
     return NextResponse.json({ error: "Kan ikke fjerne eier" }, { status: 400 });
 
   await db.membership.delete({ where: { id: membershipId } });
+
+  void audit({
+    actorId:        session.user.id,
+    organizationId: target.organizationId,
+    action:         "member.remove",
+    targetType:     "user",
+    targetId:       target.userId,
+    metadata:       { membershipId, removedRole: target.role },
+  });
+
   return NextResponse.json({ ok: true });
 }

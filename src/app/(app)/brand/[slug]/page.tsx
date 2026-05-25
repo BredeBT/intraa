@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/server/db";
 import { Globe, Calendar } from "lucide-react";
+import { safeUrl } from "@/lib/safeUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -60,9 +61,9 @@ export default async function BrandPage({
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#60A5FA" }}>Sponsor</p>
               <h1 className="text-3xl font-bold mt-0.5">{brand.brandName}</h1>
-              {brand.website && (
+              {brand.website && safeUrl(brand.website) && (
                 <a
-                  href={brand.website}
+                  href={safeUrl(brand.website)!}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-1 inline-flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors"

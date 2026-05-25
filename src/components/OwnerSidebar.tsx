@@ -7,6 +7,7 @@ import {
   ExternalLink, X, Check, Trophy,
 } from "lucide-react";
 import type { TopMember } from "@/server/getSidebarData";
+import { safeUrl } from "@/lib/safeUrl";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -83,7 +84,7 @@ const SOCIALS = [
   { key: "instagram" as keyof SocialLinks, label: "Instagram",   emoji: "📸", color: "text-pink-400",   bg: "hover:bg-pink-400/10",   url: (v: string) => `https://instagram.com/${v}` },
   { key: "youtube"   as keyof SocialLinks, label: "YouTube",     emoji: "▶️", color: "text-red-400",    bg: "hover:bg-red-400/10",    url: (v: string) => `https://youtube.com/${v}` },
   { key: "twitch"    as keyof SocialLinks, label: "Twitch",      emoji: "🎮", color: "text-purple-400", bg: "hover:bg-purple-400/10", url: (v: string) => `https://twitch.tv/${v}` },
-  { key: "discord"   as keyof SocialLinks, label: "Discord",     emoji: "💬", color: "text-indigo-400", bg: "hover:bg-indigo-400/10", url: (v: string) => v.startsWith("http") ? v : `https://discord.gg/${v}` },
+  { key: "discord"   as keyof SocialLinks, label: "Discord",     emoji: "💬", color: "text-indigo-400", bg: "hover:bg-indigo-400/10", url: (v: string) => safeUrl(v.startsWith("http") ? v : `https://discord.gg/${v}`) ?? "#" },
 ] as const;
 
 // ─── Toggle ───────────────────────────────────────────────────────────────────
@@ -472,10 +473,13 @@ export default function OwnerSidebar({
         )}
 
         {/* ── 5. Nettside ── */}
-        {settings.showWebsite && owner.website && (
+        {settings.showWebsite && owner.website && (() => {
+          const safe = safeUrl(owner.website);
+          if (!safe) return null;
+          return (
           <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3">
             <a
-              href={owner.website.startsWith("http") ? owner.website : `https://${owner.website}`}
+              href={safe}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-zinc-200"
@@ -484,7 +488,8 @@ export default function OwnerSidebar({
               <span className="truncate">{owner.website.replace(/^https?:\/\//, "")}</span>
             </a>
           </div>
-        )}
+          );
+        })()}
 
         {/* ── 6. Egendefinert tekst ── */}
         {settings.showCustomText && (settings.customTitle ?? settings.customText) && (

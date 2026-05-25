@@ -2,11 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { notifyFriendRequest } from "@/server/notifications/dispatch";
+import { rateLimit } from "@/lib/rateLimit";
 
 // POST /api/friends/request
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Anti-harassment: maks 20 venneforespørsler per time per bruker
+  const limited = await rateLimit(req, { key: `friend-req:${session.user.id}`, max: 20, windowMs: 60 * 60_000 });
+  if (limited) return limited;
 
   const { receiverId } = await req.json() as { receiverId?: string };
   if (!receiverId) return NextResponse.json({ error: "receiverId required" }, { status: 400 });

@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import Link from "next/link";
 import { ChevronLeft, ExternalLink, Mail, Globe, Calendar, Eye, Image as ImageIcon, Users } from "lucide-react";
+import { safeUrl } from "@/lib/safeUrl";
 
 export const dynamic   = "force-dynamic";
 export const revalidate = 0;
@@ -100,8 +101,8 @@ export default async function SponsorAdminDetailPage({
             <Calendar className="h-3.5 w-3.5" />
             Registrert {fmt(sponsor.createdAt)}
           </div>
-          {sponsor.website && (
-            <a href={sponsor.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-white">
+          {sponsor.website && safeUrl(sponsor.website) && (
+            <a href={safeUrl(sponsor.website)!} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-white">
               <Globe className="h-3.5 w-3.5" />
               {sponsor.website.replace(/^https?:\/\//, "")}
             </a>

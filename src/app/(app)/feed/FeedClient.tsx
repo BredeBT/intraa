@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X, Sparkles, Crown, Users as UsersIcon, Image as ImgIcon, Paperclip, Bookmark } from "lucide-react";
+import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X, Sparkles, Crown, Users as UsersIcon, Image as ImgIcon, Paperclip, Bookmark, MoreHorizontal, EyeOff, Eye, Shield } from "lucide-react";
 import { FanpassBadge } from "@/components/FanpassBadge";
-import { createPost, deletePost } from "@/server/actions/posts";
+import { createPost, deletePost, hidePost, unhidePost } from "@/server/actions/posts";
 import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditorLazy";
 import type { PostWithAuthor, CommentWithAuthor } from "@/lib/types";
 import SafeHtml from "@/components/SafeHtml";
@@ -55,6 +55,8 @@ interface Props {
   userName:           string;
   userId:             string;
   isSuperAdmin:       boolean;
+  /** OWNER / ADMIN / MODERATOR i denne orgen — kan skjule/slette andres innhold */
+  isMod:              boolean;
   logoUrl:            string | null;
   orgName:            string;
   orgType:            string;
@@ -81,6 +83,156 @@ function UserAvatar({ name, size = 9 }: { name: string; size?: number }) {
       className={`h-${size} w-${size} flex shrink-0 items-center justify-center rounded-full bg-purple-600 text-xs font-semibold text-white`}
     >
       {initials(name)}
+    </div>
+  );
+}
+
+// ─── Post action menu (own post / moderator) ────────────────────────────────
+
+function PostActionMenu({
+  isAuthor, isMod, isHidden, onHide, onUnhide, onDelete,
+}: {
+  isAuthor: boolean;
+  isMod:    boolean;
+  isHidden: boolean;
+  onHide:   () => void;
+  onUnhide: () => void;
+  onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onClick(e: MouseEvent | TouchEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("touchstart", onClick);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("touchstart", onClick);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="p-1.5 rounded-lg opacity-30 transition-opacity hover:opacity-70"
+        style={{ color: "var(--text-secondary)" }}
+        aria-label="Handlinger"
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+      {open && (
+        <div
+          className="absolute right-0 top-full z-40 mt-1 min-w-[170px] overflow-hidden rounded-xl shadow-2xl"
+          style={{
+            background: "var(--bg-tertiary)",
+            border:     "1px solid var(--border-subtle)",
+            boxShadow:  "0 12px 32px rgba(0,0,0,0.4)",
+          }}
+        >
+          {isMod && !isHidden && (
+            <button
+              onClick={() => { onHide(); setOpen(false); }}
+              className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-xs transition-colors hover:bg-white/[0.05]"
+              style={{ color: "var(--text-primary)" }}
+            >
+              <EyeOff className="h-3.5 w-3.5" />
+              Skjul fra feed
+            </button>
+          )}
+          {isMod && isHidden && (
+            <button
+              onClick={() => { onUnhide(); setOpen(false); }}
+              className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-xs transition-colors hover:bg-white/[0.05]"
+              style={{ color: "var(--text-primary)" }}
+            >
+              <Eye className="h-3.5 w-3.5" />
+              Vis igjen
+            </button>
+          )}
+          <button
+            onClick={() => { onDelete(); setOpen(false); }}
+            className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-xs transition-colors hover:bg-red-500/10"
+            style={{ color: "#F87171" }}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            {isAuthor ? "Slett innlegg" : "Slett (mod)"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Comment action menu (own / moderator) ──────────────────────────────────
+
+function CommentActionMenu({
+  isAuthor, isMod, onHide, onDelete,
+}: {
+  isAuthor: boolean;
+  isMod:    boolean;
+  onHide:   () => void;
+  onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onClick(e: MouseEvent | TouchEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("touchstart", onClick);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("touchstart", onClick);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative shrink-0">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="p-1 rounded opacity-0 group-hover:opacity-50 transition-opacity hover:opacity-100"
+        style={{ color: "var(--text-secondary)" }}
+        aria-label="Handlinger"
+      >
+        <MoreHorizontal className="h-3.5 w-3.5" />
+      </button>
+      {open && (
+        <div
+          className="absolute right-0 top-full z-40 mt-1 min-w-[150px] overflow-hidden rounded-lg shadow-2xl"
+          style={{
+            background: "var(--bg-tertiary)",
+            border:     "1px solid var(--border-subtle)",
+            boxShadow:  "0 8px 24px rgba(0,0,0,0.4)",
+          }}
+        >
+          {isMod && !isAuthor && (
+            <button
+              onClick={() => { onHide(); setOpen(false); }}
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs transition-colors hover:bg-white/[0.05]"
+              style={{ color: "var(--text-primary)" }}
+            >
+              <EyeOff className="h-3 w-3" />
+              Skjul
+            </button>
+          )}
+          <button
+            onClick={() => { onDelete(); setOpen(false); }}
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs transition-colors hover:bg-red-500/10"
+            style={{ color: "#F87171" }}
+          >
+            <Trash2 className="h-3 w-3" />
+            Slett
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -155,7 +307,7 @@ function SidebarStat({ icon, value, label, color }: { icon: React.ReactNode; val
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function FeedClient({
-  initialPosts, orgId, userName, userId, isSuperAdmin,
+  initialPosts, orgId, userName, userId, isSuperAdmin, isMod,
   logoUrl, orgName, orgSlug, orgCreatedAt,
   memberCount, welcomeMessage, bannerBg, orgType,
 }: Props) {
@@ -339,6 +491,46 @@ export default function FeedClient({
     setPosts((prev) => prev.filter((p) => p.id !== postId));
     setConfirmDeleteId(null);
     try { await deletePost(postId); } catch { /* silent */ }
+  }
+
+  async function handleHidePost(postId: string) {
+    setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, hiddenAt: new Date() } : p));
+    try { await hidePost(postId); } catch {
+      setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, hiddenAt: null } : p));
+    }
+  }
+
+  async function handleUnhidePost(postId: string) {
+    setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, hiddenAt: null } : p));
+    try { await unhidePost(postId); } catch {
+      setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, hiddenAt: new Date() } : p));
+    }
+  }
+
+  async function handleHideComment(postId: string, commentId: string) {
+    try {
+      const r = await fetch(`/api/comments/${commentId}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ action: "hide" }),
+      });
+      if (r.ok) {
+        setPosts((prev) => prev.map((p) => p.id === postId
+          ? { ...p, comments: p.comments.filter((c) => c.id !== commentId) }
+          : p));
+      }
+    } catch { /* silent */ }
+  }
+
+  async function handleDeleteComment(postId: string, commentId: string) {
+    try {
+      const r = await fetch(`/api/comments/${commentId}`, { method: "DELETE" });
+      if (r.ok) {
+        setPosts((prev) => prev.map((p) => p.id === postId
+          ? { ...p, comments: p.comments.filter((c) => c.id !== commentId) }
+          : p));
+      }
+    } catch { /* silent */ }
   }
 
   function handleLike(postId: string, likedByMe: boolean) {
@@ -600,17 +792,32 @@ export default function FeedClient({
       ) : (
         <div className="space-y-3">
           {posts.map((post) => {
-            const canDelete      = post.authorId === userId || isSuperAdmin;
+            const isAuthor       = post.authorId === userId;
+            const canDelete      = isAuthor || isSuperAdmin || isMod;
             const isCommentsOpen = openComments.has(post.id);
             const isExpanded     = expandedComments.has(post.id);
             const displayed      = isExpanded ? post.comments : post.comments.slice(0, 3);
+            const isHidden       = !!post.hiddenAt;
 
             return (
               <article
                 key={post.id}
-                className="rounded-2xl border border-white/[0.06] overflow-hidden transition-colors hover:border-white/[0.10]"
-                style={{ background: "var(--bg-secondary)" }}
+                className="rounded-2xl border overflow-hidden transition-colors"
+                style={{
+                  background:  "var(--bg-secondary)",
+                  borderColor: isHidden ? "rgba(248,113,113,0.35)" : "var(--border-subtle)",
+                }}
               >
+                {/* Hidden-banner — vises kun for mods siden ikke-mods filtreres bort i getPosts */}
+                {isHidden && (
+                  <div
+                    className="flex items-center gap-2 px-4 py-2 text-xs"
+                    style={{ background: "rgba(248,113,113,0.10)", color: "#F87171" }}
+                  >
+                    <Shield className="h-3.5 w-3.5" />
+                    <span>Skjult av moderator{post.hiddenReason ? ` — ${post.hiddenReason}` : ""}</span>
+                  </div>
+                )}
                 {/* Header */}
                 <div className="flex items-center gap-3 px-4 pt-4 pb-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-purple-600/30 text-sm font-semibold text-purple-300">
@@ -624,14 +831,14 @@ export default function FeedClient({
                     <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{relativeTime(post.createdAt)}</p>
                   </div>
                   {canDelete && (
-                    <button
-                      onClick={() => setConfirmDeleteId(post.id)}
-                      className="p-1.5 rounded-lg transition-colors opacity-30 hover:opacity-70 hover:text-red-400"
-                      style={{ color: "var(--text-secondary)" }}
-                      title="Slett innlegg"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <PostActionMenu
+                      isAuthor={isAuthor}
+                      isMod={isMod || isSuperAdmin}
+                      isHidden={isHidden}
+                      onHide={() => void handleHidePost(post.id)}
+                      onUnhide={() => void handleUnhidePost(post.id)}
+                      onDelete={() => setConfirmDeleteId(post.id)}
+                    />
                   )}
                 </div>
 
@@ -686,8 +893,11 @@ export default function FeedClient({
                 {/* Comments */}
                 {isCommentsOpen && (
                   <div className="px-4 pb-4 pt-3 space-y-2.5 border-t border-white/[0.06]">
-                    {displayed.map((comment) => (
-                      <div key={comment.id} className="flex items-start gap-2.5">
+                    {displayed.map((comment) => {
+                      const commentIsAuthor = comment.authorId === userId;
+                      const canModerateComment = commentIsAuthor || isMod || isSuperAdmin;
+                      return (
+                      <div key={comment.id} className="group flex items-start gap-2.5">
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-600/20 text-[10px] font-semibold text-purple-300">
                           {initials(comment.author.name ?? "")}
                         </div>
@@ -696,13 +906,24 @@ export default function FeedClient({
                             <span className="text-xs font-semibold text-white">{comment.author.name}</span>
                             {comment.author.hasFanpass && <FanpassBadge size={10} />}
                             <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>{relativeTime(comment.createdAt)}</span>
+                            {canModerateComment && (
+                              <div className="ml-auto">
+                                <CommentActionMenu
+                                  isAuthor={commentIsAuthor}
+                                  isMod={isMod || isSuperAdmin}
+                                  onHide={() => void handleHideComment(post.id, comment.id)}
+                                  onDelete={() => void handleDeleteComment(post.id, comment.id)}
+                                />
+                              </div>
+                            )}
                           </div>
                           <div className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                             <SafeHtml content={comment.content} />
                           </div>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
 
                     {post.comments.length > 3 && (
                       <button onClick={() => toggleExpand(post.id)} className="text-xs font-medium text-purple-400 hover:text-purple-300">
