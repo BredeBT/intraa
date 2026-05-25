@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X, Sparkles, Crown, Users as UsersIcon, Image as ImgIcon, Paperclip, Bookmark, MoreHorizontal, EyeOff, Eye, Shield } from "lucide-react";
+import { Send, Heart, MessageCircle, Trash2, SendHorizontal, ImageIcon, X, Sparkles, Crown, Image as ImgIcon, Paperclip, Bookmark, MoreHorizontal, EyeOff, Eye, Shield } from "lucide-react";
 import { FanpassBadge } from "@/components/FanpassBadge";
 import { createPost, deletePost, hidePost, unhidePost } from "@/server/actions/posts";
 import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditorLazy";
@@ -1021,28 +1021,8 @@ export default function FeedClient({
             </ul>
           </div>
 
-          {/* Members shortcut */}
-          {orgSlug && (
-            <a
-              href={`/community/medlemmer`}
-              className="rounded-2xl border border-white/[0.08] p-4 transition-colors hover:border-white/20 group"
-              style={{ background: "var(--bg-secondary)" }}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex h-9 w-9 items-center justify-center rounded-xl"
-                  style={{ background: "rgba(94,234,212,0.15)", color: "#5EEAD4" }}
-                >
-                  <UsersIcon className="h-4 w-4" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs font-semibold text-white">Alle medlemmer</p>
-                  <p className="text-[10px] text-white/40">{memberCount.toLocaleString("no-NO")} totalt</p>
-                </div>
-                <span className="text-white/30 group-hover:translate-x-0.5 group-hover:text-white transition-all">→</span>
-              </div>
-            </a>
-          )}
+          {/* Medlemmer-snarvei fjernet — venn-systemet på tvers av communities
+              + følg-funksjonen på profilsider erstatter denne flyten. */}
         </aside>
       </div>
       {/* ── /TWO-COLUMN LAYOUT ───────────────────────────────────────── */}

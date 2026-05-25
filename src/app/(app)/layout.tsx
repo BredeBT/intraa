@@ -54,7 +54,6 @@ const PAGE_TITLES: Record<string, string> = {
   "/chat":               "Chat",
   "/tickets":            "Tickets",
   "/filer":              "Filer",
-  "/medlemmer":          "Medlemmer",
   "/kalender":           "Kalender",
   "/oppgaver":           "Oppgaver",
   "/admin":              "Admin — Oversikt",

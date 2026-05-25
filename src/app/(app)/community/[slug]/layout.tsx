@@ -24,7 +24,6 @@ export default function CommunitySlugLayout({ children }: { children: React.Reac
   const navLinks = [
     { href: base,                    label: "Forside",      icon: Rss,             exact: true },
     { href: `${base}/feed`,          label: "Feed",         icon: Rss },
-    { href: `${base}/medlemmer`,     label: "Medlemmer",    icon: Users },
     { href: `${base}/rangering`,     label: "Rangering",    icon: Trophy },
     { href: `${base}/konkurranser`,  label: "Konkurranser", icon: Swords },
     { href: `${base}/lojalitet`,     label: "Lojalitet",    icon: Star },
