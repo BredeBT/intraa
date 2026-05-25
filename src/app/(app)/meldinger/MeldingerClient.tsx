@@ -495,8 +495,11 @@ function DMView({ friendId, friend, currentUserId }: { friendId: string; friend:
                       <div
                         className="w-fit max-w-[75%] md:max-w-[65%] text-white rounded-2xl rounded-tr-sm px-4 py-2.5"
                         style={{
-                          background: "linear-gradient(135deg, #A855F7 0%, #60A5FA 100%)",
-                          boxShadow:  "0 4px 16px rgba(168,85,247,0.25)",
+                          // Dempet aurora-gradient (600-skala) så hvit tekst
+                          // har WCAG AA-kontrast over hele bobla, ikke bare
+                          // den mørke siden.
+                          background: "linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)",
+                          boxShadow:  "0 4px 16px rgba(124,58,237,0.30)",
                         }}
                       >
                         <SafeHtml content={msg.content} className="text-[14px] leading-relaxed" />
