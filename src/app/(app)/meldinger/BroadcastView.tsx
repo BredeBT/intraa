@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useTransition, useCallback } from "react";
-import { Send, Mic, Image as ImageIcon, Loader2, Heart, MessageCircle, Pin, Sparkles, ChevronUp, MoreHorizontal, Pencil, Trash2, X, Check } from "lucide-react";
+import { Send, Mic, Image as ImageIcon, Loader2, Heart, MessageCircle, Pin, Sparkles, ChevronUp, MoreHorizontal, Pencil, Trash2, X, Check, Type, Camera, Crown, Eye } from "lucide-react";
 import { getMessages, sendMessage, toggleReaction, editMessage, deleteMessage } from "@/server/actions/messages";
 import type { MessageWithAuthor } from "@/lib/types";
 import VoiceMessage from "@/components/VoiceMessage";
@@ -238,35 +238,63 @@ export default function BroadcastView({
           </div>
         </div>
 
-        {/* Creator compose toggle */}
-        {isCreator && !composeOpen && !recording && (
+        {/* Creator compose toggle — vises kun når det allerede er broadcasts,
+            ellers tar EmptyState over som primær CTA og dette ville duplisert. */}
+        {isCreator && !composeOpen && !recording && messages.length > 0 && (
           <button
             onClick={() => setComposeOpen(true)}
             className="relative mt-5 flex w-full items-center gap-3 rounded-2xl px-4 py-3 transition-all hover:scale-[1.01]"
             style={{
-              background: "var(--border-subtle)",
+              background: "var(--bg-tertiary)",
               border:     "1px solid var(--border-default)",
             }}
           >
             <div
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold"
-              style={{ background: "var(--border-subtle)", color: "#fff" }}
+              style={{
+                background: "linear-gradient(135deg, #5EEAD4, #A855F7)",
+                color:      "#fff",
+              }}
             >
               {initials(userName)}
             </div>
-            <span className="flex-1 text-left text-sm text-white/40">Hva vil du dele med ♛-ene dine?</span>
+            <span className="flex-1 text-left text-sm" style={{ color: "var(--text-tertiary)" }}>
+              Hva vil du dele med ♛-ene dine?
+            </span>
+            {/* Mini-action-chips for raske formater */}
+            <div className="hidden sm:flex items-center gap-1">
+              <span
+                className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:scale-110"
+                style={{ background: "rgba(94,234,212,0.15)", color: "#5EEAD4" }}
+                title="Voice-note"
+              >
+                <Mic className="h-3.5 w-3.5" />
+              </span>
+              <span
+                className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:scale-110"
+                style={{ background: "rgba(96,165,250,0.15)", color: "#60A5FA" }}
+                title="Bilde"
+              >
+                <ImageIcon className="h-3.5 w-3.5" />
+              </span>
+            </div>
             <Sparkles className="h-4 w-4" style={{ color: "#A855F7" }} />
           </button>
         )}
       </div>
 
       {/* ── Stories strip ──────────────────────────────────────────────────── */}
-      <StoryStrip
-        groups={storyGroups}
-        canPost={isCreator}
-        onAdd={() => setStoryCaptureOn(true)}
-        onOpen={(idx) => setStoryViewerIdx(idx)}
-      />
+      {/* Skjul story-strip når både stories OG broadcasts er tomme — i den
+          tilstanden bakes story-knappen inn i EmptyState så vi ikke får en
+          orphan-sirkel som svever alene under header'en. */}
+      {(storyGroups.length > 0 || messages.length > 0) && (
+        <StoryStrip
+          groups={storyGroups}
+          canPost={isCreator}
+          onAdd={() => setStoryCaptureOn(true)}
+          onOpen={(idx) => setStoryViewerIdx(idx)}
+        />
+      )}
 
       {/* Story capture modal */}
       {storyCaptureOn && (
@@ -395,7 +423,13 @@ export default function BroadcastView({
             <Loader2 className="h-4 w-4 animate-spin mr-2" /> Henter broadcasts…
           </div>
         ) : messages.length === 0 ? (
-          <EmptyState isCreator={isCreator} onCompose={() => setComposeOpen(true)} />
+          <EmptyState
+            isCreator={isCreator}
+            channelName={channelName}
+            onCompose={() => setComposeOpen(true)}
+            onVoiceNote={() => setRecording(true)}
+            onStoryAdd={() => setStoryCaptureOn(true)}
+          />
         ) : (
           <>
             {/* Pinned */}
@@ -463,55 +497,229 @@ export default function BroadcastView({
 /* Empty state                                                               */
 /* ────────────────────────────────────────────────────────────────────────── */
 
-function EmptyState({ isCreator, onCompose }: { isCreator: boolean; onCompose: () => void }) {
+function EmptyState({
+  isCreator, channelName, onCompose, onVoiceNote, onStoryAdd,
+}: {
+  isCreator:   boolean;
+  channelName: string;
+  onCompose:   () => void;
+  onVoiceNote: () => void;
+  onStoryAdd:  () => void;
+}) {
   if (isCreator) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center max-w-md mx-auto">
+      <div className="relative mx-auto max-w-2xl py-8 px-2">
+        {/* Hero — gradient-kort med crown og pulsende glow */}
         <div
-          className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl text-3xl"
+          className="relative overflow-hidden rounded-3xl p-7 mb-5"
           style={{
-            background: "linear-gradient(135deg, #5EEAD4, #A855F7)",
-            color:      "#fff",
-            boxShadow:  "0 12px 36px rgba(168,85,247,0.35)",
+            background: "linear-gradient(135deg, rgba(94,234,212,0.10) 0%, rgba(168,85,247,0.14) 50%, rgba(96,165,250,0.10) 100%)",
+            border:     "1px solid rgba(168,85,247,0.25)",
           }}
         >
-          ♛
+          {/* Bakgrunns-blobs */}
+          <div
+            aria-hidden
+            className="absolute -top-24 -right-16 h-56 w-56 rounded-full opacity-50 blur-[80px]"
+            style={{ background: "radial-gradient(circle, #A855F7, transparent 70%)" }}
+          />
+          <div
+            aria-hidden
+            className="absolute -bottom-20 -left-12 h-48 w-48 rounded-full opacity-40 blur-[70px]"
+            style={{ background: "radial-gradient(circle, #5EEAD4, transparent 70%)" }}
+          />
+
+          <div className="relative flex flex-col items-center text-center">
+            {/* Crown med pulserende ring */}
+            <div className="relative mb-5">
+              <div
+                aria-hidden
+                className="absolute inset-0 rounded-2xl animate-ping"
+                style={{
+                  background: "linear-gradient(135deg, #5EEAD4, #A855F7)",
+                  opacity:    0.35,
+                }}
+              />
+              <div
+                className="relative flex h-20 w-20 items-center justify-center rounded-2xl text-4xl"
+                style={{
+                  background: "linear-gradient(135deg, #5EEAD4, #A855F7)",
+                  color:      "#FFFFFF",
+                  boxShadow:  "0 16px 48px rgba(168,85,247,0.45)",
+                }}
+              >
+                ♛
+              </div>
+            </div>
+
+            <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>
+              Velkommen til #{channelName}
+            </h2>
+            <p className="text-sm mb-6 leading-relaxed max-w-md" style={{ color: "var(--text-secondary)" }}>
+              Dette er ditt private rom for de mest engasjerte fansene dine. Bare
+              ♛-medlemmer ser det du deler her.
+            </p>
+
+            {/* Primær CTA */}
+            <button
+              onClick={onCompose}
+              className="flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-transform hover:scale-[1.03] mb-3"
+              style={{
+                background: "linear-gradient(135deg, #5EEAD4, #A855F7)",
+                color:      "#FFFFFF",
+                boxShadow:  "0 8px 24px rgba(168,85,247,0.4)",
+              }}
+            >
+              <Sparkles className="h-4 w-4" />
+              Skriv første broadcast
+            </button>
+            <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+              eller velg et format under
+            </p>
+          </div>
         </div>
-        <h2 className="text-lg font-bold text-white mb-2">Send din første broadcast</h2>
-        <p className="text-sm text-white/50 mb-6 leading-relaxed">
-          Dette er ditt private rom for de mest engasjerte fansene dine. Del en oppdatering,
-          en voice-note eller en sneak-peek — bare ♛-medlemmer ser det.
-        </p>
-        <button
-          onClick={onCompose}
-          className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-transform hover:scale-[1.03]"
+
+        {/* Quick-action-grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <QuickActionTile
+            icon={<Type className="h-5 w-5" />}
+            label="Tekst"
+            desc="Lengre oppdatering"
+            color="#A855F7"
+            onClick={onCompose}
+          />
+          <QuickActionTile
+            icon={<Mic className="h-5 w-5" />}
+            label="Voice-note"
+            desc="Personlig vibe"
+            color="#5EEAD4"
+            onClick={onVoiceNote}
+          />
+          <QuickActionTile
+            icon={<Camera className="h-5 w-5" />}
+            label="Story"
+            desc="Forsvinner etter 24t"
+            color="#F472B6"
+            onClick={onStoryAdd}
+          />
+          <QuickActionTile
+            icon={<ImageIcon className="h-5 w-5" />}
+            label="Bilde"
+            desc="Sneak-peek el. BTS"
+            color="#60A5FA"
+            onClick={onCompose}
+          />
+        </div>
+
+        {/* Tips-rad */}
+        <div
+          className="rounded-2xl p-4 flex items-start gap-3"
           style={{
-            background: "linear-gradient(135deg, #5EEAD4, #A855F7)",
-            color:      "#FFFFFF",
-            boxShadow:  "0 8px 24px rgba(168,85,247,0.4)",
+            background: "var(--bg-tertiary)",
+            border:     "1px solid var(--border-subtle)",
           }}
         >
-          <Sparkles className="h-4 w-4" />
-          Skriv første broadcast
-        </button>
+          <div
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+            style={{ background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)" }}
+          >
+            <Sparkles className="h-4 w-4" style={{ color: "#FBBF24" }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>Tips for første post</p>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+              Si hei, fortell hva ♛-medlemmer kan forvente — eksklusivt innhold, early access,
+              eller bare mer ekte deg. Personlighet vinner over polish.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // Fan-variant — venter på creator
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center max-w-md mx-auto">
+    <div className="mx-auto max-w-md py-12 px-4">
       <div
-        className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl text-3xl"
-        style={{ background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.3)" }}
+        className="relative overflow-hidden rounded-3xl p-8 text-center"
+        style={{
+          background: "linear-gradient(135deg, rgba(94,234,212,0.06) 0%, rgba(168,85,247,0.08) 100%)",
+          border:     "1px solid rgba(168,85,247,0.20)",
+        }}
       >
-        💌
+        <div
+          aria-hidden
+          className="absolute -top-16 -right-10 h-40 w-40 rounded-full opacity-30 blur-[60px]"
+          style={{ background: "radial-gradient(circle, #A855F7, transparent 70%)" }}
+        />
+
+        <div className="relative">
+          <div
+            className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl"
+            style={{
+              background: "rgba(168,85,247,0.15)",
+              border:     "1px solid rgba(168,85,247,0.3)",
+            }}
+          >
+            <Crown className="h-7 w-7" style={{ color: "#A855F7" }} />
+          </div>
+          <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>
+            Ingen broadcasts ennå
+          </h2>
+          <p className="text-sm leading-relaxed mb-5" style={{ color: "var(--text-secondary)" }}>
+            Creatoren har ikke sendt noe i denne kanalen ennå. Du får et varsel
+            så snart første post kommer.
+          </p>
+          <div
+            className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs"
+            style={{
+              background: "rgba(94,234,212,0.10)",
+              color:      "#5EEAD4",
+              border:     "1px solid rgba(94,234,212,0.25)",
+            }}
+          >
+            <Eye className="h-3 w-3" />
+            Du er medlem av innersirkelen
+          </div>
+        </div>
       </div>
-      <h2 className="text-lg font-bold text-white mb-2">Ingen broadcasts ennå</h2>
-      <p className="text-sm text-white/50 leading-relaxed">
-        Creatoren har ikke sendt noen broadcasts i denne kanalen ennå. Du får varsel
-        så snart noe kommer ut.
-      </p>
     </div>
+  );
+}
+
+function QuickActionTile({
+  icon, label, desc, color, onClick,
+}: {
+  icon:    React.ReactNode;
+  label:   string;
+  desc:    string;
+  color:   string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="group flex flex-col items-start gap-2 rounded-2xl p-4 text-left transition-all hover:scale-[1.02]"
+      style={{
+        background: "var(--bg-tertiary)",
+        border:     "1px solid var(--border-subtle)",
+      }}
+    >
+      <div
+        className="flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110"
+        style={{
+          background: `${color}15`,
+          color:      color,
+          border:     `1px solid ${color}30`,
+        }}
+      >
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>{label}</p>
+        <p className="text-[11px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>{desc}</p>
+      </div>
+    </button>
   );
 }
 
