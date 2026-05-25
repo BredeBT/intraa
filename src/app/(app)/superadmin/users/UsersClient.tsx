@@ -46,10 +46,12 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" });
 }
 
+// Bruker CSS-variabler så fargene flippes i light mode (mørkere/mettet for
+// god kontrast på hvit bakgrunn). Hardkodede hex bypasser theme-overstyringer.
 const TYPE_META: Record<UserTypeKey, { label: string; bg: string; color: string; border: string }> = {
-  FAN:     { label: "Fan",     bg: "rgba(94,234,212,0.15)",  color: "#5EEAD4", border: "rgba(94,234,212,0.30)"  },
-  CREATOR: { label: "Creator", bg: "rgba(168,85,247,0.15)",  color: "#A855F7", border: "rgba(168,85,247,0.30)"  },
-  SPONSOR: { label: "Sponsor", bg: "rgba(96,165,250,0.15)",  color: "#60A5FA", border: "rgba(96,165,250,0.30)"  },
+  FAN:     { label: "Fan",     bg: "var(--aurora-teal-bg)",   color: "var(--aurora-teal)",   border: "var(--aurora-teal-border)"   },
+  CREATOR: { label: "Creator", bg: "var(--aurora-purple-bg)", color: "var(--aurora-purple)", border: "var(--aurora-purple-border)" },
+  SPONSOR: { label: "Sponsor", bg: "var(--aurora-blue-bg)",   color: "var(--aurora-blue)",   border: "var(--aurora-blue-border)"   },
 };
 
 function UserTypePill({ type, brandName }: { type: UserTypeKey; brandName: string | null }) {

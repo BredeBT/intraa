@@ -10,7 +10,7 @@ export function FanpassBadge({ size = 11 }: { size?: number }) {
       style={{
         fontSize:   size,
         lineHeight: 1,
-        color:      "#A855F7",
+        color:      "var(--aurora-purple)",  // flippes til mørkere lilla i light mode
         filter:     "drop-shadow(0 0 3px rgba(168,85,247,0.6))",
         flexShrink: 0,
         display:    "inline-block",
