@@ -19,8 +19,8 @@ export async function PATCH(
   if (!callerId) return NextResponse.json({ error: "Ingen tilgang" }, { status: 403 });
 
   const { userId } = await params;
-  const body = await req.json() as { name?: string; username?: string; email?: string };
-  const { name, username, email } = body;
+  const body = await req.json() as { name?: string; username?: string; email?: string; userType?: string };
+  const { name, username, email, userType } = body;
 
   if (username !== undefined) {
     const validation = validateUsername(username);
@@ -35,16 +35,21 @@ export async function PATCH(
     if (existing) return NextResponse.json({ error: "E-posten er allerede i bruk" }, { status: 409 });
   }
 
+  if (userType !== undefined && !["FAN", "CREATOR", "SPONSOR"].includes(userType)) {
+    return NextResponse.json({ error: "Ugyldig userType" }, { status: 400 });
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
   if (name     !== undefined) data.name     = name;
   if (username !== undefined) data.username = username;
   if (email    !== undefined) data.email    = email;
+  if (userType !== undefined) data.userType = userType;
 
   const updated = await db.user.update({
     where:  { id: userId },
     data,
-    select: { id: true, name: true, username: true, email: true },
+    select: { id: true, name: true, username: true, email: true, userType: true },
   });
 
   return NextResponse.json({ user: updated });

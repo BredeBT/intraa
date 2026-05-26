@@ -366,7 +366,7 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
           {/* Bruker */}
-          <Reveal delay={0}>
+          <Reveal delay={0} className="h-full">
           <RoleCard
             label="Bruker"
             labelColor={C.blue}
@@ -384,7 +384,7 @@ export default async function Home() {
           </Reveal>
 
           {/* Creator */}
-          <Reveal delay={0.12}>
+          <Reveal delay={0.12} className="h-full">
           <RoleCard
             label="Creator"
             labelColor={C.teal}
@@ -403,15 +403,15 @@ export default async function Home() {
           </Reveal>
 
           {/* Sponsor */}
-          <Reveal delay={0.24}>
+          <Reveal delay={0.24} className="h-full">
           <RoleCard
             label="Sponsor"
             labelColor={C.purple}
             tagline="For merkevarer som vil nå norske communities."
             bullets={[
-              "Egen brandside (/brand/...)",
+              "Egen brandside med /brand-URL",
               "Bli tagget i creator-stories",
-              "Direkte kontakt med creators",
+              "Statistikk på rekkevidde og engasjement",
               "Nå engasjerte norske fans",
             ]}
             href="/registrer?rolle=sponsor"
@@ -526,7 +526,7 @@ function RoleCard({
 }) {
   return (
     <div
-      className="flex flex-col rounded-3xl p-7"
+      className="flex h-full flex-col rounded-3xl p-7"
       style={{
         background: C.surface,
         border:     `1px solid ${C.line}`,

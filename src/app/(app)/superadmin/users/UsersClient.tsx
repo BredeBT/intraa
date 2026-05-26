@@ -83,6 +83,7 @@ function ManageModal({ user, onClose, onSaved }: { user: User; onClose: () => vo
   const [name,       setName]       = useState(user.name ?? "");
   const [username,   setUsername]   = useState(user.username);
   const [email,      setEmail]      = useState(user.email);
+  const [userType,   setUserType]   = useState<UserTypeKey>(user.userType);
   const [saving,     setSaving]     = useState(false);
   const [tempPw,     setTempPw]     = useState<string | null>(null);
   const [error,      setError]      = useState<string | null>(null);
@@ -151,12 +152,18 @@ function ManageModal({ user, onClose, onSaved }: { user: User; onClose: () => vo
     const res = await fetch(`/api/superadmin/users/${user.id}`, {
       method:  "PATCH",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ name: name.trim() || null, username: username.trim(), email: email.trim() }),
+      body:    JSON.stringify({ name: name.trim() || null, username: username.trim(), email: email.trim(), userType }),
     });
-    const data = await res.json() as { user?: User; error?: string };
+    const data = await res.json() as { user?: User & { userType?: UserTypeKey }; error?: string };
     setSaving(false);
     if (!res.ok) { setError(data.error ?? "Noe gikk galt"); return; }
-    onSaved({ ...user, name: data.user?.name ?? null, username: data.user?.username ?? user.username, email: data.user?.email ?? user.email });
+    onSaved({
+      ...user,
+      name:     data.user?.name ?? null,
+      username: data.user?.username ?? user.username,
+      email:    data.user?.email ?? user.email,
+      userType: data.user?.userType ?? userType,
+    });
   }
 
   async function handleResetPassword() {
@@ -249,6 +256,33 @@ function ManageModal({ user, onClose, onSaved }: { user: User; onClose: () => vo
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-zinc-500"
             />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-zinc-400">Rolle</label>
+            <div className="grid grid-cols-3 gap-2">
+              {(["FAN", "CREATOR", "SPONSOR"] as UserTypeKey[]).map((t) => {
+                const active = userType === t;
+                const meta   = TYPE_META[t];
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setUserType(t)}
+                    className="rounded-lg px-2 py-2 text-xs font-medium transition-all"
+                    style={{
+                      background: active ? meta.bg : "var(--bg-tertiary)",
+                      color:      active ? meta.color : "rgba(255,255,255,0.60)",
+                      border:     `1px solid ${active ? meta.border : "var(--border-subtle)"}`,
+                    }}
+                  >
+                    {meta.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1.5 text-[11px] text-zinc-500">
+              Endrer rollen umiddelbart. Brukeren må logge ut/inn for at session-token oppdateres.
+            </p>
           </div>
           {error && <p className="text-xs text-red-400">{error}</p>}
           <button
