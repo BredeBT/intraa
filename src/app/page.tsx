@@ -158,29 +158,25 @@ export default async function Home() {
             </div>
 
             <h1
-              className="text-[clamp(2.6rem,5.8vw,4.5rem)] leading-[1.02] tracking-tight text-balance"
+              className="text-[clamp(2.8rem,6.2vw,5rem)] leading-[1.05] tracking-tight text-balance"
               style={{
                 color:      C.text,
                 fontFamily: "var(--font-instrument-serif), Georgia, serif",
                 fontWeight: 400,
               }}
             >
-              Du har bygd publikum
+              For creators som er
               <br />
-              på Twitch, YouTube
-              <br />
-              og Discord.{" "}
-              <span style={{ fontStyle: "italic", color: C.teal }}>Hjemmet ditt</span>
-              <br />
-              er ikke der.
+              ferdig med å være{" "}
+              <span style={{ fontStyle: "italic", color: C.teal }}>gjest.</span>
             </h1>
 
             <p
-              className="mt-8 max-w-lg text-[17px] leading-relaxed"
+              className="mt-8 max-w-md text-[17px] leading-relaxed"
               style={{ color: C.mutedHi }}
             >
-              Intraa er stedet du flytter dem til når du er ferdig med å være
-              gjest i andres app.
+              Stream, community, fanpass, spill — alt på ett sted
+              du faktisk eier.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-3">
