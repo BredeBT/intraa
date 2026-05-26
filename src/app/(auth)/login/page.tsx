@@ -47,7 +47,10 @@ export default function LoginPage() {
           setTotp("");
         }
       } else {
-        router.push("/home");
+        // Respect ?next=/some/path query-param (brukes f.eks. ved test-rolle-bytte i superadmin)
+        const params = new URLSearchParams(window.location.search);
+        const next = params.get("next");
+        router.push(next && next.startsWith("/") ? next : "/home");
       }
     } catch {
       setErrors({ server: "Noe gikk galt. Prøv igjen." });

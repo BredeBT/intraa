@@ -7,6 +7,7 @@ import {
   UserPlus, Activity, Clock, Zap,
 } from "lucide-react";
 import SuperAdminNav from "./SuperAdminNav";
+import RoleSwitcher from "./RoleSwitcher";
 
 export const dynamic   = "force-dynamic";
 export const revalidate = 0;
@@ -173,6 +174,8 @@ export default async function SuperAdminPage() {
       <p className="mb-8 text-sm text-zinc-500">Globalt administrasjonspanel for alle organisasjoner på plattformen.</p>
 
       <SuperAdminNav />
+
+      <RoleSwitcher />
 
       {/* Stat cards — 4×2 */}
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
