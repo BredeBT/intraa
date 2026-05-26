@@ -73,7 +73,7 @@ export default function AppTour() {
   const current = CHAPTERS[idx];
 
   return (
-    <section ref={ref} className="relative" style={{ background: C.bg, height: "320vh" }}>
+    <section ref={ref} className="relative" style={{ background: C.bg, height: "240vh" }}>
       <Intro />
 
       <div className="sticky top-0 h-screen flex items-center">

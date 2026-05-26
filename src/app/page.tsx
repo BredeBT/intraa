@@ -47,7 +47,7 @@ export default async function Home() {
 
   return (
     <div
-      className="min-h-screen relative overflow-x-hidden"
+      className="min-h-screen relative overflow-x-clip"
       style={{ background: C.bg, color: C.text }}
     >
       {/* Aurora blobs — northern-lights backdrop, kun en antydning */}

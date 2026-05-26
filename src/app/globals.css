@@ -162,8 +162,11 @@ body {
   /* Smooth overgang ved theme-bytte */
   transition: background-color 0.2s ease, color 0.2s ease;
   /* Forhindre at content som er bredere enn viewport (f.eks. bilder, lange
-     ord, eller iOS-zoom-rester) lar siden scrolles horisontalt. */
-  overflow-x: hidden;
+     ord, eller iOS-zoom-rester) lar siden scrolles horisontalt.
+     NB: 'clip' fremfor 'hidden' — 'hidden' lager en scroll-container som
+     bryter position: sticky på etterkommere. 'clip' har samme synlige
+     effekt uten å bryte sticky. */
+  overflow-x: clip;
 }
 
 /* iOS Safari auto-zoomer på input-fokus hvis font-size < 16px og dytter
