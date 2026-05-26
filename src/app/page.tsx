@@ -4,6 +4,8 @@ import {
   Coins, Trophy, Send, Sparkles, ChevronRight,
 } from "lucide-react";
 import { db } from "@/server/db";
+import AppTour from "@/components/landing/AppTour";
+import Reveal from "@/components/landing/Reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -217,6 +219,9 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ── App-tour (scroll-driven walkthrough) ─────────────────────────── */}
+      <AppTour />
+
       {/* ── Features bento ───────────────────────────────────────────────── */}
       <section id="funksjoner" className="relative mx-auto max-w-6xl px-6 sm:px-10 pb-24">
         <div className="mb-12 max-w-2xl">
@@ -303,6 +308,7 @@ export default async function Home() {
       {/* ── Social proof — replaces fake stats ───────────────────────────── */}
       <section className="relative py-20 px-6 sm:px-10" style={{ borderTop: `1px solid ${C.line}`, borderBottom: `1px solid ${C.line}`, background: C.surface }}>
         <div className="mx-auto max-w-5xl text-center">
+          <Reveal>
           <p
             className="text-xs font-semibold uppercase tracking-[0.2em] mb-6"
             style={{ color: C.mint }}
@@ -316,6 +322,7 @@ export default async function Home() {
             «Plattformene tjener på at fansen din ikke føler at de eier deg.
             Intraa snur det rundt — du eier relasjonen, vi gir verktøyene.»
           </blockquote>
+          </Reveal>
           <div className="mt-8 flex items-center justify-center gap-3">
             <div
               className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold"
@@ -362,6 +369,7 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
           {/* Bruker */}
+          <Reveal delay={0}>
           <RoleCard
             label="Bruker"
             labelColor={C.blue}
@@ -376,8 +384,10 @@ export default async function Home() {
             href="/registrer"
             ctaText="Opprett konto"
           />
+          </Reveal>
 
           {/* Creator */}
+          <Reveal delay={0.12}>
           <RoleCard
             label="Creator"
             labelColor={C.teal}
@@ -393,8 +403,10 @@ export default async function Home() {
             href="/registrer?rolle=creator"
             ctaText="Start ditt community"
           />
+          </Reveal>
 
           {/* Sponsor */}
+          <Reveal delay={0.24}>
           <RoleCard
             label="Sponsor"
             labelColor={C.purple}
@@ -408,6 +420,7 @@ export default async function Home() {
             href="/registrer?rolle=sponsor"
             ctaText="Bli sponsor"
           />
+          </Reveal>
         </div>
       </section>
 
