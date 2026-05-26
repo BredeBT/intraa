@@ -180,9 +180,11 @@ export default async function Home() {
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-3">
-              {/* Primary CTA: white on dark per Aurora spec */}
+              {/* "Bygg det her" leder rett til creator-onboarding —
+                  målgruppen for landing-hero er creators som vil
+                  starte eget community. */}
               <Link
-                href="/registrer"
+                href="/registrer?rolle=creator"
                 className="group flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-white/90"
                 style={{
                   background: "#FFFFFF",
@@ -191,20 +193,6 @@ export default async function Home() {
               >
                 Bygg det her
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              {/* Secondary glass CTA per Aurora spec */}
-              <Link
-                href="mailto:brede_bt@hotmail.com"
-                className="flex items-center gap-1.5 rounded-full px-5 py-3.5 text-sm font-medium transition-colors hover:bg-white/[0.08]"
-                style={{
-                  background:           "var(--bg-glass)",
-                  border:               "0.5px solid var(--border-default)",
-                  backdropFilter:       "blur(10px)",
-                  WebkitBackdropFilter: "blur(10px)",
-                  color:                C.text,
-                }}
-              >
-                Snakk med Brede
               </Link>
             </div>
 
@@ -215,7 +203,7 @@ export default async function Home() {
                 fontFamily: "var(--font-geist-mono), monospace",
               }}
             >
-              åpen beta · norsk support · ingen kredittkort
+              åpen beta · norsk support
             </p>
           </div>
 
@@ -761,7 +749,7 @@ function FanpassMock() {
         </span>
       </div>
       <p className="text-2xl font-bold" style={{ color: C.text }}>
-        49<span className="text-sm font-normal" style={{ color: C.muted }}> kr/mnd</span>
+        59<span className="text-sm font-normal" style={{ color: C.muted }}> kr/mnd</span>
       </p>
       <ul className="mt-3 space-y-1.5 text-xs" style={{ color: C.mutedHi }}>
         <li className="flex items-center gap-1.5">
