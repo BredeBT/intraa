@@ -76,7 +76,9 @@ export default function AppTour() {
     <section ref={ref} className="relative" style={{ background: C.bg, height: "240vh" }}>
       <Intro />
 
-      <div className="sticky top-0 h-screen flex items-center">
+      {/* Sticky som starter UNDER landing-navet (~72px tall). h-[calc()] sørger
+          for at phone-en holder seg innenfor den synlige viewporten under nav. */}
+      <div className="sticky top-[72px] h-[calc(100vh-72px)] flex items-center">
         <div className="mx-auto w-full max-w-6xl px-6 sm:px-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
 
