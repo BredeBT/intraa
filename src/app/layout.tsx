@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { OrgProvider } from "@/lib/context/OrgContext";
 import Providers from "@/components/Providers";
@@ -14,6 +14,15 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Display-serif for overskrifter på landing-page. Gir karakter og bryter
+// med Geist-default som hvert AI-generert SaaS-site bruker.
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  subsets: ["latin"],
+  weight:   "400",
+  style:    ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -37,7 +46,7 @@ export default function RootLayout({
     <html
       lang="no"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased bg-zinc-950`}
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full antialiased bg-zinc-950`}
     >
       <head>
         {/* Setter data-theme før hydrering så vi unngår «flash of wrong theme»

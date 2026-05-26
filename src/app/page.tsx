@@ -154,25 +154,33 @@ export default async function Home() {
                 />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ background: C.mint }} />
               </span>
-              For norske creators — i åpen beta
+              norske creators · åpen beta
             </div>
 
             <h1
-              className="text-[clamp(2.5rem,6vw,4.75rem)] font-black leading-[0.95] tracking-tight text-balance"
-              style={{ color: C.text }}
+              className="text-[clamp(2.6rem,5.8vw,4.5rem)] leading-[1.02] tracking-tight text-balance"
+              style={{
+                color:      C.text,
+                fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                fontWeight: 400,
+              }}
             >
-              Communityet ditt.{" "}
-              <span style={{ color: C.teal }}>Hjemmet</span>{" "}
-              ditt.
+              Du har bygd publikum
+              <br />
+              på Twitch, YouTube
+              <br />
+              og Discord.{" "}
+              <span style={{ fontStyle: "italic", color: C.teal }}>Hjemmet ditt</span>
+              <br />
+              er ikke der.
             </h1>
 
             <p
-              className="mt-7 max-w-xl text-[17px] leading-relaxed"
+              className="mt-8 max-w-lg text-[17px] leading-relaxed"
               style={{ color: C.mutedHi }}
             >
-              Slutt å splitte fansen mellom Discord, Twitch og Patreon. Intraa er
-              alt-i-ett-plattformen der streamen, chatten, spillene og Fanpass-en
-              din lever sammen.
+              Intraa er stedet du flytter dem til når du er ferdig med å være
+              gjest i andres app.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-3">
@@ -185,12 +193,12 @@ export default async function Home() {
                   color:      C.bg,
                 }}
               >
-                Start ditt community
+                Bygg det her
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               {/* Secondary glass CTA per Aurora spec */}
               <Link
-                href="#funksjoner"
+                href="mailto:brede_bt@hotmail.com"
                 className="flex items-center gap-1.5 rounded-full px-5 py-3.5 text-sm font-medium transition-colors hover:bg-white/[0.08]"
                 style={{
                   background:           "var(--bg-glass)",
@@ -200,13 +208,18 @@ export default async function Home() {
                   color:                C.text,
                 }}
               >
-                Se hva som er inni
-                <ChevronRight className="h-4 w-4" />
+                Snakk med Brede
               </Link>
             </div>
 
-            <p className="mt-6 text-xs" style={{ color: C.muted }}>
-              Gratis å starte · Ingen kredittkort · Norsk support
+            <p
+              className="mt-6 text-[11px] uppercase tracking-[0.18em]"
+              style={{
+                color:      C.muted,
+                fontFamily: "var(--font-geist-mono), monospace",
+              }}
+            >
+              åpen beta · norsk support · ingen kredittkort
             </p>
           </div>
 
