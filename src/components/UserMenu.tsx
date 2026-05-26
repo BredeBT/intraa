@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Settings, LogOut, ShieldAlert, Sun, Moon, Monitor, Bookmark } from "lucide-react";
+import { Settings, LogOut, ShieldAlert, Sun, Moon, Monitor, Bookmark, Briefcase } from "lucide-react";
 import { useUser } from "@/lib/hooks/useUser";
 import { useTheme, type ThemeChoice } from "@/components/ThemeProvider";
 
@@ -84,6 +84,16 @@ export default function UserMenu() {
               </Link>
               <div className="my-1 border-t border-zinc-800" />
             </>
+          )}
+          {user?.userType === "CREATOR" && (
+            <Link
+              href="/sponsor-henvendelser"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
+            >
+              <Briefcase className="h-4 w-4 shrink-0" />
+              Sponsor-henvendelser
+            </Link>
           )}
           <Link
             href="/lagret"

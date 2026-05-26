@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db";
 import Link from "next/link";
-import { Globe, Edit, Eye, Heart, Image as ImageIcon, ExternalLink, TrendingUp } from "lucide-react";
+import { Globe, Edit, Eye, Heart, Image as ImageIcon, ExternalLink, TrendingUp, Users, Inbox } from "lucide-react";
 import { safeUrl } from "@/lib/safeUrl";
 
 export const dynamic = "force-dynamic";
@@ -86,7 +86,22 @@ export default async function BrandDashboardPage() {
                 )}
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <Link
+                href="/brand/creators"
+                className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-opacity hover:opacity-90"
+                style={{ background: "#A855F7", color: "#fff" }}
+              >
+                <Users className="h-3.5 w-3.5" />
+                Finn creators
+              </Link>
+              <Link
+                href="/brand/innboks"
+                className="flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-xs text-white/70 hover:text-white hover:border-white/20 transition-colors"
+              >
+                <Inbox className="h-3.5 w-3.5" />
+                Innboks
+              </Link>
               <Link
                 href={`/brand/${brand.slug}`}
                 className="flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-xs text-white/70 hover:text-white hover:border-white/20 transition-colors"

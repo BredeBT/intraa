@@ -229,6 +229,9 @@ model User {
   createdAt     DateTime  @default(now())
   bio           String?
   interests     String[]
+  // creatorTags brukes av sponsorer for å filtrere/finne creators til samarbeid.
+  // Kuratert liste i lib/creatorTags.ts — slugs som "streamer", "gamer" osv.
+  creatorTags   String[]
   website       String?
   socialLinks   Json?
   status          String?   @default("online")
@@ -306,6 +309,10 @@ model User {
   liveGiveawaysCreated    LiveGiveaway[]        @relation("LiveGiveawayCreator")
   liveGiveawaysWon        LiveGiveaway[]        @relation("LiveGiveawayWinner")
   liveGiveawayEntries     LiveGiveawayEntry[]
+
+  // Sponsor-marketplace inbox (separat fra DM/meldinger)
+  sponsorThreadsAsCreator SponsorThread[]   @relation("SponsorThreadCreator")
+  sponsorMessagesSent     SponsorMessage[]
 
   @@index([username])
   @@index([lastActive])
@@ -568,8 +575,56 @@ model SponsorProfile {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   stories Story[]
+  threads SponsorThread[]
+}
+
+// Sponsor↔creator-outreach. Separat fra DM (Friendship+DirectMessage) som
+// er fan-fokusert. Mønsteret er stjålet fra Ticket-systemet — tråd + svar
+// + status — men user-scoped istedenfor org-scoped.
+model SponsorThread {
+  id         String              @id @default(cuid())
+  sponsorId  String              // SponsorProfile.id
+  creatorId  String              // User.id (creator-rollen)
+  subject    String
+  status     SponsorThreadStatus @default(PENDING)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  // Cache av siste melding-tid for sortering uten å joine
+  lastMessageAt DateTime         @default(now())
+
+  sponsor   SponsorProfile   @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  creator   User             @relation("SponsorThreadCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  messages  SponsorMessage[]
+
+  @@index([sponsorId, lastMessageAt(sort: Desc)])
+  @@index([creatorId, lastMessageAt(sort: Desc)])
+  @@index([creatorId, status])
+}
+
+enum SponsorThreadStatus {
+  PENDING    // Sponsor har sendt, creator har ikke svart enda
+  ACCEPTED   // Creator har akseptert å diskutere
+  DECLINED   // Creator har sagt nei
+  ARCHIVED   // En av partene har arkivert
+}
+
+model SponsorMessage {
+  id          String        @id @default(cuid())
+  threadId    String
+  authorId    String
+  // "SPONSOR" eller "CREATOR" — gjør at UI kan farge meldinger uten å sjekke
+  // mot user.userType (som kan endres over tid).
+  senderRole  String
+  content     String
+  createdAt   DateTime      @default(now())
+  readAt      DateTime?
+
+  thread  SponsorThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author  User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt(sort: Desc)])
 }
 
 model StoryView {

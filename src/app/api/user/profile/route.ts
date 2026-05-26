@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { getUserOrg } from "@/server/getUserOrg";
+import { sanitizeTags, MAX_TAGS_PER_CREATOR } from "@/lib/creatorTags";
 
 /** GET /api/user/profile — fetch full profile including org username */
 export async function GET() {
@@ -11,7 +12,7 @@ export async function GET() {
   const [user, ctx] = await Promise.all([
     db.user.findUnique({
       where:  { id: session.user.id },
-      select: { id: true, name: true, email: true, avatarUrl: true, bio: true, website: true, socialLinks: true, status: true },
+      select: { id: true, name: true, email: true, avatarUrl: true, bio: true, website: true, socialLinks: true, status: true, userType: true, creatorTags: true },
     }),
     getUserOrg(),
   ]);
@@ -48,11 +49,15 @@ export async function PATCH(request: Request) {
     avatarUrl?:   string;
     bannerUrl?:   string;
     interests?:   string[];
+    creatorTags?: string[];
     isPublic?:    boolean;
     orgUsername?: string;
   };
 
-  const { name, bio, website, socialLinks, status, avatarUrl, bannerUrl, interests, isPublic, orgUsername } = body;
+  const { name, bio, website, socialLinks, status, avatarUrl, bannerUrl, interests, creatorTags, isPublic, orgUsername } = body;
+
+  // creatorTags valideres og begrenses mot kuratert liste
+  const validatedTags = creatorTags !== undefined ? sanitizeTags(creatorTags).slice(0, MAX_TAGS_PER_CREATOR) : undefined;
 
   // Begrens bio til 2000 tegn HTML (rom for litt formatering uten DoS-risiko)
   if (bio !== undefined && bio.length > 2000) {
@@ -88,6 +93,7 @@ export async function PATCH(request: Request) {
         ...(avatarUrl   !== undefined && { avatarUrl }),
         ...(bannerUrl   !== undefined && { bannerUrl }),
         ...(interests   !== undefined && { interests }),
+        ...(validatedTags !== undefined && { creatorTags: validatedTags }),
         ...(isPublic    !== undefined && { isPublic }),
       },
       select: { name: true, avatarUrl: true },

@@ -59,6 +59,9 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin":              "Admin — Oversikt",
   "/admin/brukere":      "Admin — Brukere",
   "/admin/innstillinger":"Admin — Innstillinger",
+  "/sponsor-henvendelser": "Sponsor-henvendelser",
+  "/brand/creators":     "Finn creators",
+  "/brand/innboks":      "Sponsor-innboks",
   "/profil":             "Profil",
   "/notifikasjoner":     "Notifikasjoner",
   "/soek":               "Søk",
@@ -406,7 +409,7 @@ const SidebarContent = memo(function SidebarContentImpl({
 // Paths accessible without any org membership
 const NO_ORG_PATHS = [
   "/home", "/utforsk", "/lagret", "/support", "/innstillinger", "/notifikasjoner",
-  "/meldinger", "/bytt-org", "/profil", "/soek", "/brand",
+  "/meldinger", "/bytt-org", "/profil", "/soek", "/brand", "/sponsor-henvendelser",
 ];
 
 // ─── Superadmin impersonate banner ────────────────────────────────────────────

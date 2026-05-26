@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { Camera, Check, X, Globe, Link as LinkIcon, Loader2 } from "lucide-react";
+import { Camera, Check, X, Globe, Link as LinkIcon, Loader2, Sparkles } from "lucide-react";
 import RichTextEditor, { type RichTextEditorRef } from "@/components/RichTextEditorLazy";
+import { CREATOR_TAGS, MAX_TAGS_PER_CREATOR } from "@/lib/creatorTags";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,6 +29,8 @@ interface Profile {
   status:      Status;
   orgType:     string | null;
   orgRole:     string | null;
+  userType:    "FAN" | "CREATOR" | "SPONSOR";
+  creatorTags: string[];
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -141,6 +144,7 @@ export default function ProfilTab() {
     id: "", name: "", email: "", avatarUrl: null,
     bio: "", website: "", socialLinks: {}, status: "online",
     orgType: null, orgRole: null,
+    userType: "FAN", creatorTags: [],
   });
   const [loading,       setLoading]       = useState(true);
   const [saving,        setSaving]        = useState(false);
@@ -170,6 +174,8 @@ export default function ProfilTab() {
           status:      (data.status as Status) ?? "online",
           orgType:     (data as { orgType?: string | null }).orgType ?? null,
           orgRole:     (data as { orgRole?: string | null }).orgRole ?? null,
+          userType:    (data as { userType?: "FAN" | "CREATOR" | "SPONSOR" }).userType ?? "FAN",
+          creatorTags: (data as { creatorTags?: string[] }).creatorTags ?? [],
         });
         // Sett bio i editoren etter at den har mountet
         if (bio) bioEditorRef.current?.setContent(bio);
@@ -213,6 +219,7 @@ export default function ProfilTab() {
         socialLinks: profile.socialLinks,
         status:      profile.status,
         avatarUrl,
+        ...(profile.userType === "CREATOR" ? { creatorTags: profile.creatorTags } : {}),
       }),
     });
 
@@ -355,6 +362,49 @@ export default function ProfilTab() {
           />
         </div>
       </Section>
+
+      {/* Creator-tagger — synlig kun for CREATOR-userType. Sponsorer bruker
+          disse til å filtrere creators i /brand/creators. */}
+      {profile.userType === "CREATOR" && (
+        <Section
+          title="Creator-tagger"
+          desc="Vises for sponsorer som leter etter creators. Velg opp til 6 som beskriver innholdet ditt."
+        >
+          <div className="flex flex-wrap gap-2 mb-3">
+            {CREATOR_TAGS.map((tag) => {
+              const active = profile.creatorTags.includes(tag.slug);
+              const atLimit = profile.creatorTags.length >= MAX_TAGS_PER_CREATOR && !active;
+              return (
+                <button
+                  key={tag.slug}
+                  type="button"
+                  disabled={atLimit}
+                  onClick={() => {
+                    const next = active
+                      ? profile.creatorTags.filter((t) => t !== tag.slug)
+                      : [...profile.creatorTags, tag.slug];
+                    update("creatorTags", next);
+                  }}
+                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    background: active ? "rgba(94,234,212,0.15)"             : "var(--bg-tertiary)",
+                    color:      active ? "#5EEAD4"                            : "var(--text-secondary)",
+                    border:     `1px solid ${active ? "rgba(94,234,212,0.40)" : "var(--border-subtle)"}`,
+                  }}
+                >
+                  <span>{tag.emoji}</span>
+                  {tag.label}
+                  {active && <Check className="h-3 w-3 ml-0.5" />}
+                </button>
+              );
+            })}
+          </div>
+          <p className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-tertiary)" }}>
+            <Sparkles className="h-3 w-3" style={{ color: "#5EEAD4" }} />
+            {profile.creatorTags.length} av {MAX_TAGS_PER_CREATOR} valgt
+          </p>
+        </Section>
+      )}
 
       {/* Social links — only for community owners */}
       {profile.orgType === "COMMUNITY" && profile.orgRole === "OWNER" && (
