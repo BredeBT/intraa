@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "framer-motion";
-import { useRef, type ReactNode } from "react";
+import { motion, AnimatePresence, useReducedMotion, useScroll, useMotionValueEvent } from "framer-motion";
+import { useRef, useState, type ReactNode } from "react";
 import { Newspaper, Crown, Gamepad2, Mic, Heart, MessageCircle } from "lucide-react";
 
 /**
@@ -11,63 +11,57 @@ import { Newspaper, Crown, Gamepad2, Mic, Heart, MessageCircle } from "lucide-re
  * Klikker) mens brukeren scroller. Føles som om du står og ser noen bruke
  * appen. Skalerer naturlig til mobil siden mockup-en allerede er en phone.
  *
- * Implementasjon: én tall section (~320vh) med sticky phone-frame inni. Tre
- * lag i skjermen som crossfades basert på scrollYProgress. Side-tekst gjør
- * tilsvarende crossfade.
+ * Implementasjon: én tall section (~320vh) med sticky phone-frame inni.
+ * scrollYProgress tracks → state-bytte → AnimatePresence-crossfade.
+ * State-basert er mer robust enn å overlay opacity-MotionValues.
  */
 
 const C = {
-  bg:     "#050816",
-  text:   "#F0F4FF",
-  muted:  "rgba(255,255,255,0.55)",
-  subtle: "rgba(255,255,255,0.35)",
-  teal:   "#5EEAD4",
-  purple: "#A855F7",
-  blue:   "#60A5FA",
-  pink:   "#F472B6",
-  amber:  "#FBBF24",
-  surface: "#0B1027",
+  bg:      "#050816",
+  text:    "#F0F4FF",
+  muted:   "rgba(255,255,255,0.55)",
+  subtle:  "rgba(255,255,255,0.35)",
+  teal:    "#5EEAD4",
+  purple:  "#A855F7",
+  blue:    "#60A5FA",
+  pink:    "#F472B6",
+  amber:   "#FBBF24",
   line:    "rgba(240,244,255,0.10)",
 } as const;
 
 const CHAPTERS = [
-  { eyebrow: "Feed",                title: "Daglig puls i communityet",      body: "Innlegg, kommentarer, likes, bilder — der hvor medlemmene faktisk henger sammen mellom store events.", icon: Newspaper, accent: C.blue },
-  { eyebrow: "Innenfor-sirkelen",   title: "Ditt rom for ♛-medlemmer",       body: "Eksklusiv broadcast-kanal hvor du sender personlige oppdateringer, voice-notes og sneak-peeks som kun Fanpass-medlemmer ser.", icon: Crown,     accent: C.purple },
-  { eyebrow: "Klikker-spillet",     title: "Limet som drar dem tilbake",     body: "Idle-spill bygd inn i hvert community. 9 verdener, prestige-system, daglig streak. Vanedannende sammen.", icon: Gamepad2,  accent: C.teal },
+  { eyebrow: "Feed",              title: "Daglig puls i communityet", body: "Innlegg, kommentarer, likes, bilder — der hvor medlemmene faktisk henger sammen mellom store events.", icon: Newspaper, accent: C.blue,   screen: <FeedScreen /> },
+  { eyebrow: "Innenfor-sirkelen", title: "Ditt rom for ♛-medlemmer",  body: "Eksklusiv broadcast-kanal hvor du sender personlige oppdateringer, voice-notes og sneak-peeks som kun Fanpass-medlemmer ser.", icon: Crown, accent: C.purple, screen: <BroadcastScreen /> },
+  { eyebrow: "Klikker-spillet",   title: "Limet som drar dem tilbake", body: "Idle-spill bygd inn i hvert community. 9 verdener, prestige-system, daglig streak. Vanedannende sammen.", icon: Gamepad2, accent: C.teal, screen: <ClickerScreen /> },
 ] as const;
 
 export default function AppTour() {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
+  const [idx, setIdx] = useState(0);
 
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"],
   });
 
-  // Tre kapittel-vinduer: 0-0.33 = Feed, 0.33-0.66 = Broadcast, 0.66-1 = Klikker
-  // Crossfades med smooth bands rundt overgangene.
-  const op0 = useTransform(scrollYProgress, [0.00, 0.05, 0.30, 0.40], [1, 1, 1, 0]);
-  const op1 = useTransform(scrollYProgress, [0.30, 0.40, 0.62, 0.72], [0, 1, 1, 0]);
-  const op2 = useTransform(scrollYProgress, [0.62, 0.72, 0.95, 1.00], [0, 1, 1, 1]);
+  // Map scroll-progress til aktiv kapittel-indeks
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    const next = v < 0.34 ? 0 : v < 0.67 ? 1 : 2;
+    if (next !== idx) setIdx(next);
+  });
 
-  // Subtle "pop" på phone når kapittelet bytter
-  const phoneScale = useTransform(
-    scrollYProgress,
-    [0.00, 0.30, 0.40, 0.62, 0.72, 1.00],
-    [1.00, 1.00, 1.02, 1.00, 1.02, 1.00],
-  );
-
+  // Reduced motion: stack chapters i normal flow
   if (reduce) {
     return (
       <section className="relative py-24" style={{ background: C.bg }}>
         <Intro />
         <div className="mx-auto max-w-6xl px-6 sm:px-10 space-y-24">
-          {CHAPTERS.map((ch, i) => (
+          {CHAPTERS.map((ch) => (
             <div key={ch.eyebrow} className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
               <SideText chapter={ch} />
               <div className="flex justify-center">
-                <PhoneFrame>{i === 0 ? <FeedScreen /> : i === 1 ? <BroadcastScreen /> : <ClickerScreen />}</PhoneFrame>
+                <PhoneFrame>{ch.screen}</PhoneFrame>
               </div>
             </div>
           ))}
@@ -76,46 +70,65 @@ export default function AppTour() {
     );
   }
 
+  const current = CHAPTERS[idx];
+
   return (
     <section ref={ref} className="relative" style={{ background: C.bg, height: "320vh" }}>
       <Intro />
 
-      {/* Sticky phone + side-tekst */}
       <div className="sticky top-0 h-screen flex items-center">
         <div className="mx-auto w-full max-w-6xl px-6 sm:px-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
 
-            {/* Side-tekst — crossfades mellom kapitler */}
-            <div className="relative min-h-[260px] md:min-h-[320px] order-2 md:order-1">
-              <ChapterText chapter={CHAPTERS[0]} opacity={op0} />
-              <ChapterText chapter={CHAPTERS[1]} opacity={op1} />
-              <ChapterText chapter={CHAPTERS[2]} opacity={op2} />
+            {/* Side-tekst med crossfade */}
+            <div className="order-2 md:order-1 min-h-[280px] md:min-h-[320px] relative">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={current.eyebrow}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <SideText chapter={current} />
+                </motion.div>
+              </AnimatePresence>
             </div>
 
-            {/* Phone-mockup med tre lag */}
+            {/* Phone-mockup med crossfade-screen */}
             <div className="flex justify-center order-1 md:order-2">
-              <motion.div style={{ scale: phoneScale }}>
-                <PhoneFrame>
-                  <motion.div style={{ opacity: op0 }} className="absolute inset-0">
-                    <FeedScreen />
+              <PhoneFrame>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={current.eyebrow}
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.02 }}
+                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                    className="absolute inset-0"
+                  >
+                    {current.screen}
                   </motion.div>
-                  <motion.div style={{ opacity: op1 }} className="absolute inset-0">
-                    <BroadcastScreen />
-                  </motion.div>
-                  <motion.div style={{ opacity: op2 }} className="absolute inset-0">
-                    <ClickerScreen />
-                  </motion.div>
-                </PhoneFrame>
-              </motion.div>
+                </AnimatePresence>
+              </PhoneFrame>
             </div>
 
           </div>
 
           {/* Progress-prikker */}
           <div className="mt-8 flex justify-center gap-2">
-            <Dot opacity={op0} />
-            <Dot opacity={op1} />
-            <Dot opacity={op2} />
+            {CHAPTERS.map((_, i) => (
+              <motion.div
+                key={i}
+                className="h-1.5 rounded-full"
+                animate={{
+                  width:      i === idx ? 32 : 16,
+                  opacity:    i === idx ? 1 : 0.3,
+                  background: C.text,
+                }}
+                transition={{ duration: 0.3 }}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -164,26 +177,6 @@ function SideText({ chapter }: { chapter: typeof CHAPTERS[number] }) {
   );
 }
 
-function ChapterText({ chapter, opacity }: { chapter: typeof CHAPTERS[number]; opacity: MotionValue<number> }) {
-  return (
-    <motion.div className="absolute inset-0" style={{ opacity }}>
-      <SideText chapter={chapter} />
-    </motion.div>
-  );
-}
-
-function Dot({ opacity }: { opacity: MotionValue<number> }) {
-  return (
-    <motion.div
-      className="h-1.5 w-8 rounded-full"
-      style={{
-        background: C.text,
-        opacity,
-      }}
-    />
-  );
-}
-
 // ─── Phone frame ─────────────────────────────────────────────────────────────
 
 function PhoneFrame({ children }: { children: ReactNode }) {
@@ -210,7 +203,6 @@ function PhoneFrame({ children }: { children: ReactNode }) {
           borderRadius: 12,
         }}
       />
-      {/* Skjerm-container */}
       <div
         className="relative h-full w-full overflow-hidden"
         style={{
