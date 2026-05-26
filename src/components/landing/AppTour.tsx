@@ -73,7 +73,7 @@ export default function AppTour() {
   const current = CHAPTERS[idx];
 
   return (
-    <section ref={ref} className="relative" style={{ background: C.bg, height: "240vh" }}>
+    <section ref={ref} className="relative" style={{ background: C.bg, height: "360vh" }}>
       <Intro />
 
       {/* Sticky som starter UNDER landing-navet (~72px tall). h-[calc()] sørger
@@ -83,7 +83,7 @@ export default function AppTour() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
 
             {/* Side-tekst med crossfade */}
-            <div className="order-2 md:order-1 min-h-[280px] md:min-h-[320px] relative">
+            <div className="order-2 md:order-1 min-h-[180px] md:min-h-[320px] relative">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={current.eyebrow}
@@ -157,22 +157,22 @@ function Intro() {
 function SideText({ chapter }: { chapter: typeof CHAPTERS[number] }) {
   const Icon = chapter.icon;
   return (
-    <div>
+    <div className="text-center md:text-left px-2 md:px-0">
       <div
-        className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] mb-5"
+        className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.18em] mb-3 md:mb-5"
         style={{
           background: `${chapter.accent}15`,
           color:      chapter.accent,
           border:     `1px solid ${chapter.accent}30`,
         }}
       >
-        <Icon className="h-3.5 w-3.5" />
+        <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
         {chapter.eyebrow}
       </div>
-      <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-5 leading-tight" style={{ color: C.text }}>
+      <h3 className="text-xl sm:text-3xl md:text-4xl font-bold mb-2 md:mb-5 leading-tight" style={{ color: C.text }}>
         {chapter.title}
       </h3>
-      <p className="text-base sm:text-lg leading-relaxed max-w-md" style={{ color: C.muted }}>
+      <p className="text-sm sm:text-lg leading-relaxed max-w-md mx-auto md:mx-0" style={{ color: C.muted }}>
         {chapter.body}
       </p>
     </div>
@@ -184,32 +184,28 @@ function SideText({ chapter }: { chapter: typeof CHAPTERS[number] }) {
 function PhoneFrame({ children }: { children: ReactNode }) {
   return (
     <div
-      className="relative overflow-hidden mx-auto"
+      className="relative overflow-hidden mx-auto w-[210px] h-[440px] sm:w-[260px] sm:h-[540px]"
       style={{
-        width:      260,
-        height:     540,
-        background: "#000",
-        borderRadius: 40,
-        padding:    8,
-        boxShadow:  "0 32px 80px rgba(0,0,0,0.65), 0 0 0 2px rgba(240,244,255,0.06), inset 0 0 0 2px rgba(255,255,255,0.04)",
+        background:   "#000",
+        borderRadius: 38,
+        padding:      8,
+        boxShadow:    "0 32px 80px rgba(0,0,0,0.65), 0 0 0 2px rgba(240,244,255,0.06), inset 0 0 0 2px rgba(255,255,255,0.04)",
       }}
     >
       {/* Notch */}
       <div
         aria-hidden
-        className="absolute top-3 left-1/2 -translate-x-1/2 z-30"
+        className="absolute top-3 left-1/2 -translate-x-1/2 z-30 w-[70px] h-[18px] sm:w-[88px] sm:h-[20px]"
         style={{
-          width:      88,
-          height:     20,
-          background: "#000",
+          background:   "#000",
           borderRadius: 12,
         }}
       />
       <div
         className="relative h-full w-full overflow-hidden"
         style={{
-          background: C.bg,
-          borderRadius: 32,
+          background:   C.bg,
+          borderRadius: 30,
         }}
       >
         {children}
