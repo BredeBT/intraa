@@ -456,18 +456,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, isSponsor } = useUser();
   const keyboardOpen = useKeyboardOpen();
 
-  // Sponsors always live on /brand/* — redirect them away from creator/fan pages
+  // Sponsors always live on /brand/* — redirect them away from creator/fan pages.
+  // Superadmin er unntatt: kan navigere fritt selv om de tester sponsor-rollen.
   useEffect(() => {
     if (!mounted || !isSponsor) return;
+    if (user?.isSuperAdmin) return;
     if (!pathname.startsWith("/brand") && !pathname.startsWith("/innstillinger") && pathname !== "/logout") {
       router.replace("/brand/dashboard");
     }
-  }, [mounted, isSponsor, pathname, router]);
+  }, [mounted, isSponsor, pathname, router, user?.isSuperAdmin]);
 
   // Redirect to /home when user has no org and tries to access an org-specific page
   useEffect(() => {
     if (!mounted || !orgLoaded || org !== null) return;
-    if (isSponsor) return; // sponsors handled above
+    if (isSponsor && !user?.isSuperAdmin) return; // sponsors handled above (superadmin gets normal flow)
     const isNoOrgPath =
       NO_ORG_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/")) ||
       pathname.startsWith("/u/");
