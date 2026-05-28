@@ -140,10 +140,11 @@ export const PRESTIGE_PERKS: PrestigePerk[] = [
   { id: "base_income",      name: "Grunnbonus",        emoji: "💰", category: "income",  cost: 1, maxPurchases: 10, description: "+5% bonus på all inntekt (stabelbar)",         effect: "+5% inntekt" },
   { id: "click_power",      name: "Klikk-kraft",        emoji: "⚡", category: "income",  cost: 1, maxPurchases:  5, description: "+10% coins per klikk (stabelbar)",             effect: "+10% CPC" },
   { id: "passive_boost",    name: "Passiv boost",       emoji: "⏱️", category: "income",  cost: 1, maxPurchases:  5, description: "+10% passiv inntekt per sekund (stabelbar)",   effect: "+10% CPS" },
+  { id: "world_momentum",   name: "Verdens-momentum",   emoji: "🔨", category: "income",  cost: 2, maxPurchases:  5, description: "Per klikk: +2% av første oppgradering i nåværende verden (skalerer naturlig)", effect: "+2% w-cost/klikk" },
   // Quality of Life
   { id: "upgrade_discount", name: "Handelsmann",        emoji: "🛒", category: "quality", cost: 2, maxPurchases:  3, description: "Oppgraderinger koster 10% mindre (stabelbar)",  effect: "-10% kostnad" },
   { id: "offline_hours",    name: "Nattugle",           emoji: "🦉", category: "quality", cost: 2, maxPurchases:  4, description: "+4 timer offline inntekt (maks 24t)",           effect: "+4t offline" },
-  { id: "quick_start",      name: "Hurtigstart",        emoji: "🚀", category: "quality", cost: 1, maxPurchases:  5, description: "Start hver verden med +2 000 coins",            effect: "+2K startcoins" },
+  { id: "quick_start",      name: "Hurtigstart",        emoji: "🚀", category: "quality", cost: 1, maxPurchases:  5, description: "Start hver verden med +20% av første oppgraderings-kostnad", effect: "+20% startcoins" },
   // Special
   { id: "lucky_click",      name: "Lykkeklikk",         emoji: "🍀", category: "special", cost: 2, maxPurchases:  4, description: "+5% sjanse for 3× klikk-inntekt (stabelbar)",  effect: "+5% sjanse 3×" },
   { id: "mega_click",       name: "Mega-klikk",         emoji: "💥", category: "special", cost: 3, maxPurchases:  2, description: "2% sjanse for 10× klikk-inntekt (stabelbar)",  effect: "2% sjanse 10×" },
@@ -156,7 +157,10 @@ export interface PerkConfig {
   passiveBonus:   number;   // extra CPS multiplier
   costMultiplier: number;   // <1 means cheaper upgrades
   offlineHours:   number;   // extra offline hours
-  quickStartCoins: number;  // start coins
+  /** Andel av første-oppgraderings-kostnad i ny verden som start-coins (0-1). */
+  quickStartPct:  number;
+  /** Andel av første-oppgraderings-kostnad i nåværende verden som flat coins per klikk (0-0.10). */
+  worldMomentumPct: number;
   luckyChance:    number;   // 0.0-1.0 total chance
   megaChance:     number;   // 0.0-1.0
   prestigeExtraBonus: number; // extra % per prestige beyond base 10%
@@ -165,16 +169,25 @@ export interface PerkConfig {
 export function calcPerkConfig(shop: Record<string, number>): PerkConfig {
   const get = (id: string) => shop[id] ?? 0;
   return {
-    incomeBonus:     Math.pow(1.05, get("base_income")),
-    clickBonus:      Math.pow(1.10, get("click_power")),
-    passiveBonus:    Math.pow(1.10, get("passive_boost")),
-    costMultiplier:  Math.pow(0.90, get("upgrade_discount")),
-    offlineHours:    get("offline_hours") * 4,
-    quickStartCoins: get("quick_start") * 2_000,
-    luckyChance:     Math.min(0.95, get("lucky_click") * 0.05),
-    megaChance:      Math.min(0.95, get("mega_click") * 0.02),
+    incomeBonus:        Math.pow(1.05, get("base_income")),
+    clickBonus:         Math.pow(1.10, get("click_power")),
+    passiveBonus:       Math.pow(1.10, get("passive_boost")),
+    costMultiplier:     Math.pow(0.90, get("upgrade_discount")),
+    offlineHours:       get("offline_hours") * 4,
+    quickStartPct:      get("quick_start") * 0.20,
+    worldMomentumPct:   get("world_momentum") * 0.02,
+    luckyChance:        Math.min(0.95, get("lucky_click") * 0.05),
+    megaChance:         Math.min(0.95, get("mega_click") * 0.02),
     prestigeExtraBonus: get("prestige_bonus") * 0.05,
   };
+}
+
+/** Billigste oppgradering i en verden — brukes for å skalere perks som
+ *  `world_momentum` og `quick_start` mot hvor langt brukeren har kommet. */
+export function getFirstUpgradeCost(world: number): number {
+  const ups = UPGRADES.filter((u) => u.world === world);
+  if (ups.length === 0) return 0;
+  return Math.min(...ups.map((u) => u.baseCost));
 }
 
 // ─── Existing helpers ─────────────────────────────────────────────────────────

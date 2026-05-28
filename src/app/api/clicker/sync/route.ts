@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { calcPerkConfig, getFirstUpgradeCost } from "@/lib/clickerUpgrades";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -46,10 +47,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ coins: Number(created.coins) });
   }
 
-  // Dynamic cap — 5 minutes of passive + all claimed clicks + small buffer
-  const cps      = Number(existing.coinsPerSecond);
-  const cpc      = Number(existing.coinsPerClick);
-  const maxDelta = (cps * 300) + (safeClicks * cpc) + 10_000;
+  // Dynamic cap — 5 minutter passiv + alle hevdede klikk + buffer.
+  // Vi tar høyde for fanpass (×1.5 CPC / ×2 CPS) og prestige-perks
+  // (incomeBonus, clickBonus, passiveBonus, worldMomentum-flat) slik
+  // at cap'en speiler det klienten faktisk kan tjene per klikk.
+  const shop      = (existing.prestigeShop ?? {}) as Record<string, number>;
+  const perkCfg   = calcPerkConfig(shop);
+  const cps       = Number(existing.coinsPerSecond);
+  const cpc       = Number(existing.coinsPerClick);
+  const worldFlat = getFirstUpgradeCost(existing.prestigeWorld) * perkCfg.worldMomentumPct;
+  // Generøse multiplikatorer (×1.5 fanpass + perks + 10× mega-klikk-margin)
+  const effCpc    = cpc * 1.5 * perkCfg.incomeBonus * perkCfg.clickBonus * 30 + worldFlat * 30;
+  const effCps    = cps * 2   * perkCfg.incomeBonus * perkCfg.passiveBonus;
+  const maxDelta  = (effCps * 300) + (safeClicks * effCpc) + 10_000;
   const safeCoins = Math.min(maxDelta, Math.max(0, Math.floor(delta)));
 
   console.log("[Sync API] delta:", delta, "safeCoins:", safeCoins, "maxDelta:", maxDelta, "currentCoins:", Number(existing.coins));

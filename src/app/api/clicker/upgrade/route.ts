@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { getUpgradeCost, calcCoinsPerClick, calcCoinsPerSecond, UPGRADES } from "@/lib/clickerUpgrades";
+import { getUpgradeCost, calcCoinsPerClick, calcCoinsPerSecond, UPGRADES, calcPerkConfig, getFirstUpgradeCost } from "@/lib/clickerUpgrades";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -38,9 +38,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Max level reached" }, { status: 400 });
   }
 
-  // Apply pending delta atomically (cap: 5 min of passive income + clicks)
+  // Apply pending delta atomically (cap: 5 min of passive income + clicks).
+  // Cap'en speiler fanpass + alle prestige-perks (inkl. world_momentum-flat
+  // og lucky/mega-multiplikatorer) slik at vi ikke uventet trunkerer
+  // legitim inntekt.
   const safeClicks = Math.max(0, Math.floor(clicks ?? 0));
-  const maxDelta   = (profile.coinsPerSecond * 300) + (safeClicks * profile.coinsPerClick) + 10_000;
+  const shop       = (profile.prestigeShop ?? {}) as Record<string, number>;
+  const perkCfg    = calcPerkConfig(shop);
+  const worldFlat  = getFirstUpgradeCost(profile.prestigeWorld) * perkCfg.worldMomentumPct;
+  const effCpc     = profile.coinsPerClick * 1.5 * perkCfg.incomeBonus * perkCfg.clickBonus * 30 + worldFlat * 30;
+  const effCps     = profile.coinsPerSecond * 2   * perkCfg.incomeBonus * perkCfg.passiveBonus;
+  const maxDelta   = (effCps * 300) + (safeClicks * effCpc) + 10_000;
   const safeDelta  = Math.min(maxDelta, Math.max(0, Math.floor(delta ?? 0)));
 
   const cost          = getUpgradeCost(upgradeId, currentLevel);

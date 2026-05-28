@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { WORLDS, MAX_WORLD, getWorldUpgrades, getUpgradeCost, PRESTIGE_PERKS, calcPerkConfig } from "@/lib/clickerUpgrades";
+import { WORLDS, MAX_WORLD, getWorldUpgrades, getUpgradeCost, PRESTIGE_PERKS, calcPerkConfig, getFirstUpgradeCost } from "@/lib/clickerUpgrades";
 import { Zap, Clock, Trophy, X, Lock, ShoppingBag } from "lucide-react";
 import FanpassHint from "@/components/FanpassHint";
 
@@ -301,7 +301,11 @@ export default function ClickerPage() {
     const multiplier = activeEvent?.type === "multiplier" ? activeEvent.multiplier : 1;
     const shop    = profile.prestigeShop ?? {};
     const pCfg    = calcPerkConfig(shop);
-    let baseCpc   = profile.coinsPerClick * multiplier * (hasFanpass ? 1.5 : 1) * pCfg.incomeBonus * pCfg.clickBonus;
+    // Flat world-momentum-bonus: % av nåværende verdens første-oppgradering.
+    // Skalerer naturlig — trivielt i W1, gjør slutten på grindet i W7+ mye
+    // mindre brutal.
+    const worldFlat = getFirstUpgradeCost(profile.prestigeWorld ?? 1) * pCfg.worldMomentumPct;
+    let baseCpc   = profile.coinsPerClick * multiplier * (hasFanpass ? 1.5 : 1) * pCfg.incomeBonus * pCfg.clickBonus + worldFlat;
     // Lucky click: X% chance for 3×
     if (pCfg.luckyChance > 0 && Math.random() < pCfg.luckyChance) baseCpc *= 3;
     // Mega click: Y% chance for 10× (rolls independently)
@@ -460,7 +464,8 @@ export default function ClickerPage() {
   const pointsSpent   = profile.prestigePointsSpent ?? 0;
   const pointsAvail   = totalPrestige - pointsSpent;
   const perkCfg       = calcPerkConfig(shopData);
-  const effectiveCpc  = profile.coinsPerClick * multiplier * (hasFanpass ? 1.5 : 1) * perkCfg.incomeBonus * perkCfg.clickBonus;
+  const worldFlatBonus = getFirstUpgradeCost(world) * perkCfg.worldMomentumPct;
+  const effectiveCpc  = profile.coinsPerClick * multiplier * (hasFanpass ? 1.5 : 1) * perkCfg.incomeBonus * perkCfg.clickBonus + worldFlatBonus;
   const effectiveCps  = profile.coinsPerSecond * (hasFanpass ? 2 : 1) * perkCfg.incomeBonus * perkCfg.passiveBonus;
 
   const worldUpgrades = getWorldUpgrades(world);

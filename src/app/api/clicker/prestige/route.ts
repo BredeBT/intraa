@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { WORLDS, MAX_WORLD, calcPerkConfig } from "@/lib/clickerUpgrades";
+import { WORLDS, MAX_WORLD, calcPerkConfig, getFirstUpgradeCost } from "@/lib/clickerUpgrades";
 import { awardCoins } from "@/lib/awardCoins";
 
 export async function POST(req: NextRequest) {
@@ -33,10 +33,12 @@ export async function POST(req: NextRequest) {
   const bonusPerPrestige = 0.10 + perkCfg.prestigeExtraBonus;
   const newBonus = Math.round((Number(profile.permanentBonus) + bonusPerPrestige) * 1000) / 1000;
 
-  // Quick start perk: begin with extra coins
-  const startCoins = perkCfg.quickStartCoins;
-
   const nextWorld = Math.min(world + 1, MAX_WORLD);
+
+  // Quick start perk: start ny verden med en andel av første-oppgraderingen.
+  // Skalerer naturlig med verden — i W1 er det noen kroner, i W9 er det
+  // millioner. Maks 5 stacks = 100% av første oppgraderings-kostnad.
+  const startCoins = Math.floor(getFirstUpgradeCost(nextWorld) * perkCfg.quickStartPct);
 
   // Delete all upgrades (reset)
   await db.clickerUpgrade.deleteMany({
