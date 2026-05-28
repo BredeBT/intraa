@@ -47,6 +47,7 @@ export default async function Home() {
 
   return (
     <div
+      data-theme="dark"
       className="min-h-screen relative overflow-x-clip"
       style={{ background: C.bg, color: C.text }}
     >

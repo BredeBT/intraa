@@ -10,8 +10,11 @@
    :root + [data-theme="light"]-blokkene under sammen med @theme-mappingen.
    ───────────────────────────────────────────────────────────────────── */
 
-:root, :root[data-theme="dark"] {
+:root, :root[data-theme="dark"], [data-theme="dark"] {
   /* ── Aurora palette (DARK) ──────────────────────────────────────── */
+  /* Tredje selektor ([data-theme="dark"] uten :root) lar oss tvinge dark
+     på en wrapper — f.eks. landing-pagen — uavhengig av brukerens
+     globale theme-pref. */
   --bg-primary:    #050816;
   --bg-secondary:  #0B1027;
   --bg-tertiary:   #131A35;
