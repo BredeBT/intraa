@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { cache } from "react";
 import { db } from "@/server/db";
 import { verifyTotpCode } from "@/lib/totp";
+import { readGeoFromHeaders, recordLoginEvent } from "@/lib/loginEvents";
 import { authConfig } from "./auth.config";
 
 // Spesifikke feilkoder slik at login-UI kan vise riktig melding
@@ -45,7 +46,7 @@ const nextAuthResult = NextAuth({
         password: { label: "Passord", type: "password" },
         totp:     { label: "2FA-kode", type: "text" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         if (!credentials?.email || !credentials?.password) return null;
 
         const user = await db.user.findUnique({
@@ -63,6 +64,16 @@ const nextAuthResult = NextAuth({
           if (!code) throw new TotpRequiredError();
           const validTotp = verifyTotpCode(code, user.totpSecret);
           if (!validTotp) throw new TotpInvalidError();
+        }
+
+        // Logg innloggingen og sjekk om landet er endret siden sist.
+        // Fire-and-forget — recordLoginEvent fanger alle feil internt slik
+        // at en DB-feil ikke knekker login. Vi venter på den likevel siden
+        // den er rask og vi vil at notifikasjonen skal være på plass før
+        // brukeren lander på /home.
+        if (request?.headers) {
+          const geo = readGeoFromHeaders(request.headers);
+          await recordLoginEvent(user.id, geo);
         }
 
         return {

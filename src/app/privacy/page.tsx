@@ -47,7 +47,17 @@ export default function PrivacyPage() {
               <li className="list-disc">Coin-balanse og clicker-spillprogresjon</li>
               <li className="list-disc">Streak-data (antall sammenhengende dager med innlogging)</li>
               <li className="list-disc">Lese-bekreftelser i meldinger (når du leser en DM eller kanal)</li>
-              <li className="list-disc">IP-adresse og nettlesertype ved innlogging (kun for sikkerhetslogging)</li>
+              <li className="list-disc">
+                IP-adresse, nettlesertype og <strong className="text-white">land/by</strong>{" "}
+                ved innlogging (sikkerhetslogging — landet utledes fra IP-en
+                via Vercels edge, vi snakker ikke med ekstern geo-tjeneste)
+              </li>
+              <li className="list-disc">
+                <strong className="text-white">Innloggings-historikk</strong>:
+                hvis du logger på fra et nytt land vi ikke har sett deg fra
+                før, varsler vi deg automatisk i appen og logger hendelsen
+                slik at vi kan hjelpe deg hvis kontoen blir misbrukt
+              </li>
               <li className="list-disc">Hvis du installerer mobilappen: enhetstoken for å sende push-varsler</li>
             </ul>
           </section>

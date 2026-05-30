@@ -95,6 +95,7 @@ enum NotifType {
   FANPASS_EXPIRING  // Fanpass utløper snart
   SPONSOR_TAG       // creator tagget brandet ditt
   STREAK_BUMP       // streak økte til en bonus-tier
+  SECURITY_LOGIN    // innlogging fra nytt land
 }
 
 enum FriendshipStatus {
@@ -314,8 +315,44 @@ model User {
   sponsorThreadsAsCreator SponsorThread[]   @relation("SponsorThreadCreator")
   sponsorMessagesSent     SponsorMessage[]
 
+  // Innloggings-logg + sikkerhetsalarmer
+  loginEvents             LoginEvent[]
+
   @@index([username])
   @@index([lastActive])
+}
+
+/// Append-only logg over hver vellykket innlogging. Brukes til å detektere
+/// uvanlig aktivitet (nytt land vs. forrige) og til support-saker. Slettes
+/// etter 90 dager (privacy-policy §11).
+model LoginEvent {
+  id           String   @id @default(cuid())
+  userId       String
+  /// Klient-IP — ofte fra `x-forwarded-for` eller `x-real-ip`. Kan være null
+  /// i lokal utvikling.
+  ip           String?
+  /// ISO 3166-1 alpha-2 land-kode fra Vercel edge (`x-vercel-ip-country`).
+  /// "??" hvis ikke tilgjengelig (lokal dev, edge-overstyring).
+  country      String?
+  /// By/region fra Vercel (`x-vercel-ip-city`) — best-effort.
+  city         String?
+  /// User-agent kappet til 500 tegn.
+  userAgent    String?
+  /// True hvis dette landet er ulikt forrige innloggings-land (alarm trigget).
+  suspicious   Boolean  @default(false)
+  /// Hva forrige innloggings-land var, hvis suspicious=true. Lar superadmin
+  /// se "logget på fra NO → TR" uten å joine tilbake i tabellen.
+  previousCountry String?
+  /// Settes når superadmin har avklart hendelsen ("ikke noe galt — bruker var
+  /// på ferie"). Filtreres ut av aktivt-tilfeller-panelet.
+  reviewedAt   DateTime?
+  reviewedBy   String?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([suspicious, reviewedAt, createdAt(sort: Desc)])
 }
 
 model NotificationPreference {

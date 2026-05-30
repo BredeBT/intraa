@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Globe, Inbox, Flag, Users, Mail, Briefcase } from "lucide-react";
+import { LayoutDashboard, Globe, Inbox, Flag, Users, Mail, Briefcase, ShieldAlert } from "lucide-react";
 
 const TABS = [
   { label: "Oversikt",  href: "/superadmin",           icon: LayoutDashboard },
@@ -11,6 +11,7 @@ const TABS = [
   { label: "Sponsors",  href: "/superadmin/sponsors",  icon: Briefcase },
   { label: "Support",   href: "/superadmin/support",   icon: Inbox },
   { label: "Rapporter", href: "/superadmin/rapporter", icon: Flag },
+  { label: "Sikkerhet", href: "/superadmin/sikkerhet", icon: ShieldAlert },
   { label: "Epost",     href: "/superadmin/epost",     icon: Mail },
 ];
 
