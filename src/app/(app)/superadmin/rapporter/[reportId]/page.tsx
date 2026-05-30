@@ -14,6 +14,7 @@ const REASON_FULL: Record<string, string> = {
   THREATS:       "⚡ Trusler",
   IMPERSONATION: "🎭 Utgir seg for å være noen andre",
   CHEATING:      "🎮 Juks i spill eller konkurranser",
+  COPYRIGHT:     "©️ Opphavsrett-brudd (musikk/video/bilder)",
   OTHER:         "📋 Annet",
 };
 

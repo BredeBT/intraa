@@ -569,7 +569,7 @@ export default function FeedClient({
     setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
     const optimistic: CommentWithAuthor = {
       id: `opt-${Date.now()}`, content: text, createdAt: new Date(), postId, authorId: userId,
-      author: { id: userId, name: userName, email: "", avatarUrl: null, createdAt: new Date() },
+      author: { id: userId, name: userName, avatarUrl: null, createdAt: new Date() },
     };
     setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, comments: [...p.comments, optimistic] } : p));
     try {

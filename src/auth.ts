@@ -6,11 +6,13 @@ import { cache } from "react";
 import { db } from "@/server/db";
 import { verifyTotpCode } from "@/lib/totp";
 import { readGeoFromHeaders, recordLoginEvent } from "@/lib/loginEvents";
+import { rateLimitByBucket } from "@/lib/rateLimit";
 import { authConfig } from "./auth.config";
 
 // Spesifikke feilkoder slik at login-UI kan vise riktig melding
 class TotpRequiredError extends CredentialsSignin { code = "totp_required"; }
 class TotpInvalidError  extends CredentialsSignin { code = "totp_invalid";  }
+class RateLimitedError  extends CredentialsSignin { code = "rate_limited";  }
 
 declare module "next-auth" {
   interface User {
@@ -49,8 +51,30 @@ const nextAuthResult = NextAuth({
       async authorize(credentials, request) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        const emailRaw = String(credentials.email).toLowerCase();
+
+        // Rate-limit FØR bcrypt-compare. Brute-force / credential-stuffing
+        // forsvar: to bøtter — én per IP (mot bred angrep), én per e-post
+        // (mot målrettet angrep der angriper roterer IP). bcrypt cost 12
+        // tar ~250ms per gjetting; uten throttle kan en angriper kjøre så
+        // raskt CPUen tillater.
+        //
+        // - IP-bøtte: 30/5 min — romslig nok til legitime brukere som
+        //   skriver feil passord noen ganger, stramt nok til å gjøre
+        //   brute-force upraktisk
+        // - E-post-bøtte: 10/15 min — stopper målrettet angrep mot én
+        //   konto selv om IP roterer
+        const ipHdr = request?.headers?.get("x-forwarded-for")?.split(",")[0]?.trim()
+                   ?? request?.headers?.get("x-real-ip")
+                   ?? "unknown";
+        const ipResult    = await rateLimitByBucket(`login-ip:${ipHdr}`,       30, 5  * 60_000);
+        const emailResult = await rateLimitByBucket(`login-email:${emailRaw}`, 10, 15 * 60_000);
+        if (!ipResult.ok || !emailResult.ok) {
+          throw new RateLimitedError();
+        }
+
         const user = await db.user.findUnique({
-          where: { email: String(credentials.email) },
+          where: { email: emailRaw },
         });
 
         if (!user?.password) return null;

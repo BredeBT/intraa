@@ -32,6 +32,7 @@ const REASON_LABEL: Record<string, string> = {
   THREATS:       "⚡ Trusler",
   IMPERSONATION: "🎭 Falsk identitet",
   CHEATING:      "🎮 Juks",
+  COPYRIGHT:     "©️ Opphavsrett",
   OTHER:         "📋 Annet",
 };
 

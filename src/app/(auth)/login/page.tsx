@@ -41,6 +41,8 @@ export default function LoginPage() {
         } else if (result.code === "totp_invalid" || result.error.includes("totp_invalid")) {
           setNeedsTotp(true);
           setErrors({ totp: "Feil 2FA-kode" });
+        } else if (result.code === "rate_limited" || result.error.includes("rate_limited")) {
+          setErrors({ server: "For mange innloggings-forsøk. Vent litt og prøv igjen." });
         } else {
           setErrors({ server: "Feil e-post eller passord" });
           setNeedsTotp(false);

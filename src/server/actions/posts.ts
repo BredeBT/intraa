@@ -27,10 +27,10 @@ export async function getPosts(orgId: string): Promise<PostWithAuthor[]> {
       ...(isMod ? {} : { hiddenAt: null }),
     },
     include: {
-      author:   { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } },
+      author:   { select: { id: true, name: true, avatarUrl: true, createdAt: true } },
       comments: {
         where:    isMod ? {} : { hiddenAt: null },
-        include:  { author: { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } } },
+        include:  { author: { select: { id: true, name: true, avatarUrl: true, createdAt: true } } },
         orderBy:  { createdAt: "asc" },
         take:     5, // load first 5 comments; more are fetched on demand via /api/comments
       },
@@ -90,7 +90,7 @@ export async function createPost(orgId: string, content: string, imageUrl?: stri
 
   const post = await db.post.create({
     data:    { orgId, authorId: session.user.id, content, imageUrl: imageUrl ?? null },
-    include: { author: { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } }, comments: { include: { author: { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } } } } },
+    include: { author: { select: { id: true, name: true, avatarUrl: true, createdAt: true } }, comments: { include: { author: { select: { id: true, name: true, avatarUrl: true, createdAt: true } } } } },
   });
 
   void awardCoins({ userId: session.user.id, organizationId: orgId, amount: 10, reason: "post", description: "Opprettet et innlegg" });

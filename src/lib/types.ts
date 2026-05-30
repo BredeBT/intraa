@@ -28,6 +28,20 @@ export type User = {
   hasFanpass?: boolean;
 };
 
+/**
+ * Brukerinfo som er trygg å sende til klienten — IKKE e-post. Brukes som
+ * `author`/`user`-shape på posts, kommentarer, meldinger og medlemsslister
+ * der respons-payloaden flyter til andre brukere enn eieren selv. Hindrer
+ * at e-postadresser lekker via API-responsen.
+ */
+export type PublicUser = {
+  id:         string;
+  name:       string | null;
+  avatarUrl:  string | null;
+  createdAt:  Date;
+  hasFanpass?: boolean;
+};
+
 export type Membership = {
   id:             string;
   role:           MemberRole;
@@ -117,11 +131,11 @@ export type Like = {
 // ─── With relations ───────────────────────────────────────────────────────────
 
 export type CommentWithAuthor = Comment & {
-  author: User;
+  author: PublicUser;
 };
 
 export type PostWithAuthor = Post & {
-  author:         User;
+  author:         PublicUser;
   comments:       CommentWithAuthor[];
   likeCount:      number;
   likedByMe:      boolean;
@@ -136,14 +150,14 @@ export type TicketWithAssignee = Ticket & {
 };
 
 export type MessageWithAuthor = Message & {
-  author:     User;
+  author:     PublicUser;
   reactions:  ReactionGroup[];
   replyCount: number;
   replies:    MessageWithAuthor[];
 };
 
 export type MembershipWithUser = Membership & {
-  user: User;
+  user: PublicUser;
 };
 
 export type ChannelWithMessages = Channel & {

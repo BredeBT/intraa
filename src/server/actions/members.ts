@@ -15,7 +15,7 @@ export async function getMembers(orgId: string): Promise<MembershipWithUser[]> {
 
   return db.membership.findMany({
     where:   { organizationId: orgId },
-    include: { user: { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } } },
+    include: { user: { select: { id: true, name: true, avatarUrl: true, createdAt: true } } },
     orderBy: { user: { name: "asc" } },
   });
 }
@@ -37,7 +37,7 @@ export async function updateMemberRole(
   return db.membership.update({
     where:   { userId_organizationId: { userId, organizationId: orgId } },
     data:    { role },
-    include: { user: { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } } },
+    include: { user: { select: { id: true, name: true, avatarUrl: true, createdAt: true } } },
   });
 }
 

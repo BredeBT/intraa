@@ -94,33 +94,52 @@ export interface RateLimitOptions {
 export async function rateLimit(req: NextRequest, opts: RateLimitOptions): Promise<NextResponse | null> {
   const ip        = getClientIp(req);
   const bucketKey = `${opts.key}:${ip}`;
+  const result    = await checkBucket(bucketKey, opts.max, opts.windowMs);
+  if (result.ok) return null;
+  return NextResponse.json(
+    { error: "For mange forsøk. Prøv igjen om litt." },
+    { status: 429, headers: { "Retry-After": String(Math.max(1, result.retryAfter)) } },
+  );
+}
 
-  const limiter = getLimiter(opts.max, opts.windowMs);
+/**
+ * Lav-nivå rate-limit som tar en ferdig-bygget bucket-key i stedet for å
+ * derivere den fra en NextRequest. Brukes der request-objektet er en plain
+ * Web Request (f.eks. NextAuth Credentials.authorize), eller når vi vil
+ * kombinere flere identifikatorer i én bucket (login: IP + e-post).
+ *
+ * Returnerer `{ ok: false, retryAfter }` ved overskridelse i stedet for en
+ * NextResponse — kalleren bestemmer hva som skjer (throw, error-status,
+ * osv).
+ */
+export async function rateLimitByBucket(
+  bucketKey: string,
+  max:       number,
+  windowMs:  number,
+): Promise<{ ok: boolean; retryAfter: number }> {
+  return checkBucket(bucketKey, max, windowMs);
+}
+
+async function checkBucket(
+  bucketKey: string,
+  max:       number,
+  windowMs:  number,
+): Promise<{ ok: boolean; retryAfter: number }> {
+  const limiter = getLimiter(max, windowMs);
   if (limiter) {
     try {
       const result = await limiter.limit(bucketKey);
-      if (!result.success) {
-        const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
-        return NextResponse.json(
-          { error: "For mange forsøk. Prøv igjen om litt." },
-          { status: 429, headers: { "Retry-After": String(Math.max(1, retryAfter)) } },
-        );
-      }
-      return null;
+      if (result.success) return { ok: true, retryAfter: 0 };
+      const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
+      return { ok: false, retryAfter: Math.max(1, retryAfter) };
     } catch (err) {
-      // Hvis Upstash er nede skal vi ikke knekke hele endepunktet —
-      // logg og fall tilbake til in-memory så vi har EN form for limit.
+      // Hvis Upstash er nede skal vi ikke knekke hele endepunktet — fall
+      // tilbake til in-memory så vi har EN form for limit.
       console.warn("[rateLimit] Upstash failed, falling back to memory:", err);
     }
   }
-
-  const memResult = memLimit(bucketKey, opts.max, opts.windowMs);
-  if (!memResult.ok) {
-    const retryAfter = Math.ceil((memResult.resetAt - Date.now()) / 1000);
-    return NextResponse.json(
-      { error: "For mange forsøk. Prøv igjen om litt." },
-      { status: 429, headers: { "Retry-After": String(Math.max(1, retryAfter)) } },
-    );
-  }
-  return null;
+  const memResult = memLimit(bucketKey, max, windowMs);
+  if (memResult.ok) return { ok: true, retryAfter: 0 };
+  const retryAfter = Math.ceil((memResult.resetAt - Date.now()) / 1000);
+  return { ok: false, retryAfter: Math.max(1, retryAfter) };
 }

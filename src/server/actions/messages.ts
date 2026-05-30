@@ -22,7 +22,6 @@ type PrismaMsg = {
   parentMessageId: string | null;
   author: {
     id:        string;
-    email:     string;
     name:      string | null;
     avatarUrl: string | null;
     createdAt: Date;
@@ -53,7 +52,6 @@ function mapMessage(m: PrismaMsg, userId: string, fanpassSet?: Set<string>): Mes
     parentMessageId: m.parentMessageId,
     author: {
       id:         m.author.id,
-      email:      m.author.email,
       name:       m.author.name,
       avatarUrl:  m.author.avatarUrl,
       createdAt:  m.author.createdAt,
@@ -81,7 +79,9 @@ async function getFanpassSet(userIds: string[], orgId: string): Promise<Set<stri
   return new Set(rows.map((r) => r.userId));
 }
 
-const AUTHOR_SELECT = { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } } as const;
+// E-post bevisst utelatt — author-objektet sendes til alle medlemmer som ser
+// meldingen, og e-post er PII vi ikke skal lekke inn i klient-payloaden.
+const AUTHOR_SELECT = { select: { id: true, name: true, avatarUrl: true, createdAt: true } } as const;
 
 const MSG_INCLUDE = {
   author:    AUTHOR_SELECT,

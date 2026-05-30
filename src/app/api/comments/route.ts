@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
   const comments = await db.comment.findMany({
     where:   { postId },
-    include: { author: { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } } },
+    include: { author: { select: { id: true, name: true, avatarUrl: true, createdAt: true } } },
     orderBy: { createdAt: "asc" },
   });
 
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
   const comment = await db.comment.create({
     data:    { postId, content: content.trim(), authorId: session.user.id },
-    include: { author: { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } } },
+    include: { author: { select: { id: true, name: true, avatarUrl: true, createdAt: true } } },
   });
 
   if (postWithOrg) {

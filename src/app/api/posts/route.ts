@@ -26,9 +26,9 @@ export async function GET(request: Request) {
   const posts = await db.post.findMany({
     where:   { orgId },
     include: {
-      author:   { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } },
+      author:   { select: { id: true, name: true, avatarUrl: true, createdAt: true } },
       comments: {
-        include:  { author: { select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true } } },
+        include:  { author: { select: { id: true, name: true, avatarUrl: true, createdAt: true } } },
         orderBy:  { createdAt: "asc" },
         take:     5, // load first 5 comments; more are fetched on demand via /api/comments
       },

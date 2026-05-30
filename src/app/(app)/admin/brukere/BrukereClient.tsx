@@ -8,7 +8,7 @@ type OrgType    = "COMPANY" | "COMMUNITY";
 
 type ReportReason =
   | "HARASSMENT" | "HATE_SPEECH" | "SPAM" | "INAPPROPRIATE"
-  | "THREATS" | "IMPERSONATION" | "CHEATING" | "OTHER";
+  | "THREATS" | "IMPERSONATION" | "CHEATING" | "COPYRIGHT" | "OTHER";
 
 const ROLE_LABEL: Record<MemberRole, string> = {
   OWNER:     "Eier",
@@ -34,6 +34,7 @@ const REPORT_REASONS: { value: ReportReason; label: string }[] = [
   { value: "THREATS",      label: "⚡ Trusler" },
   { value: "IMPERSONATION",label: "🎭 Utgir seg for å være noen andre" },
   { value: "CHEATING",     label: "🎮 Juks i spill eller konkurranser" },
+  { value: "COPYRIGHT",    label: "©️ Opphavsrett-brudd (musikk, video, bilder)" },
   { value: "OTHER",        label: "📋 Annet" },
 ];
 
