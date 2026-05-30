@@ -2,30 +2,35 @@
 
 import { useState, useEffect, useTransition, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, Users, ChevronLeft, X, Shield, Ticket, RotateCcw, Trash2, Check, Loader2, Activity, Flame } from "lucide-react";
+import { Search, Users, ChevronLeft, X, Shield, ShieldCheck, ShieldAlert, Ticket, RotateCcw, Trash2, Check, Loader2, Activity, Flame, Globe, MapPin } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type UserTypeKey = "FAN" | "CREATOR" | "SPONSOR";
 
 interface User {
-  id:            string;
-  name:          string | null;
-  username:      string;
-  email:         string;
-  avatarUrl:     string | null;
-  isSuperAdmin:  boolean;
-  userType:      UserTypeKey;
-  createdAt:     string;
-  lastActive:    string | null;
-  dailyStreak:   number;
-  longestStreak: number;
-  lastStreakDay: string | null;
-  memberCount:   number;
-  hasFanpass:    boolean;
-  fanpassEnd:    string | null;
-  brandName:     string | null;
-  brandSlug:     string | null;
+  id:               string;
+  name:             string | null;
+  username:         string;
+  email:            string;
+  avatarUrl:        string | null;
+  isSuperAdmin:     boolean;
+  userType:         UserTypeKey;
+  totpEnabled:      boolean;
+  createdAt:        string;
+  lastActive:       string | null;
+  dailyStreak:      number;
+  longestStreak:    number;
+  lastStreakDay:    string | null;
+  memberCount:      number;
+  hasFanpass:       boolean;
+  fanpassEnd:       string | null;
+  brandName:        string | null;
+  brandSlug:        string | null;
+  lastLoginCountry: string | null;
+  lastLoginCity:    string | null;
+  lastLoginIp:      string | null;
+  lastLoginAt:      string | null;
 }
 
 interface Props {
@@ -286,6 +291,53 @@ function ManageModal({ user, onClose, onSaved }: { user: User; onClose: () => vo
                   sist bumpet {fmtDate(user.lastStreakDay)}
                 </p>
               )}
+            </div>
+          </div>
+
+          {/* Siste innlogging — land/by/IP + 2FA. Land vises fra Vercel
+              edge-headere; mangler i lokal dev (vises som "?? / ukjent"). */}
+          <div className="mt-3 border-t border-zinc-800 pt-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] text-zinc-500">Siste innlogging</p>
+                {user.lastLoginAt ? (
+                  <>
+                    <p className="flex flex-wrap items-center gap-1.5 text-zinc-200">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-zinc-800 px-1.5 py-0.5 font-mono text-[11px] font-semibold">
+                        <Globe className="h-3 w-3" />
+                        {user.lastLoginCountry ?? "??"}
+                      </span>
+                      {user.lastLoginCity && (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-zinc-400">
+                          <MapPin className="h-3 w-3" /> {user.lastLoginCity}
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-[10px] text-zinc-500" title={user.lastLoginAt}>
+                      {timeAgo(user.lastLoginAt)} · {fmtDateTime(user.lastLoginAt)}
+                    </p>
+                    {user.lastLoginIp && (
+                      <p className="font-mono text-[10px] text-zinc-600">{user.lastLoginIp}</p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-zinc-500">
+                    ingen logget innlogging
+                    <span className="ml-1 text-[10px] text-zinc-600">(lagt til 30. mai 2026 — tidligere innlogginger ble ikke sporet)</span>
+                  </p>
+                )}
+              </div>
+              <div className="shrink-0">
+                {user.totpEnabled ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
+                    <ShieldCheck className="h-3 w-3" /> 2FA
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-2 py-0.5 text-[11px] font-medium text-rose-300">
+                    <ShieldAlert className="h-3 w-3" /> Ingen 2FA
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>

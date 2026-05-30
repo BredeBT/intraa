@@ -52,6 +52,7 @@ export default async function UsersPage({
         avatarUrl:     true,
         isSuperAdmin:  true,
         userType:      true,
+        totpEnabled:   true,
         createdAt:     true,
         lastActive:    true,
         dailyStreak:   true,
@@ -60,6 +61,11 @@ export default async function UsersPage({
         _count:        { select: { memberships: true } },
         fanPasses:     { where: { status: "ACTIVE", cancelledAt: null }, select: { id: true, endDate: true }, take: 1 },
         sponsorProfile: { select: { slug: true, brandName: true } },
+        loginEvents:   {
+          orderBy: { createdAt: "desc" },
+          take:    1,
+          select:  { country: true, city: true, ip: true, createdAt: true },
+        },
       },
     }),
     db.user.count({ where }),
@@ -68,25 +74,33 @@ export default async function UsersPage({
       : Promise.resolve(null),
   ]);
 
-  const mappedUsers = users.map((u) => ({
-    id:            u.id,
-    name:          u.name,
-    username:      u.username,
-    email:         u.email,
-    avatarUrl:     u.avatarUrl,
-    isSuperAdmin:  u.isSuperAdmin,
-    userType:      u.userType,
-    createdAt:     u.createdAt.toISOString(),
-    lastActive:    u.lastActive?.toISOString() ?? null,
-    dailyStreak:   u.dailyStreak,
-    longestStreak: u.longestStreak,
-    lastStreakDay: u.lastStreakDay?.toISOString() ?? null,
-    memberCount:   u._count.memberships,
-    hasFanpass:    u.fanPasses.length > 0,
-    fanpassEnd:    u.fanPasses[0]?.endDate.toISOString() ?? null,
-    brandName:     u.sponsorProfile?.brandName ?? null,
-    brandSlug:     u.sponsorProfile?.slug ?? null,
-  }));
+  const mappedUsers = users.map((u) => {
+    const last = u.loginEvents[0];
+    return {
+      id:               u.id,
+      name:             u.name,
+      username:         u.username,
+      email:            u.email,
+      avatarUrl:        u.avatarUrl,
+      isSuperAdmin:     u.isSuperAdmin,
+      userType:         u.userType,
+      totpEnabled:      u.totpEnabled,
+      createdAt:        u.createdAt.toISOString(),
+      lastActive:       u.lastActive?.toISOString() ?? null,
+      dailyStreak:      u.dailyStreak,
+      longestStreak:    u.longestStreak,
+      lastStreakDay:    u.lastStreakDay?.toISOString() ?? null,
+      memberCount:      u._count.memberships,
+      hasFanpass:       u.fanPasses.length > 0,
+      fanpassEnd:       u.fanPasses[0]?.endDate.toISOString() ?? null,
+      brandName:        u.sponsorProfile?.brandName ?? null,
+      brandSlug:        u.sponsorProfile?.slug ?? null,
+      lastLoginCountry: last?.country ?? null,
+      lastLoginCity:    last?.city    ?? null,
+      lastLoginIp:      last?.ip      ?? null,
+      lastLoginAt:      last?.createdAt.toISOString() ?? null,
+    };
+  });
 
   return (
     <UsersClient
