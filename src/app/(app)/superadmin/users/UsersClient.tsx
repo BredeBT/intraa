@@ -2,26 +2,30 @@
 
 import { useState, useEffect, useTransition, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, Users, ChevronLeft, X, Shield, Ticket, RotateCcw, Trash2, Check, Loader2 } from "lucide-react";
+import { Search, Users, ChevronLeft, X, Shield, Ticket, RotateCcw, Trash2, Check, Loader2, Activity, Flame } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type UserTypeKey = "FAN" | "CREATOR" | "SPONSOR";
 
 interface User {
-  id:           string;
-  name:         string | null;
-  username:     string;
-  email:        string;
-  avatarUrl:    string | null;
-  isSuperAdmin: boolean;
-  userType:     UserTypeKey;
-  createdAt:    string;
-  memberCount:  number;
-  hasFanpass:   boolean;
-  fanpassEnd:   string | null;
-  brandName:    string | null;
-  brandSlug:    string | null;
+  id:            string;
+  name:          string | null;
+  username:      string;
+  email:         string;
+  avatarUrl:     string | null;
+  isSuperAdmin:  boolean;
+  userType:      UserTypeKey;
+  createdAt:     string;
+  lastActive:    string | null;
+  dailyStreak:   number;
+  longestStreak: number;
+  lastStreakDay: string | null;
+  memberCount:   number;
+  hasFanpass:    boolean;
+  fanpassEnd:    string | null;
+  brandName:     string | null;
+  brandSlug:     string | null;
 }
 
 interface Props {
@@ -44,6 +48,24 @@ function initials(name: string | null) {
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function fmtDateTime(iso: string) {
+  return new Date(iso).toLocaleString("nb-NO", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+function timeAgo(iso: string): string {
+  const ms   = Date.now() - new Date(iso).getTime();
+  const min  = Math.floor(ms / 60_000);
+  if (min < 1)       return "akkurat nå";
+  if (min < 60)      return `${min} min siden`;
+  const hr   = Math.floor(min / 60);
+  if (hr  < 24)      return `${hr} t siden`;
+  const day  = Math.floor(hr / 24);
+  if (day < 30)      return `${day} dager siden`;
+  const mon  = Math.floor(day / 30);
+  if (mon < 12)      return `${mon} mnd siden`;
+  return `${Math.floor(mon / 12)} år siden`;
 }
 
 // Bruker CSS-variabler så fargene flippes i light mode (mørkere/mettet for
@@ -227,6 +249,45 @@ function ManageModal({ user, onClose, onSaved }: { user: User; onClose: () => vo
               <Shield className="h-3 w-3" /> Superadmin
             </span>
           )}
+        </div>
+
+        {/* Aktivitet — hjelper med support-saker ("hvorfor mistet jeg streaken?",
+            "noen har tatt over kontoen min", osv). Dataene logges allerede;
+            denne seksjonen viser dem bare samlet. */}
+        <div className="mb-5 rounded-lg border border-zinc-800 bg-zinc-900/60 p-3">
+          <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+            <Activity className="h-3 w-3" /> Aktivitet
+          </p>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+            <div>
+              <p className="text-[10px] text-zinc-500">Sist aktiv</p>
+              <p className="text-zinc-200">
+                {user.lastActive ? timeAgo(user.lastActive) : <span className="text-zinc-500">aldri</span>}
+              </p>
+              {user.lastActive && (
+                <p className="text-[10px] text-zinc-500" title={user.lastActive}>
+                  {fmtDateTime(user.lastActive)}
+                </p>
+              )}
+            </div>
+            <div>
+              <p className="text-[10px] text-zinc-500">Streak</p>
+              <p className="flex items-center gap-1 text-zinc-200">
+                <Flame
+                  className="h-3 w-3"
+                  fill={user.dailyStreak >= 3 ? "#FB923C" : "none"}
+                  color={user.dailyStreak >= 3 ? "#FB923C" : "currentColor"}
+                />
+                {user.dailyStreak} {user.dailyStreak === 1 ? "dag" : "dager"}
+                <span className="text-[10px] text-zinc-500">(maks {user.longestStreak})</span>
+              </p>
+              {user.lastStreakDay && (
+                <p className="text-[10px] text-zinc-500">
+                  sist bumpet {fmtDate(user.lastStreakDay)}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Edit form */}

@@ -85,6 +85,12 @@ export default function PrivacyPage() {
               <li className="list-disc">For å sende varsler du har valgt</li>
               <li className="list-disc">For å beregne coin-belønninger og fanpass-status</li>
               <li className="list-disc">For å motvirke misbruk (rate-limiting, sikkerhetslogging)</li>
+              <li className="list-disc">
+                For å undersøke support-henvendelser (f.eks. <em>«hvorfor mistet jeg streaken min?»</em>
+                eller mistenkt kompromittert konto) — intraa-teamet kan se
+                sist-aktiv-tidspunkt, streak-historikk og innloggings-logger
+                når de hjelper deg
+              </li>
             </ul>
             <p className="mt-3">
               Vi selger aldri data til tredjeparter. Vi bruker ikke dataene dine til
