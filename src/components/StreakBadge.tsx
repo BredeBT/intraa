@@ -42,10 +42,19 @@ export default function StreakBadge() {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch("/api/user/streak")
-      .then((r) => r.ok ? r.json() as Promise<StreakData> : Promise.reject())
-      .then(setData)
-      .catch(() => null);
+    const refresh = () => {
+      fetch("/api/user/streak")
+        .then((r) => r.ok ? r.json() as Promise<StreakData> : Promise.reject())
+        .then(setData)
+        .catch(() => null);
+    };
+    refresh();
+    // Re-fetch når tab'en blir synlig igjen — GET'en bumper streaken som
+    // side-effekt, så brukere som lar tab'en stå åpen på tvers av dager
+    // får fortsatt registrert dagen sin.
+    const onVisible = () => { if (document.visibilityState === "visible") refresh(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, []);
 
   useEffect(() => {

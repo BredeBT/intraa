@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { calcPerkConfig, getFirstUpgradeCost } from "@/lib/clickerUpgrades";
+import { updateLastActive } from "@/lib/updateLastActive";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Klikker-spilling teller som aktivitet → bump daily-streak (throttled).
+  void updateLastActive(session.user.id);
 
   const contentType = req.headers.get("content-type") ?? "";
   let orgId: string, delta: number, clicks: number;
