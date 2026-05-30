@@ -315,6 +315,7 @@ model User {
   // Sponsor-marketplace inbox (separat fra DM/meldinger)
   sponsorThreadsAsCreator SponsorThread[]   @relation("SponsorThreadCreator")
   sponsorMessagesSent     SponsorMessage[]
+  sponsorAgreementsAsCreator SponsorAgreement[] @relation("SponsorAgreementCreator")
 
   // Innloggings-logg + sikkerhetsalarmer
   loginEvents             LoginEvent[]
@@ -610,12 +611,18 @@ model SponsorProfile {
   logoUrl     String?
   website     String?
   description String?
+  // Default-kontaktinfo som forhåndsfyller nye avtaler. Lagres her så
+  // sponsoren slipper å skrive på nytt for hver avtale.
+  orgNumber   String?  // organisasjonsnummer
+  contactEmail String?
+  contactPhone String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stories Story[]
-  threads SponsorThread[]
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stories    Story[]
+  threads    SponsorThread[]
+  agreements SponsorAgreement[]
 }
 
 // Sponsor↔creator-outreach. Separat fra DM (Friendship+DirectMessage) som
@@ -663,6 +670,71 @@ model SponsorMessage {
   author  User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([threadId, createdAt(sort: Desc)])
+}
+
+/// Formell avtale mellom en sponsor og en creator om sponset innhold.
+/// Sponsor fyller ut malen, signerer digitalt, sender til creator. Creator
+/// signerer i sin tur — avtalen blir da ACTIVE for hele perioden. Når
+/// status er ACTIVE og dagens dato er innen periodStart→periodEnd, kan
+/// creator tagge sponsoren i innlegg/broadcasts.
+///
+/// Intraa er IKKE juridisk part i avtalen — vi fasiliterer kun
+/// dokumentasjonen. Standard-disclaimer (`intraaDisclaimer`) settes på
+/// hver avtale og kan ikke endres av partene.
+model SponsorAgreement {
+  id              String                 @id @default(cuid())
+  sponsorId       String                 // SponsorProfile.id
+  creatorId       String                 // User.id (creator-rollen)
+
+  // Mal-felter — sponsor fyller ut. Brand-navn forhåndsfylles fra
+  // SponsorProfile, men kan justeres (f.eks. hvis bestemt produkt-navn
+  // skal stå istedenfor selskaps-navnet).
+  brandName        String
+  brandOrgNumber   String?
+  contactEmail     String
+  contactPhone     String?
+  /// Beskrivelse av arbeidet: hva creator skal levere, antall innlegg,
+  /// stories, broadcasts, eventuelle eksklusivitets-klausuler.
+  workDescription  String
+  periodStart      DateTime
+  periodEnd        DateTime
+  /// Compensation as fritekst — beløp, in-kind, prosent, etc. Holder
+  /// dette enkelt så vi slipper valuta-håndtering. Intraa er ikke
+  /// økonomisk part.
+  compensation     String?
+
+  /// Status: DRAFT (sponsor lager) → PENDING_CREATOR (sendt) → ACTIVE
+  /// (begge har signert) → EXPIRED (periodEnd passert) eller REVOKED
+  /// (en av partene har avsluttet før tiden).
+  status           SponsorAgreementStatus @default(DRAFT)
+
+  // Digitale signaturer. Settes når parten klikker "signer" i UI.
+  sponsorSignedAt  DateTime?
+  creatorSignedAt  DateTime?
+
+  /// Hvis avsluttet før tiden — hvem og hvorfor. Sponsor eller creator
+  /// kan revoke; den andre parten varsles.
+  revokedAt        DateTime?
+  revokedBy        String?
+  revokedReason    String?
+
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  sponsor SponsorProfile @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  creator User           @relation("SponsorAgreementCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([sponsorId, status])
+  @@index([creatorId, status])
+  @@index([status, periodEnd])
+}
+
+enum SponsorAgreementStatus {
+  DRAFT             // sponsor lager / redigerer
+  PENDING_CREATOR   // sponsor har signert, ligger og venter på creator
+  ACTIVE            // begge har signert + innenfor periode
+  EXPIRED           // periodEnd passert
+  REVOKED           // avsluttet av en av partene
 }
 
 model StoryView {

@@ -79,13 +79,15 @@ export default function ThreadList({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 md:px-6 md:py-8" style={{ color: S.text }}>
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2" style={{ color: S.text }}>
-          <Inbox className="h-6 w-6" style={{ color: S.purple }} />
-          {title}
-        </h1>
-        <p className="mt-1 text-sm" style={{ color: S.muted }}>{subtitle}</p>
-      </div>
+      {title && (
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2" style={{ color: S.text }}>
+            <Inbox className="h-6 w-6" style={{ color: S.purple }} />
+            {title}
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: S.muted }}>{subtitle}</p>
+        </div>
+      )}
 
       {/* Status-filter */}
       <div className="mb-5 relative inline-block">

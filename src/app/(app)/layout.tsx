@@ -62,6 +62,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/sponsor-henvendelser": "Sponsor-henvendelser",
   "/brand/creators":     "Finn creators",
   "/brand/innboks":      "Sponsor-innboks",
+  "/brand/avtaler":      "Sponsoravtaler",
   "/profil":             "Profil",
   "/notifikasjoner":     "Notifikasjoner",
   "/soek":               "Søk",

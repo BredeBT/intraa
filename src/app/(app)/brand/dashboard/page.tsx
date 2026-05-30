@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db";
 import Link from "next/link";
-import { Globe, Edit, Eye, Heart, Image as ImageIcon, ExternalLink, TrendingUp, Users, Inbox } from "lucide-react";
+import { Globe, Edit, Eye, Heart, Image as ImageIcon, ExternalLink, TrendingUp, Users, Inbox, FileText } from "lucide-react";
 import { safeUrl } from "@/lib/safeUrl";
 
 export const dynamic = "force-dynamic";
@@ -101,6 +101,13 @@ export default async function BrandDashboardPage() {
               >
                 <Inbox className="h-3.5 w-3.5" />
                 Innboks
+              </Link>
+              <Link
+                href="/brand/avtaler"
+                className="flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-xs text-white/70 hover:text-white hover:border-white/20 transition-colors"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                Avtaler
               </Link>
               <Link
                 href={`/brand/${brand.slug}`}
