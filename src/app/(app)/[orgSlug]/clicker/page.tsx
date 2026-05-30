@@ -1181,9 +1181,16 @@ export default function ClickerPage() {
         {WorldsPanel}
       </div>
 
-      {/* Centre — Game */}
-      <div className={`${mobileTab === "klikker" ? "flex" : "hidden"} md:flex flex-1 flex-col items-center md:justify-center overflow-y-auto px-4 pt-4 pb-6 md:px-8 md:py-6`}>
-        {ClickPanel}
+      {/* Centre — Game.
+          NB: bruker m-auto-wrapper i stedet for justify-center. justify-center
+          + overflow-y-auto klipper toppen av content når det er taller enn
+          viewport (f.eks. når offline-toast + event-banner + coin + sirkel
+          stables). m-auto sentrerer når det er plass, lar overflow scrolle
+          fra toppen når det ikke er det. */}
+      <div className={`${mobileTab === "klikker" ? "flex" : "hidden"} md:flex flex-1 flex-col items-center overflow-y-auto px-4 pt-4 pb-6 md:px-8 md:py-6`}>
+        <div className="m-auto w-full flex flex-col items-center">
+          {ClickPanel}
+        </div>
       </div>
 
       {/* Right — Upgrades */}
